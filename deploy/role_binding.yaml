@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks2
+subjects:
+- kind: ServiceAccount
+  name: yaks2
+roleRef:
+  kind: Role
+  name: yaks2
+  apiGroup: rbac.authorization.k8s.io
