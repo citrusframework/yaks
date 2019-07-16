@@ -18,17 +18,23 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/apimachinery/pkg/labels"
 	"net/http"
+	"regexp"
 	"strings"
+	"text/template"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/jboss-fuse/yaks/pkg/client"
 	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
+	"github.com/wercker/stern/stern"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -138,7 +144,63 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 	} else {
 		fmt.Printf("test \"%s\" updated\n", name)
 	}
+
+	ctx, cancel := context.WithCancel(o.Context)
+	go func() {
+		status := "Unknown"
+		err = kubernetes.WaitCondition(o.Context, c, &test, func(obj interface{}) (bool, error) {
+			if val, ok := obj.(*v1alpha1.Test); ok {
+				if val.Status.Phase == v1alpha1.TestPhaseDeleting ||
+					val.Status.Phase == v1alpha1.TestPhaseError ||
+					val.Status.Phase == v1alpha1.TestPhasePassed ||
+					val.Status.Phase == v1alpha1.TestPhaseFailed {
+					status = string(val.Status.Phase)
+					return true, nil
+				}
+			}
+			return false, nil
+		}, 10*time.Minute)
+
+		cancel()
+		fmt.Printf("Test result: %s\n", status)
+	}()
+
+	if err := o.printLogs(ctx, name); err != nil {
+		return nil, err
+	}
+
 	return &test, nil
+}
+
+func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
+	t := "{{color .PodColor .PodName}} {{color .ContainerColor .ContainerName}} {{.Message}}"
+	funs := map[string]interface{}{
+		"color": func(color color.Color, text string) string {
+			return color.SprintFunc()(text)
+		},
+	}
+	templ, err := template.New("log").Funcs(funs).Parse(t)
+	if err != nil {
+		return err
+	}
+
+	//tail := int64(100)
+	conf := stern.Config{
+		Namespace:  o.Namespace,
+		PodQuery:   regexp.MustCompile(".*"),
+		KubeConfig: client.GetValidKubeConfig(o.KubeConfig),
+		//TailLines: &tail,
+		ContainerQuery: regexp.MustCompile(".*"),
+		LabelSelector:  labels.SelectorFromSet(labels.Set{"yaks.dev/test": name}),
+		//LabelSelector: labels.SelectorFromSet(labels.Set{"name": "yaks"}),
+		ContainerState: stern.ContainerState(stern.RUNNING),
+		Since:          172800000000000,
+		Template:       templ,
+	}
+	if err := stern.Run(ctx, &conf); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (*testCmdOptions) loadData(fileName string) (string, error) {

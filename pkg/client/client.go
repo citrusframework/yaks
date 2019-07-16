@@ -121,6 +121,13 @@ func FromManager(manager manager.Manager) (Client, error) {
 	}, nil
 }
 
+func GetValidKubeConfig(kubeconfig string) string {
+	if kubeconfig == "" {
+		kubeconfig = getDefaultKubeConfigFile()
+	}
+	return kubeconfig
+}
+
 // init initialize the k8s client for usage outside the cluster
 func initialize(kubeconfig string) {
 	if kubeconfig == "" {
