@@ -1,7 +1,7 @@
 .idea
 *.iml
 
-build/_maven_output
+build/_maven_dependencies
 build/_output
 
 yaks

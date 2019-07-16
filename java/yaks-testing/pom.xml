@@ -38,7 +38,7 @@
 
         <dependency>
             <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-kubernetes</artifactId>
+            <artifactId>yaks-testing-camel-k</artifactId>
         </dependency>
 
         <!-- ****************************** -->

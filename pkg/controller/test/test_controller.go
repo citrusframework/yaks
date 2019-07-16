@@ -2,39 +2,46 @@ package test
 
 import (
 	"context"
-
-	yaksv1alpha1 "github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-)
 
-var log = logf.Log.WithName("controller_test")
+	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/jboss-fuse/yaks/pkg/util/log"
+)
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new Test Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Integration Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
+	c, err := client.FromManager(mgr)
+	if err != nil {
+		return err
+	}
+	return add(mgr, newReconciler(mgr, c))
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileTest{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+func newReconciler(mgr manager.Manager, c client.Client) reconcile.Reconciler {
+	return &ReconcileIntegrationTest{
+		client: c,
+		scheme: mgr.GetScheme(),
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -45,18 +52,45 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource Test
-	err = c.Watch(&source.Kind{Type: &yaksv1alpha1.Test{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource Integration
+	err = c.Watch(&source.Kind{Type: &v1alpha1.Test{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			oldTest := e.ObjectOld.(*v1alpha1.Test)
+			newTest := e.ObjectNew.(*v1alpha1.Test)
+			// Ignore updates to the integration status in which case metadata.Generation does not change,
+			// or except when the integration phase changes as it's used to transition from one phase
+			// to another
+			return oldTest.Generation != newTest.Generation ||
+				oldTest.Status.Phase != newTest.Status.Phase
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			// Evaluates to false if the object has been confirmed deleted
+			return !e.DeleteStateUnknown
+		},
+	})
 	if err != nil {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner Test
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &yaksv1alpha1.Test{},
+	// Watch for related Pods changing
+	err = c.Watch(&source.Kind{Type: &v1.Pod{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
+			pod := a.Object.(*v1.Pod)
+			var requests []reconcile.Request
+
+			if testName, ok := pod.Labels["yaks.dev/test"]; ok {
+				requests = append(requests, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Namespace: pod.Namespace,
+						Name:      testName,
+					},
+				})
+			}
+
+			return requests
+		}),
 	})
+
 	if err != nil {
 		return err
 	}
@@ -64,32 +98,31 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileTest implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileTest{}
+var _ reconcile.Reconciler = &ReconcileIntegrationTest{}
 
-// ReconcileTest reconciles a Test object
-type ReconcileTest struct {
+// ReconcileIntegrationTest reconciles a IntegrationTest object
+type ReconcileIntegrationTest struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a Test object and makes changes based on the state read
-// and what is in the Test.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
+// Reconcile reads that state of the cluster for a Integration object and makes changes based on the state read
+// and what is in the Integration.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileTest) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Test")
+func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	rlog := Log.WithValues("request-namespace", request.Namespace, "request-name", request.Name)
+	rlog.Info("Reconciling Test")
+
+	ctx := context.TODO()
 
 	// Fetch the Test instance
-	instance := &yaksv1alpha1.Test{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
-	if err != nil {
+	var instance v1alpha1.Test
+
+	if err := r.client.Get(ctx, request.NamespacedName, &instance); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -100,54 +133,67 @@ func (r *ReconcileTest) Reconcile(request reconcile.Request) (reconcile.Result, 
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set Test instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
+	// Delete phase
+	if instance.GetDeletionTimestamp() != nil {
+		instance.Status.Phase = v1alpha1.TestPhaseDeleting
 	}
 
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
-			return reconcile.Result{}, err
+	target := instance.DeepCopy()
+	targetLog := rlog.ForTest(target)
+
+	actions := []Action{
+		NewInitializeAction(),
+		NewStartAction(),
+		NewEvaluateAction(),
+	}
+
+	for _, a := range actions {
+		a.InjectClient(r.client)
+		a.InjectLogger(targetLog)
+
+		if a.CanHandle(target) {
+			targetLog.Infof("Invoking action %s", a.Name())
+
+			newTarget, err := a.Handle(ctx, target)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			if newTarget != nil {
+				if r, err := r.update(ctx, targetLog, newTarget); err != nil {
+					return r, err
+				}
+
+				if newTarget.Status.Phase != target.Status.Phase {
+					targetLog.Info(
+						"state transition",
+						"phase-from", target.Status.Phase,
+						"phase-to", newTarget.Status.Phase,
+					)
+				}
+			}
+
+			// handle one action at time so the resource
+			// is always at its latest state
+			break
 		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *yaksv1alpha1.Test) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
+// Update --
+func (r *ReconcileIntegrationTest) update(ctx context.Context, log log.Logger, target *v1alpha1.Test) (reconcile.Result, error) {
+	err := r.client.Status().Update(ctx, target)
+	if err != nil {
+		if k8serrors.IsConflict(err) {
+			log.Error(err, "conflict")
+
+			return reconcile.Result{
+				Requeue: true,
+			}, nil
+		}
 	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
+
+	return reconcile.Result{}, err
 }

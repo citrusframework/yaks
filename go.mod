@@ -2,8 +2,10 @@ module github.com/jboss-fuse/yaks
 
 require (
 	github.com/NYTimes/gziphandler v1.0.1 // indirect
+	github.com/go-logr/logr v0.1.0
 	github.com/operator-framework/operator-sdk v0.9.1-0.20190712203509-e1d904fa80a4
 	github.com/pkg/errors v0.8.1
+	github.com/rs/xid v1.2.1
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/stoewer/go-strcase v1.0.2

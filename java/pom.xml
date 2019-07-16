@@ -68,7 +68,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-kubernetes</artifactId>
+                <artifactId>yaks-testing-camel-k</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
@@ -119,7 +119,7 @@
 
     <modules>
         <module>yaks-testing</module>
-        <module>yaks-testing-kubernetes</module>
+        <module>yaks-testing-camel-k</module>
     </modules>
 
     <profiles>

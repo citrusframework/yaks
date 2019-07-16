@@ -107,6 +107,29 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods/log
+  - pods/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - events
   verbs:
   - get
@@ -188,6 +211,77 @@ rules:
   verbs:
   - get
   - create
+`
+	Resources["viewer_role_binding.yaml"] =
+		`
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: yaks-viewer
+  labels:
+    app: "yaks"
+subjects:
+- kind: ServiceAccount
+  name: yaks-viewer
+roleRef:
+  kind: Role
+  name: yaks-viewer
+  apiGroup: rbac.authorization.k8s.io
+
+`
+	Resources["viewer_role.yaml"] =
+		`
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: yaks-viewer
+  labels:
+    app: "yaks"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - persistentvolumeclaims
+  - pods
+  - serviceaccounts
+  - services
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods/log
+  - pods/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+
+`
+	Resources["viewer_service_account.yaml"] =
+		`
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: yaks-viewer
+  labels:
+    app: "yaks"
+
 `
 	Resources["crds/yaks_v1alpha1_test_crd.yaml"] =
 		`

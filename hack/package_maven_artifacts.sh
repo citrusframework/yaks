@@ -24,8 +24,18 @@ fi
 
 cd ${location}/../java
 
-mkdir -p $PWD/../build/_maven_output
+mkdir -p $PWD/../build/_maven_dependencies
+
+./mvnw clean install
+
+rm -rf $PWD/../build/_maven_dependencies/*
 
 ./mvnw \
-    -Dmaven.repo.local=$PWD/../build/_maven_output \
+    clean \
+    -f yaks-testing/pom.xml \
+    -DoutputDirectory=$PWD/../build/_maven_dependencies \
+    -DskipTests \
+    dependency:copy-dependencies \
     install
+
+cp $PWD/yaks-testing/target/*.jar $PWD/../build/_maven_dependencies

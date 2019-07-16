@@ -74,7 +74,9 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha1.Test, error) {
 	namespace := o.Namespace
 
-	name := kubernetes.SanitizeName(sources[0])
+	rawName := sources[0]
+	fileName := kubernetes.SanitizeFileName(rawName)
+	name := kubernetes.SanitizeName(rawName)
 
 	if name == "" {
 		return nil, errors.New("unable to determine test name")
@@ -96,7 +98,7 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 		},
 		Spec: v1alpha1.TestSpec{
 			Source: v1alpha1.SourceSpec{
-				Name:     name,
+				Name:     fileName,
 				Content:  data,
 				Language: v1alpha1.LanguageGherkin,
 			},
