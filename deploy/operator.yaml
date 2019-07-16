@@ -1,25 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: yaks2
+  name: yaks
+  labels:
+    yaks.dev/component: operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: yaks2
+      name: yaks
   template:
     metadata:
       labels:
-        name: yaks2
+        name: yaks
     spec:
-      serviceAccountName: yaks2
+      serviceAccountName: yaks
       containers:
-        - name: yaks2
-          # Replace this with the built image name
-          image: REPLACE_IMAGE
+        - name: yaks
+          image: yaks/yaks:0.0.1
           command:
-          - yaks2
-          imagePullPolicy: Always
+          - yaks
+          imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
@@ -30,4 +31,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "yaks2"
+              value: "yaks"

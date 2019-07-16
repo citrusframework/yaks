@@ -13,6 +13,15 @@ type TestSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	Source SourceSpec `json:"source,omitempty"`
+}
+
+// SourceSpec--
+type SourceSpec struct {
+	Name     string   `json:"name,omitempty"`
+	Content  string   `json:"content,omitempty"`
+	Language Language `json:"language,omitempty"`
 }
 
 // TestStatus defines the observed state of Test
@@ -21,6 +30,10 @@ type TestStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	Phase   TestPhase `json:"phase,omitempty"`
+	TestID  string    `json:"testId,omitempty"`
+	Version string    `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -43,6 +56,41 @@ type TestList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Test `json:"items"`
+}
+
+// TestPhase --
+type TestPhase string
+
+const (
+	// TestKind --
+	TestKind string = "Test"
+
+	// TestPhaseNone --
+	IntegrationTestPhaseNone TestPhase = ""
+	// TestPhasePending --
+	TestPhasePending TestPhase = "Pending"
+	// TestPhaseRunning --
+	TestPhaseRunning TestPhase = "Running"
+	// TestPhasePassed --
+	TestPhasePassed TestPhase = "Passed"
+	// TestPhaseFailed --
+	TestPhaseFailed TestPhase = "Failed"
+	// TestPhaseError --
+	TestPhaseError TestPhase = "Error"
+	// TestPhaseDeleting --
+	TestPhaseDeleting TestPhase = "Deleting"
+)
+
+type Language string
+
+const (
+	// LanguageGherkin --
+	LanguageGherkin Language = "feature"
+)
+
+// TestLanguages is the list of all supported test languages
+var TestLanguages = []Language{
+	LanguageGherkin,
 }
 
 func init() {
