@@ -71,6 +71,11 @@
                 <artifactId>yaks-testing-camel-k</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>dev.yaks</groupId>
+                <artifactId>yaks-testing-http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -120,6 +125,7 @@
     <modules>
         <module>yaks-testing</module>
         <module>yaks-testing-camel-k</module>
+        <module>yaks-testing-http</module>
     </modules>
 
     <profiles>
