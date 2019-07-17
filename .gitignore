@@ -4,5 +4,7 @@
 build/_maven_dependencies
 build/_output
 
-yaks
-yaks-cli
+/yaks
+/yaks-cli
+
+target/
