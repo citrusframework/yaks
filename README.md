@@ -21,4 +21,7 @@ oc new-project yaks
 # Run the test
 # expects a camel k integration named simple to be running and printing "Hello Camel"
 ./yaks-cli test examples/simple.feature
+
+# Check the status of all tests
+oc get tests
 ```

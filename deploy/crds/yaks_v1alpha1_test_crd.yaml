@@ -12,6 +12,11 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
+  additionalPrinterColumns:
+    - name: Phase
+      type: string
+      description: The test phase
+      JSONPath: .status.phase
   validation:
     openAPIV3Schema:
       properties:
