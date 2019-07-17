@@ -1,4 +1,6 @@
-# yaks
+# Yaks
+
+**Proof of Concept**
 
 YAKS (Yeat Another Kamel Subproject)
 
