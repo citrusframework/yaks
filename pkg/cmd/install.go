@@ -87,6 +87,7 @@ func (o *installCmdOptions) install(_ *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
+			fmt.Println("Yaks setup completed successfully")
 		} else {
 			fmt.Println("Yaks operator installation skipped")
 		}
