@@ -1,7 +1,7 @@
 Feature: Integration Works
 
   Background:
-    Given URL: https://www.wikipedia.org
+    Given URL: https://swapi.co/api/films
 
   Scenario: Get a result from API
     When send GET /
