@@ -2,6 +2,7 @@
 FROM fabric8/s2i-java:3.0-java8
 
 ENV OPERATOR=/usr/local/bin/yaks \
+    OPERATOR_ARGS=operator \
     USER_UID=1001 \
     USER_NAME=yaks \
     HOME=/root

@@ -48,6 +48,7 @@ spec:
           image: yaks/yaks:0.0.1
           command:
           - yaks
+          - operator
           imagePullPolicy: IfNotPresent
           env:
             - name: WATCH_NAMESPACE
