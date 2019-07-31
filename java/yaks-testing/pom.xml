@@ -58,6 +58,12 @@
         <!-- ****************************** -->
 
         <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-cucumber</artifactId>
+            <version>${citrus.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
             <version>${cucumber.version}</version>
