@@ -32,7 +32,7 @@ type TestStatus struct {
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
 	Phase   TestPhase `json:"phase,omitempty"`
-	TestID  string    `json:"testId,omitempty"`
+	TestID  string    `json:"testID,omitempty"`
 	Version string    `json:"version,omitempty"`
 }
 

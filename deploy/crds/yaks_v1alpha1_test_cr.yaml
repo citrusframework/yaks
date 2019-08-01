@@ -3,5 +3,12 @@ kind: Test
 metadata:
   name: example-test
 spec:
-  # Add fields here
-  size: 3
+  source:
+    name: simple.feature
+    language: feature
+    content: |-
+      Feature: integration runs
+
+        Scenario:
+          Given integration simple is running
+          Then integration simple should print Hello Camel
