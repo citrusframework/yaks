@@ -321,8 +321,25 @@ spec:
         metadata:
           type: object
         spec:
+          properties:
+            source:
+              properties:
+                content:
+                  type: string
+                language:
+                  type: string
+                name:
+                  type: string
+              type: object
           type: object
         status:
+          properties:
+            phase:
+              type: string
+            testID:
+              type: string
+            version:
+              type: string
           type: object
   version: v1alpha1
   versions:
