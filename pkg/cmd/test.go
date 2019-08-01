@@ -46,10 +46,12 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	}
 
 	cmd := cobra.Command{
-		Use:   "test [test file to execute]",
-		Short: "Execute a test on Kubernetes",
-		Long:  `Deploys and execute a pod on Kubernetes for running tests.`,
-		RunE:  options.run,
+		PersistentPreRunE: options.preRun,
+		Use:               "test [test file to execute]",
+		Short:             "Execute a test on Kubernetes",
+		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
+		PreRunE:           options.validateArgs,
+		RunE:              options.run,
 	}
 
 	return &cmd

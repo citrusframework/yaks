@@ -2,7 +2,7 @@
 
 **Proof of Concept**
 
-YAKS (Yeat Another Kamel Subproject)
+YAKS (Yet Another Kamel Subproject)
 
 ## Usage
 
@@ -13,16 +13,16 @@ make && make images-dev
 
 # Once per cluster
 oc login -u system:admin
-./yaks-cli install --cluster-setup
+./yaks install --cluster-setup
 
 # Once per namespace
 oc login -u developer
 oc new-project yaks
-./yaks-cli install
+./yaks install
 
 # Run the test
 # expects a camel k integration named simple to be running and printing "Hello Camel"
-./yaks-cli test examples/simple.feature
+./yaks test examples/simple.feature
 
 # Check the status of all tests
 oc get tests

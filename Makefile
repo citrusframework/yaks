@@ -21,29 +21,27 @@ GOFLAGS = -ldflags "$(GOLDFLAGS)" -gcflags=-trimpath=$(GO_PATH) -asmflags=-trimp
 
 default: test
 
+clean:
+	./hack/clean.sh
+
 generate:
 	operator-sdk generate k8s
 
-build: build-operator build-yaks
+build: build-yaks
 
 test: build
 	go test ./...
 
-build-operator:
-	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
-
 build-yaks:
-	go build $(GOFLAGS) -o yaks-cli ./cmd/yaks-cli/*.go
+	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
 
 build-resources:
 	./hack/embed_resources.sh deploy
 
-images: test
-	mkdir -p build/_maven_dependencies
-	mkdir -p build/_output/bin
-	operator-sdk build $(IMAGE_NAME):$(VERSION)
+cross-compile:
+	./hack/cross_compile.sh $(VERSION)
 
-images-dev: test package-artifacts
+images: test package-artifacts
 	mkdir -p build/_maven_dependencies
 	mkdir -p build/_output/bin
 	operator-sdk build $(IMAGE_NAME):$(VERSION)
@@ -51,7 +49,9 @@ images-dev: test package-artifacts
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
+release: clean images cross-compile images-push
+
 package-artifacts:
 	./hack/package_maven_artifacts.sh
 
-.PHONY: build build-operator build-yaks test images images-dev images-push package-artifacts
+.PHONY: clean build build-yaks cross-compile test images images-push package-artifacts release

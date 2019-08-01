@@ -32,10 +32,11 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		RootCmdOptions: rootCmdOptions,
 	}
 	cmd := cobra.Command{
-		Use:   "install",
-		Short: "Install Yaks on a Kubernetes cluster",
-		Long:  `Installs Yaks on a Kubernetes or OpenShift cluster.`,
-		RunE:  impl.install,
+		PersistentPreRunE: impl.preRun,
+		Use:               "install",
+		Short:             "Install Yaks on a Kubernetes cluster",
+		Long:              `Installs Yaks on a Kubernetes or OpenShift cluster.`,
+		RunE:              impl.install,
 	}
 
 	cmd.Flags().BoolVar(&impl.clusterSetupOnly, "cluster-setup", false, "Execute cluster-wide operations only (may require admin rights)")
