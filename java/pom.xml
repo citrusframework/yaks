@@ -36,6 +36,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <log4j2.version>2.12.0</log4j2.version>
         <citrus.version>2.8.0</citrus.version>
         <cucumber.version>3.0.2</cucumber.version>
         <junit.version>5.5.0</junit.version>
@@ -75,6 +76,13 @@
                 <groupId>dev.yaks</groupId>
                 <artifactId>yaks-testing-http</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
