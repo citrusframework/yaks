@@ -41,6 +41,7 @@
         <cucumber.version>3.0.2</cucumber.version>
         <junit.version>5.5.0</junit.version>
         <kubernetes-client.version>4.3.0</kubernetes-client.version>
+        <postgresql.version>9.4.1212</postgresql.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -70,6 +71,11 @@
             <dependency>
                 <groupId>dev.yaks</groupId>
                 <artifactId>yaks-testing-camel-k</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.yaks</groupId>
+                <artifactId>yaks-testing-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -134,6 +140,7 @@
         <module>yaks-testing</module>
         <module>yaks-testing-camel-k</module>
         <module>yaks-testing-http</module>
+        <module>yaks-testing-jdbc</module>
     </modules>
 
     <profiles>
