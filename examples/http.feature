@@ -5,4 +5,4 @@ Feature: Integration Works
 
   Scenario: Get a result from API
     When send GET /
-    Then receive status 200 OK
+    Then receive HTTP 200 OK

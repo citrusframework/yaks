@@ -34,7 +34,7 @@ public class TestRunner {
         params.add("com.consol.citrus.cucumber.step.runner.core");
 
         params.add("--glue");
-        params.add("com.consol.citrus.cucumber.step.runner.http");
+        params.add("dev.yaks.testing.http");
 
         params.add("--glue");
         params.add("dev.yaks.testing.camel.k");
