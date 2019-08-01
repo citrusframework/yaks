@@ -7,9 +7,9 @@ YAKS (Yet Another Kamel Subproject)
 ## Usage
 
 ```
-# Build binaries and image
+# Build binaries and images
 eval $(minishift docker-env)
-make && make images-dev
+make && make images
 
 # Once per cluster
 oc login -u system:admin
