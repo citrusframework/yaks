@@ -72,3 +72,36 @@ Feature: Http client
     }
     """
     And receive HTTP 200 OK
+
+  Scenario: Verify RAW data
+    Given variable id is "citrus:randomNumber(5)"
+    When send HTTP request
+"""
+GET http://localhost:8080/todo
+Accept-Charset:utf-8
+Accept:application/json, application/*+json, */*
+Host:localhost:8080
+Content-Type:text/plain;charset=UTF-8
+"""
+    Then receive HTTP response
+"""
+HTTP/1.1 200 OK
+Content-Type:application/json
+X-TodoId:@isNumber()@
+Date: @ignore@
+
+{"id": "@ignore@", "task": "Sample task", "completed": 0}
+"""
+
+  Scenario: Verify JsonPath expression
+    When send GET /todo
+    Then verify HTTP response expression: $.task is "Sample task"
+    And receive HTTP 200 OK
+
+  Scenario: Verify JsonPath expressions
+    When send GET /todo
+    Then verify HTTP response expressions
+      | $.id        | @isNumber()@ |
+      | $.task      | Sample task |
+      | $.completed | 0 |
+    And receive HTTP 200 OK
