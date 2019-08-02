@@ -42,6 +42,7 @@
         <junit.version>4.12</junit.version>
         <kubernetes-client.version>4.3.0</kubernetes-client.version>
         <postgresql.version>9.4.1212</postgresql.version>
+        <testcontainers.version>1.10.7</testcontainers.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
