@@ -81,6 +81,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Namespace: test.Namespace,
 			Name:      TestPodNameFor(test),
 			Labels: map[string]string{
+				"yaks.dev/app":    "yaks",
 				"yaks.dev/test":    test.Name,
 				"yaks.dev/test-id": test.Status.TestID,
 			},
@@ -156,6 +157,7 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 			Namespace: test.Namespace,
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
+				"yaks.dev/app":    "yaks",
 				"yaks.dev/test":    test.Name,
 				"yaks.dev/test-id": test.Status.TestID,
 			},
