@@ -40,9 +40,9 @@ _hello.feature_
 ```
 Feature: hello world
 
-  Scenario: pass a dummy test
-    Given that yaks does BDD testing on Kubernetes
-    Then yaks is cool!
+  Scenario: print slogan
+    Given Yaks does BDD testing on Kubernetes
+    Then Yaks is cool!
 ```
 
 Once you have the first test written down in a `hello.feature` file, you can **run it** using: 
