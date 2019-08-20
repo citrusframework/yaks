@@ -232,8 +232,13 @@ There's also an example that uses [JDBC and REST together](/examples/task-api.fe
 
 ### Using custom steps
 
-... coming soon ...
+It's often useful to plug some custom steps into the testing environment. Custom steps help keeping the 
+tests short and self-explanatory and at the same time help teams to add generic assertions that are meaningful in their 
+environment.
 
+To add custom steps in Yaks, please clone/fork the [yaks extension](https://github.com/nicolaferraro/yaks-extension).
+
+You can add your own steps and follow the instructions in that repository to install them in the Yaks environment.
 
 ## For Yaks Developers
 
