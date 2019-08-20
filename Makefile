@@ -41,17 +41,24 @@ build-resources:
 cross-compile:
 	./hack/cross_compile.sh $(VERSION)
 
-images: test package-artifacts
+docker-image:
 	mkdir -p build/_maven_dependencies
 	mkdir -p build/_output/bin
 	operator-sdk build $(IMAGE_NAME):$(VERSION)
+
+images-no-test: package-artifacts-no-test docker-image
+
+images: test package-artifacts docker-image
 
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
 release: clean images cross-compile images-push
 
+package-artifacts-no-test:
+	./hack/package_maven_artifacts.sh -DskipTests
+
 package-artifacts:
 	./hack/package_maven_artifacts.sh
 
-.PHONY: clean build build-yaks cross-compile test images images-push package-artifacts release
+.PHONY: clean build build-yaks cross-compile test docker-image images images-no-test images-push package-artifacts package-artifacts-no-test release

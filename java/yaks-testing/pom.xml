@@ -51,6 +51,11 @@
             <artifactId>yaks-testing-jdbc</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>dev.yaks</groupId>
+            <artifactId>yaks-testing-standard</artifactId>
+        </dependency>
+
         <!-- ****************************** -->
         <!--                                -->
         <!-- OTHERS                         -->

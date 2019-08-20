@@ -17,16 +17,11 @@
 
 location=$(dirname $0)
 
-if [ "$#" -ne 0 ]; then
-    echo "usage: $0"
-    exit 1
-fi
-
 cd ${location}/../java
 
 mkdir -p $PWD/../build/_maven_dependencies
 
-./mvnw clean install
+./mvnw clean install $@
 
 rm -rf $PWD/../build/_maven_dependencies/*
 

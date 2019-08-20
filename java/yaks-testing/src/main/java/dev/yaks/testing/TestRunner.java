@@ -42,6 +42,9 @@ public class TestRunner {
         params.add("--glue");
         params.add("dev.yaks.testing.jdbc");
 
+        params.add("--glue");
+        params.add("dev.yaks.testing.standard");
+
         params.add("--plugin");
         params.add("com.consol.citrus.cucumber.CitrusReporter");
 
