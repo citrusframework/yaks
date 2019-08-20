@@ -18,6 +18,6 @@ RUN  /usr/local/bin/user_setup
 # TODO create a more efficient way to manage dependencies than to hardcode them
 ADD build/_maven_dependencies /deployments/dependencies
 
-ENTRYPOINT ["/usr/local/bin/entrypoint"]
+# Let's not use ENTRYPOINT so we can override libs in the base image
 
 USER ${USER_UID}
