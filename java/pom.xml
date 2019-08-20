@@ -84,6 +84,11 @@
                 <artifactId>yaks-testing-http</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>dev.yaks</groupId>
+                <artifactId>yaks-testing-standard</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Logging -->
             <dependency>
@@ -149,6 +154,7 @@
         <module>yaks-testing-camel-k</module>
         <module>yaks-testing-http</module>
         <module>yaks-testing-jdbc</module>
+        <module>yaks-testing-standard</module>
     </modules>
 
     <profiles>
