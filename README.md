@@ -16,8 +16,8 @@ You can download the CLI from the [0.0.1 release page](https://github.com/jboss-
 To install yaks, just make it runnable and move it to a location in your `$path`, e.g. on linux:
 
 ```
-chmod a+x yaks
-mv yaks /usr/local/bin/
+chmod a+x yaks-0.0.1-linux-64bit
+mv yaks-0.0.1-linux-64bit /usr/local/bin/yaks
 ```
 
 Yaks tests can be executed on any Kubernetes or OpenShift environment.
