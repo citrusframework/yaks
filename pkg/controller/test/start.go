@@ -103,6 +103,8 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 					Name:            "test",
 					Image:           config.GetTestBaseImage(),
 					Command:         []string{"/usr/local/s2i/run"},
+					TerminationMessagePolicy: "FallbackToLogsOnError",
+					TerminationMessagePath: "/dev/termination-log",
 					ImagePullPolicy: v1.PullIfNotPresent,
 					VolumeMounts: []v1.VolumeMount{
 						{
