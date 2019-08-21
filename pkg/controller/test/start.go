@@ -21,9 +21,9 @@ import (
 	"context"
 
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/jboss-fuse/yaks/pkg/config"
 	"github.com/jboss-fuse/yaks/pkg/install"
 	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
-	"github.com/jboss-fuse/yaks/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/rbac/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -81,7 +81,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Namespace: test.Namespace,
 			Name:      TestPodNameFor(test),
 			Labels: map[string]string{
-				"yaks.dev/app":    "yaks",
+				"yaks.dev/app":     "yaks",
 				"yaks.dev/test":    test.Name,
 				"yaks.dev/test-id": test.Status.TestID,
 			},
@@ -101,7 +101,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Containers: []v1.Container{
 				{
 					Name:            "test",
-					Image:           "yaks/yaks:" + version.Version,
+					Image:           config.GetTestBaseImage(),
 					Command:         []string{"/usr/local/s2i/run"},
 					ImagePullPolicy: v1.PullIfNotPresent,
 					VolumeMounts: []v1.VolumeMount{
@@ -157,7 +157,7 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 			Namespace: test.Namespace,
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
-				"yaks.dev/app":    "yaks",
+				"yaks.dev/app":     "yaks",
 				"yaks.dev/test":    test.Name,
 				"yaks.dev/test-id": test.Status.TestID,
 			},
