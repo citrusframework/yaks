@@ -22,11 +22,17 @@ mv yaks-0.0.1-linux-64bit /usr/local/bin/yaks
 
 Yaks tests can be executed on any Kubernetes or OpenShift environment.
 
-To install Yaks, just run:
+You need to connect to the cluster and switch to the namespace where you want Yaks to be installed.
+You can also create a new namespace:
+
+```
+oc new-project my-yaks-project
+``` 
+
+To install Yaks into your namespace, just run:
 
 ```
 # If it's the first time you install it on a cluster, make sure you're cluster admin.
-# Switch to the Kubernetes namespace where you want to install the operator, then:
 
 yaks install
 ```
@@ -36,19 +42,22 @@ the Yaks custom resource definitions in the cluster (in this case, the user need
 
 ### Running the Hello World!
 
-_hello.feature_
+_examples/helloworld.feature_
 ```
 Feature: hello world
 
   Scenario: print slogan
     Given Yaks does BDD testing on Kubernetes
     Then Yaks is cool!
-```
-
-Once you have the first test written down in a `hello.feature` file, you can **run it** using: 
 
 ```
-yaks test hello.feature
+
+The `helloworld.feature` file is present in the `examples` directory of this repository: you can clone the repo or just download it to your host. 
+
+Once you have your first test in the `helloworld.feature` file, you can **run it** using: 
+
+```
+yaks test helloworld.feature
 ```
 
 This is an example of output you should get:
@@ -172,7 +181,7 @@ The log ends with the result of the tests you've executed.
 To check the status of all tests in the namespace, you can run:
 
 ```
-kubectl get test
+oc get test
 ```
 
 This is an example of output you should get:
