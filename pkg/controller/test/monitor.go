@@ -19,42 +19,44 @@ package test
 
 import (
 	"context"
+	"github.com/jboss-fuse/yaks/pkg/util/digest"
 
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/pkg/util/digest"
-	"github.com/jboss-fuse/yaks/version"
-	"github.com/rs/xid"
 )
 
-// NewInitializeAction creates a new initialize action
-func NewInitializeAction() Action {
-	return &initializeAction{}
+// NewMonitorAction creates a new monitor action
+func NewMonitorAction() Action {
+	return &monitorAction{}
 }
 
-type initializeAction struct {
+type monitorAction struct {
 	baseAction
 }
 
 // Name returns a common name of the action
-func (action *initializeAction) Name() string {
-	return "initialize"
+func (action *monitorAction) Name() string {
+	return "monitor"
 }
 
 // CanHandle tells whether this action can handle the test
-func (action *initializeAction) CanHandle(build *v1alpha1.Test) bool {
-	return build.Status.Phase == v1alpha1.IntegrationTestPhaseNone
+func (action *monitorAction) CanHandle(build *v1alpha1.Test) bool {
+	return build.Status.Phase == v1alpha1.TestPhaseFailed ||
+		build.Status.Phase == v1alpha1.TestPhasePassed ||
+		build.Status.Phase == v1alpha1.TestPhaseError
 }
 
 // Handle handles the test
-func (action *initializeAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
-	testDigest, err := digest.ComputeForTest(test)
+func (action *monitorAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
+
+	expectedDigest, err := digest.ComputeForTest(test)
 	if err != nil {
 		return nil, err
 	}
 
-	test.Status.Phase = v1alpha1.TestPhasePending
-	test.Status.TestID = xid.New().String()
-	test.Status.Digest = testDigest
-	test.Status.Version = version.Version
+	if expectedDigest != test.Status.Digest {
+		// Restart the test
+		test.Status.Phase = v1alpha1.IntegrationTestPhaseNone
+	}
+
 	return test, nil
 }

@@ -145,6 +145,7 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 		NewInitializeAction(),
 		NewStartAction(),
 		NewEvaluateAction(),
+		NewMonitorAction(),
 	}
 
 	for _, a := range actions {
