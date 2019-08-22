@@ -33,6 +33,7 @@ type TestStatus struct {
 
 	Phase   TestPhase `json:"phase,omitempty"`
 	TestID  string    `json:"testID,omitempty"`
+	Digest  string    `json:"digest,omitempty"`
 	Version string    `json:"version,omitempty"`
 }
 
