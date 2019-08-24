@@ -26,62 +26,56 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>yaks-testing</artifactId>
+    <artifactId>yaks-testing-camel</artifactId>
 
     <dependencies>
 
-        <!-- ****************************** -->
-        <!--                                -->
-        <!-- RUNTIME                        -->
-        <!--                                -->
-        <!-- ****************************** -->
-
-        <dependency>
-            <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-camel</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-camel-k</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-http</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-jdbc</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.yaks</groupId>
-            <artifactId>yaks-testing-standard</artifactId>
-        </dependency>
-
-        <!-- ****************************** -->
-        <!--                                -->
-        <!-- OTHERS                         -->
-        <!--                                -->
-        <!-- ****************************** -->
-
-        <dependency>
-            <groupId>com.consol.citrus</groupId>
-            <artifactId>citrus-cucumber</artifactId>
-            <version>${citrus.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>io.cucumber</groupId>
-            <artifactId>cucumber-junit</artifactId>
+            <artifactId>cucumber-java</artifactId>
             <version>${cucumber.version}</version>
         </dependency>
 
         <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-core</artifactId>
+            <version>${citrus.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-java-dsl</artifactId>
+            <version>${citrus.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-camel</artifactId>
+            <version>${citrus.version}</version>
+        </dependency>
+
+        <!-- Test scope -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.consol.citrus</groupId>
+            <artifactId>citrus-cucumber</artifactId>
+            <version>${citrus.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
