@@ -37,6 +37,9 @@ public class TestRunner {
         params.add("dev.yaks.testing.http");
 
         params.add("--glue");
+        params.add("dev.yaks.testing.swagger");
+
+        params.add("--glue");
         params.add("dev.yaks.testing.camel.k");
 
         params.add("--glue");

@@ -22,6 +22,7 @@ import com.consol.citrus.dsl.runner.TestRunner;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.http.message.HttpMessage;
+import com.consol.citrus.variable.dictionary.DataDictionary;
 import cucumber.api.Scenario;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.Given;
@@ -33,15 +34,15 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Deppisch
  */
-public class HttpClientSteps {
+public class HttpClientSteps implements HttpSteps {
 
     @CitrusResource
     private TestRunner runner;
@@ -53,16 +54,20 @@ public class HttpClientSteps {
 
     private String requestUrl;
 
-    private HttpMessage request;
-    private HttpMessage response;
-
     private Map<String, String> requestHeaders = new HashMap<>();
     private Map<String, String> responseHeaders = new HashMap<>();
+    private Map<String, String> requestParams = new HashMap<>();
 
     private Map<String, String> bodyValidationExpressions = new HashMap<>();
 
+    private String requestMessageType;
+    private String responseMessageType;
+
     private String requestBody;
     private String responseBody;
+
+    private DataDictionary outboundDictionary;
+    private DataDictionary inboundDictionary;
 
     @Before
     public void before(Scenario scenario) {
@@ -76,11 +81,14 @@ public class HttpClientSteps {
 
         requestHeaders = new HashMap<>();
         responseHeaders = new HashMap<>();
-        request = new HttpMessage();
-        response = new HttpMessage();
+        requestParams = new HashMap<>();
+        requestMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
+        responseMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
         requestBody = null;
         responseBody = null;
         bodyValidationExpressions = new HashMap<>();
+        outboundDictionary = null;
+        inboundDictionary = null;
     }
 
     @Given("^http-client \"([^\"\\s]+)\"$")
@@ -108,6 +116,10 @@ public class HttpClientSteps {
 
     @Then("^(?:expect|verify) HTTP response header ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addResponseHeader(String name, String value) {
+        if (name.equals(HttpHeaders.CONTENT_TYPE)) {
+            responseMessageType = getMessageType(value);
+        }
+
         responseHeaders.put(name, value);
     }
 
@@ -119,7 +131,16 @@ public class HttpClientSteps {
 
     @Given("^HTTP request header ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addRequestHeader(String name, String value) {
+        if (name.equals(HttpHeaders.CONTENT_TYPE)) {
+            requestMessageType = getMessageType(value);
+        }
+
         requestHeaders.put(name, value);
+    }
+
+    @Given("^HTTP request query parameter ([^\\s]+)(?:=| is )\"(.+)\"$")
+    public void addRequestQueryParam(String name, String value) {
+        requestParams.put(name, value);
     }
 
     @Given("^HTTP request headers$")
@@ -176,41 +197,15 @@ public class HttpClientSteps {
 
     @When("^send (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) ([^\"\\s]+)$")
     public void sendClientRequest(String method, String path) {
-        request.method(HttpMethod.valueOf(method));
-
-        if (StringUtils.hasText(path)) {
-            request.path(path);
-            request.contextPath(path);
-        }
-
-        if (StringUtils.hasText(requestBody)) {
-            request.setPayload(requestBody);
-        }
-
-        for (Map.Entry<String, String> headerEntry : requestHeaders.entrySet()) {
-            request.setHeader(headerEntry.getKey(), headerEntry.getValue());
-        }
-
-        sendClientRequest(request);
-
+        sendClientRequest(createRequest(requestBody, requestHeaders, requestParams, method, path));
         requestBody = null;
         requestHeaders.clear();
+        requestParams.clear();
     }
 
     @Then("^receive HTTP (\\d+)(?: [^\\s]+)?$")
     public void receiveClientResponse(Integer status) {
-        response.status(HttpStatus.valueOf(status));
-
-        if (StringUtils.hasText(responseBody)) {
-            response.setPayload(responseBody);
-        }
-
-        for (Map.Entry<String, String> headerEntry : responseHeaders.entrySet()) {
-            response.setHeader(headerEntry.getKey(), headerEntry.getValue());
-        }
-
-        receiveClientResponse(response);
-
+        receiveClientResponse(createResponse(responseBody, responseHeaders, status));
         responseBody = null;
         responseHeaders.clear();
     }
@@ -247,6 +242,12 @@ public class HttpClientSteps {
             if (StringUtils.hasText(requestUrl)) {
                 requestBuilder.uri(requestUrl);
             }
+
+            requestBuilder.messageType(requestMessageType);
+
+            if (outboundDictionary != null) {
+                requestBuilder.dictionary(outboundDictionary);
+            }
         };
 
         runner.http(action);
@@ -266,6 +267,12 @@ public class HttpClientSteps {
                 responseBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
             }
             bodyValidationExpressions.clear();
+
+            responseBuilder.messageType(responseMessageType);
+
+            if (inboundDictionary != null) {
+                responseBuilder.dictionary(inboundDictionary);
+            }
         });
     }
 
@@ -299,5 +306,23 @@ public class HttpClientSteps {
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new CitrusRuntimeException("Failed to create http client for ssl connection", e);
         }
+    }
+
+    /**
+     * Specifies the inboundDictionary.
+     *
+     * @param inboundDictionary
+     */
+    public void setInboundDictionary(DataDictionary inboundDictionary) {
+        this.inboundDictionary = inboundDictionary;
+    }
+
+    /**
+     * Specifies the outboundDictionary.
+     *
+     * @param outboundDictionary
+     */
+    public void setOutboundDictionary(DataDictionary outboundDictionary) {
+        this.outboundDictionary = outboundDictionary;
     }
 }
