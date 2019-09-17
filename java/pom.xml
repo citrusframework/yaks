@@ -44,6 +44,7 @@
         <kubernetes-client.version>4.3.0</kubernetes-client.version>
         <postgresql.version>9.4.1212</postgresql.version>
         <testcontainers.version>1.10.7</testcontainers.version>
+        <swagger.parser.version>1.0.34</swagger.parser.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -88,6 +89,11 @@
             <dependency>
                 <groupId>dev.yaks</groupId>
                 <artifactId>yaks-testing-http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.yaks</groupId>
+                <artifactId>yaks-testing-swagger</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -161,6 +167,7 @@
         <module>yaks-testing-camel-k</module>
         <module>yaks-testing-http</module>
         <module>yaks-testing-jdbc</module>
+        <module>yaks-testing-swagger</module>
         <module>yaks-testing-standard</module>
     </modules>
 

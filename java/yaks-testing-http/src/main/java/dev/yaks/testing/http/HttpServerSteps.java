@@ -21,14 +21,13 @@ import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.cucumber.datatable.DataTable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Christoph Deppisch
  */
-public class HttpServerSteps {
+public class HttpServerSteps implements HttpSteps {
 
     @CitrusResource
     private TestRunner runner;
@@ -38,13 +37,14 @@ public class HttpServerSteps {
 
     private HttpServer httpServer;
 
-    private HttpMessage request;
-    private HttpMessage response;
-
     private Map<String, String> requestHeaders = new HashMap<>();
     private Map<String, String> responseHeaders = new HashMap<>();
+    private Map<String, String> requestParams = new HashMap<>();
 
     private Map<String, String> bodyValidationExpressions = new HashMap<>();
+
+    private String requestMessageType;
+    private String responseMessageType;
 
     private String requestBody;
     private String responseBody;
@@ -61,8 +61,9 @@ public class HttpServerSteps {
 
         requestHeaders = new HashMap<>();
         responseHeaders = new HashMap<>();
-        request = new HttpMessage();
-        response = new HttpMessage();
+        requestParams = new HashMap<>();
+        requestMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
+        responseMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
         requestBody = null;
         responseBody = null;
         bodyValidationExpressions = new HashMap<>();
@@ -79,6 +80,10 @@ public class HttpServerSteps {
 
     @Then("^(?:expect|verify) HTTP request header: ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addRequestHeader(String name, String value) {
+        if (name.equals(HttpHeaders.CONTENT_TYPE)) {
+            requestMessageType = getMessageType(value);
+        }
+
         requestHeaders.put(name, value);
     }
 
@@ -88,8 +93,17 @@ public class HttpServerSteps {
         headerPairs.forEach(this::addRequestHeader);
     }
 
+    @Given("^(?:expect|verify) HTTP request query parameter ([^\\s]+)(?:=| is )\"(.+)\"$")
+    public void addRequestQueryParam(String name, String value) {
+        requestParams.put(name, value);
+    }
+
     @Given("^HTTP response header: ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addResponseHeader(String name, String value) {
+        if (name.equals(HttpHeaders.CONTENT_TYPE)) {
+            responseMessageType = getMessageType(value);
+        }
+
         responseHeaders.put(name, value);
     }
 
@@ -147,41 +161,15 @@ public class HttpServerSteps {
 
     @When("^receive (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) ([^\"\\s]+)$")
     public void receiveServerRequest(String method, String path) {
-        request.method(HttpMethod.valueOf(method));
-
-        if (StringUtils.hasText(path)) {
-            request.path(path);
-            request.contextPath(path);
-        }
-
-        if (StringUtils.hasText(requestBody)) {
-            request.setPayload(requestBody);
-        }
-
-        for (Map.Entry<String, String> headerEntry : requestHeaders.entrySet()) {
-            request.setHeader(headerEntry.getKey(), headerEntry.getValue());
-        }
-
-        receiveServerRequest(request);
-
+        receiveServerRequest(createRequest(requestBody, requestHeaders, requestParams, method, path));
         requestBody = null;
         requestHeaders.clear();
+        requestParams.clear();
     }
 
     @Then("^send HTTP (\\d+)(?: [^\\s]+)?$")
     public void sendServerResponse(Integer status) {
-        response.status(HttpStatus.valueOf(status));
-
-        if (StringUtils.hasText(responseBody)) {
-            response.setPayload(responseBody);
-        }
-
-        for (Map.Entry<String, String> headerEntry : responseHeaders.entrySet()) {
-            response.setHeader(headerEntry.getKey(), headerEntry.getValue());
-        }
-
-        sendServerResponse(response);
-
+        sendServerResponse(createResponse(responseBody, responseHeaders, status));
         responseBody = null;
         responseHeaders.clear();
     }
@@ -219,6 +207,8 @@ public class HttpServerSteps {
                 requestBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
             }
             bodyValidationExpressions.clear();
+
+            requestBuilder.messageType(requestMessageType);
         };
 
         runner.http(action);
@@ -231,6 +221,7 @@ public class HttpServerSteps {
     private void sendServerResponse(HttpMessage response) {
         runner.http(action -> action.server(httpServer).send()
                 .response(response.getStatusCode())
+                .messageType(responseMessageType)
                 .message(response));
     }
 
