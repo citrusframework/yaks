@@ -139,9 +139,9 @@ public class SwaggerTestDataGenerator {
                 payload.append("\"");
             }
         } else if (property instanceof IntegerProperty || property instanceof LongProperty) {
-            payload.append("citrus:randomNumber(10)");
+            payload.append("citrus:randomNumber(8)");
         } else if (property instanceof FloatProperty || property instanceof DoubleProperty) {
-            payload.append("citrus:randomNumber(10)");
+            payload.append("citrus:randomNumber(8)");
         } else if (property instanceof BooleanProperty) {
             payload.append("citrus:randomEnumValue('true', 'false')");
         } else if (quotes) {
@@ -373,7 +373,7 @@ public class SwaggerTestDataGenerator {
     public static String createRandomValueExpression(AbstractSerializableParameter parameter) {
         switch (parameter.getType()) {
             case "integer":
-                return "citrus:randomNumber(10)";
+                return "citrus:randomNumber(8)";
             case "string":
                 if (parameter.getFormat() != null && parameter.getFormat().equals("date")) {
                     return "\"citrus:currentDate('yyyy-MM-dd')\"";
