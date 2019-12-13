@@ -159,6 +159,19 @@ rules:
   - get
   - create
 - apiGroups:
+  - camel.apache.org
+  resources:
+  - integrations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - yaks.dev
   resources:
   - '*'
@@ -272,6 +285,19 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - integrations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
 
 `
 	Resources["viewer_service_account.yaml"] =
@@ -355,8 +381,15 @@ kind: Test
 metadata:
   name: example-test
 spec:
-  # Add fields here
-  size: 3
+  source:
+    name: simple.feature
+    language: feature
+    content: |-
+      Feature: integration runs
+
+        Scenario:
+          Given integration simple is running
+          Then integration simple should print Hello Camel
 
 `
 

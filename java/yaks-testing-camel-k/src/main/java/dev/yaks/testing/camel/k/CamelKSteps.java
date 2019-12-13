@@ -1,5 +1,17 @@
 package dev.yaks.testing.camel.k;
 
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.commons.text.StringSubstitutor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import io.fabric8.kubernetes.api.model.DoneablePod;
@@ -8,13 +20,43 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+
 
 public class CamelKSteps {
+
+	private static final String CRD_GROUP = "camel.apache.org";
+	private static final String CRD_VERSION = "v1alpha1";
+	private static final String CRD_INTEGRATION_NAME = "integrations.camel.apache.org";
 
     private static final int MAX_ATTEMPTS = 150;
     private static final long DELAY_BETWEEN_ATTEMPTS = 2000;
 
+	private static final String INTEGRATION_TEMPLATE =
+					"{\"apiVersion\": \"" + CRD_GROUP + "/" + CRD_VERSION + "\"," +
+					"\"kind\": \"Integration\"," +
+					"\"metadata\": {\"name\": \"${integrationName}\"}," +
+					"\"spec\": {\"sources\": [" +
+					"{" +
+					"\"content\": \"${source}\"," +
+					"\"name\": \"${fileName}\"" +
+					"}]}" +
+					"}";
+
     private KubernetesClient client;
+
+	/** Logger */
+	private static final Logger LOG = LoggerFactory.getLogger(CamelKSteps.class);
+
+	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+)$")
+	public void createNewIntegration(String name, String integration) throws IOException {
+		final String rawJsonIntegration = createJsonIntegration(name, integration);
+		final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
+		Map<String, Object> result = client().customResource(crdContext).createOrReplace(namespace(), rawJsonIntegration);
+		if(result.get("message") != null) {
+			throw new IllegalStateException(result.get("message").toString());
+		}
+	}
 
     @Given("^integration ([a-z0-9-.]+) is running$")
     @Then("^integration ([a-z0-9-.]+) should be running$")
@@ -89,8 +131,39 @@ public class CamelKSteps {
         return null;
     }
 
+	private CustomResourceDefinitionContext getIntegrationCRD() {
+		return new CustomResourceDefinitionContext.Builder()
+				.withName(CRD_INTEGRATION_NAME)
+				.withGroup(CRD_GROUP)
+				.withVersion(CRD_VERSION)
+				.withPlural("integrations")
+				.withScope("Namespaced")
+				.build();
+	}
+
+	private String createJsonIntegration(String name, String source) {
+		final Map<String, String> values = new HashMap<>();
+		values.put("integrationName", name.substring(0, name.indexOf(".")));
+		values.put("source", StringEscapeUtils.escapeJson(source));
+		values.put("fileName", name);
+
+		final StringSubstitutor sub = new StringSubstitutor(values);
+		System.out.println(sub.replace(INTEGRATION_TEMPLATE) + namespace());
+		return sub.replace(INTEGRATION_TEMPLATE);
+	}
+
     private String namespace() {
-        return System.getenv("NAMESPACE");
+        String result = System.getenv("NAMESPACE");
+		final File namespace = new File("/var/run/secrets/kubernetes.io/serviceaccount/namespace");
+		if(result == null && namespace.exists()){
+			try {
+				result = new String(Files.readAllBytes(namespace.toPath()));
+			} catch (IOException e) {
+				LOG.warn("Can't read {}", namespace, e);
+				return null;
+			}
+		}
+		return result;
     }
 
     private KubernetesClient client() {
