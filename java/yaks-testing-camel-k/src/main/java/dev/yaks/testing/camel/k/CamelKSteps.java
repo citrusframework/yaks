@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -36,7 +38,9 @@ public class CamelKSteps {
 					"{\"apiVersion\": \"" + CRD_GROUP + "/" + CRD_VERSION + "\"," +
 					"\"kind\": \"Integration\"," +
 					"\"metadata\": {\"name\": \"${integrationName}\"}," +
-					"\"spec\": {\"sources\": [" +
+					"\"spec\": {" +
+					"\"dependencies\": [${dependencies}]," +
+					"\"sources\": [" +
 					"{" +
 					"\"content\": \"${source}\"," +
 					"\"name\": \"${fileName}\"" +
@@ -50,8 +54,14 @@ public class CamelKSteps {
 
 	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+)$")
 	public void createNewIntegration(String name, String integration) throws IOException {
-		final String rawJsonIntegration = createJsonIntegration(name, integration);
-		final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
+		createNewIntegration(name, "", integration);
+	}
+
+	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+) and dependencies (([A-Za-z]+:[a-z.]+:[A-Za-z0-9._-]+(:[A-Za-z0-9._-]+)?,?)+)$")
+	public void createNewIntegration(String name, String dependencies, String integration) throws IOException {
+		final String rawJsonIntegration = createJsonIntegration(name, integration, dependencies.split(","));
+        final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
+
 		Map<String, Object> result = client().customResource(crdContext).createOrReplace(namespace(), rawJsonIntegration);
 		if(result.get("message") != null) {
 			throw new IllegalStateException(result.get("message").toString());
@@ -141,14 +151,20 @@ public class CamelKSteps {
 				.build();
 	}
 
-	private String createJsonIntegration(String name, String source) {
+	private String createJsonIntegration(String name, String source, String... dependencies) {
 		final Map<String, String> values = new HashMap<>();
 		values.put("integrationName", name.substring(0, name.indexOf(".")));
-		values.put("source", StringEscapeUtils.escapeJson(source));
+        values.put("source", StringEscapeUtils.escapeJson(source));
 		values.put("fileName", name);
 
+		final String joined = Arrays.stream(dependencies)
+				.filter(d -> !d.isEmpty())
+				.map(d -> StringEscapeUtils.escapeJson(d))
+				.map(d -> String.format("\"%s\"", d))
+				.collect(Collectors.joining(","));
+        values.put("dependencies", joined);
+
 		final StringSubstitutor sub = new StringSubstitutor(values);
-		System.out.println(sub.replace(INTEGRATION_TEMPLATE) + namespace());
 		return sub.replace(INTEGRATION_TEMPLATE);
 	}
 
