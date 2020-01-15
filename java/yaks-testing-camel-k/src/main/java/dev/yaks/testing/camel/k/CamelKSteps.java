@@ -1,10 +1,9 @@
 package dev.yaks.testing.camel.k;
 
-import org.apache.commons.text.StringEscapeUtils;
-import org.apache.commons.text.StringSubstitutor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,10 +11,12 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
+import dev.yaks.testing.camel.k.model.Integration;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -27,45 +28,28 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 public class CamelKSteps {
 
-	private static final String CRD_GROUP = "camel.apache.org";
-	private static final String CRD_VERSION = "v1alpha1";
-	private static final String CRD_INTEGRATION_NAME = "integrations.camel.apache.org";
-
     private static final int MAX_ATTEMPTS = 150;
     private static final long DELAY_BETWEEN_ATTEMPTS = 2000;
 
-	private static final String INTEGRATION_TEMPLATE =
-					"{\"apiVersion\": \"" + CRD_GROUP + "/" + CRD_VERSION + "\"," +
-					"\"kind\": \"Integration\"," +
-					"\"metadata\": {\"name\": \"${integrationName}\"}," +
-					"\"spec\": {" +
-					"\"dependencies\": [${dependencies}]," +
-					"\"sources\": [" +
-					"{" +
-					"\"content\": \"${source}\"," +
-					"\"name\": \"${fileName}\"" +
-					"}]}" +
-					"}";
-
     private KubernetesClient client;
+    private ObjectMapper obj = new ObjectMapper();
 
 	/** Logger */
 	private static final Logger LOG = LoggerFactory.getLogger(CamelKSteps.class);
 
-	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+)$")
-	public void createNewIntegration(String name, String integration) throws IOException {
-		createNewIntegration(name, "", integration);
+	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+) with configuration:$")
+	public void createNewIntegration(String name, Map<String, String> configuration) throws IOException {
+		if(configuration.get("source") == null) {
+			throw new IllegalStateException("Specify 'source' parameter");
+		}
+		createIntegration(name, configuration.get("source"), configuration.get("dependencies"), configuration.get("traits"));
+
 	}
 
-	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+) and dependencies (([A-Za-z]+:[a-z.]+:[A-Za-z0-9._-]+(:[A-Za-z0-9._-]+)?,?)+)$")
-	public void createNewIntegration(String name, String dependencies, String integration) throws IOException {
-		final String rawJsonIntegration = createJsonIntegration(name, integration, dependencies.split(","));
-        final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
+	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+)$")
+	public void createNewIntegration(String name, String source) throws IOException {
+		createIntegration(name, source, null, null);
 
-		Map<String, Object> result = client().customResource(crdContext).createOrReplace(namespace(), rawJsonIntegration);
-		if(result.get("message") != null) {
-			throw new IllegalStateException(result.get("message").toString());
-		}
 	}
 
     @Given("^integration ([a-z0-9-.]+) is running$")
@@ -143,30 +127,65 @@ public class CamelKSteps {
 
 	private CustomResourceDefinitionContext getIntegrationCRD() {
 		return new CustomResourceDefinitionContext.Builder()
-				.withName(CRD_INTEGRATION_NAME)
-				.withGroup(CRD_GROUP)
-				.withVersion(CRD_VERSION)
+				.withName(Integration.CRD_INTEGRATION_NAME)
+				.withGroup(Integration.CRD_GROUP)
+				.withVersion(Integration.CRD_VERSION)
 				.withPlural("integrations")
 				.withScope("Namespaced")
 				.build();
 	}
 
-	private String createJsonIntegration(String name, String source, String... dependencies) {
-		final Map<String, String> values = new HashMap<>();
-		values.put("integrationName", name.substring(0, name.indexOf(".")));
-        values.put("source", StringEscapeUtils.escapeJson(source));
-		values.put("fileName", name);
+	private void createIntegration(String name, String source, String dependencies, String traits) {
+		final Integration.Builder integrationBuilder = new Integration.Builder()
+				.name(name)
+				.source(source);
 
-		final String joined = Arrays.stream(dependencies)
-				.filter(d -> !d.isEmpty())
-				.map(d -> StringEscapeUtils.escapeJson(d))
-				.map(d -> String.format("\"%s\"", d))
-				.collect(Collectors.joining(","));
-        values.put("dependencies", joined);
+		if(dependencies != null && !dependencies.isEmpty()) {
+			integrationBuilder.dependencies(Arrays.asList(dependencies.split(",")));
+		}
 
-		final StringSubstitutor sub = new StringSubstitutor(values);
-		return sub.replace(INTEGRATION_TEMPLATE);
+		if (traits != null && !traits.isEmpty()) {
+			final Map<String, Integration.TraitConfig> traitConfigMap = new HashMap<>();
+			for(String t : traits.split(",")){
+				//traitName.key=value
+				if(!validateTraitFormat(t)) {
+					throw new IllegalArgumentException("Trait" + t + "does not match format traitName.key=value");
+				}
+				final String[] trait = t.split("\\.",2);
+				final String[] traitConfig = trait[1].split("=", 2);
+				if(traitConfigMap.containsKey(trait[0])) {
+					traitConfigMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
+				} else {
+					traitConfigMap.put(trait[0],  new Integration.TraitConfig(traitConfig[0], traitConfig[1]));
+				}
+			}
+			integrationBuilder.traits(traitConfigMap);
+		}
+
+		final Integration i = integrationBuilder.build();
+
+		final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
+
+		try {
+			Map<String, Object> result = client().customResource(crdContext).createOrReplace(namespace(), obj.writeValueAsString(i));
+			if(result.get("message") != null) {
+				throw new IllegalStateException(result.get("message").toString());
+			}
+		} catch (IOException e) {
+			throw new IllegalStateException("Can't create Integration JSON object", e);
+		}
 	}
+
+	private boolean validateTraitFormat(String trait) {
+		String patternString = "[A-Za-z-0-9]+\\.[A-Za-z-0-9]+=[A-Za-z-0-9]+";
+
+		Pattern pattern = Pattern.compile(patternString);
+
+		Matcher matcher = pattern.matcher(trait);
+		return matcher.matches();
+	}
+
+
 
     private String namespace() {
         String result = System.getenv("NAMESPACE");

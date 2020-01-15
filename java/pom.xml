@@ -41,12 +41,12 @@
         <spring.version>5.0.8.RELEASE</spring.version>
         <cucumber.version>3.0.2</cucumber.version>
         <camel.version>2.23.4</camel.version>
+        <jackson.version>2.9.8</jackson.version>
         <junit.version>4.12</junit.version>
         <kubernetes-client.version>4.3.0</kubernetes-client.version>
         <postgresql.version>9.4.1212</postgresql.version>
         <testcontainers.version>1.10.7</testcontainers.version>
         <swagger.parser.version>1.0.34</swagger.parser.version>
-        <commons-text.version>1.8</commons-text.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -68,6 +68,17 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-client</artifactId>
+                <version>${kubernetes-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
             <!-- Citrus -->
             <dependency>
                 <groupId>com.consol.citrus</groupId>
@@ -129,6 +140,7 @@
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
