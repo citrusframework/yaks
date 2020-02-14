@@ -1,22 +1,32 @@
-#FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 FROM fabric8/s2i-java:3.0-java8
 
 ENV OPERATOR=/usr/local/bin/yaks \
     OPERATOR_ARGS=operator \
     USER_UID=1001 \
     USER_NAME=yaks \
-    HOME=/root
+    HOME=/root \
+    APP_DIR=/deployments/data/yaks-testing \
+    APP_LIBS=/deployments/artifacts/m2
 
 # install operator binary
 COPY build/_output/bin/yaks ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 
+# TODO create a more efficient way to manage dependencies than to hardcode them
+COPY build/_maven_repository ${APP_LIBS}
+
+# add YAKS runtime
+COPY build/_maven_project/yaks-testing ${APP_DIR}
+
 USER 0
 RUN  /usr/local/bin/user_setup
 
-# TODO create a more efficient way to manage dependencies than to hardcode them
-ADD build/_maven_dependencies /deployments/dependencies
+RUN chgrp -R 0 ${APP_LIBS} && \
+    chmod -R g=u ${APP_LIBS}
+
+RUN chgrp -R 0 ${APP_DIR} && \
+    chmod -R g=u ${APP_DIR}
 
 # Let's not use ENTRYPOINT so we can override libs in the base image
 

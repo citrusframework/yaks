@@ -3,7 +3,7 @@
 
 .DS_Store
 
-build/_maven_dependencies
+build/_maven_*
 build/_output
 
 /yaks

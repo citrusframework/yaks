@@ -28,6 +28,44 @@
 
     <artifactId>yaks-testing</artifactId>
 
+    <properties>
+        <yaks.mounted.test.path>/etc/yaks/tests</yaks.mounted.test.path>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <copyPom>true</copyPom>
+                    <useRepositoryLayout>true</useRepositoryLayout>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${build.testOutputDirectory}/dev/yaks/testing</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${yaks.mounted.test.path}</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
 
         <!-- ****************************** -->
@@ -39,31 +77,32 @@
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-camel</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-camel-k</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-http</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-jdbc</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-swagger</artifactId>
+            <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-standard</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- ****************************** -->
@@ -73,15 +112,8 @@
         <!-- ****************************** -->
 
         <dependency>
-            <groupId>com.consol.citrus</groupId>
-            <artifactId>citrus-cucumber</artifactId>
-            <version>${citrus.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
-            <version>${cucumber.version}</version>
         </dependency>
 
         <dependency>

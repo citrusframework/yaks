@@ -49,8 +49,8 @@
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-        <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
         <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+        <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
         <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
@@ -67,40 +67,53 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Citrus -->
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.consol.citrus</groupId>
+                <artifactId>citrus-core</artifactId>
+                <version>${citrus.version}</version>
             </dependency>
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-camel</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.consol.citrus</groupId>
+                <artifactId>citrus-java-dsl</artifactId>
+                <version>${citrus.version}</version>
             </dependency>
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-camel-k</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.consol.citrus</groupId>
+                <artifactId>citrus-http</artifactId>
+                <version>${citrus.version}</version>
             </dependency>
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-jdbc</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.consol.citrus</groupId>
+                <artifactId>citrus-cucumber</artifactId>
+                <version>${citrus.version}</version>
             </dependency>
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-http</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.consol.citrus</groupId>
+                <artifactId>citrus-camel</artifactId>
+                <version>${citrus.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.camel</groupId>
+                        <artifactId>camel-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.camel</groupId>
+                        <artifactId>camel-spring</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- Cucumber -->
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-java</artifactId>
+                <version>${cucumber.version}</version>
             </dependency>
             <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-swagger</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.yaks</groupId>
-                <artifactId>yaks-testing-standard</artifactId>
-                <version>${project.version}</version>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-junit</artifactId>
+                <version>${cucumber.version}</version>
             </dependency>
 
             <!-- Logging -->

@@ -33,19 +33,15 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>${cucumber.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-core</artifactId>
-            <version>${citrus.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-java-dsl</artifactId>
-            <version>${citrus.version}</version>
         </dependency>
 
         <dependency>
@@ -63,13 +59,11 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
-            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-cucumber</artifactId>
-            <version>${citrus.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

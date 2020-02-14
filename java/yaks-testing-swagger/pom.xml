@@ -33,12 +33,12 @@
         <dependency>
             <groupId>dev.yaks</groupId>
             <artifactId>yaks-testing-http</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>${cucumber.version}</version>
         </dependency>
 
         <dependency>
@@ -50,13 +50,11 @@
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-core</artifactId>
-            <version>${citrus.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-java-dsl</artifactId>
-            <version>${citrus.version}</version>
         </dependency>
 
         <!-- Test scope -->
@@ -68,13 +66,11 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-junit</artifactId>
-            <version>${cucumber.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.consol.citrus</groupId>
             <artifactId>citrus-cucumber</artifactId>
-            <version>${citrus.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

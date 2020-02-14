@@ -19,18 +19,51 @@ location=$(dirname $0)
 
 cd ${location}/../java
 
-mkdir -p $PWD/../build/_maven_dependencies
+mkdir -p $PWD/../build/_maven_repository
+mkdir -p $PWD/../build/_maven_project
 
-./mvnw clean install $@
-
-rm -rf $PWD/../build/_maven_dependencies/*
+# copy YAKS Maven project to image, this will be the runtime for the tests
+echo Copy YAKS runtime ...
 
 ./mvnw \
-    clean \
+    --quiet \
     -f yaks-testing/pom.xml \
-    -DoutputDirectory=$PWD/../build/_maven_dependencies \
-    -DskipTests \
-    dependency:copy-dependencies \
-    install
+    clean
 
-cp $PWD/yaks-testing/target/*.jar $PWD/../build/_maven_dependencies
+cp -r yaks-testing $PWD/../build/_maven_project
+
+# fresh build YAKS java modules
+echo Build YAKS modules ...
+
+./mvnw \
+    --quiet \
+    clean install $@
+
+# copy all dependencies to image m2 repository
+echo Copy project dependencies ...
+
+./mvnw \
+    --quiet \
+    -f yaks-testing/pom.xml \
+    -DskipTests \
+    -DoutputDirectory=$PWD/../build/_maven_repository \
+    dependency:copy-dependencies
+
+# install YAKS artifacts to image m2 repository
+echo Install Yaks artifacts ...
+
+./mvnw \
+    --quiet \
+    -DskipTests \
+    -Dmaven.repo.local=$PWD/../build/_maven_repository \
+    jar:jar \
+    install:install
+
+# preload Maven plugins so they are part of the image
+echo Load project plugins ...
+
+./mvnw \
+    --quiet \
+    -f yaks-testing/pom.xml \
+    -Dmaven.repo.local=$PWD/../build/_maven_repository \
+    test

@@ -102,24 +102,27 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 				{
 					Name:            "test",
 					Image:           config.GetTestBaseImage(),
-					Command:         []string{"/usr/local/s2i/run"},
+					Command:         []string{
+						"mvn",
+						"-f",
+						"/deployments/data/yaks-testing",
+						"-Dremoteresources.skip=true",
+						"-Dmaven.repo.local=/deployments/artifacts/m2",
+						"test",
+					},
 					TerminationMessagePolicy: "FallbackToLogsOnError",
 					TerminationMessagePath: "/dev/termination-log",
 					ImagePullPolicy: v1.PullIfNotPresent,
 					VolumeMounts: []v1.VolumeMount{
 						{
 							Name:      "tests",
-							MountPath: "/etc/yaks/test",
+							MountPath: "/etc/yaks/tests",
 						},
 					},
 					Env: []v1.EnvVar{
 						{
-							Name:  "JAVA_MAIN_CLASS",
-							Value: "dev.yaks.testing.TestRunner",
-						},
-						{
-							Name:  "JAVA_LIB_DIR",
-							Value: "/deployments/dependencies/*",
+							Name:  "YAKS_TERMINATION_LOG",
+							Value: "/dev/termination-log",
 						},
 					},
 				},

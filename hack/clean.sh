@@ -22,7 +22,11 @@ if [ "$#" -ne 0 ]; then
     exit 1
 fi
 
-cd ${location}/../java
+cd ${location}/../build
 
-rm -rf $PWD/../build/_maven_dependencies
-rm -rf $PWD/../build/_output
+rm -rf _maven_repository
+mkdir -p _maven_repository
+rm -rf _maven_project
+mkdir -p _maven_project
+rm -rf _output
+mkdir -p _output
