@@ -16,7 +16,7 @@
 # limitations under the License.
 
 location=$(dirname $0)
-rootdir=$(realpath ${location}/..)
+rootdir=${location}/..
 
 basename=yaks
 

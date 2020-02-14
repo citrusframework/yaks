@@ -11,6 +11,6 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
         strict = true,
         glue = { "dev.yaks.testing.standard" },
-        plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
+        plugin = { "dev.yaks.testing.report.TestReporter" } )
 public class StandardFeatureTest {
 }

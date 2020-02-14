@@ -1,4 +1,4 @@
-package dev.yaks.testing;
+package dev.yaks.testing.report;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -27,11 +27,11 @@ public class TestReporter extends CitrusReporter {
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(TestReporter.class);
 
-    private static final String TERMINATION_LOG_DEFAULT = "/dev/termination-log";
+    private static final String TERMINATION_LOG_DEFAULT = "target/termination.log";
     private static final String TERMINATION_LOG_PROPERTY = "yaks.termination.log";
     private static final String TERMINATION_LOG_ENV = "YAKS_TERMINATION_LOG";
 
-    public TestReporter() {
+    static {
         TerminationLogReporter reporter = new TerminationLogReporter();
 
         Citrus.CitrusInstanceManager.addInstanceProcessor(citrus -> {
@@ -73,7 +73,7 @@ public class TestReporter extends CitrusReporter {
         }
     }
 
-    private static Path getTerminationLog() {
+    public static Path getTerminationLog() {
         return Paths.get(System.getProperty(TERMINATION_LOG_PROPERTY,
                 System.getenv(TERMINATION_LOG_ENV) != null ? System.getenv(TERMINATION_LOG_ENV) : TERMINATION_LOG_DEFAULT));
     }

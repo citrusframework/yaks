@@ -42,7 +42,6 @@ cross-compile:
 	./hack/cross_compile.sh $(VERSION)
 
 docker-image:
-	mkdir -p build/_maven_dependencies
 	mkdir -p build/_output/bin
 	operator-sdk build $(IMAGE_NAME):$(VERSION)
 

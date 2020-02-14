@@ -22,13 +22,11 @@
     <Console name="STDOUT" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n"/>
     </Console>
-    <Null name="NONE"/>
   </Appenders>
 
   <Loggers>
     <Root level="INFO">
-      <!-- <AppenderRef ref="STDOUT"/> -->
-      <AppenderRef ref="NONE"/>
+      <AppenderRef ref="STDOUT"/>
     </Root>
   </Loggers>
 
