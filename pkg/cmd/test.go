@@ -47,23 +47,28 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 
 	cmd := cobra.Command{
 		PersistentPreRunE: options.preRun,
-		Use:               "test [test file to execute]",
+		Use:               "test [options] [test file to execute]",
 		Short:             "Execute a test on Kubernetes",
 		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
 		PreRunE:           options.validateArgs,
 		RunE:              options.run,
 	}
 
+	cmd.Flags().StringVarP(&options.dependencies, "dependencies", "d","", "Adds runtime dependencies that get automatically loaded before the test is executed.")
+	cmd.Flags().StringVarP(&options.settings, "settings", "s","", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
+
 	return &cmd
 }
 
 type testCmdOptions struct {
 	*RootCmdOptions
+	dependencies string
+	settings string
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return errors.New(fmt.Sprintf("accepts exactly 1 arg, received %d", len(args)))
+		return errors.New(fmt.Sprintf("accepts exactly 1 test name to execute, received %d", len(args)))
 	}
 
 	return nil
@@ -90,7 +95,7 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 		return nil, errors.New("unable to determine test name")
 	}
 
-	data, err := o.loadData(sources[0])
+	data, err := o.loadData(rawName)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +116,19 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 				Language: v1alpha1.LanguageGherkin,
 			},
 		},
+	}
+
+	settings, err := o.newTestSettings()
+
+	if err != nil {
+		return nil, err
+	} else if settings != nil {
+		test.Spec.Settings = *settings
+	} else if o.dependencies != "" {
+		test.Spec.Settings = v1alpha1.SettingsSpec{
+			Name:    "",
+			Content: o.dependencies,
+		}
 	}
 
 	existed := false
@@ -172,6 +190,37 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 	}
 
 	return &test, nil
+}
+
+func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
+	runtimeDependencies := o.dependencies
+
+	if runtimeDependencies != "" {
+		settings := v1alpha1.SettingsSpec{
+			Content:  runtimeDependencies,
+		}
+		return &settings, nil
+	}
+
+	rawName := o.settings
+	settingsFileName := kubernetes.SanitizeFileName(rawName)
+
+	if settingsFileName == "" {
+		return nil, nil
+	}
+
+	configData, err := o.loadData(rawName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	settings := v1alpha1.SettingsSpec{
+		Name:     settingsFileName,
+		Content:  configData,
+	}
+
+	return &settings, nil
 }
 
 func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {

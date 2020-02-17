@@ -14,7 +14,8 @@ type TestSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	Source SourceSpec `json:"source,omitempty"`
+	Source   SourceSpec   `json:"source,omitempty"`
+	Settings SettingsSpec `json:"config,omitempty"`
 }
 
 // SourceSpec--
@@ -22,6 +23,12 @@ type SourceSpec struct {
 	Name     string   `json:"name,omitempty"`
 	Content  string   `json:"content,omitempty"`
 	Language Language `json:"language,omitempty"`
+}
+
+// SettingsSpec--
+type SettingsSpec struct {
+	Name    string `json:"name,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
 // TestStatus defines the observed state of Test

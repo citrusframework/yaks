@@ -1,4 +1,3 @@
-@require('org.apache.camel:camel-groovy:@camel.version@')
 Feature: Camel xml route
 
   Background:

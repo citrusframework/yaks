@@ -28,10 +28,6 @@
 
     <artifactId>yaks-testing</artifactId>
 
-    <properties>
-        <yaks.mounted.test.path>/etc/yaks/tests</yaks.mounted.test.path>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -41,27 +37,6 @@
                     <copyPom>true</copyPom>
                     <useRepositoryLayout>true</useRepositoryLayout>
                 </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${build.testOutputDirectory}/dev/yaks/testing</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${yaks.mounted.test.path}</directory>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

@@ -250,6 +250,125 @@ an example of how to do that.
 
 You can add your own steps to that project and follow the instructions in order to install them in the Yaks environment.
 
+### Adding custom runtime dependencies
+
+The Yaks testing framework provides a base runtime image that holds all required libraries and artifacts to execute tests. You may need to add
+additional runtime dependencies though in order to extend the framework capabilities.
+
+For instance when using a Camel route in your test you may need to add additional Camel components that are not part in the
+basic Yaks runtime (e.g. camel-groovy). You can add the runtime dependency to the Yaks runtime image in multiple ways:
+
+#### Load dependencies via Cucumber tags
+
+You can simply add a tag to your BDD feature specification in order to declare a runtime dependency for your test.
+
+```gherkin
+@require('org.apache.camel:camel-groovy:@camel.version@')
+Feature: Camel route testing
+
+  Background:
+    Given Camel route hello.xml
+    """
+    <route>
+      <from uri="direct:hello"/>
+      <filter>
+        <groovy>request.body.startsWith('Hello')</groovy>
+        <to uri="log:dev.yaks.testing.camel?level=INFO"/>
+      </filter>
+      <split>
+        <tokenize token=" "/>
+        <to uri="seda:tokens"/>
+      </split>
+    </route>
+    """
+
+  Scenario: Hello route
+    When send to route direct:hello body: Hello Camel!
+    And receive from route seda:tokens body: Hello
+    And receive from route seda:tokens body: Camel!
+```
+
+The given Camel route uses the groovy language support and this is not part in the basic Yaks runtime image. So we add
+the tag `@require('org.apache.camel:camel-groovy:@camel.version@')`. This tag will load the Maven dependency at runtime 
+before the test is executed in the Yaks runtime image.
+
+Note that you have to provide proper Maven artifact coordinates with proper `groupId`, `artifactId` and `version`. You can make 
+use of version properties for these versions available in the Yaks base image:
+
+* citrus.version
+* camel.version
+* spring.version
+* cucumber.version
+
+#### Load dependencies via System property or environment setting
+
+You can add dependencies also by specifying the dependencies as command line parameter when running the test via `yaks` CLI.
+
+```bash
+yaks test --dependencies org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
+```
+
+This will add a environment setting in the Yaks runtime container and the dependency will be loaded automatically
+at runtime.
+
+#### Load dependencies via property file
+
+Yaks supports adding runtime dependency information to a property file called `yaks.properties`. The dependency is added through
+Maven coordinates in the property file using a common property key prefix `yaks.dependency.`
+
+```properties
+# include these dependencies
+yaks.dependency.foo=org.foo:foo-artifact:1.0.0
+yaks.dependency.bar=org.bar:bar-artifact:1.5.0
+```
+
+You can add the property file when running the test via `yaks` CLI like follows:
+
+```bash
+yaks test --settings yaks.properties camel-route.feature
+```
+
+#### Load dependencies via configuration file
+
+When more dependencies are required to run a test you may consider to add a configuration file as `.yaml` or `.json`.
+
+The configuration file is able to declare multiple dependencies:
+
+```yaml
+dependencies:
+  - dependency:
+      groupId: org.foo
+      artifactId: foo-artifact
+      version: 1.0.0
+  - dependency:
+      groupId: org.bar
+      artifactId: bar-artifact
+      version: 1.5.0
+```
+
+```json
+{
+  "dependencies": [
+    {
+      "groupId": "org.foo",
+      "artifactId": "foo-artifact",
+      "version": "1.0.0"
+    },
+    {
+      "groupId": "org.bar",
+      "artifactId": "bar-artifact",
+      "version": "1.5.0"
+    }
+  ]
+}
+```
+
+You can add the configuration file when running the test via `yaks` CLI like follows:
+
+```bash
+yaks test --settings yaks.dependency.yaml camel-route.feature
+```
+
 ## For Yaks Developers
 
 Requirements:

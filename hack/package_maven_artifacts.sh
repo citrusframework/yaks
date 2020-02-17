@@ -39,6 +39,12 @@ echo Build YAKS modules ...
     --quiet \
     clean install $@
 
+# install YAKS Maven extension to runtime project in image
+echo Install YAKS Maven extension
+
+mkdir -p $PWD/../build/_maven_project/yaks-testing/.mvn
+cp yaks-maven-extension/target/classes/extensions.xml $PWD/../build/_maven_project/yaks-testing/.mvn/
+
 # copy all dependencies to image m2 repository
 echo Copy project dependencies ...
 
@@ -50,7 +56,7 @@ echo Copy project dependencies ...
     dependency:copy-dependencies
 
 # install YAKS artifacts to image m2 repository
-echo Install Yaks artifacts ...
+echo Install YAKS artifacts ...
 
 ./mvnw \
     --quiet \

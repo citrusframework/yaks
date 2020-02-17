@@ -124,6 +124,10 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 							Name:  "YAKS_TERMINATION_LOG",
 							Value: "/dev/termination-log",
 						},
+						{
+							Name:  "YAKS_TESTS_PATH",
+							Value: "/etc/yaks/tests",
+						},
 					},
 				},
 			},
@@ -143,6 +147,20 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 		},
 	}
 
+	if test.Spec.Settings.Name != "" {
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  "YAKS_SETTINGS_FILE",
+			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
+		},
+		)
+	} else if test.Spec.Settings.Content != "" {
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  "YAKS_DEPENDENCIES",
+			Value: test.Spec.Settings.Content,
+		},
+		)
+	}
+
 	return &pod
 }
 
@@ -152,6 +170,10 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 
 	sources := make(map[string]string)
 	sources[test.Spec.Source.Name] = test.Spec.Source.Content
+
+	if test.Spec.Settings.Name != "" {
+		sources[test.Spec.Settings.Name] = test.Spec.Settings.Content
+	}
 
 	cm := v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
