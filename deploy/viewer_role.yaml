@@ -38,3 +38,16 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - integrations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch

@@ -77,6 +77,19 @@ rules:
   - get
   - create
 - apiGroups:
+  - camel.apache.org
+  resources:
+  - integrations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - yaks.dev
   resources:
   - '*'
