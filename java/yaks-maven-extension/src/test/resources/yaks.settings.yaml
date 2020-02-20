@@ -1,0 +1,9 @@
+dependencies:
+  - dependency:
+      groupId: org.foo
+      artifactId: foo-artifact
+      version: 1.0.0
+  - dependency:
+      groupId: org.bar
+      artifactId: bar-artifact
+      version: 1.5.0

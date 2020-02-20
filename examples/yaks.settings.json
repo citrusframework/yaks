@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    {
+      "groupId": "org.apache.camel",
+      "artifactId": "camel-groovy",
+      "version": "@camel.version@"
+    }
+  ]
+}

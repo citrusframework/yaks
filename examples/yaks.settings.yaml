@@ -1,0 +1,5 @@
+dependencies:
+  - dependency:
+      groupId: org.apache.camel
+      artifactId: camel-groovy
+      version: "@camel.version@"
