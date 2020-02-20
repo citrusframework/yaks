@@ -41,7 +41,7 @@
         <spring.version>5.0.8.RELEASE</spring.version>
         <cucumber.version>3.0.2</cucumber.version>
         <camel.version>2.23.4</camel.version>
-        <jackson.version>2.9.8</jackson.version>
+        <jackson.version>2.9.10.1</jackson.version>
         <junit.version>4.12</junit.version>
         <kubernetes-client.version>4.3.0</kubernetes-client.version>
         <postgresql.version>9.4.1212</postgresql.version>
