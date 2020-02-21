@@ -202,13 +202,12 @@ func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 		return &settings, nil
 	}
 
-	rawName := o.settings
-	settingsFileName := kubernetes.SanitizeFileName(rawName)
-
-	if settingsFileName == "" {
+	if o.settings == "" {
 		return nil, nil
 	}
 
+	rawName := o.settings
+	settingsFileName := kubernetes.SanitizeFileName(rawName)
 	configData, err := o.loadData(rawName)
 
 	if err != nil {
