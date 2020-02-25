@@ -1,4 +1,3 @@
-@require('org.apache.camel:camel-groovy:@camel.version@')
 Feature: Camel xml route
 
   Background:
@@ -6,10 +5,7 @@ Feature: Camel xml route
     """
     <route>
       <from uri="direct:hello"/>
-      <filter>
-        <groovy>request.body.startsWith('Hello')</groovy>
-        <to uri="log:dev.yaks.testing.camel?level=INFO"/>
-      </filter>
+      <to uri="log:dev.yaks.testing.camel?level=INFO"/>
       <split>
         <tokenize token=" "/>
         <to uri="seda:tokens"/>
