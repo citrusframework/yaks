@@ -29,8 +29,7 @@ generate:
 
 build: build-yaks
 
-test:
-    build
+test: build
 	go test ./...
 
 build-yaks:
