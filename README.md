@@ -11,13 +11,13 @@ Yaks allows you to do BDD testing on Kubernetes using the [Gherkin syntax from C
 ### Installation
 
 The easiest way to getting started with Yaks is using the **Yaks CLI**.
-You can download the CLI from the [0.0.1 release page](https://github.com/jboss-fuse/yaks/releases/tag/0.0.1).
+You can download the CLI from the [0.0.2 release page](https://github.com/jboss-fuse/yaks/releases/tag/0.0.2).
 
 To install yaks, just make it runnable and move it to a location in your `$path`, e.g. on linux:
 
 ```
-chmod a+x yaks-0.0.1-linux-64bit
-mv yaks-0.0.1-linux-64bit /usr/local/bin/yaks
+chmod a+x yaks-0.0.2-linux-64bit
+mv yaks-0.0.2-linux-64bit /usr/local/bin/yaks
 ```
 
 Yaks tests can be executed on any Kubernetes or OpenShift environment.

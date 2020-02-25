@@ -45,7 +45,7 @@ spec:
       serviceAccountName: yaks
       containers:
         - name: yaks
-          image: yaks/yaks:0.0.1
+          image: yaks/yaks:0.0.2
           command:
           - yaks
           - operator
