@@ -22,8 +22,13 @@ if [ "$#" -ne 0 ]; then
     exit 1
 fi
 
+# remove built binaries
+rm -f yaks
+rm -f yaks-*
+
 cd ${location}/../build
 
+#remove build outputs
 rm -rf _maven_repository
 mkdir -p _maven_repository
 rm -rf _maven_project
