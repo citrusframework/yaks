@@ -14,7 +14,7 @@
 # limitations under the License.
 
 IMAGE_NAME := docker.io/yaks/yaks
-VERSION := 0.0.2
+VERSION := devel
 
 GOLDFLAGS += -X main.GitCommit=$(GIT_COMMIT)
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -gcflags=-trimpath=$(GO_PATH) -asmflags=-trimpath=$(GO_PATH)
