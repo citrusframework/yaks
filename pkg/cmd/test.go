@@ -21,12 +21,13 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/labels"
 	"net/http"
 	"regexp"
 	"strings"
 	"text/template"
 	"time"
+
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/fatih/color"
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
@@ -52,10 +53,11 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
 		PreRunE:           options.validateArgs,
 		RunE:              options.run,
+		SilenceUsage:      true,
 	}
 
-	cmd.Flags().StringVarP(&options.dependencies, "dependencies", "d","", "Adds runtime dependencies that get automatically loaded before the test is executed.")
-	cmd.Flags().StringVarP(&options.settings, "settings", "s","", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
+	cmd.Flags().StringVarP(&options.dependencies, "dependencies", "d", "", "Adds runtime dependencies that get automatically loaded before the test is executed.")
+	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
 
 	return &cmd
 }
@@ -63,7 +65,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 type testCmdOptions struct {
 	*RootCmdOptions
 	dependencies string
-	settings string
+	settings     string
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -166,15 +168,15 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 	}
 
 	ctx, cancel := context.WithCancel(o.Context)
+	var status v1alpha1.TestPhase = "Unknown"
 	go func() {
-		status := "Unknown"
 		err = kubernetes.WaitCondition(o.Context, c, &test, func(obj interface{}) (bool, error) {
 			if val, ok := obj.(*v1alpha1.Test); ok {
 				if val.Status.Phase == v1alpha1.TestPhaseDeleting ||
 					val.Status.Phase == v1alpha1.TestPhaseError ||
 					val.Status.Phase == v1alpha1.TestPhasePassed ||
 					val.Status.Phase == v1alpha1.TestPhaseFailed {
-					status = string(val.Status.Phase)
+					status = val.Status.Phase
 					return true, nil
 				}
 			}
@@ -182,14 +184,13 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 		}, 10*time.Minute)
 
 		cancel()
-		fmt.Printf("Test result: %s\n", status)
 	}()
 
 	if err := o.printLogs(ctx, name); err != nil {
 		return nil, err
 	}
 
-	return &test, nil
+	return &test, status.AsError()
 }
 
 func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
@@ -197,7 +198,7 @@ func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 
 	if runtimeDependencies != "" {
 		settings := v1alpha1.SettingsSpec{
-			Content:  runtimeDependencies,
+			Content: runtimeDependencies,
 		}
 		return &settings, nil
 	}
@@ -215,8 +216,8 @@ func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 	}
 
 	settings := v1alpha1.SettingsSpec{
-		Name:     settingsFileName,
-		Content:  configData,
+		Name:    settingsFileName,
+		Content: configData,
 	}
 
 	return &settings, nil

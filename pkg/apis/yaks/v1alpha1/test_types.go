@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -88,6 +90,13 @@ const (
 	// TestPhaseDeleting --
 	TestPhaseDeleting TestPhase = "Deleting"
 )
+
+func (phase TestPhase) AsError() error {
+	if phase != TestPhasePassed {
+		return fmt.Errorf("Test %s", string(phase))
+	}
+	return nil
+}
 
 type Language string
 
