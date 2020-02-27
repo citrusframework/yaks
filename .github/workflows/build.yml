@@ -1,0 +1,70 @@
+name: build
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Info
+      run: |
+        ls -lart
+    - name: Set Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
+    - name: Set Up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Run Tests
+      run: |
+        make test
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Info
+      run: |
+        ls -lart
+    - name: Set Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
+    - name: Set Up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Tag Release
+      uses: mathieudutour/github-tag-action@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Prepare Release Environment
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      run: |
+        git fetch --prune --unshallow
+        docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v1
+      with:
+        version: v0.127.0
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
