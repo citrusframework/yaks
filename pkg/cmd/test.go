@@ -190,7 +190,12 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 		return nil, err
 	}
 
-	return &test, status.AsError()
+	err = status.AsError()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Test %s\n", string(status))
+	return &test, nil
 }
 
 func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
