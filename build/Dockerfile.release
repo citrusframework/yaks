@@ -1,0 +1,34 @@
+# This is the same of the other Dockerfile but with the binary built by goreleaser
+FROM fabric8/s2i-java:3.0-java8
+
+ENV OPERATOR=/usr/local/bin/yaks \
+    OPERATOR_ARGS=operator \
+    USER_UID=1001 \
+    USER_NAME=yaks \
+    HOME=/root \
+    APP_DIR=/deployments/data/yaks-testing \
+    APP_LIBS=/deployments/artifacts/m2
+
+# install operator binary
+COPY yaks ${OPERATOR}
+
+COPY build/bin /usr/local/bin
+
+# TODO create a more efficient way to manage dependencies than to hardcode them
+COPY build/_maven_repository ${APP_LIBS}
+
+# add YAKS runtime
+COPY build/_maven_project/yaks-testing ${APP_DIR}
+
+USER 0
+RUN  /usr/local/bin/user_setup
+
+RUN chgrp -R 0 ${APP_LIBS} && \
+    chmod -R g=u ${APP_LIBS}
+
+RUN chgrp -R 0 ${APP_DIR} && \
+    chmod -R g=u ${APP_DIR}
+
+# Let's not use ENTRYPOINT so we can override libs in the base image
+
+USER ${USER_UID}
