@@ -1,7 +1,6 @@
 module github.com/jboss-fuse/yaks
 
 require (
-	github.com/NYTimes/gziphandler v1.0.1 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/go-logr/logr v0.1.0
 	github.com/mattn/go-colorable v0.1.2 // indirect
