@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -46,8 +45,6 @@ func main() {
 
 func exitOnError(err error) {
 	if err != nil {
-		fmt.Println("Error:", err)
-
 		os.Exit(1)
 	}
 }
