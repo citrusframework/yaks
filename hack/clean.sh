@@ -26,7 +26,14 @@ fi
 rm -f yaks
 rm -f yaks-*
 
-cd ${location}/../build
+cd ${location}/../java
+
+# Maven clean
+
+./mvnw \
+    clean
+
+cd ../build
 
 #remove build outputs
 rm -rf _maven_repository
