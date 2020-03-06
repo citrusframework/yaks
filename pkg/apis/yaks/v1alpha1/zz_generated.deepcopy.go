@@ -45,7 +45,7 @@ func (in *Test) DeepCopyInto(out *Test) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	out.Spec = in.Spec
+	in.Spec.DeepCopyInto(&out.Spec)
 	out.Status = in.Status
 	return
 }
@@ -106,6 +106,11 @@ func (in *TestSpec) DeepCopyInto(out *TestSpec) {
 	*out = *in
 	out.Source = in.Source
 	out.Settings = in.Settings
+	if in.Env != nil {
+		in, out := &in.Env, &out.Env
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
