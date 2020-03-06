@@ -10,14 +10,14 @@ public class YaksStandardSteps {
     @CitrusResource
     private TestRunner runner;
 
-    @Given("^Yaks does BDD testing on Kubernetes$")
+    @Given("^YAKS does Cloud-Native BDD testing$")
     public void itDoesBDD() {
-        print("Yaks does BDD testing on Kubernetes");
+        print("YAKS does Cloud-Native BDD testing");
     }
 
-    @Then("^Yaks is cool!$")
+    @Then("^YAKS rocks!$")
     public void yaksRocks() {
-        print("Yaks is cool!");
+        print("YAKS rocks!");
     }
 
     @Then("^(?:log|print) '(.+)'$")

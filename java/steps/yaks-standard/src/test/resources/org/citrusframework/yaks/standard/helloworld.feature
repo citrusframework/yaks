@@ -1,5 +1,5 @@
 Feature: hello world
 
   Scenario: print slogan
-    Given Yaks does BDD testing on Kubernetes
-    Then Yaks is cool!
+    Given YAKS does Cloud-Native BDD testing
+    Then YAKS rocks!

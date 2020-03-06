@@ -12,7 +12,7 @@ metadata:
         "spec": {
           "source": {
             "name":"example.feature",
-            "content": "Feature: hello world\n  Scenario: print slogan\n    Given Yaks does BDD testing on Kubernetes\n    Then Yaks is cool!\n"
+            "content": "Feature: hello world\n  Scenario: print slogan\n    Given YAKS does Cloud-Native BDD testing\n    Then YAKS rocks!\n"
           }
         }
       }]
@@ -86,8 +86,8 @@ spec:
           Feature: hello world
 
             Scenario: print slogan
-              Given Yaks does BDD testing on Kubernetes
-              Then Yaks is cool!
+              Given YAKS does Cloud-Native BDD testing
+              Then YAKS rocks!
     ```
 
     Refer to the [Yaks repository](https://github.com/jboss-fuse/yaks) for more complex examples.
