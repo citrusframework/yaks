@@ -58,6 +58,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 
 	cmd.Flags().StringVarP(&options.dependencies, "dependencies", "d", "", "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
+	cmd.Flags().StringArrayVarP(&options.env, "env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
 
 	return &cmd
 }
@@ -66,6 +67,7 @@ type testCmdOptions struct {
 	*RootCmdOptions
 	dependencies string
 	settings     string
+	env          []string
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -131,6 +133,10 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 			Name:    "",
 			Content: o.dependencies,
 		}
+	}
+
+	if o.env != nil {
+		test.Spec.Env = o.env
 	}
 
 	existed := false

@@ -19,6 +19,7 @@ package test
 
 import (
 	"context"
+	"strings"
 
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/jboss-fuse/yaks/pkg/config"
@@ -145,6 +146,21 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 				},
 			},
 		},
+	}
+
+	for _, value := range test.Spec.Env {
+		pair := strings.SplitN(value, "=", 2)
+		if len(pair) == 2 {
+			k := strings.TrimSpace(pair[0])
+			v := strings.TrimSpace(pair[1])
+
+			if len(k) > 0 && len(v) > 0 {
+				pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+					Name:  k,
+					Value: v,
+				})
+			}
+		}
 	}
 
 	if test.Spec.Settings.Name != "" {
