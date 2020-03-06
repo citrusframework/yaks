@@ -28,14 +28,14 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 public class CamelKSteps {
 
-    private static final int MAX_ATTEMPTS = 150;
-    private static final long DELAY_BETWEEN_ATTEMPTS = 2000;
+    private static final int MAX_ATTEMPTS = System.getenv("YAKS_CAMELK_MAX_ATTEMPTS") != null ? Integer.valueOf(System.getenv("YAKS_CAMELK_MAX_ATTEMPTS")) : 150;
+    private static final long DELAY_BETWEEN_ATTEMPTS = System.getenv("YAKS_CAMELK_DELAY_BETWEEN_ATTEMPTS") != null ? Long.valueOf(System.getenv("YAKS_CAMELK_DELAY_BETWEEN_ATTEMPTS")) : 2000;
 
     private KubernetesClient client;
     private ObjectMapper obj = new ObjectMapper();
 
 	/** Logger */
-	private static final Logger LOG = LoggerFactory.getLogger(CamelKSteps.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CamelKSteps.class);
 
 	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+) with configuration:$")
 	public void createNewIntegration(String name, Map<String, String> configuration) throws IOException {
