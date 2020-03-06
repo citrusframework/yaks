@@ -31,7 +31,7 @@ kind: Deployment
 metadata:
   name: yaks
   labels:
-    yaks.dev/component: operator
+    org.citrusframework.yaks/component: operator
 spec:
   replicas: 1
   selector:
@@ -172,7 +172,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - yaks.dev
+  - org.citrusframework.yaks
   resources:
   - '*'
   verbs:
@@ -215,7 +215,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
 rules:
-- apiGroups: ["yaks.dev"]
+- apiGroups: ["org.citrusframework.yaks"]
   resources: ["*"]
   verbs: ["*"]
 - apiGroups:
@@ -315,9 +315,9 @@ metadata:
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: tests.yaks.dev
+  name: tests.org.citrusframework.yaks
 spec:
-  group: yaks.dev
+  group: org.citrusframework.yaks
   names:
     kind: Test
     listKind: TestList
@@ -376,7 +376,7 @@ spec:
 `
 	Resources["crds/yaks_v1alpha1_test_cr.yaml"] =
 		`
-apiVersion: yaks.dev/v1alpha1
+apiVersion: org.citrusframework.yaks/v1alpha1
 kind: Test
 metadata:
   name: example-test

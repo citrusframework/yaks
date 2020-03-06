@@ -7,7 +7,7 @@ Feature: Camel xml route
       <from uri="direct:hello"/>
       <filter>
         <groovy>request.body.startsWith('Hello')</groovy>
-        <to uri="log:dev.yaks.testing.camel?level=INFO"/>
+        <to uri="log:org.citrusframework.yaks.camel?level=INFO"/>
       </filter>
       <split>
         <tokenize token=" "/>

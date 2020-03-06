@@ -90,7 +90,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - yaks.dev
+  - org.citrusframework.yaks
   resources:
   - '*'
   verbs:

@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: |-
       [{
-        "apiVersion": "yaks.dev/v1alpha1",
+        "apiVersion": "org.citrusframework.yaks/v1alpha1",
         "kind": "Test",
         "metadata": {
           "name": "example"
@@ -12,7 +12,7 @@ metadata:
         "spec": {
           "source": {
             "name":"example.feature",
-            "content": "Feature: hello world\n  Scenario: print slogan\n    Given Yaks does BDD testing on Kubernetes\n    Then Yaks is cool!\n"
+            "content": "Feature: hello world\n  Scenario: print slogan\n    Given YAKS does Cloud-Native BDD testing\n    Then YAKS rocks!\n"
           }
         }
       }]
@@ -33,7 +33,7 @@ spec:
     - kind: Test
       description: A YAKS test
       displayName: YAKS Test
-      name: tests.yaks.dev
+      name: tests.org.citrusframework.yaks
       version: v1alpha1
       specDescriptors:
         - description: The test source
@@ -75,7 +75,7 @@ spec:
     The example below executes some dummy steps to check that Yaks has been installed correctly.
 
     ```
-    apiVersion: yaks.dev/v1alpha1
+    apiVersion: org.citrusframework.yaks/v1alpha1
     kind: Test
     metadata:
       name: example
@@ -86,8 +86,8 @@ spec:
           Feature: hello world
 
             Scenario: print slogan
-              Given Yaks does BDD testing on Kubernetes
-              Then Yaks is cool!
+              Given YAKS does Cloud-Native BDD testing
+              Then YAKS rocks!
     ```
 
     Refer to the [Yaks repository](https://github.com/jboss-fuse/yaks) for more complex examples.
@@ -206,7 +206,7 @@ spec:
           - get
           - create
         - apiGroups:
-          - yaks.dev
+          - org.citrusframework.yaks
           resources:
           - '*'
           verbs:
