@@ -27,10 +27,10 @@ echo Copy YAKS runtime ...
 
 ./mvnw \
     --quiet \
-    -f yaks-testing/pom.xml \
+    -f runtime/yaks-runtime-maven/pom.xml \
     clean
 
-cp -r yaks-testing $PWD/../build/_maven_project
+cp -r runtime/yaks-runtime-maven $PWD/../build/_maven_project
 
 # fresh build YAKS java modules
 echo Build YAKS modules ...
@@ -42,15 +42,15 @@ echo Build YAKS modules ...
 # install YAKS Maven extension to runtime project in image
 echo Install YAKS Maven extension
 
-mkdir -p $PWD/../build/_maven_project/yaks-testing/.mvn
-cp yaks-maven-extension/target/classes/extensions.xml $PWD/../build/_maven_project/yaks-testing/.mvn/
+mkdir -p $PWD/../build/_maven_project/yaks-runtime-maven/.mvn
+cp tools/maven/yaks-maven-extension/target/classes/extensions.xml $PWD/../build/_maven_project/yaks-runtime-maven/.mvn/
 
 # copy all dependencies to image m2 repository
 echo Copy project dependencies ...
 
 ./mvnw \
     --quiet \
-    -f yaks-testing/pom.xml \
+    -f runtime/yaks-runtime-maven/pom.xml \
     -DskipTests \
     -DoutputDirectory=$PWD/../build/_maven_repository \
     dependency:copy-dependencies
@@ -70,6 +70,6 @@ echo Load project plugins ...
 
 ./mvnw \
     --quiet \
-    -f yaks-testing/pom.xml \
+    -f runtime/yaks-runtime-maven/pom.xml \
     -Dmaven.repo.local=$PWD/../build/_maven_repository \
     test

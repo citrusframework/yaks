@@ -106,7 +106,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 					Command:         []string{
 						"mvn",
 						"-f",
-						"/deployments/data/yaks-testing",
+						"/deployments/data/yaks-runtime-maven",
 						"-Dremoteresources.skip=true",
 						"-Dmaven.repo.local=/deployments/artifacts/m2",
 						"test",

@@ -5,7 +5,7 @@ ENV OPERATOR=/usr/local/bin/yaks \
     USER_UID=1001 \
     USER_NAME=yaks \
     HOME=/root \
-    APP_DIR=/deployments/data/yaks-testing \
+    APP_DIR=/deployments/data/yaks-runtime-maven \
     APP_LIBS=/deployments/artifacts/m2
 
 # install operator binary
@@ -17,7 +17,7 @@ COPY build/bin /usr/local/bin
 COPY build/_maven_repository ${APP_LIBS}
 
 # add YAKS runtime
-COPY build/_maven_project/yaks-testing ${APP_DIR}
+COPY build/_maven_project/yaks-runtime-maven ${APP_DIR}
 
 USER 0
 RUN  /usr/local/bin/user_setup

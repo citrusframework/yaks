@@ -21,15 +21,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>dev.yaks</groupId>
-        <artifactId>yaks-parent</artifactId>
+        <artifactId>yaks-steps</artifactId>
         <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>yaks-testing-http</artifactId>
+    <artifactId>yaks-http</artifactId>
+    <name>YAKS :: Steps :: Http</name>
 
     <dependencies>
-
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>cucumber-java</artifactId>
@@ -69,7 +70,6 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
 </project>
