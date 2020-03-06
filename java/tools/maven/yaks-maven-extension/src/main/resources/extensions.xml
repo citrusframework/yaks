@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extensions>
   <extension>
-    <groupId>dev.yaks</groupId>
+    <groupId>org.citrusframework.yaks</groupId>
     <artifactId>yaks-maven-extension</artifactId>
     <version>${project.version}</version>
   </extension>

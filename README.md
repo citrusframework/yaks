@@ -67,7 +67,7 @@ This is an example of output you should get:
 test "hello" created
 + test-hello-bldrmuj9nakdqqrj7eag › test
 test-hello-bldrmuj9nakdqqrj7eag test Starting the Java application using /opt/run-java/run-java.sh ...
-test-hello-bldrmuj9nakdqqrj7eag test exec java -javaagent:/opt/jolokia/jolokia.jar=config=/opt/jolokia/etc/jolokia.properties -javaagent:/opt/prometheus/jmx_prometheus_javaagent.jar=9779:/opt/prometheus/prometheus-config.yml -XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:+ExitOnOutOfMemoryError -cp .:/deployments/dependencies/*:/deployments/* dev.yaks.testing.TestRunner
+test-hello-bldrmuj9nakdqqrj7eag test exec java -javaagent:/opt/jolokia/jolokia.jar=config=/opt/jolokia/etc/jolokia.properties -javaagent:/opt/prometheus/jmx_prometheus_javaagent.jar=9779:/opt/prometheus/prometheus-config.yml -XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:+ExitOnOutOfMemoryError -cp .:/deployments/dependencies/*:/deployments/* org.citrusframework.yaks.YaksTest
 test-hello-bldrmuj9nakdqqrj7eag test OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
 test-hello-bldrmuj9nakdqqrj7eag test I> No access restrictor found, access to any MBean is allowed
 test-hello-bldrmuj9nakdqqrj7eag test Jolokia: Agent started with URL https://172.17.0.10:8778/jolokia/
@@ -273,7 +273,7 @@ Feature: Camel route testing
       <from uri="direct:hello"/>
       <filter>
         <groovy>request.body.startsWith('Hello')</groovy>
-        <to uri="log:dev.yaks.testing.camel?level=INFO"/>
+        <to uri="log:org.citrusframework.yaks.camel?level=INFO"/>
       </filter>
       <split>
         <tokenize token=" "/>
