@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: |-
       [{
-        "apiVersion": "yaks.dev/v1alpha1",
+        "apiVersion": "org.citrusframework.yaks/v1alpha1",
         "kind": "Test",
         "metadata": {
           "name": "example"
@@ -33,7 +33,7 @@ spec:
     - kind: Test
       description: A YAKS test
       displayName: YAKS Test
-      name: tests.yaks.dev
+      name: tests.org.citrusframework.yaks
       version: v1alpha1
       specDescriptors:
         - description: The test source
@@ -75,7 +75,7 @@ spec:
     The example below executes some dummy steps to check that Yaks has been installed correctly.
 
     ```
-    apiVersion: yaks.dev/v1alpha1
+    apiVersion: org.citrusframework.yaks/v1alpha1
     kind: Test
     metadata:
       name: example
@@ -206,7 +206,7 @@ spec:
           - get
           - create
         - apiGroups:
-          - yaks.dev
+          - org.citrusframework.yaks
           resources:
           - '*'
           verbs:

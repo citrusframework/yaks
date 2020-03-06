@@ -253,7 +253,7 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
 		KubeConfig: client.GetValidKubeConfig(o.KubeConfig),
 		//TailLines: &tail,
 		ContainerQuery: regexp.MustCompile(".*"),
-		LabelSelector:  labels.SelectorFromSet(labels.Set{"yaks.dev/test": name}),
+		LabelSelector:  labels.SelectorFromSet(labels.Set{"org.citrusframework.yaks/test": name}),
 		//LabelSelector: labels.SelectorFromSet(labels.Set{"name": "yaks"}),
 		ContainerState: stern.ContainerState(stern.RUNNING),
 		Since:          172800000000000,

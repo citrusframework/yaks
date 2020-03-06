@@ -1,3 +1,3 @@
 version: "1"
-domain: yaks.dev
-repo: github.com/jboss-fuse/yaks
+domain: org.citrusframework.yaks
+repo: github.com/citrusframework/yaks
