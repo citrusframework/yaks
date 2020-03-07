@@ -21,6 +21,7 @@ import (
 	"context"
 	"strings"
 
+	snap "github.com/container-tools/snap/pkg/api"
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/jboss-fuse/yaks/pkg/config"
 	"github.com/jboss-fuse/yaks/pkg/install"
@@ -60,7 +61,10 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	}
 
 	cm := action.newTestingConfigMap(ctx, test)
-	pod := action.newTestingPod(ctx, test, cm)
+	pod, err := action.newTestingPod(ctx, test, cm)
+	if err != nil {
+		return nil, err
+	}
 	resources := []runtime.Object{cm, pod}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
 		return nil, err
@@ -70,7 +74,7 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	return test, nil
 }
 
-func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Test, cm *v1.ConfigMap) *v1.Pod {
+func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Test, cm *v1.ConfigMap) (*v1.Pod, error) {
 	controller := true
 	blockOwnerDeletion := true
 	pod := v1.Pod{
@@ -101,19 +105,21 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			ServiceAccountName: "yaks-viewer",
 			Containers: []v1.Container{
 				{
-					Name:            "test",
-					Image:           config.GetTestBaseImage(),
-					Command:         []string{
+					Name:  "test",
+					Image: config.GetTestBaseImage(),
+					Command: []string{
 						"mvn",
 						"-f",
 						"/deployments/data/yaks-runtime-maven",
 						"-Dremoteresources.skip=true",
 						"-Dmaven.repo.local=/deployments/artifacts/m2",
+						"-s",
+						"/deployments/artifacts/settings.xml",
 						"test",
 					},
 					TerminationMessagePolicy: "FallbackToLogsOnError",
-					TerminationMessagePath: "/dev/termination-log",
-					ImagePullPolicy: v1.PullIfNotPresent,
+					TerminationMessagePath:   "/dev/termination-log",
+					ImagePullPolicy:          v1.PullIfNotPresent,
 					VolumeMounts: []v1.VolumeMount{
 						{
 							Name:      "tests",
@@ -177,7 +183,11 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 		)
 	}
 
-	return &pod
+	if err := action.injectSnap(ctx, &pod); err != nil {
+		return nil, err
+	}
+
+	return &pod, nil
 }
 
 func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alpha1.Test) *v1.ConfigMap {
@@ -233,4 +243,62 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 		return install.ViewerServiceAccountRoles(ctx, action.client, namespace)
 	}
 	return err
+}
+
+func (action *startAction) injectSnap(ctx context.Context, pod *v1.Pod) error {
+	bucket := "yaks"
+	options := snap.SnapOptions{
+		Bucket: bucket,
+	}
+	s3, err := snap.NewSnap(action.config, pod.Namespace, true, options)
+	if err != nil {
+		return err
+	}
+	installed, err := s3.IsInstalled(ctx)
+	if err != nil {
+		return err
+	}
+	if installed {
+		// Adding env var to enable the S3 service
+		url, err := s3.GetEndpoint(ctx)
+		if err != nil {
+			return err
+		}
+		creds, err := s3.GetCredentials(ctx)
+		if err != nil {
+			return err
+		}
+
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  "YAKS_S3_REPOSITORY_URL",
+			Value: url,
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  "YAKS_S3_REPOSITORY_BUCKET",
+			Value: bucket,
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name: "YAKS_S3_REPOSITORY_ACCESS_KEY",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+					Key: creds.AccessKeyEntry,
+				},
+			},
+		})
+		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+			Name: "YAKS_S3_REPOSITORY_SECRET_KEY",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: creds.SecretName,
+					},
+					Key: creds.SecretKeyEntry,
+				},
+			},
+		})
+	}
+	return nil
 }

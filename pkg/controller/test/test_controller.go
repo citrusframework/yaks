@@ -7,6 +7,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -33,14 +34,15 @@ func Add(mgr manager.Manager) error {
 	if err != nil {
 		return err
 	}
-	return add(mgr, newReconciler(mgr, c))
+	return add(mgr, newReconciler(mgr, c, mgr.GetConfig()))
 }
 
 // newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager, c client.Client) reconcile.Reconciler {
+func newReconciler(mgr manager.Manager, c client.Client, cfg *rest.Config) reconcile.Reconciler {
 	return &ReconcileIntegrationTest{
 		client: c,
 		scheme: mgr.GetScheme(),
+		config: cfg,
 	}
 }
 
@@ -106,6 +108,7 @@ type ReconcileIntegrationTest struct {
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
+	config *rest.Config
 }
 
 // Reconcile reads that state of the cluster for a Integration object and makes changes based on the state read
@@ -150,6 +153,7 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 
 	for _, a := range actions {
 		a.InjectClient(r.client)
+		a.InjectConfig(r.config)
 		a.InjectLogger(targetLog)
 
 		if a.CanHandle(target) {

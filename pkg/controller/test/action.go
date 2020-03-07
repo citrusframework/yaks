@@ -23,6 +23,7 @@ import (
 	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/jboss-fuse/yaks/pkg/client"
 	"github.com/jboss-fuse/yaks/pkg/util/log"
+	"k8s.io/client-go/rest"
 )
 
 // Action --
@@ -42,11 +43,16 @@ type Action interface {
 
 type baseAction struct {
 	client client.Client
+	config *rest.Config
 	L      log.Logger
 }
 
 func (action *baseAction) InjectClient(client client.Client) {
 	action.client = client
+}
+
+func (action *baseAction) InjectConfig(config *rest.Config) {
+	action.config = config
 }
 
 func (action *baseAction) InjectLogger(log log.Logger) {

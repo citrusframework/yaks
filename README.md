@@ -259,10 +259,22 @@ It's often useful to plug some custom steps into the testing environment. Custom
 tests short and self-explanatory and at the same time help teams to add generic assertions that are meaningful in their 
 environment.
 
-To add custom steps in YAKS, you can fork + clone the [yaks extension](https://github.com/nicolaferraro/yaks-extension) repository, that provides
-an example of how to do that.
+To add custom steps in YAKS, you can look at the example provided in the [examples/extension](/examples/extension) directory.
+The example consists of a feature file ([examples/extension/extension.feature](/examples/extension/extension.feature)) using a custom step from a local project 
+([examples/extension/steps](/examples/extension/steps)).
 
-You can add your own steps to that project and follow the instructions in order to install them in the YAKS environment.
+To run the example:
+
+```
+yaks test extension.feature -u steps/
+```
+
+The `-u` flag stands for "upload". The steps project is built before running the test and the artifacts are uploaded to a
+[Snap](https://github.com/container-tools/snap) Minio server, in order for the test to retrieve them
+when needed.
+This happens transparently to the user.
+
+The local library can also be uploaded to the Snap Minio server prior to running the test, using the `yaks upload` command.  
 
 ### Adding custom runtime dependencies
 
@@ -319,7 +331,7 @@ use of version properties for these versions available in the YAKS base image:
 You can add dependencies also by specifying the dependencies as command line parameter when running the test via `yaks` CLI.
 
 ```bash
-yaks test --dependencies org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
+yaks test --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
 ```
 
 This will add a environment setting in the YAKS runtime container and the dependency will be loaded automatically
