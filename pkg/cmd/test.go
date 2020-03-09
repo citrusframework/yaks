@@ -56,7 +56,8 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		SilenceUsage:      true,
 	}
 
-	cmd.Flags().StringVarP(&options.dependencies, "dependencies", "d", "", "Adds runtime dependencies that get automatically loaded before the test is executed.")
+	cmd.Flags().StringArrayVarP(&options.dependencies, "dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
+	cmd.Flags().StringArrayVarP(&options.uploads, "upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
 	cmd.Flags().StringArrayVarP(&options.env, "env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
 
@@ -65,7 +66,8 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 
 type testCmdOptions struct {
 	*RootCmdOptions
-	dependencies string
+	dependencies []string
+	uploads      []string
 	settings     string
 	env          []string
 }
@@ -82,6 +84,14 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		return err
+	}
+
+	for _, lib := range o.uploads {
+		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib)
+		if err != nil {
+			return err
+		}
+		o.dependencies = append(o.dependencies, additionalDep)
 	}
 
 	_, err = o.createTest(c, args)
@@ -128,10 +138,10 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 		return nil, err
 	} else if settings != nil {
 		test.Spec.Settings = *settings
-	} else if o.dependencies != "" {
+	} else if len(o.dependencies) > 0 {
 		test.Spec.Settings = v1alpha1.SettingsSpec{
 			Name:    "",
-			Content: o.dependencies,
+			Content: strings.Join(o.dependencies, ","),
 		}
 	}
 
@@ -207,9 +217,9 @@ func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha
 func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 	runtimeDependencies := o.dependencies
 
-	if runtimeDependencies != "" {
+	if len(runtimeDependencies) > 0 {
 		settings := v1alpha1.SettingsSpec{
-			Content: runtimeDependencies,
+			Content: strings.Join(runtimeDependencies, ","),
 		}
 		return &settings, nil
 	}

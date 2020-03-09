@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	clientscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	clientcmdlatest "k8s.io/client-go/tools/clientcmd/api/latest"
@@ -45,9 +46,10 @@ type Client interface {
 	GetScheme() *runtime.Scheme
 }
 
-// Injectable identifies objects that can receive a Client
+// Injectable identifies objects that can receive a Client and the rest config
 type Injectable interface {
 	InjectClient(Client)
+	InjectConfig(*rest.Config)
 }
 
 // Provider is used to provide a new instance of the Client each time it's required
@@ -69,6 +71,11 @@ func (c *defaultClient) GetScheme() *runtime.Scheme {
 func NewOutOfClusterClient(kubeconfig string) (Client, error) {
 	initialize(kubeconfig)
 	return NewClient()
+}
+
+func GetOutOfClusterConfig(kubeconfig string) (*rest.Config, error) {
+	initialize(kubeconfig)
+	return config.GetConfig()
 }
 
 // NewClient creates a new k8s client that can be used from outside or in the cluster

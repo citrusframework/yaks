@@ -1,0 +1,34 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+
+    <servers>
+        <server>
+            <id>s3</id>
+            <!-- put the right credentials here -->
+            <username>${env.YAKS_S3_REPOSITORY_ACCESS_KEY}</username>
+            <password>${env.YAKS_S3_REPOSITORY_SECRET_KEY}</password>
+            <configuration>
+                <endpoint>${env.YAKS_S3_REPOSITORY_URL}</endpoint>
+                <pathStyleEnabled>true</pathStyleEnabled>
+            </configuration>
+        </server>
+    </servers>
+
+    <profiles>
+        <profile>
+            <id>s3</id>
+            <activation>
+                <property>
+                    <name>env.YAKS_S3_REPOSITORY_URL</name>
+                </property>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>s3</id>
+                    <name>Minio Server</name>
+                    <url>s3://${env.YAKS_S3_REPOSITORY_BUCKET}</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+</settings>
