@@ -1,6 +1,6 @@
 // TODO package can be changed when we add support for loading
 // steps from any location
-package dev.yaks.testing.standard;
+package org.citrusframework.yaks.standard;
 
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.dsl.runner.TestRunner;
