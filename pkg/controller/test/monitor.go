@@ -19,9 +19,9 @@ package test
 
 import (
 	"context"
-	"github.com/jboss-fuse/yaks/pkg/util/digest"
+	"github.com/citrusframework/yaks/pkg/util/digest"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
 // NewMonitorAction creates a new monitor action

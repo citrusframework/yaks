@@ -19,11 +19,11 @@ package install
 
 import (
 	"context"
-	"github.com/jboss-fuse/yaks/deploy"
+	"github.com/citrusframework/yaks/deploy"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

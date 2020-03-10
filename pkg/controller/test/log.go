@@ -17,7 +17,7 @@ limitations under the License.
 
 package test
 
-import "github.com/jboss-fuse/yaks/pkg/util/log"
+import "github.com/citrusframework/yaks/pkg/util/log"
 
 // Log --
 var Log = log.Log.WithName("controller").WithName("test")

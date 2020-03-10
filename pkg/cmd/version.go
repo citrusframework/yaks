@@ -20,7 +20,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/jboss-fuse/yaks/version"
+	"github.com/citrusframework/yaks/version"
 	"github.com/spf13/cobra"
 )
 

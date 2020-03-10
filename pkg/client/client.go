@@ -23,7 +23,7 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/jboss-fuse/yaks/pkg/apis"
+	"github.com/citrusframework/yaks/pkg/apis"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"

@@ -23,7 +23,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/jboss-fuse/yaks/pkg/cmd"
+	"github.com/citrusframework/yaks/pkg/cmd"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )

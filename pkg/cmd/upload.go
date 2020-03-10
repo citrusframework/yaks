@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/citrusframework/yaks/pkg/client"
 	snap "github.com/container-tools/snap/pkg/api"
-	"github.com/jboss-fuse/yaks/pkg/client"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

@@ -18,7 +18,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/jboss-fuse/yaks/pkg/cmd/operator"
+	"github.com/citrusframework/yaks/pkg/cmd/operator"
 	"github.com/spf13/cobra"
 )
 

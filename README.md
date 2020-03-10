@@ -12,7 +12,7 @@ Kubernetes cluster. All you need to do is to write some BDD feature specs using 
 ### Installation
 
 The easiest way to getting started with YAKS is using the **YAKS CLI**.
-You can download the CLI from the [release page](https://github.com/jboss-fuse/yaks/releases/).
+You can download the CLI from the [release page](https://github.com/citrusframework/yaks/releases/).
 
 To install the `yaks` binary, just make it runnable and move it to a location in your `$PATH`, e.g. on linux:
 

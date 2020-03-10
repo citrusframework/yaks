@@ -1,4 +1,4 @@
-module github.com/jboss-fuse/yaks
+module github.com/citrusframework/yaks
 
 require (
 	github.com/container-tools/snap v0.0.5

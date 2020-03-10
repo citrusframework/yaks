@@ -21,7 +21,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/spf13/cobra"
 )
 

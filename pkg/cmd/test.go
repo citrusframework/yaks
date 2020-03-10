@@ -29,10 +29,10 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/fatih/color"
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/wercker/stern/stern"

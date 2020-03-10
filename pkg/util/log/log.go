@@ -20,7 +20,7 @@ package log
 import (
 	"fmt"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 
 	"github.com/go-logr/logr"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
