@@ -17,9 +17,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/log"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/log"
 )
 
 /**

@@ -20,9 +20,9 @@ package test
 import (
 	"context"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/log"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/log"
 	"k8s.io/client-go/rest"
 )
 

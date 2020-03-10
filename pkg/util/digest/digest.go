@@ -21,8 +21,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/jboss-fuse/yaks/version"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/version"
 )
 
 // ComputeForTest returns a digest of the fields that are relevant for detecting changes

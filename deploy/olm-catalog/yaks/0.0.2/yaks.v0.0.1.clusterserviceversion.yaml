@@ -22,7 +22,7 @@ metadata:
     containerImage: docker.io/apache/yaks:0.0.2
     createdAt: "2019-01-08T10:52:00Z"
     description: YAKS is a framework to help you test Apache Camel integrations running on Openshift & Kubernetes.
-    repository: https://github.com/jboss-fuse/yaks
+    repository: https://github.com/citrusframework/yaks
     support: Red Hat Fuse
   name: yaks.v0.0.2
   namespace: placeholder
@@ -90,7 +90,7 @@ spec:
               Then YAKS rocks!
     ```
 
-    Refer to the [Yaks repository](https://github.com/jboss-fuse/yaks) for more complex examples.
+    Refer to the [Yaks repository](https://github.com/citrusframework/yaks) for more complex examples.
 
   displayName: Yaks Operator
   icon:
@@ -230,7 +230,7 @@ spec:
     name: yaks-operator
   links:
     - name: YAKS source code repository
-      url: https://github.com/jboss-fuse/yaks
+      url: https://github.com/citrusframework/yaks
 # TODO: To be confirmed...
 #  maintainers:
 #    - email:

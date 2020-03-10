@@ -20,7 +20,7 @@ package install
 import (
 	"context"
 
-	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/client"
 )
 
 // ViewerServiceAccountRoles installs the viewer service account and related roles in the given namespace

@@ -19,8 +19,8 @@ package install
 
 import (
 	"context"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 )
 
 // OperatorConfiguration --

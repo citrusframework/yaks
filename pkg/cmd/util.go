@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/client"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"

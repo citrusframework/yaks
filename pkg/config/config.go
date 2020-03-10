@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/jboss-fuse/yaks/version"
+	"github.com/citrusframework/yaks/version"
 )
 
 func GetTestBaseImage() string {

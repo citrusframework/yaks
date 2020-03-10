@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/jboss-fuse/yaks/pkg/controller/test"
+	"github.com/citrusframework/yaks/pkg/controller/test"
 )
 
 func init() {

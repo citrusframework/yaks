@@ -18,7 +18,7 @@ limitations under the License.
 package customclient
 
 import (
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"

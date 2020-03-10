@@ -20,7 +20,7 @@ package kubernetes
 import (
 	"context"
 
-	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/client"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"

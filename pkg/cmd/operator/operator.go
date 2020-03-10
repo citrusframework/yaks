@@ -11,8 +11,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"github.com/jboss-fuse/yaks/pkg/apis"
-	"github.com/jboss-fuse/yaks/pkg/controller"
+	"github.com/citrusframework/yaks/pkg/apis"
+	"github.com/citrusframework/yaks/pkg/controller"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

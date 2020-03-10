@@ -23,10 +23,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jboss-fuse/yaks/deploy"
-	"github.com/jboss-fuse/yaks/pkg/client"
-	"github.com/jboss-fuse/yaks/pkg/util/kubernetes"
-	"github.com/jboss-fuse/yaks/pkg/util/kubernetes/customclient"
+	"github.com/citrusframework/yaks/deploy"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes/customclient"
 
 	"k8s.io/apimachinery/pkg/util/yaml"
 

@@ -20,7 +20,7 @@ package test
 import (
 	"fmt"
 
-	"github.com/jboss-fuse/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
 // TestPodNameFor returns the name to use for the testing pod

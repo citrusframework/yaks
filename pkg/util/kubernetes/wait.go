@@ -21,7 +21,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/jboss-fuse/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 

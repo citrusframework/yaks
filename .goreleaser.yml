@@ -9,7 +9,7 @@ builds:
     pre: ./hack/before_release.sh {{ .Tag }}
   main: ./cmd/manager/main.go
   binary: yaks
-  ldflags: -X github.com/jboss-fuse/yaks/version.Version={{ .Tag }}
+  ldflags: -X github.com/citrusframework/yaks/version.Version={{ .Tag }}
   goos:
   - linux
   - darwin
