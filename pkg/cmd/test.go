@@ -45,24 +45,6 @@ import (
 
 const FileSuffix = ".feature"
 
-type testError struct {
-	errors map[string]error
-}
-
-func (e *testError) Error() string {
-	message := "Test suite failed with following errors:\n"
-	for k, v := range e.errors {
-		message += fmt.Sprintf("%s: %s\n", k, v)
-	}
-	return message
-}
-
-func newTestError(errs map[string]error) *testError {
-	var t testError
-	t.errors = errs
-	return &t
-}
-
 func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	options := testCmdOptions{
 		RootCmdOptions: rootCmdOptions,
@@ -107,17 +89,11 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 		o.dependencies = append(o.dependencies, additionalDep)
 	}
 
-	errors := make(map[string]error)
-	logError := func(source string, err error) {
-		if err == nil {
-			return
-		}
-		errors[source] = err
-	}
+	results := make(map[string]error)
 
 	execute := func(name string) {
 		_, err := o.createTest(c, name)
-		logError(name, err)
+		results[name] = err
 	}
 
 	for _, source := range args {
@@ -127,13 +103,13 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 		}
 
 		if info, err := os.Stat(source); err != nil {
-			logError(source, err)
+			results[source] = err
 		} else {
 			if !info.IsDir() {
 				execute(source)
 			} else {
 				if files, err := ioutil.ReadDir(source); err != nil {
-					logError(source, err)
+					results[source] = err
 				} else {
 					for _, f := range files {
 						if strings.HasSuffix(f.Name(), FileSuffix) {
@@ -145,11 +121,17 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	if len(errors) > 0 {
-		return newTestError(errors)
-	} else {
-		return nil
+	summary := "Test suite results:\n"
+	for k, v := range results {
+		result := "Passed"
+		if v != nil {
+			result = v.Error()
+			err = fmt.Errorf("There are test failures!")
+		}
+		summary += fmt.Sprintf("%s: %s\n", k, result)
 	}
+	fmt.Print(summary)
+	return err
 }
 
 func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.Test, error) {
