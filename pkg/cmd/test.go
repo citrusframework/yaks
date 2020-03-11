@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 	"text/template"
@@ -41,6 +43,8 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const FileSuffix = ".feature"
+
 func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	options := testCmdOptions{
 		RootCmdOptions: rootCmdOptions,
@@ -51,7 +55,6 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		Use:               "test [options] [test file to execute]",
 		Short:             "Execute a test on Kubernetes",
 		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
-		PreRunE:           options.validateArgs,
 		RunE:              options.run,
 		SilenceUsage:      true,
 	}
@@ -72,14 +75,6 @@ type testCmdOptions struct {
 	env          []string
 }
 
-func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return errors.New(fmt.Sprintf("accepts exactly 1 test name to execute, received %d", len(args)))
-	}
-
-	return nil
-}
-
 func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
@@ -94,14 +89,53 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 		o.dependencies = append(o.dependencies, additionalDep)
 	}
 
-	_, err = o.createTest(c, args)
+	results := make(map[string]error)
+
+	execute := func(name string) {
+		_, err := o.createTest(c, name)
+		results[name] = err
+	}
+
+	for _, source := range args {
+		if isRemoteFile(source) {
+			execute(source)
+			continue
+		}
+
+		if info, err := os.Stat(source); err != nil {
+			results[source] = err
+		} else {
+			if !info.IsDir() {
+				execute(source)
+			} else {
+				if files, err := ioutil.ReadDir(source); err != nil {
+					results[source] = err
+				} else {
+					for _, f := range files {
+						if strings.HasSuffix(f.Name(), FileSuffix) {
+							execute(path.Join(info.Name(), f.Name()))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	summary := "Test suite results:\n"
+	for k, v := range results {
+		result := "Passed"
+		if v != nil {
+			result = v.Error()
+			err = fmt.Errorf("There are test failures!")
+		}
+		summary += fmt.Sprintf("%s: %s\n", k, result)
+	}
+	fmt.Print(summary)
 	return err
 }
 
-func (o *testCmdOptions) createTest(c client.Client, sources []string) (*v1alpha1.Test, error) {
+func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.Test, error) {
 	namespace := o.Namespace
-
-	rawName := sources[0]
 	fileName := kubernetes.SanitizeFileName(rawName)
 	name := kubernetes.SanitizeName(rawName)
 
@@ -275,11 +309,15 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
 	return nil
 }
 
+func isRemoteFile(fileName string) bool {
+	return strings.HasPrefix(fileName, "http://") || strings.HasPrefix(fileName, "https://")
+}
+
 func (*testCmdOptions) loadData(fileName string) (string, error) {
 	var content []byte
 	var err error
 
-	if !strings.HasPrefix(fileName, "http://") && !strings.HasPrefix(fileName, "https://") {
+	if !isRemoteFile(fileName) {
 		content, err = ioutil.ReadFile(fileName)
 		if err != nil {
 			return "", err
