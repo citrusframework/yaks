@@ -30,20 +30,29 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"github.com/fatih/color"
+	"github.com/google/uuid"
+	projectv1 "github.com/openshift/api/project/v1"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/wercker/stern/stern"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const FileSuffix = ".feature"
+const (
+	FileSuffix = ".feature"
+	ConfigFile = "yaks-config.yaml"
+)
 
 func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	options := testCmdOptions{
@@ -55,6 +64,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		Use:               "test [options] [test file to execute]",
 		Short:             "Execute a test on Kubernetes",
 		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
+		PreRunE:           options.validateArgs,
 		RunE:              options.run,
 		SilenceUsage:      true,
 	}
@@ -75,63 +85,89 @@ type testCmdOptions struct {
 	env          []string
 }
 
+func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return errors.New(fmt.Sprintf("accepts exactly 1 test name to execute, received %d", len(args)))
+	}
+
+	return nil
+}
+
 func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
+	var err error
+	source := args[0]
 	c, err := o.GetCmdClient()
+
 	if err != nil {
 		return err
 	}
 
-	for _, lib := range o.uploads {
-		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib)
-		if err != nil {
-			return err
-		}
-		o.dependencies = append(o.dependencies, additionalDep)
+	if isRemoteFile(source) || !isDir(source) {
+		// do the regular deployment
+		err = o.uploadArtifacts()
+		_, err = o.createTest(c, source)
+		return err
 	}
+
+	// execute directory deployment
+	configFile := path.Join(source, ConfigFile)
+	var conf *config.TestConfig
 
 	results := make(map[string]error)
+	defer printSummary(results)
 
-	execute := func(name string) {
-		_, err := o.createTest(c, name)
-		results[name] = err
+	if conf, err = config.LoadConfig(configFile); err != nil {
+		panic(err)
 	}
 
-	for _, source := range args {
-		if isRemoteFile(source) {
-			execute(source)
-			continue
+	if conf.Config.Namespace.Temporary {
+		namespaceName := "yaks-" + uuid.New().String()
+		var namespace metav1.Object
+		if namespace, err = initializeTempNamespace(namespaceName, c, o.Context); err != nil {
+			panic(err)
+		}
+		if conf.Config.Namespace.AutoRemove {
+			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 
-		if info, err := os.Stat(source); err != nil {
-			results[source] = err
-		} else {
-			if !info.IsDir() {
-				execute(source)
-			} else {
-				if files, err := ioutil.ReadDir(source); err != nil {
-					results[source] = err
-				} else {
-					for _, f := range files {
-						if strings.HasSuffix(f.Name(), FileSuffix) {
-							execute(path.Join(info.Name(), f.Name()))
-						}
-					}
+		o.Namespace = namespaceName
+
+		copy := o.RootCmdOptions
+		if err = newCmdInstall(copy).Execute(); err != nil {
+			panic(err)
+		}
+
+		err = o.uploadArtifacts()
+	}
+
+	if files, err := ioutil.ReadDir(source); err != nil {
+		results[source] = err
+	} else {
+		for _, f := range files {
+			if strings.HasSuffix(f.Name(), FileSuffix) {
+				name := path.Join(source, f.Name())
+				_, testError := o.createTest(c, name)
+				if testError != nil {
+					err = errors.New("There are test failures!")
 				}
+				results[name] = testError
 			}
 		}
 	}
 
-	summary := "Test suite results:\n"
+	return err
+}
+
+func printSummary(results map[string]error) {
+	summary := "\n\nTest suite results:\n"
 	for k, v := range results {
 		result := "Passed"
 		if v != nil {
 			result = v.Error()
-			err = fmt.Errorf("There are test failures!")
 		}
-		summary += fmt.Sprintf("%s: %s\n", k, result)
+		summary += fmt.Sprintf("\t%s: %s\n", k, result)
 	}
 	fmt.Print(summary)
-	return err
 }
 
 func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.Test, error) {
@@ -248,6 +284,17 @@ func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.
 	return &test, nil
 }
 
+func (o *testCmdOptions) uploadArtifacts() error {
+	for _, lib := range o.uploads {
+		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib)
+		if err != nil {
+			return err
+		}
+		o.dependencies = append(o.dependencies, additionalDep)
+	}
+	return nil
+}
+
 func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 	runtimeDependencies := o.dependencies
 
@@ -311,6 +358,71 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
 
 func isRemoteFile(fileName string) bool {
 	return strings.HasPrefix(fileName, "http://") || strings.HasPrefix(fileName, "https://")
+}
+
+func isDir(fileName string) bool {
+	if info, err := os.Stat(fileName); err == nil {
+		return info.IsDir()
+	}
+	return false
+}
+
+func initializeTempNamespace(name string, c client.Client, context context.Context) (metav1.Object, error) {
+	var obj runtime.Object
+
+	if oc, err := openshift.IsOpenShift(c); err != nil {
+		panic(err)
+	} else if oc {
+		scheme := c.GetScheme()
+		projectv1.AddToScheme(scheme)
+
+		obj = &projectv1.ProjectRequest{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: projectv1.GroupVersion.String(),
+				Kind:       "ProjectRequest",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+		}
+	} else {
+		obj = &corev1.Namespace{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "Namespace",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+		}
+	}
+	fmt.Printf("Creating new test namespace %s\n", name)
+	err := c.Create(context, obj)
+	return obj.(metav1.Object), err
+}
+
+func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Context) {
+	if oc, err := openshift.IsOpenShift(c); err != nil {
+		panic(err)
+	} else if oc {
+		prj := &projectv1.Project{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: projectv1.GroupVersion.String(),
+				Kind:       "Project",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: ns.GetName(),
+			},
+		}
+		if err = c.Delete(context, prj); err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
+		}
+	} else {
+		if err = c.Delete(context, ns.(runtime.Object)); err != nil {
+			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
+		}
+	}
+	fmt.Printf("AutoRemove namespace %s\n", ns.GetName())
 }
 
 func (*testCmdOptions) loadData(fileName string) (string, error) {
