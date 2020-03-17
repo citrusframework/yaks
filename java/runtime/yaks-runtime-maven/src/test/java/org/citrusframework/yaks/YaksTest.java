@@ -29,6 +29,7 @@ import org.junit.runner.RunWith;
                 "org.citrusframework.yaks.http",
                 "org.citrusframework.yaks.swagger",
                 "org.citrusframework.yaks.camel",
+                "org.citrusframework.yaks.camelk",
                 "org.citrusframework.yaks.jdbc",
                 "org.citrusframework.yaks.standard",
         },
