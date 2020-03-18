@@ -51,11 +51,6 @@
       <artifactId>citrus-core</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-java-dsl</artifactId>
-    </dependency>
-
     <!-- Test scope -->
     <dependency>
       <groupId>junit</groupId>

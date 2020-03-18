@@ -27,25 +27,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusSettings;
+import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.builder.BuilderSupport;
-import com.consol.citrus.dsl.builder.HttpActionBuilder;
-import com.consol.citrus.dsl.builder.HttpClientActionBuilder;
-import com.consol.citrus.dsl.builder.HttpClientRequestActionBuilder;
-import com.consol.citrus.dsl.builder.HttpClientResponseActionBuilder;
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
-import com.consol.citrus.dsl.runner.TestRunner;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.http.actions.HttpClientActionBuilder;
+import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
+import com.consol.citrus.http.actions.HttpClientResponseActionBuilder;
 import com.consol.citrus.http.client.HttpClient;
+import com.consol.citrus.http.client.HttpClientBuilder;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.variable.dictionary.DataDictionary;
-import cucumber.api.Scenario;
-import cucumber.api.java.Before;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
@@ -56,13 +55,15 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
+import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+
 /**
  * @author Christoph Deppisch
  */
 public class HttpClientSteps implements HttpSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
@@ -88,19 +89,17 @@ public class HttpClientSteps implements HttpSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpClient == null && citrus.getApplicationContext().getBeansOfType(HttpClient.class).size() == 1L) {
-            httpClient = citrus.getApplicationContext().getBean(HttpClient.class);
+        if (httpClient == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
+            httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
         } else {
-            httpClient = CitrusEndpoints.http()
-                    .client()
-                    .build();
+            httpClient = new HttpClientBuilder().build();
         }
 
         requestHeaders = new HashMap<>();
         responseHeaders = new HashMap<>();
         requestParams = new HashMap<>();
-        requestMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
-        responseMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
+        requestMessageType = CitrusSettings.DEFAULT_MESSAGE_TYPE;
+        responseMessageType = CitrusSettings.DEFAULT_MESSAGE_TYPE;
         requestBody = null;
         responseBody = null;
         bodyValidationExpressions = new HashMap<>();
@@ -110,11 +109,11 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^http-client \"([^\"\\s]+)\"$")
     public void setClient(String id) {
-        if (!citrus.getApplicationContext().containsBean(id)) {
+        if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
             throw new CitrusRuntimeException("Unable to find http client for id: " + id);
         }
 
-        httpClient = citrus.getApplicationContext().getBean(id, HttpClient.class);
+        httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(id, HttpClient.class);
     }
 
     @Given("^(?:URL|url): ([^\\s]+)$")
@@ -232,42 +231,40 @@ public class HttpClientSteps implements HttpSteps {
      * @param request
      */
     private void sendClientRequest(HttpMessage request) {
-        BuilderSupport<HttpActionBuilder> action = builder -> {
-            HttpClientActionBuilder.HttpClientSendActionBuilder sendBuilder = builder.client(httpClient).send();
-            HttpClientRequestActionBuilder requestBuilder;
+        HttpClientActionBuilder.HttpClientSendActionBuilder sendBuilder = http().client(httpClient).send();
+        HttpClientRequestActionBuilder requestBuilder;
 
-            if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
-                requestBuilder = sendBuilder.post().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
-                requestBuilder = sendBuilder.get().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
-                requestBuilder = sendBuilder.put().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
-                requestBuilder = sendBuilder.delete().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
-                requestBuilder = sendBuilder.head().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
-                requestBuilder = sendBuilder.trace().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
-                requestBuilder = sendBuilder.patch().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
-                requestBuilder = sendBuilder.options().message(request);
-            } else {
-                requestBuilder = sendBuilder.post().message(request);
-            }
+        if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
+            requestBuilder = sendBuilder.post().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
+            requestBuilder = sendBuilder.get().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
+            requestBuilder = sendBuilder.put().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
+            requestBuilder = sendBuilder.delete().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
+            requestBuilder = sendBuilder.head().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
+            requestBuilder = sendBuilder.trace().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
+            requestBuilder = sendBuilder.patch().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
+            requestBuilder = sendBuilder.options().message(request);
+        } else {
+            requestBuilder = sendBuilder.post().message(request);
+        }
 
-            if (StringUtils.hasText(requestUrl)) {
-                requestBuilder.uri(requestUrl);
-            }
+        if (StringUtils.hasText(requestUrl)) {
+            requestBuilder.uri(requestUrl);
+        }
 
-            requestBuilder.messageType(requestMessageType);
+        requestBuilder.messageType(requestMessageType);
 
-            if (outboundDictionary != null) {
-                requestBuilder.dictionary(outboundDictionary);
-            }
-        };
+        if (outboundDictionary != null) {
+            requestBuilder.dictionary(outboundDictionary);
+        }
 
-        runner.http(action);
+        runner.run(requestBuilder);
     }
 
     /**
@@ -275,22 +272,22 @@ public class HttpClientSteps implements HttpSteps {
      * @param response
      */
     private void receiveClientResponse(HttpMessage response) {
-        runner.http(action -> {
-            HttpClientResponseActionBuilder responseBuilder = action.client(httpClient).receive()
-                    .response(response.getStatusCode())
-                    .message(response);
+        HttpClientResponseActionBuilder responseBuilder = http().client(httpClient).receive()
+                .response(response.getStatusCode())
+                .message(response);
 
-            for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
-                responseBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
-            }
-            bodyValidationExpressions.clear();
+        for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
+            responseBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
+        }
+        bodyValidationExpressions.clear();
 
-            responseBuilder.messageType(responseMessageType);
+        responseBuilder.messageType(responseMessageType);
 
-            if (inboundDictionary != null) {
-                responseBuilder.dictionary(inboundDictionary);
-            }
-        });
+        if (inboundDictionary != null) {
+            responseBuilder.dictionary(inboundDictionary);
+        }
+
+        runner.run(responseBuilder);
     }
 
     /**

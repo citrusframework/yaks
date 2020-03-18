@@ -17,15 +17,17 @@
 
 package org.citrusframework.yaks.standard;
 
+import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.runner.TestRunner;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+
+import static com.consol.citrus.actions.EchoAction.Builder.echo;
 
 public class YaksStandardSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @Given("^YAKS does Cloud-Native BDD testing$")
     public void itDoesBDD() {
@@ -39,6 +41,6 @@ public class YaksStandardSteps {
 
     @Then("^(?:log|print) '(.+)'$")
     public void print(String message) {
-        runner.echo(message);
+        runner.run(echo(message));
     }
 }

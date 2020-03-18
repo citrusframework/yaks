@@ -20,7 +20,7 @@ package org.citrusframework.yaks.http;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
+import com.consol.citrus.context.TestContextFactory;
 import com.consol.citrus.endpoint.EndpointAdapter;
 import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter;
 import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter;
@@ -30,6 +30,7 @@ import com.consol.citrus.endpoint.adapter.mapping.SimpleMappingStrategy;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.message.HttpMessageHeaders;
 import com.consol.citrus.http.server.HttpServer;
+import com.consol.citrus.http.server.HttpServerBuilder;
 import com.consol.citrus.message.Message;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,22 +47,21 @@ public class HttpEndpointConfiguration {
     private static final int HTTP_PORT = 8080;
 
     @Bean
-    public HttpServer httpServer() {
-        return CitrusEndpoints.http()
-                              .server()
+    public HttpServer httpServer(TestContextFactory contextFactory) {
+        return new HttpServerBuilder()
                               .port(HTTP_PORT)
                               .autoStart(true)
-                              .endpointAdapter(staticResponseAdapter())
+                              .endpointAdapter(staticResponseAdapter(contextFactory))
                               .build();
     }
 
     @Bean
-    public EndpointAdapter staticResponseAdapter() {
+    public EndpointAdapter staticResponseAdapter(TestContextFactory contextFactory) {
         RequestDispatchingEndpointAdapter dispatchingEndpointAdapter = new RequestDispatchingEndpointAdapter();
 
         Map<String, EndpointAdapter> mappings = new HashMap<>();
 
-        mappings.put(HttpMethod.GET.name(), handleGetRequestAdapter());
+        mappings.put(HttpMethod.GET.name(), handleGetRequestAdapter(contextFactory));
         mappings.put(HttpMethod.POST.name(), handlePostRequestAdapter());
         mappings.put(HttpMethod.PUT.name(), handlePutRequestAdapter());
         mappings.put(HttpMethod.DELETE.name(), handleDeleteRequestAdapter());
@@ -96,11 +96,12 @@ public class HttpEndpointConfiguration {
     }
 
     @Bean
-    public EndpointAdapter handleGetRequestAdapter() {
+    public EndpointAdapter handleGetRequestAdapter(TestContextFactory contextFactory) {
         StaticResponseEndpointAdapter responseEndpointAdapter = new StaticResponseEndpointAdapter();
         responseEndpointAdapter.getMessageHeader().put(HttpMessageHeaders.HTTP_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         responseEndpointAdapter.getMessageHeader().put("X-TodoId", "citrus:randomNumber(5)");
         responseEndpointAdapter.setMessagePayload("{\"id\": \"citrus:randomNumber(5)\", \"task\": \"Sample task\", \"completed\": 0}");
+        responseEndpointAdapter.setTestContextFactory(contextFactory);
         return responseEndpointAdapter;
     }
 

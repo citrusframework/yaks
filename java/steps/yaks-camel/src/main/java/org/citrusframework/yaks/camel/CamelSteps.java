@@ -21,24 +21,27 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.camel.endpoint.CamelEndpoint;
 import com.consol.citrus.camel.endpoint.CamelEndpointConfiguration;
-import com.consol.citrus.dsl.runner.TestRunner;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.engine.AbstractCamelContext;
 import org.apache.camel.model.ModelCamelContext;
-import org.apache.camel.model.ModelHelper;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RoutesDefinition;
+import org.apache.camel.spi.XMLRoutesDefinitionLoader;
 import org.apache.camel.spring.SpringCamelContext;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -46,10 +49,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.core.io.ByteArrayResource;
 
+import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
+import static com.consol.citrus.actions.SendMessageAction.Builder.send;
+import static com.consol.citrus.camel.actions.CamelRouteActionBuilder.camel;
+
 public class CamelSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
@@ -79,22 +86,39 @@ public class CamelSteps {
     }
 
     @Given("^Camel route ([^\"\\s]+)\\.xml")
-    public void camelRouteXml(String id, String route) throws Exception {
+    public void camelRouteXml(String id, String routeSpec) throws Exception {
         String routeXml;
 
-        if (route.startsWith("<route>")) {
-            routeXml = String.format("<route id=\"%s\" xmlns=\"http://camel.apache.org/schema/spring\">", id) + route.substring("<route>".length());
-        } else if (route.startsWith("<route")) {
-            routeXml = route;
+        if (routeSpec.startsWith("<route>")) {
+            routeXml = String.format("<route id=\"%s\" xmlns=\"http://camel.apache.org/schema/spring\">", id) + routeSpec.substring("<route>".length());
+        } else if (routeSpec.startsWith("<route")) {
+            routeXml = routeSpec;
         } else {
-            routeXml = String.format("<route id=\"%s\" xmlns=\"http://camel.apache.org/schema/spring\">", id) + route + "</route>";
+            routeXml = String.format("<route id=\"%s\" xmlns=\"http://camel.apache.org/schema/spring\">", id) + routeSpec + "</route>";
         }
 
-        RoutesDefinition routeDefinition = ModelHelper.loadRoutesDefinition(camelContext(), new ByteArrayInputStream(routeXml.getBytes(StandardCharsets.UTF_8)));
+        final XMLRoutesDefinitionLoader loader = camelContext().adapt(ExtendedCamelContext.class).getXMLRoutesDefinitionLoader();
+        Object result = loader.loadRoutesDefinition(camelContext(), new ByteArrayInputStream(routeXml.getBytes(StandardCharsets.UTF_8)));
+        if (result instanceof RoutesDefinition) {
+            RoutesDefinition routeDefinition = (RoutesDefinition) result;
 
-        for (RouteDefinition definition : routeDefinition.getRoutes()) {
-            camelContext().addRouteDefinition(definition);
-            camelContext().startRoute(definition.getId());
+            camelContext().addRoutes(new RouteBuilder(camelContext()) {
+                @Override
+                public void configure() throws Exception {
+                    for (RouteDefinition route : routeDefinition.getRoutes()) {
+                        try {
+                            getRouteCollection().getRoutes().add(route);
+                            log.info(String.format("Created new Camel route '%s' in context '%s'", route.getRouteId(), camelContext().getName()));
+                        } catch (Exception e) {
+                            throw new CitrusRuntimeException(String.format("Failed to create route definition '%s' in context '%s'", route.getRouteId(), camelContext.getName()), e);
+                        }
+                    }
+                }
+            });
+
+            for (RouteDefinition route : routeDefinition.getRoutes()) {
+                camelContext().adapt(AbstractCamelContext.class).startRoute(route.getRouteId());
+            }
         }
     }
 
@@ -122,7 +146,7 @@ public class CamelSteps {
 
             @Override
             protected void configureRoute(RouteDefinition route) {
-                route.id(id);
+                route.routeId(id);
             }
         };
 
@@ -131,19 +155,19 @@ public class CamelSteps {
 
     @Given("^start route (.+)$")
     public void startRoute(String routeId) {
-        runner.camel(action -> action.context(camelContext().adapt(ModelCamelContext.class))
+        runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .start(routeId));
     }
 
     @Given("^stop route (.+)$")
     public void stopRoute(String routeId) {
-        runner.camel(action -> action.context(camelContext().adapt(ModelCamelContext.class))
+        runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .stop(routeId));
     }
 
     @Given("^remove route (.+)$")
     public void removeRoute(String routeId) {
-        runner.camel(action -> action.context(camelContext().adapt(ModelCamelContext.class))
+        runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .remove(routeId));
     }
 
@@ -159,7 +183,7 @@ public class CamelSteps {
 
     @When("^send to route ([^\"\\s]+)$")
     public void sendExchange(String endpointUri) {
-        runner.send(action -> action.endpoint(camelEndpoint(endpointUri))
+        runner.run(send().endpoint(camelEndpoint(endpointUri))
                                     .payload(requestBody));
     }
 
@@ -170,7 +194,7 @@ public class CamelSteps {
 
     @When("^send to route ([^\"\\s]+) body: (.+)$")
     public void sendExchangeBody(String endpointUri, String body) {
-        runner.send(action -> action.endpoint(camelEndpoint(endpointUri))
+        runner.run(send().endpoint(camelEndpoint(endpointUri))
                                     .payload(body));
     }
 
@@ -186,7 +210,7 @@ public class CamelSteps {
 
     @Then("^receive from route ([^\"\\s]+)$")
     public void receiveExchange(String endpointUri) {
-        runner.receive(action -> action.endpoint(camelEndpoint(endpointUri))
+        runner.run(receive().endpoint(camelEndpoint(endpointUri))
                                        .payload(responseBody));
     }
 
@@ -196,7 +220,7 @@ public class CamelSteps {
     }
     @Then("^receive from route ([^\"\\s]+) body: (.+)$")
     public void receiveExchangeBody(String endpointUri, String body) {
-        runner.receive(action -> action.endpoint(camelEndpoint(endpointUri))
+        runner.run(receive().endpoint(camelEndpoint(endpointUri))
                                        .payload(body));
     }
 

@@ -23,18 +23,22 @@ import java.util.List;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.actions.ExecuteSQLQueryAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.runner.TestRunner;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import cucumber.api.Scenario;
-import cucumber.api.java.Before;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.postgresql.Driver;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+
+import static com.consol.citrus.actions.ExecuteSQLAction.Builder.sql;
+import static com.consol.citrus.actions.ExecuteSQLQueryAction.Builder.query;
 
 /**
  * @author Christoph Deppisch
@@ -42,7 +46,7 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 public class JdbcSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
@@ -52,18 +56,18 @@ public class JdbcSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (dataSource == null && citrus.getApplicationContext().getBeansOfType(DataSource.class).size() == 1L) {
-            dataSource = citrus.getApplicationContext().getBean(DataSource.class);
+        if (dataSource == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(DataSource.class).size() == 1L) {
+            dataSource = citrus.getCitrusContext().getReferenceResolver().resolve(DataSource.class);
         }
     }
 
     @Given("^(?:D|d)ata source: ([^\"\\s]+)$")
     public void setDataSource(String id) {
-        if (!citrus.getApplicationContext().containsBean(id)) {
+        if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
             throw new CitrusRuntimeException("Unable to find data source for id: " + id);
         }
 
-        dataSource = citrus.getApplicationContext().getBean(id, DataSource.class);
+        dataSource = citrus.getCitrusContext().getReferenceResolver().resolve(id, DataSource.class);
     }
 
     @Given("^(?:D|d)atabase connection$")
@@ -97,7 +101,7 @@ public class JdbcSteps {
 
     @Then("^verify column ([^\"\\s]+)=(.+)$")
     public void verifyColumn(String name, String value) {
-        runner.query(action -> action.dataSource(dataSource)
+        runner.run(query(dataSource)
                                      .statements(sqlQueryStatements)
                                      .validate(name, value));
         sqlQueryStatements.clear();
@@ -105,25 +109,24 @@ public class JdbcSteps {
 
     @Then("^verify columns$")
     public void verifyResultSet(DataTable expectedResults) {
-        runner.query(action -> {
-            action.dataSource(dataSource);
-            action.statements(sqlQueryStatements);
+        ExecuteSQLQueryAction.Builder action = query(dataSource)
+                                                    .statements(sqlQueryStatements);
 
-            List<List<String>> rows = expectedResults.asLists(String.class);
-            rows.forEach(row -> {
-                if (!row.isEmpty()) {
-                    String columnName = row.remove(0);
-                    action.validate(columnName, row.toArray(new String[]{}));
-                }
-            });
+        List<List<String>> rows = expectedResults.asLists(String.class);
+        rows.forEach(row -> {
+            if (!row.isEmpty()) {
+                String columnName = row.remove(0);
+                action.validate(columnName, row.toArray(new String[]{}));
+            }
         });
 
+        runner.run(action);
         sqlQueryStatements.clear();
     }
 
     @Then("^verify result set$")
     public void verifyResultSet(String verifyScript) {
-        runner.query(action -> action.dataSource(dataSource)
+        runner.run(query(dataSource)
                                      .statements(sqlQueryStatements)
                                      .groovy(verifyScript));
 
@@ -135,8 +138,7 @@ public class JdbcSteps {
         if (statement.trim().toUpperCase().startsWith("SELECT")) {
             throw new CitrusRuntimeException("Invalid SQL update statement - please use SQL query for 'SELECT' statements");
         } else {
-            runner.sql(action -> action.dataSource(dataSource)
-                                        .statement(statement));
+            runner.run(sql(dataSource).statement(statement));
         }
 
     }

@@ -26,10 +26,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusInstanceManager;
 import com.consol.citrus.TestResult;
 import com.consol.citrus.cucumber.CitrusReporter;
 import com.consol.citrus.report.AbstractTestReporter;
+import com.consol.citrus.report.TestResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,17 +52,16 @@ public class TestReporter extends CitrusReporter {
     static {
         TerminationLogReporter reporter = new TerminationLogReporter();
 
-        Citrus.CitrusInstanceManager.addInstanceProcessor(citrus -> {
-            citrus.addTestListener(reporter);
-            citrus.addTestSuiteListener(reporter);
+        CitrusInstanceManager.addInstanceProcessor(citrus -> {
+            citrus.addTestReporter(reporter);
         });
     }
 
     static class TerminationLogReporter extends AbstractTestReporter {
         @Override
-        public void generateTestResults() {
+        public void generate(TestResults testResults) {
             StringJoiner report = new StringJoiner(System.lineSeparator());
-            getTestResults().doWithResults(result -> report.add(getTestResultMessage(result)));
+            testResults.doWithResults(result -> report.add(getTestResultMessage(result)));
 
             try (Writer terminationLogWriter = Files.newBufferedWriter(getTerminationLog(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 terminationLogWriter.write(report.toString());
