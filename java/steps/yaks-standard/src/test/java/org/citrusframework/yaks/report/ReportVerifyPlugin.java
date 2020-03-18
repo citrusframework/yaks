@@ -21,11 +21,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 
-import cucumber.api.SummaryPrinter;
-import cucumber.api.event.EventListener;
-import cucumber.api.event.EventPublisher;
-import cucumber.api.event.TestRunFinished;
-import cucumber.api.formatter.Formatter;
+import io.cucumber.plugin.EventListener;
+import io.cucumber.plugin.SummaryPrinter;
+import io.cucumber.plugin.event.EventPublisher;
+import io.cucumber.plugin.event.TestRunFinished;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Christoph Deppisch
  */
-public class ReportVerifyPlugin implements SummaryPrinter, Formatter, EventListener {
+public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
 
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(ReportVerifyPlugin.class);
@@ -45,7 +44,7 @@ public class ReportVerifyPlugin implements SummaryPrinter, Formatter, EventListe
                 Assert.assertTrue("Verify termination log exists", Files.exists(TestReporter.getTerminationLog()));
                 List<String> lines = Files.readAllLines(TestReporter.getTerminationLog());
                 Assert.assertTrue("Missing successful test result in termination log",
-                        lines.contains("org/citrusframework/yaks/report/report.feature:3 SUCCESS"));
+                        lines.contains("classpath:org/citrusframework/yaks/report/report.feature:3 SUCCESS"));
             } catch (IOException e) {
                 LOG.warn("Failed to verify termination logs", e);
                 Assert.fail(e.getMessage());

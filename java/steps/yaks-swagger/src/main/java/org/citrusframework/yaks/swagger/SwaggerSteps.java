@@ -27,20 +27,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusSettings;
+import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.annotations.CitrusDslAnnotations;
-import com.consol.citrus.dsl.runner.TestRunner;
 import com.consol.citrus.variable.dictionary.json.JsonPathMappingDataDictionary;
-import cucumber.api.Scenario;
-import cucumber.api.java.Before;
-import cucumber.api.java.en.And;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
-import org.citrusframework.yaks.http.HttpClientSteps;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.swagger.models.ArrayModel;
 import io.swagger.models.HttpMethod;
 import io.swagger.models.Operation;
@@ -57,13 +56,14 @@ import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
+import org.citrusframework.yaks.http.HttpClientSteps;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 public class SwaggerSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
@@ -80,7 +80,7 @@ public class SwaggerSteps {
     public void before(Scenario scenario) {
         clientSteps = new HttpClientSteps();
         CitrusAnnotations.injectAll(clientSteps, citrus);
-        CitrusDslAnnotations.injectTestRunner(clientSteps, runner);
+        CitrusAnnotations.injectTestRunner(clientSteps, runner);
         clientSteps.before(scenario);
 
         operation = null;
@@ -208,7 +208,7 @@ public class SwaggerSteps {
             for (PathParameter parameter : pathParams) {
                 String parameterValue;
                 if (runner.getTestCase().getVariableDefinitions().containsKey(parameter.getName())) {
-                    parameterValue = "\\" + Citrus.VARIABLE_PREFIX + parameter.getName() + Citrus.VARIABLE_SUFFIX;
+                    parameterValue = "\\" + CitrusSettings.VARIABLE_PREFIX + parameter.getName() + CitrusSettings.VARIABLE_SUFFIX;
                 } else {
                     parameterValue = SwaggerTestDataGenerator.createRandomValueExpression(parameter);
                 }

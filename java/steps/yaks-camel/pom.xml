@@ -40,10 +40,6 @@
     </dependency>
     <dependency>
       <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-java-dsl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-camel</artifactId>
     </dependency>
 

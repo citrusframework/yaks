@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.message.MessageType;
 import org.springframework.http.HttpMethod;
@@ -63,7 +63,7 @@ public interface HttpSteps {
             return MessageType.BINARY.name();
         }
 
-        return Citrus.DEFAULT_MESSAGE_TYPE;
+        return CitrusSettings.DEFAULT_MESSAGE_TYPE;
     }
 
     /**

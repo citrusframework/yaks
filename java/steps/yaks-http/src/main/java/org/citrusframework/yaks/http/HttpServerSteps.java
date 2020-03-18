@@ -21,25 +21,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusSettings;
+import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.builder.BuilderSupport;
-import com.consol.citrus.dsl.builder.HttpActionBuilder;
-import com.consol.citrus.dsl.builder.HttpServerActionBuilder;
-import com.consol.citrus.dsl.builder.HttpServerRequestActionBuilder;
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
-import com.consol.citrus.dsl.runner.TestRunner;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.http.actions.HttpServerActionBuilder;
+import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
-import cucumber.api.Scenario;
-import cucumber.api.java.Before;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
+import com.consol.citrus.http.server.HttpServerBuilder;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+
+import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 
 /**
  * @author Christoph Deppisch
@@ -47,7 +48,7 @@ import org.springframework.http.HttpMethod;
 public class HttpServerSteps implements HttpSteps {
 
     @CitrusResource
-    private TestRunner runner;
+    private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
@@ -68,19 +69,17 @@ public class HttpServerSteps implements HttpSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpServer == null && citrus.getApplicationContext().getBeansOfType(HttpServer.class).size() == 1L) {
-            httpServer = citrus.getApplicationContext().getBean(HttpServer.class);
+        if (httpServer == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
+            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
         } else {
-            httpServer = CitrusEndpoints.http()
-                                        .server()
-                                        .build();
+            httpServer = new HttpServerBuilder().build();
         }
 
         requestHeaders = new HashMap<>();
         responseHeaders = new HashMap<>();
         requestParams = new HashMap<>();
-        requestMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
-        responseMessageType = Citrus.DEFAULT_MESSAGE_TYPE;
+        requestMessageType = CitrusSettings.DEFAULT_MESSAGE_TYPE;
+        responseMessageType = CitrusSettings.DEFAULT_MESSAGE_TYPE;
         requestBody = null;
         responseBody = null;
         bodyValidationExpressions = new HashMap<>();
@@ -88,11 +87,11 @@ public class HttpServerSteps implements HttpSteps {
 
     @Given("^http-server \"([^\"\\s]+)\"$")
     public void setServer(String id) {
-        if (!citrus.getApplicationContext().containsBean(id)) {
+        if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
             throw new CitrusRuntimeException("Unable to find http server for id: " + id);
         }
 
-        httpServer = citrus.getApplicationContext().getBean(id, HttpServer.class);
+        httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(id, HttpServer.class);
     }
 
     @Then("^(?:expect|verify) HTTP request header: ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -196,39 +195,37 @@ public class HttpServerSteps implements HttpSteps {
      * @param request
      */
     private void receiveServerRequest(HttpMessage request) {
-        BuilderSupport<HttpActionBuilder> action = builder -> {
-            HttpServerActionBuilder.HttpServerReceiveActionBuilder receiveBuilder = builder.server(httpServer).receive();
-            HttpServerRequestActionBuilder requestBuilder;
+        HttpServerActionBuilder.HttpServerReceiveActionBuilder receiveBuilder = http().server(httpServer).receive();
+        HttpServerRequestActionBuilder requestBuilder;
 
-            if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
-                requestBuilder = receiveBuilder.post().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
-                requestBuilder = receiveBuilder.get().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
-                requestBuilder = receiveBuilder.put().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
-                requestBuilder = receiveBuilder.delete().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
-                requestBuilder = receiveBuilder.head().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
-                requestBuilder = receiveBuilder.trace().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
-                requestBuilder = receiveBuilder.patch().message(request);
-            } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
-                requestBuilder = receiveBuilder.options().message(request);
-            } else {
-                requestBuilder = receiveBuilder.post().message(request);
-            }
+        if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
+            requestBuilder = receiveBuilder.post().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
+            requestBuilder = receiveBuilder.get().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
+            requestBuilder = receiveBuilder.put().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
+            requestBuilder = receiveBuilder.delete().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
+            requestBuilder = receiveBuilder.head().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
+            requestBuilder = receiveBuilder.trace().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
+            requestBuilder = receiveBuilder.patch().message(request);
+        } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
+            requestBuilder = receiveBuilder.options().message(request);
+        } else {
+            requestBuilder = receiveBuilder.post().message(request);
+        }
 
-            for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
-                requestBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
-            }
-            bodyValidationExpressions.clear();
+        for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
+            requestBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
+        }
+        bodyValidationExpressions.clear();
 
-            requestBuilder.messageType(requestMessageType);
-        };
+        requestBuilder.messageType(requestMessageType);
 
-        runner.http(action);
+        runner.run(requestBuilder);
     }
 
     /**
@@ -236,7 +233,7 @@ public class HttpServerSteps implements HttpSteps {
      * @param response
      */
     private void sendServerResponse(HttpMessage response) {
-        runner.http(action -> action.server(httpServer).send()
+        runner.run(http().server(httpServer).send()
                 .response(response.getStatusCode())
                 .messageType(responseMessageType)
                 .message(response));

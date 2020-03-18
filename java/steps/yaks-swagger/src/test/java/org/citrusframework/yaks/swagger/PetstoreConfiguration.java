@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
+import com.consol.citrus.context.TestContextFactory;
 import com.consol.citrus.endpoint.EndpointAdapter;
 import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter;
 import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter;
@@ -32,6 +32,7 @@ import com.consol.citrus.endpoint.adapter.mapping.SimpleMappingStrategy;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.message.HttpMessageHeaders;
 import com.consol.citrus.http.server.HttpServer;
+import com.consol.citrus.http.server.HttpServerBuilder;
 import com.consol.citrus.message.Message;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,22 +49,21 @@ public class PetstoreConfiguration {
     private static final int HTTP_PORT = 8080;
 
     @Bean
-    public HttpServer petstoreServer() {
-        return CitrusEndpoints.http()
-                              .server()
+    public HttpServer petstoreServer(TestContextFactory contextFactory) {
+        return new HttpServerBuilder()
                               .port(HTTP_PORT)
                               .autoStart(true)
-                              .endpointAdapter(staticResponseAdapter())
+                              .endpointAdapter(staticResponseAdapter(contextFactory))
                               .build();
     }
 
     @Bean
-    public EndpointAdapter staticResponseAdapter() {
+    public EndpointAdapter staticResponseAdapter(TestContextFactory contextFactory) {
         RequestDispatchingEndpointAdapter dispatchingEndpointAdapter = new RequestDispatchingEndpointAdapter();
 
         Map<String, EndpointAdapter> mappings = new HashMap<>();
 
-        mappings.put(HttpMethod.GET.name(), handleGetRequestAdapter());
+        mappings.put(HttpMethod.GET.name(), handleGetRequestAdapter(contextFactory));
         mappings.put(HttpMethod.POST.name(), handlePostRequestAdapter());
         mappings.put(HttpMethod.PUT.name(), handlePutRequestAdapter());
         mappings.put(HttpMethod.DELETE.name(), handleDeleteRequestAdapter());
@@ -102,8 +102,8 @@ public class PetstoreConfiguration {
     }
 
     @Bean
-    public EndpointAdapter handleGetRequestAdapter() {
-        return new StaticResponseEndpointAdapter() {
+    public EndpointAdapter handleGetRequestAdapter(TestContextFactory contextFactory) {
+        StaticEndpointAdapter endpointAdapter = new StaticResponseEndpointAdapter() {
             private TestContext context;
 
             @Override
@@ -141,6 +141,9 @@ public class PetstoreConfiguration {
                 return context;
             }
         };
+
+        endpointAdapter.setTestContextFactory(contextFactory);
+        return endpointAdapter;
     }
 
     @Bean
