@@ -15,26 +15,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <parent>
-    <groupId>org.citrusframework.yaks</groupId>
-    <artifactId>yaks-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-  </parent>
-  <modelVersion>4.0.0</modelVersion>
+<Configuration status="INFO">
+  <Appenders>
+    <Console name="STDOUT" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n"/>
+    </Console>
+    <Null name="NONE"/>
+  </Appenders>
 
-  <artifactId>yaks-steps</artifactId>
-  <name>YAKS :: Steps</name>
-  <packaging>pom</packaging>
+  <Loggers>
+    <Root level="DEBUG">
+      <AppenderRef ref="STDOUT"/>
+    </Root>
+  </Loggers>
 
-  <modules>
-    <module>yaks-camel</module>
-    <module>yaks-camel-k</module>
-    <module>yaks-http</module>
-    <module>yaks-jdbc</module>
-    <module>yaks-kafka</module>
-    <module>yaks-standard</module>
-    <module>yaks-swagger</module>
-  </modules>
-</project>
+</Configuration>
