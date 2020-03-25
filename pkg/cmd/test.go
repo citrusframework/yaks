@@ -96,35 +96,40 @@ func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	var err error
 	source := args[0]
-	c, err := o.GetCmdClient()
-
-	if err != nil {
-		return err
-	}
-
-	if isRemoteFile(source) || !isDir(source) {
-		// do the regular deployment
-		err = o.uploadArtifacts()
-		_, err = o.createTest(c, source)
-		return err
-	}
-
-	// execute directory deployment
-	configFile := path.Join(source, ConfigFile)
-	var conf *config.TestConfig
 
 	results := make(map[string]error)
 	defer printSummary(results)
 
+	if isRemoteFile(source) || !isDir(source) {
+		results[source] = o.runTest(source)
+	} else {
+		o.runTestGroup(source, &results)
+	}
+
+	return err
+}
+
+func (o *testCmdOptions) runTest(source string) error {
+	c, err := o.GetCmdClient()
+	err = o.uploadArtifacts()
+	_, err = o.createTest(c, source)
+	return err
+}
+
+func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) error {
+	c, err := o.GetCmdClient()
+	configFile := path.Join(source, ConfigFile)
+	var conf *config.TestConfig
+
 	if conf, err = config.LoadConfig(configFile); err != nil {
-		panic(err)
+		return err
 	}
 
 	if conf.Config.Namespace.Temporary {
 		namespaceName := "yaks-" + uuid.New().String()
 		var namespace metav1.Object
 		if namespace, err = initializeTempNamespace(namespaceName, c, o.Context); err != nil {
-			panic(err)
+			return err
 		}
 		if conf.Config.Namespace.AutoRemove {
 			defer deleteTempNamespace(namespace, c, o.Context)
@@ -134,14 +139,14 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 
 		copy := o.RootCmdOptions
 		if err = newCmdInstall(copy).Execute(); err != nil {
-			panic(err)
+			return err
 		}
 
 		err = o.uploadArtifacts()
 	}
 
 	if files, err := ioutil.ReadDir(source); err != nil {
-		results[source] = err
+		(*results)[source] = err
 	} else {
 		for _, f := range files {
 			if strings.HasSuffix(f.Name(), FileSuffix) {
@@ -150,11 +155,10 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 				if testError != nil {
 					err = errors.New("There are test failures!")
 				}
-				results[name] = testError
+				(*results)[name] = testError
 			}
 		}
 	}
-
 	return err
 }
 
