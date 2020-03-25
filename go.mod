@@ -4,6 +4,8 @@ require (
 	github.com/container-tools/snap v0.0.5
 	github.com/fatih/color v1.9.0
 	github.com/go-logr/logr v0.1.0
+	github.com/google/uuid v1.1.1
+	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/operator-framework/operator-sdk v0.15.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/xid v1.2.1
@@ -12,6 +14,7 @@ require (
 	github.com/stoewer/go-strcase v1.0.2
 	github.com/stretchr/testify v1.4.0
 	github.com/wercker/stern v0.0.0-20190705090245-4fa46dd6987f
+	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.17.1
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v12.0.0+incompatible
