@@ -71,6 +71,16 @@
     </dependency>
     <dependency>
       <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-jms</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-kafka</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
       <artifactId>yaks-swagger</artifactId>
       <version>${project.version}</version>
     </dependency>
