@@ -14,28 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.citrusframework.yaks.kafka;
 
-package org.citrusframework.yaks;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import io.cucumber.junit.Cucumber;
-import io.cucumber.junit.CucumberOptions;
-import org.junit.runner.RunWith;
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
+import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(
-        strict = true,
-        glue = {
-                "com.consol.citrus.cucumber.step.runner.core",
-                "org.citrusframework.yaks.http",
-                "org.citrusframework.yaks.swagger",
-                "org.citrusframework.yaks.camel",
-                "org.citrusframework.yaks.camelk",
-                "org.citrusframework.yaks.jdbc",
-                "org.citrusframework.yaks.jms",
-                "org.citrusframework.yaks.kafka",
-                "org.citrusframework.yaks.standard",
-        },
-        plugin = { "org.citrusframework.yaks.report.TestReporter" }
-)
-public class YaksTest {
+@Configuration
+public class EmbeddedKafkaConfiguration {
+
+	private static int PORT = 9092;
+	private static String TOPICS = "test";
+
+	@Bean
+	public EmbeddedKafkaServer embeddedKafkaServer() {
+		return new EmbeddedKafkaServerBuilder()
+				.kafkaServerPort(PORT)
+				.topics(TOPICS)
+				.build();
+	}
 }
