@@ -17,35 +17,31 @@
 
 package org.citrusframework.yaks.jms;
 
-import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
-import static com.consol.citrus.actions.SendMessageAction.Builder.send;
-
-import org.springframework.util.Assert;
+import javax.jms.ConnectionFactory;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
+import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
 import com.consol.citrus.jms.message.JmsMessage;
-
-import javax.jms.ConnectionFactory;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
+
+import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
+import static com.consol.citrus.actions.SendMessageAction.Builder.send;
 
 public class JmsSteps {
 
-    private static final long TIMEOUT = System.getenv("YAKS_JMS_TIMEOUT") != null ? Integer.valueOf(System.getenv("YAKS_JMS_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
+    private static final long TIMEOUT = System.getenv("YAKS_JMS_TIMEOUT") != null ? Integer.parseInt(System.getenv("YAKS_JMS_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
 
     @CitrusResource
     private TestCaseRunner runner;
@@ -57,29 +53,19 @@ public class JmsSteps {
 
     private ConnectionFactory connectionFactory;
 
-    @Given("^(?:JMS|jms) connection factory (.+)$")
-    public void setConnection(String className, DataTable properties) throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Assert.notNull(className, "Connection factory not specified");
-        Class connectionFactoryClass = Class.forName(className);
+    @Given("^(?:JMS|jms) connection factory$")
+    public void setConnection(DataTable properties) throws ClassNotFoundException {
+        List<List<String>> cells = properties.cells();
+        Map<String, String> connectionSettings = new LinkedHashMap<>();
+        cells.forEach(row -> connectionSettings.put(row.get(0), row.get(1)));
 
-        List<String> constructorArgs = properties.asList();
-        Constructor constructor = Arrays.stream(connectionFactoryClass.getConstructors())
-                .filter(c -> c.getParameterCount() == constructorArgs.size()
-                        && Arrays.stream(c.getParameterTypes()).allMatch(type -> type.equals(String.class)))
-        .findFirst().orElseThrow(() -> new IllegalStateException("Can't find proper constructor"));
-
-        Object instance = constructor.newInstance(constructorArgs.toArray(new String[constructorArgs.size()]));
-        if(!(instance instanceof ConnectionFactory)) {
-            throw new IllegalStateException("Class is not instance of " + ConnectionFactory.class.getName());
-        }
-
-        connectionFactory = (ConnectionFactory) instance;
+        connectionFactory = ConnectionFactoryCreator.lookup(connectionSettings.get("type"))
+                                                    .create(connectionSettings);
     }
 
     @Given("^(?:JMS|jms) destination: (.+)$")
     public void jmsEndpoint(String destination) {
-        jmsEndpoint = CitrusEndpoints.jms()
-                .asynchronous()
+        jmsEndpoint = new JmsEndpointBuilder()
                 .connectionFactory(connectionFactory)
                 .destination(destination)
                 .build();
@@ -87,13 +73,24 @@ public class JmsSteps {
 
     @When("^send message to JMS broker with body: (.+)")
     @Given("^message in JMS broker with body: (.+)$")
-    public void sendToBroker(String body) {
+    public void sendMessageBody(String body) {
         runner.run(send().endpoint(jmsEndpoint).message(new JmsMessage(body)));
     }
 
-    @Then("^expect message in JMS broker with body: (.+)$")
-    public void receiveFromBroker(String body) {
+    @When("^send message to JMS broker with body")
+    @Given("^message in JMS broker$")
+    public void sendMessageBodyFull(String body) {
+        sendMessageBody(body);
+    }
+
+    @Then("^(?:expect|verify) message in JMS broker with body: (.+)$")
+    public void receiveMessageBody(String body) {
         runner.run(receive().endpoint(jmsEndpoint).timeout(TIMEOUT).message(new JmsMessage(body)));
+    }
+
+    @Then("^(?:expect|verify) message in JMS broker with body$")
+    public void receiveMessageBodyFull(String body) {
+        receiveMessageBody(body);
     }
 
 }

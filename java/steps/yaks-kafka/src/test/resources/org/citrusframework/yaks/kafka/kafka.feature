@@ -3,7 +3,7 @@ Feature: Kafka steps
   Background:
     Given Kafka connection
         | url       | localhost:9092 |
-        | topic     | test|
+        | topic     | test |
 
   Scenario: Send and receive body and headers
     Given variable body is "citrus:randomString(10)"
@@ -13,4 +13,3 @@ Feature: Kafka steps
       | ${key} | ${value} |
     Then expect message in Kafka with body and headers: ${body}
       | ${key} | ${value} |
-

@@ -48,6 +48,8 @@
     <swagger.parser.version>1.0.34</swagger.parser.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
+    <activemq.version>5.15.11</activemq.version>
+    <mockito.version>3.3.3</mockito.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -101,6 +103,16 @@
         <artifactId>citrus-camel</artifactId>
         <version>${citrus.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-jms</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-kafka</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
 
       <!-- Cucumber -->
       <dependency>
@@ -132,6 +144,11 @@
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
         <version>${assertj-core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
