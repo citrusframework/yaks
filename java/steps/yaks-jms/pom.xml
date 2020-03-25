@@ -28,10 +28,6 @@
   <artifactId>yaks-jms</artifactId>
   <name>YAKS :: Steps :: JMS</name>
 
-  <properties>
-    <activemq.version>5.15.11</activemq.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
@@ -73,23 +69,18 @@
 
     <dependency>
       <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-java-dsl</artifactId>
-      <version>${citrus.version}</version>
-    </dependency>
-   
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-jms</artifactId>
-      <version>${citrus.version}</version>
     </dependency>
-    <!-- Test scope -->
+
+    <!-- Provided scope dependencies -->
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-client</artifactId>
       <version>${activemq.version}</version>
-      <scope>test</scope>
+      <scope>provided</scope>
     </dependency>
 
+    <!-- Test scoped dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -108,6 +99,16 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

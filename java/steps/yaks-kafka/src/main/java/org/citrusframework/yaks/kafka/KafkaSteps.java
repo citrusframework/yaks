@@ -17,37 +17,28 @@
 
 package org.citrusframework.yaks.kafka;
 
-import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
-import static com.consol.citrus.actions.SendMessageAction.Builder.send;
-
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.config.SaslConfigs;
-
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.actions.ReceiveMessageAction;
-import com.consol.citrus.actions.SendMessageAction;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.dsl.endpoint.CitrusEndpoints;
-import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
-import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
-import com.consol.citrus.kafka.message.KafkaMessage;
-
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.consol.citrus.Citrus;
+import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.annotations.CitrusFramework;
+import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
+import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
+import com.consol.citrus.kafka.message.KafkaMessage;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
+import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
+import static com.consol.citrus.actions.SendMessageAction.Builder.send;
+
 public class KafkaSteps {
 
-    private static final long TIMEOUT = System.getenv("YAKS_KAFKA_TIMEOUT") != null ? Integer.valueOf(System.getenv("YAKS_KAFKA_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
+    private static final long TIMEOUT = System.getenv("YAKS_KAFKA_TIMEOUT") != null ? Integer.parseInt(System.getenv("YAKS_KAFKA_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
 
     @CitrusResource
     private TestCaseRunner runner;
@@ -57,16 +48,14 @@ public class KafkaSteps {
 
     private KafkaEndpoint kafka;
 
-
     @Given("^(?:K|k)afka connection$")
     public void setConnection(DataTable properties) {
         Map<String, String> connectionProps = properties.asMap(String.class, String.class);
 
-        String url = connectionProps.getOrDefault("url", "");
+        String url = connectionProps.getOrDefault("url", "localhost:9092");
         String topic = connectionProps.getOrDefault("topic", "test");
 
-        KafkaEndpointBuilder builder = CitrusEndpoints.kafka()
-                .asynchronous()
+        KafkaEndpointBuilder builder = new KafkaEndpointBuilder()
                 .server(url)
                 .topic(topic);
 
@@ -75,33 +64,43 @@ public class KafkaSteps {
 
     @When("^send message to Kafka with body and headers: (.+)")
     @Given("^message in Kafka with body and headers: (.+)$")
-    public void sendToKafkaWithHeaders(String body, DataTable headers) {
+    public void sendToKafka(String body, DataTable headers) {
        toKafka(body, headers.asMap(String.class, Object.class));
     }
 
-
     @When("^send message to Kafka with body: (.+)")
     @Given("^message in Kafka with body: (.+)$")
-    public void sendToKafkaWithHeaders(String body) {
+    public void sendToKafka(String body) {
         toKafka(body, Collections.emptyMap());
     }
 
-    @Then("^expect message in Kafka with body: (.+)$")
+    @When("^send message to Kafka with body")
+    @Given("^message in Kafka with body$")
+    public void sendToKafkaFull(String body) {
+        sendToKafka(body);
+    }
+
+    @Then("^(?:expect|verify) message in Kafka with body: (.+)$")
     public void receiveFromKafka(String body) {
         fromKafka(body, Collections.emptyMap());
     }
 
-    @Then("^expect message in Kafka with body and headers: (.+)$")
+    @Then("^(?:expect|verify) message in Kafka with body$")
+    public void receiveFromKafkaFull(String body) {
+        receiveFromKafka(body);
+    }
+
+    @Then("^(?:expect|verify) message in Kafka with body and headers: (.+)$")
     public void receiveFromKafka(String body, DataTable headers) {
         fromKafka(body, headers.asMap(String.class, Object.class));
     }
 
-    private SendMessageAction toKafka(String body, Map<String,Object> headers) {
-        return runner.run(send().endpoint(kafka).message(new KafkaMessage(body, headers)));
+    private void toKafka(String body, Map<String,Object> headers) {
+        runner.run(send().endpoint(kafka).message(new KafkaMessage(body, headers)));
     }
 
-    private ReceiveMessageAction fromKafka(String body, Map<String,Object> headers) {
-       return runner.run(receive().endpoint(kafka).timeout(TIMEOUT).message(new KafkaMessage(body, headers)));
+    private void fromKafka(String body, Map<String,Object> headers) {
+       runner.run(receive().endpoint(kafka).timeout(TIMEOUT).message(new KafkaMessage(body, headers)));
     }
 
 }

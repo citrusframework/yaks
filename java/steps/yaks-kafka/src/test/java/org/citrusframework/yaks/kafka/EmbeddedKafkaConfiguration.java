@@ -25,14 +25,11 @@ import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
 @Configuration
 public class EmbeddedKafkaConfiguration {
 
-	private static int PORT = 9092;
-	private static String TOPICS = "test";
-
 	@Bean
 	public EmbeddedKafkaServer embeddedKafkaServer() {
 		return new EmbeddedKafkaServerBuilder()
-				.kafkaServerPort(PORT)
-				.topics(TOPICS)
+				.kafkaServerPort(9092)
+				.topics("test")
 				.build();
 	}
 }
