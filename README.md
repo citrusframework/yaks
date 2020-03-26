@@ -1,6 +1,6 @@
 ![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=master)
 
-# YAKS
+# YAKS ![logo][1]
 
 YAKS Cloud-Native BDD testing or simply: Yet Another Kubernetes Service
 
@@ -425,3 +425,5 @@ If the operator pod is running, just delete it to let it grab the new image.
 ```
 oc delete pod yaks
 ```
+
+ [1]: /docs/logo.png "YAKS"
