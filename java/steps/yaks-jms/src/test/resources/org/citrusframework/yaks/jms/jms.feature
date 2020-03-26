@@ -6,10 +6,14 @@ Feature: JMS steps
       | brokerUrl  | tcp://localhost:61616 |
     Given JMS destination: test
 
-  Scenario: Send and receive body
+  Scenario: Send and receive body and headers
     Given variable body is "citrus:randomString(10)"
-    When send message to JMS broker with body: ${body}
-    Then expect message in JMS broker with body: ${body}
+    Given variable key is "citrus:randomString(10)"
+    Given variable value is "citrus:randomString(10)"
+    When send message to JMS broker with body and headers: ${body}
+      | ${key} | ${value} |
+    Then expect message in JMS broker with body and headers: ${body}
+      | ${key} | ${value} |
 
   Scenario: Send and receive multiline body
     When send message to JMS broker with body
