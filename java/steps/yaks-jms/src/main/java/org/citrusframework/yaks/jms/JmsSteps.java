@@ -18,6 +18,8 @@
 package org.citrusframework.yaks.jms;
 
 import javax.jms.ConnectionFactory;
+
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.actions.ReceiveMessageAction;
+import com.consol.citrus.actions.SendMessageAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
@@ -53,6 +57,8 @@ public class JmsSteps {
 
     private ConnectionFactory connectionFactory;
 
+    private String selector = "";
+
     @Given("^(?:JMS|jms) connection factory$")
     public void setConnection(DataTable properties) throws ClassNotFoundException {
         List<List<String>> cells = properties.cells();
@@ -71,26 +77,50 @@ public class JmsSteps {
                 .build();
     }
 
+    @Given("^(?:JMS|jms) selector: (.+)$")
+    public void selector(String selector) {
+        this.selector = selector;
+    }
+
     @When("^send message to JMS broker with body: (.+)")
     @Given("^message in JMS broker with body: (.+)$")
     public void sendMessageBody(String body) {
-        runner.run(send().endpoint(jmsEndpoint).message(new JmsMessage(body)));
+        sendToBroker(body, Collections.emptyMap());
     }
 
     @When("^send message to JMS broker with body")
     @Given("^message in JMS broker$")
     public void sendMessageBodyFull(String body) {
-        sendMessageBody(body);
+        sendToBroker(body, Collections.emptyMap());
+    }
+
+    @When("^send message to JMS broker with body and headers: (.+)")
+    @Given("^message in JMS broker with body and headers: (.+)$")
+    public void sendMessageBodyHeaders(String body, DataTable headers) {
+        sendToBroker(body, headers.asMap(String.class, Object.class));
     }
 
     @Then("^(?:expect|verify) message in JMS broker with body: (.+)$")
     public void receiveMessageBody(String body) {
-        runner.run(receive().endpoint(jmsEndpoint).timeout(TIMEOUT).message(new JmsMessage(body)));
+        receiveFromBroker(body, Collections.emptyMap());
     }
 
     @Then("^(?:expect|verify) message in JMS broker with body$")
     public void receiveMessageBodyFull(String body) {
-        receiveMessageBody(body);
+        receiveFromBroker(body, Collections.emptyMap());
+    }
+
+    @Then("^(?:expect|verify) message in JMS broker with body and headers: (.+)$")
+    public void receiveMessageBody(String body, DataTable headers) {
+        receiveFromBroker(body, headers.asMap(String.class, Object.class));
+    }
+
+    private SendMessageAction sendToBroker(String body,  Map<String, Object> headers) {
+        return runner.run(send().endpoint(jmsEndpoint).payload(body).headers(headers));
+    }
+
+    private ReceiveMessageAction receiveFromBroker(String body, Map<String,Object> headers) {
+        return runner.run(receive().endpoint(jmsEndpoint).payload(body).headers(headers).selector(selector).timeout(TIMEOUT));
     }
 
 }
