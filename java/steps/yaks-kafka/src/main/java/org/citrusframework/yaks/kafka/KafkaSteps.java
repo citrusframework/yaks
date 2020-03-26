@@ -28,6 +28,7 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
 import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
 import com.consol.citrus.kafka.message.KafkaMessage;
+import com.consol.citrus.kafka.message.KafkaMessageHeaders;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -54,10 +55,12 @@ public class KafkaSteps {
 
         String url = connectionProps.getOrDefault("url", "localhost:9092");
         String topic = connectionProps.getOrDefault("topic", "test");
+        String consumerGroup = connectionProps.getOrDefault("consumerGroup", KafkaMessageHeaders.KAFKA_PREFIX + "group");
 
         KafkaEndpointBuilder builder = new KafkaEndpointBuilder()
                 .server(url)
-                .topic(topic);
+                .topic(topic)
+                .consumerGroup(consumerGroup);
 
         kafka = builder.build();
     }
