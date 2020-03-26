@@ -80,6 +80,13 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-jms-client</artifactId>
+      <version>${activemq.artemis.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
     <!-- Test scoped dependencies -->
     <dependency>
       <groupId>junit</groupId>

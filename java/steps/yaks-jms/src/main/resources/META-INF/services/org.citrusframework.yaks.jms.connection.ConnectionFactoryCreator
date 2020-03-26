@@ -1,1 +1,2 @@
 org.citrusframework.yaks.jms.connection.activemq.ActiveMQConnectionFactoryCreator
+org.citrusframework.yaks.jms.connection.activemq.artemis.ActiveMQArtemisConnectionFactoryCreator
