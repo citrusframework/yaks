@@ -57,6 +57,8 @@ public class JmsSteps {
 
     private ConnectionFactory connectionFactory;
 
+    private String selector = "";
+
     @Given("^(?:JMS|jms) connection factory$")
     public void setConnection(DataTable properties) throws ClassNotFoundException {
         List<List<String>> cells = properties.cells();
@@ -73,6 +75,11 @@ public class JmsSteps {
                 .connectionFactory(connectionFactory)
                 .destination(destination)
                 .build();
+    }
+
+    @Given("^(?:JMS|jms) selector: (.+)$")
+    public void selector(String selector) {
+        this.selector = selector;
     }
 
     @When("^send message to JMS broker with body: (.+)")
@@ -113,7 +120,7 @@ public class JmsSteps {
     }
 
     private ReceiveMessageAction receiveFromBroker(String body, Map<String,Object> headers) {
-        return runner.run(receive().endpoint(jmsEndpoint).payload(body).headers(headers).timeout(TIMEOUT));
+        return runner.run(receive().endpoint(jmsEndpoint).payload(body).headers(headers).selector(selector).timeout(TIMEOUT));
     }
 
 }

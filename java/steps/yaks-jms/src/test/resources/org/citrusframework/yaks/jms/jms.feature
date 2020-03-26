@@ -29,3 +29,15 @@ Feature: JMS steps
     }
     """
 
+  Scenario: Send receive message with selector
+    Given variable correctBody is "citrus:randomString(10)"
+    And variable tag is "citrus:randomString(10)"
+    And jms selector: tag='${tag}'
+    Given message in JMS broker with body and headers: citrus:randomString(10)
+      | tag | citrus:randomString(10) |
+    And message in JMS broker with body and headers: ${correctBody}
+      | tag | ${tag} |
+    And message in JMS broker with body and headers: citrus:randomString(10)
+      | tag | citrus:randomString(10) |
+    Then expect message in JMS broker with body and headers: ${correctBody}
+      | tag | ${tag} |
