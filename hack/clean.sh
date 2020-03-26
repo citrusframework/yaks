@@ -33,7 +33,11 @@ cd ${location}/../java
 ./mvnw \
     clean
 
-cd ../build
+# Dir clean
+cd ..
+rm -rf dist
+
+cd build
 
 #remove build outputs
 rm -rf _maven_repository

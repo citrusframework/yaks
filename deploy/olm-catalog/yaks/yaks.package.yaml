@@ -1,5 +1,5 @@
 channels:
-- currentCSV: yaks.v0.0.2
+- currentCSV: yaks.v0.0.0-latest
   name: alpha
 defaultChannel: alpha
 packageName: yaks
