@@ -426,4 +426,4 @@ If the operator pod is running, just delete it to let it grab the new image.
 oc delete pod yaks
 ```
 
- [1]: /docs/logo.png "YAKS"
+ [1]: /docs/logo-100x100.png "YAKS"
