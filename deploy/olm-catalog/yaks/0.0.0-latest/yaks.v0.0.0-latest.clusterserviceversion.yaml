@@ -19,12 +19,12 @@ metadata:
     capabilities: Basic Install
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/apache/yaks:0.0.2
+    containerImage: docker.io/apache/yaks:latest
     createdAt: "2019-01-08T10:52:00Z"
     description: YAKS is a framework to help you test Apache Camel integrations running on Openshift & Kubernetes.
     repository: https://github.com/citrusframework/yaks
     support: Red Hat Fuse
-  name: yaks.v0.0.2
+  name: yaks.v0.0.0-latest
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -126,7 +126,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: yaks
-                image: docker.io/yaks/yaks:0.0.2
+                image: docker.io/yaks/yaks:latest
                 imagePullPolicy: IfNotPresent
                 name: yaks
                 resources: {}
@@ -238,4 +238,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.0.2
+  version: 0.0.0-latest

@@ -17,7 +17,7 @@ spec:
       serviceAccountName: yaks
       containers:
         - name: yaks
-          image: yaks/yaks:devel
+          image: yaks/yaks:latest
           command:
           - yaks
           - operator
