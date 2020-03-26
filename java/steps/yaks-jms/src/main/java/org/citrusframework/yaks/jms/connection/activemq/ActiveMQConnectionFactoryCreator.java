@@ -49,6 +49,6 @@ public class ActiveMQConnectionFactoryCreator implements ConnectionFactoryCreato
 
     @Override
     public boolean supports(Class<?> type) {
-        return ActiveMQConnectionFactory.class.equals(type);
+        return "org.apache.activemq.ActiveMQConnectionFactory".equals(type.getName());
     }
 }

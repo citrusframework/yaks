@@ -17,14 +17,12 @@
 
 package org.citrusframework.yaks.jms.connection.activemq.artemis;
 
-import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
-
-import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-
 import java.util.Map;
+
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
 
 public class ActiveMQArtemisConnectionFactoryCreator implements ConnectionFactoryCreator {
 
@@ -53,6 +51,6 @@ public class ActiveMQArtemisConnectionFactoryCreator implements ConnectionFactor
 
     @Override
     public boolean supports(Class<?> type) {
-        return ActiveMQConnectionFactory.class.equals(type);
+        return "org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory".equals(type.getName());
     }
 }
