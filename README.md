@@ -1,6 +1,8 @@
 ![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=master)
 
-# YAKS ![logo][1]
+# YAKS 
+
+![logo][1]
 
 YAKS Cloud-Native BDD testing or simply: Yet Another Kubernetes Service
 
