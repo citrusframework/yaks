@@ -56,11 +56,13 @@ public class KafkaSteps {
         String url = connectionProps.getOrDefault("url", "localhost:9092");
         String topic = connectionProps.getOrDefault("topic", "test");
         String consumerGroup = connectionProps.getOrDefault("consumerGroup", KafkaMessageHeaders.KAFKA_PREFIX + "group");
+        String offsetReset = connectionProps.getOrDefault("offsetReset", "earliest");
 
         KafkaEndpointBuilder builder = new KafkaEndpointBuilder()
                 .server(url)
                 .topic(topic)
-                .consumerGroup(consumerGroup);
+                .consumerGroup(consumerGroup)
+                .offsetReset(offsetReset);
 
         kafka = builder.build();
     }
