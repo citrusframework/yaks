@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.citrusframework.yaks.maven.extension.configuration.AbstractConfigFileDependencyLoader;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Dependency;
+import org.citrusframework.yaks.maven.extension.configuration.AbstractConfigFileDependencyLoader;
 import org.codehaus.plexus.logging.Logger;
 
 /**
@@ -62,22 +62,22 @@ public class JsonFileDependencyLoader extends AbstractConfigFileDependencyLoader
     protected List<Dependency> load(Path filePath, Properties properties, Logger logger) throws LifecycleExecutionException {
         List<Dependency> dependencyList = new ArrayList<>();
 
-        JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
+        ObjectMapper mapper = new ObjectMapper();
         try {
-            JSONObject root = (JSONObject) parser.parse(new StringReader(new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)));
-            JSONArray dependencies = (JSONArray) root.get("dependencies");
+            JsonNode root = mapper.readTree(new StringReader(new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)));
+            ArrayNode dependencies = (ArrayNode) root.get("dependencies");
             for (Object o : dependencies) {
-                JSONObject coordinates = (JSONObject) o;
+                ObjectNode coordinates = (ObjectNode) o;
                 Dependency dependency = new Dependency();
 
-                dependency.setGroupId(coordinates.get("groupId").toString());
-                dependency.setArtifactId(coordinates.get("artifactId").toString());
-                dependency.setVersion(resolveVersionProperty(coordinates.get("version").toString(), properties));
+                dependency.setGroupId(coordinates.get("groupId").textValue());
+                dependency.setArtifactId(coordinates.get("artifactId").textValue());
+                dependency.setVersion(resolveVersionProperty(coordinates.get("version").textValue(), properties));
 
                 logger.info(String.format("Add %s", dependency));
                 dependencyList.add(dependency);
             }
-        } catch (ParseException | IOException e) {
+        } catch (IOException e) {
             throw new LifecycleExecutionException("Failed to read json dependency config file", e);
         }
 

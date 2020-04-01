@@ -43,8 +43,14 @@ public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
             try {
                 Assert.assertTrue("Verify termination log exists", Files.exists(TestReporter.getTerminationLog()));
                 List<String> lines = Files.readAllLines(TestReporter.getTerminationLog());
-                Assert.assertTrue("Missing successful test result in termination log",
-                        lines.contains("classpath:org/citrusframework/yaks/report/report.feature:3 SUCCESS"));
+                Assert.assertEquals(1L, lines.size());
+                Assert.assertEquals("{" +
+                            "\"summary\":" +
+                                "{\"passed\":1,\"failed\":0,\"skipped\":0,\"pending\":0,\"undefined\":0,\"total\":1}," +
+                            "\"tests\":[" +
+                                "{\"name\":\"classpath:org/citrusframework/yaks/report/report.feature:3\"}" +
+                            "]" +
+                        "}", lines.get(0));
             } catch (IOException e) {
                 LOG.warn("Failed to verify termination logs", e);
                 Assert.fail(e.getMessage());

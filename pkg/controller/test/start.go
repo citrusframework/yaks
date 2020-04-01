@@ -49,8 +49,8 @@ func (action *startAction) Name() string {
 }
 
 // CanHandle tells whether this action can handle the test
-func (action *startAction) CanHandle(build *v1alpha1.Test) bool {
-	return build.Status.Phase == v1alpha1.TestPhasePending
+func (action *startAction) CanHandle(test *v1alpha1.Test) bool {
+	return test.Status.Phase == v1alpha1.TestPhasePending
 }
 
 // Handle handles the test

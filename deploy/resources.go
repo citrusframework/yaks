@@ -63,21 +63,6 @@ spec:
               value: "yaks"
 
 `
-	Resources["role_binding.yaml"] =
-		`
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: yaks
-subjects:
-- kind: ServiceAccount
-  name: yaks
-roleRef:
-  kind: Role
-  name: yaks
-  apiGroup: rbac.authorization.k8s.io
-
-`
 	Resources["role.yaml"] =
 		`
 apiVersion: rbac.authorization.k8s.io/v1
@@ -179,6 +164,21 @@ rules:
   - '*'
 
 `
+	Resources["role_binding.yaml"] =
+		`
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks
+subjects:
+- kind: ServiceAccount
+  name: yaks
+roleRef:
+  kind: Role
+  name: yaks
+  apiGroup: rbac.authorization.k8s.io
+
+`
 	Resources["service_account.yaml"] =
 		`
 apiVersion: v1
@@ -225,23 +225,6 @@ rules:
   verbs:
   - get
   - create
-`
-	Resources["viewer_role_binding.yaml"] =
-		`
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: yaks-viewer
-  labels:
-    app: "yaks"
-subjects:
-- kind: ServiceAccount
-  name: yaks-viewer
-roleRef:
-  kind: Role
-  name: yaks-viewer
-  apiGroup: rbac.authorization.k8s.io
-
 `
 	Resources["viewer_role.yaml"] =
 		`
@@ -300,6 +283,23 @@ rules:
   - watch
 
 `
+	Resources["viewer_role_binding.yaml"] =
+		`
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: yaks-viewer
+  labels:
+    app: "yaks"
+subjects:
+- kind: ServiceAccount
+  name: yaks-viewer
+roleRef:
+  kind: Role
+  name: yaks-viewer
+  apiGroup: rbac.authorization.k8s.io
+
+`
 	Resources["viewer_service_account.yaml"] =
 		`
 apiVersion: v1
@@ -308,6 +308,24 @@ metadata:
   name: yaks-viewer
   labels:
     app: "yaks"
+
+`
+	Resources["crds/yaks_v1alpha1_test_cr.yaml"] =
+		`
+apiVersion: org.citrusframework.yaks/v1alpha1
+kind: Test
+metadata:
+  name: example-test
+spec:
+  source:
+    name: simple.feature
+    language: feature
+    content: |-
+      Feature: integration runs
+
+        Scenario:
+          Given integration simple is running
+          Then integration simple should print Hello Camel
 
 `
 	Resources["crds/yaks_v1alpha1_test_crd.yaml"] =
@@ -327,10 +345,31 @@ spec:
   subresources:
     status: {}
   additionalPrinterColumns:
-    - name: Phase
-      type: string
-      description: The test phase
-      JSONPath: .status.phase
+  - name: Phase
+    type: string
+    description: The test phase
+    JSONPath: .status.phase
+  - name: Total
+    type: string
+    description: The total amount of tests
+    JSONPath: .status.results.summary.total
+  - name: Passed
+    type: string
+    description: Passed tests
+    JSONPath: .status.results.summary.passed
+  - name: Failed
+    type: string
+    description: Failed tests
+    JSONPath: .status.results.summary.failed
+  - name: Skipped
+    type: string
+    description: Skipped tests
+    JSONPath: .status.results.summary.skipped
+  - name: Errors
+    type: string
+    description: Test error details
+    priority: 1
+    JSONPath: .status.errors
   validation:
     openAPIV3Schema:
       properties:
@@ -362,6 +401,35 @@ spec:
           properties:
             phase:
               type: string
+            results:
+              properties:
+                summary:
+                  properties:
+                    total:
+                      type: number
+                    passed:
+                      type: number
+                    failed:
+                      type: number
+                    skipped:
+                      type: number
+                    pending:
+                      type: number
+                    undefined:
+                      type: number
+                  type: object
+                tests:
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      errorType:
+                        type: string
+                      errorMessage:
+                        type: string
+                  type: array
+              type: object
             testID:
               type: string
             version:
@@ -372,24 +440,6 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
-
-`
-	Resources["crds/yaks_v1alpha1_test_cr.yaml"] =
-		`
-apiVersion: org.citrusframework.yaks/v1alpha1
-kind: Test
-metadata:
-  name: example-test
-spec:
-  source:
-    name: simple.feature
-    language: feature
-    content: |-
-      Feature: integration runs
-
-        Scenario:
-          Given integration simple is running
-          Then integration simple should print Hello Camel
 
 `
 
