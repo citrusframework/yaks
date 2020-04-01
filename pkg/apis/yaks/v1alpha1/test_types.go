@@ -41,10 +41,12 @@ type TestStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	Phase   TestPhase `json:"phase,omitempty"`
-	TestID  string    `json:"testID,omitempty"`
-	Digest  string    `json:"digest,omitempty"`
-	Version string    `json:"version,omitempty"`
+	Phase   TestPhase   `json:"phase,omitempty"`
+	Results TestResults `json:"results,omitempty"`
+	Errors	string      `json:"errors,omitempty"`
+	TestID  string      `json:"testID,omitempty"`
+	Digest  string      `json:"digest,omitempty"`
+	Version string      `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -66,7 +68,27 @@ type Test struct {
 type TestList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Test `json:"items"`
+	Items    []Test `json:"items"`
+}
+
+type TestResults struct {
+	Summary TestSummary  `json:"summary,omitempty"`
+	Tests	[]TestResult `json:"tests,omitempty"`
+}
+
+type TestSummary struct {
+	Total  		int   	  `json:"total"`
+	Passed 		int   	  `json:"passed"`
+	Failed 		int   	  `json:"failed"`
+	Skipped 	int   	  `json:"skipped"`
+	Pending 	int   	  `json:"pending"`
+	Undefined 	int   	  `json:"undefined"`
+}
+
+type TestResult struct {
+	Name         string  `json:"name,omitempty"`
+	ErrorType    string  `json:"errorType,omitempty"`
+	ErrorMessage string  `json:"errorMessage,omitempty"`
 }
 
 // TestPhase --

@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
                 "org.citrusframework.yaks.jms",
                 "org.citrusframework.yaks.kafka",
                 "org.citrusframework.yaks.standard",
+                "org.citrusframework.yaks.hooks",
         },
         plugin = { "org.citrusframework.yaks.report.TestReporter" }
 )

@@ -19,6 +19,8 @@ package test
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -48,23 +50,47 @@ func (action *evaluateAction) CanHandle(build *v1alpha1.Test) bool {
 
 // Handle handles the test
 func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
-	phase, err := action.getTestPodPhase(ctx, test)
+	status, err := action.getTestPodStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
 		test.Status.Phase = v1alpha1.TestPhaseError
 	} else if err != nil {
 		return nil, err
 	}
 
-	if phase == v1.PodSucceeded {
+	if status.Phase == v1.PodSucceeded {
 		test.Status.Phase = v1alpha1.TestPhasePassed
-	} else if phase == v1.PodFailed {
+		err = action.addTestResults(status, test)
+	} else if status.Phase == v1.PodFailed {
 		test.Status.Phase = v1alpha1.TestPhaseFailed
+		err = action.addTestResults(status, test)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return test, nil
 }
 
-func (action *evaluateAction) getTestPodPhase(ctx context.Context, test *v1alpha1.Test) (v1.PodPhase, error) {
+func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1.Test) error {
+	var reportJson = []byte(status.ContainerStatuses[0].State.Terminated.Message)
+	err := json.Unmarshal(reportJson, &test.Status.Results)
+
+	errors := make([]string, 0)
+	for _, result := range test.Status.Results.Tests {
+		if result.ErrorType != "" {
+			errors = append(errors, result.Name + " failed with " + result.ErrorType + ": " + result.ErrorMessage)
+		}
+	}
+
+	if len(errors) > 0 {
+		test.Status.Errors = strings.Join(errors[:], ",");
+	}
+
+	return err
+}
+
+func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {
 	pod := v1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -80,7 +106,7 @@ func (action *evaluateAction) getTestPodPhase(ctx context.Context, test *v1alpha
 		Name:      TestPodNameFor(test),
 	}
 	if err := action.client.Get(ctx, key, &pod); err != nil {
-		return "", err
+		return v1.PodStatus{}, err
 	}
-	return pod.Status.Phase, nil
+	return pod.Status, nil
 }

@@ -24,13 +24,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
-import java.util.StringJoiner;
 
-import com.consol.citrus.CitrusInstanceManager;
-import com.consol.citrus.TestResult;
 import com.consol.citrus.cucumber.CitrusReporter;
-import com.consol.citrus.report.AbstractTestReporter;
-import com.consol.citrus.report.TestResults;
+import io.cucumber.plugin.event.EventPublisher;
+import io.cucumber.plugin.event.HookTestStep;
+import io.cucumber.plugin.event.TestCaseFinished;
+import io.cucumber.plugin.event.TestCaseStarted;
+import io.cucumber.plugin.event.TestRunFinished;
+import io.cucumber.plugin.event.TestStepFinished;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,44 +50,76 @@ public class TestReporter extends CitrusReporter {
     private static final String TERMINATION_LOG_PROPERTY = "yaks.termination.log";
     private static final String TERMINATION_LOG_ENV = "YAKS_TERMINATION_LOG";
 
-    static {
-        TerminationLogReporter reporter = new TerminationLogReporter();
+    private TestResults testResults = new TestResults();
 
-        CitrusInstanceManager.addInstanceProcessor(citrus -> {
-            citrus.addTestReporter(reporter);
-        });
+    @Override
+    public void setEventPublisher(EventPublisher publisher) {
+        publisher.registerHandlerFor(TestCaseFinished.class, this::saveTestResult);
+        publisher.registerHandlerFor(TestCaseStarted.class, this::addTestDetail);
+        publisher.registerHandlerFor(TestStepFinished.class, this::checkStepErrors);
+        publisher.registerHandlerFor(TestRunFinished.class, this::printReports);
+        super.setEventPublisher(publisher);
     }
 
-    static class TerminationLogReporter extends AbstractTestReporter {
-        @Override
-        public void generate(TestResults testResults) {
-            StringJoiner report = new StringJoiner(System.lineSeparator());
-            testResults.doWithResults(result -> report.add(getTestResultMessage(result)));
+    private void addTestDetail(TestCaseStarted event) {
+        testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getUri() + ":" + event.getTestCase().getLine()));
+    }
 
-            try (Writer terminationLogWriter = Files.newBufferedWriter(getTerminationLog(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                terminationLogWriter.write(report.toString());
-                terminationLogWriter.flush();
-            } catch (IOException e) {
-                LOG.warn(String.format("Failed to write termination logs to file '%s'", getTerminationLog()), e);
+    /**
+     * Adds step error to test results.
+     * @param event
+     */
+    private void checkStepErrors(TestStepFinished event) {
+        if (event.getResult().getError() != null
+                && !(event.getTestStep() instanceof HookTestStep)) {
+            Optional<TestResult> testDetail = testResults.getTests().stream()
+                    .filter(detail -> detail.getId().equals(event.getTestCase().getId()))
+                    .findFirst();
+
+            if (testDetail.isPresent()) {
+                testDetail.get().setCause(event.getResult().getError());
+            } else {
+                testResults.addTestResult(new TestResult(event.getTestCase().getId(),
+                                            event.getTestCase().getUri() + ":" + event.getTestCase().getLine(), event.getResult().getError()));
             }
         }
+    }
 
-        private String getTestResultMessage(TestResult result) {
-            if (result.isSuccess()) {
-                return result.getTestName() + " SUCCESS";
-            } else if (result.isSkipped()) {
-                return result.getTestName() + " SKIPPED";
-            } else if (result.isFailed()) {
-                String errorType = result.getCause().getClass().getName();
-                String errorMessage = Optional.ofNullable(result.getCause().getMessage()).orElse("Unknown error");
+    /**
+     * Prints test results to termination log.
+     * @param event
+     */
+    private void printReports(TestRunFinished event) {
+        try (Writer terminationLogWriter = Files.newBufferedWriter(getTerminationLog(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            terminationLogWriter.write(testResults.toJson());
+            terminationLogWriter.flush();
+        } catch (IOException e) {
+            LOG.warn(String.format("Failed to write termination logs to file '%s'", getTerminationLog()), e);
+        }
+    }
 
-                return String.format("%s FAILED - Caused by: %s: %s%n",
-                        result.getTestName(),
-                        errorType,
-                        errorMessage);
-            }
-
-            return result.getTestName() + " UNKNOWN STATE";
+    /**
+     * Save test result for later reporting.
+     * @param event
+     */
+    private void saveTestResult(TestCaseFinished event) {
+        switch (event.getResult().getStatus()) {
+            case FAILED:
+                testResults.getSummary().failed++;
+                break;
+            case PASSED:
+                testResults.getSummary().passed++;
+                break;
+            case PENDING:
+                testResults.getSummary().pending++;
+                break;
+            case UNDEFINED:
+                testResults.getSummary().undefined++;
+                break;
+            case SKIPPED:
+                testResults.getSummary().skipped++;
+                break;
+            default:
         }
     }
 
