@@ -17,12 +17,12 @@
 
 package org.citrusframework.yaks.camelk.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class Integration {
 
@@ -52,7 +52,7 @@ public class Integration {
 		return spec;
 	}
 
-	private static class IntegrationMetadata {
+	public static class IntegrationMetadata {
 		private String name;
 
 		public String getName() {
