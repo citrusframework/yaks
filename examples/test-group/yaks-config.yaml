@@ -1,0 +1,4 @@
+config:
+  namespace:
+    temporary: false
+    autoRemove: true

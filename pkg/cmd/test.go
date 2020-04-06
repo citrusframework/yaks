@@ -100,10 +100,10 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	results := make(map[string]error)
 	defer printSummary(results)
 
-	if isRemoteFile(source) || !isDir(source) {
-		results[source] = o.runTest(source)
+	if isDir(source) {
+		err = o.runTestGroup(source, &results)
 	} else {
-		o.runTestGroup(source, &results)
+		results[source] = o.runTest(source)
 	}
 
 	return err
@@ -111,54 +111,77 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 
 func (o *testCmdOptions) runTest(source string) error {
 	c, err := o.GetCmdClient()
-	err = o.uploadArtifacts()
-	_, err = o.createTest(c, source)
+	if err != nil {
+		return err;
+	}
+
+	var runConfig *config.RunConfig
+	if runConfig, err = o.getRunConfig(source); err != nil {
+		return err
+	}
+
+	if runConfig.Config.Namespace.Temporary {
+		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
+			return err
+		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
+			defer deleteTempNamespace(namespace, c, o.Context)
+		}
+	}
+
+	if err = o.uploadArtifacts(runConfig); err != nil {
+		return err
+	}
+
+	_, err = o.createAndRunTest(c, source, runConfig)
 	return err
 }
 
 func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) error {
 	c, err := o.GetCmdClient()
-	configFile := path.Join(source, ConfigFile)
-	var conf *config.TestConfig
-
-	if conf, err = config.LoadConfig(configFile); err != nil {
+	if err != nil {
 		return err
 	}
 
-	if conf.Config.Namespace.Temporary {
-		namespaceName := "yaks-" + uuid.New().String()
-		var namespace metav1.Object
-		if namespace, err = initializeTempNamespace(namespaceName, c, o.Context); err != nil {
-			return err
-		}
-		if conf.Config.Namespace.AutoRemove {
-			defer deleteTempNamespace(namespace, c, o.Context)
-		}
-
-		o.Namespace = namespaceName
-
-		copy := o.RootCmdOptions
-		if err = newCmdInstall(copy).Execute(); err != nil {
-			return err
-		}
-
-		err = o.uploadArtifacts()
+	var runConfig *config.RunConfig
+	if runConfig, err = o.getRunConfig(source); err != nil {
+		return err
 	}
 
-	if files, err := ioutil.ReadDir(source); err != nil {
+	if runConfig.Config.Namespace.Temporary {
+		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
+			return err
+		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
+			defer deleteTempNamespace(namespace, c, o.Context)
+		}
+	}
+
+	if err = o.uploadArtifacts(runConfig); err != nil {
+		return err
+	}
+
+	var files []os.FileInfo
+	if files, err = ioutil.ReadDir(source); err != nil {
 		(*results)[source] = err
-	} else {
-		for _, f := range files {
-			if strings.HasSuffix(f.Name(), FileSuffix) {
-				name := path.Join(source, f.Name())
-				_, testError := o.createTest(c, name)
-				if testError != nil {
-					err = errors.New("There are test failures!")
-				}
-				(*results)[name] = testError
+		return err
+	}
+
+	for _, f := range files {
+		name := path.Join(source, f.Name())
+		if f.IsDir() && runConfig.Config.Recursive {
+			groupError := o.runTestGroup(name, results)
+			if groupError != nil {
+				err = errors.New("There are test failures!")
+				(*results)[name] = groupError
+			}
+		} else if strings.HasSuffix(f.Name(), FileSuffix) {
+			_, testError := o.createAndRunTest(c, name, runConfig)
+			(*results)[name] = testError
+			if testError != nil {
+				err = errors.New("There are test failures!")
 			}
 		}
 	}
+
 	return err
 }
 
@@ -174,8 +197,50 @@ func printSummary(results map[string]error) {
 	fmt.Print(summary)
 }
 
-func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.Test, error) {
-	namespace := o.Namespace
+func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
+	var configFile string
+	if isDir(source) {
+		// search for config file in given directory
+		configFile = path.Join(source, ConfigFile)
+	} else {
+		// search for config file in same directory as given file
+		dir, _ := path.Split(source);
+		configFile = path.Join(dir, ConfigFile);
+	}
+
+	var runConfig *config.RunConfig
+
+	runConfig, err := config.LoadConfig(configFile)
+	if err != nil {
+		return nil, err
+	}
+
+	if runConfig.Config.Namespace.Name == "" && !runConfig.Config.Namespace.Temporary {
+		runConfig.Config.Namespace.Name = o.Namespace;
+	}
+
+	return runConfig, nil
+}
+
+func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig,c client.Client) (metav1.Object, error) {
+	namespaceName := "yaks-" + uuid.New().String()
+	namespace, err := initializeTempNamespace(namespaceName, c, o.Context)
+	if err != nil {
+		return nil, err
+	}
+	runConfig.Config.Namespace.Name = namespaceName
+
+	cmdOptionsCopy := o.RootCmdOptions
+	cmdOptionsCopy.Namespace = namespaceName
+	if err := newCmdInstall(cmdOptionsCopy).Execute(); err != nil {
+		return namespace, err
+	}
+
+	return namespace, nil
+}
+
+func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
+	namespace := runConfig.Config.Namespace.Name
 	fileName := kubernetes.SanitizeFileName(rawName)
 	name := kubernetes.SanitizeName(rawName)
 
@@ -206,7 +271,7 @@ func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.
 		},
 	}
 
-	settings, err := o.newTestSettings()
+	settings, err := o.newSettings()
 
 	if err != nil {
 		return nil, err
@@ -276,7 +341,7 @@ func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.
 		cancel()
 	}()
 
-	if err := o.printLogs(ctx, name); err != nil {
+	if err := o.printLogs(ctx, name, runConfig); err != nil {
 		return nil, err
 	}
 
@@ -288,9 +353,9 @@ func (o *testCmdOptions) createTest(c client.Client, rawName string) (*v1alpha1.
 	return &test, nil
 }
 
-func (o *testCmdOptions) uploadArtifacts() error {
+func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 	for _, lib := range o.uploads {
-		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib)
+		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib, runConfig.Config.Namespace.Name)
 		if err != nil {
 			return err
 		}
@@ -299,7 +364,7 @@ func (o *testCmdOptions) uploadArtifacts() error {
 	return nil
 }
 
-func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
+func (o *testCmdOptions) newSettings() (*v1alpha1.SettingsSpec, error) {
 	runtimeDependencies := o.dependencies
 
 	if len(runtimeDependencies) > 0 {
@@ -329,7 +394,7 @@ func (o *testCmdOptions) newTestSettings() (*v1alpha1.SettingsSpec, error) {
 	return &settings, nil
 }
 
-func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
+func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *config.RunConfig) error {
 	t := "{{color .PodColor .PodName}} {{color .ContainerColor .ContainerName}} {{.Message}}"
 	funs := map[string]interface{}{
 		"color": func(color color.Color, text string) string {
@@ -343,7 +408,7 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string) error {
 
 	//tail := int64(100)
 	conf := stern.Config{
-		Namespace:  o.Namespace,
+		Namespace:  runConfig.Config.Namespace.Name,
 		PodQuery:   regexp.MustCompile(".*"),
 		KubeConfig: client.GetValidKubeConfig(o.KubeConfig),
 		//TailLines: &tail,
@@ -365,9 +430,14 @@ func isRemoteFile(fileName string) bool {
 }
 
 func isDir(fileName string) bool {
+	if isRemoteFile(fileName) {
+		return false
+	}
+
 	if info, err := os.Stat(fileName); err == nil {
 		return info.IsDir()
 	}
+
 	return false
 }
 
@@ -433,12 +503,7 @@ func (*testCmdOptions) loadData(fileName string) (string, error) {
 	var content []byte
 	var err error
 
-	if !isRemoteFile(fileName) {
-		content, err = ioutil.ReadFile(fileName)
-		if err != nil {
-			return "", err
-		}
-	} else {
+	if isRemoteFile(fileName) {
 		/* #nosec */
 		resp, err := http.Get(fileName)
 		if err != nil {
@@ -447,6 +512,11 @@ func (*testCmdOptions) loadData(fileName string) (string, error) {
 		defer resp.Body.Close()
 
 		content, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		content, err = ioutil.ReadFile(fileName)
 		if err != nil {
 			return "", err
 		}

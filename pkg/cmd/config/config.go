@@ -24,30 +24,32 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type TestConfig struct {
+type RunConfig struct {
 	Config Config `yaml:"config"`
 }
 
 type Config struct {
+	Recursive bool `yaml:"recursive"`
 	Namespace NamespaceConfig
 }
 
 type NamespaceConfig struct {
-	Temporary  bool `yaml:"temporary"`
-	AutoRemove bool `yaml:"autoremove"`
+	Name 	   string `yaml:"name"`
+	Temporary  bool   `yaml:"temporary"`
+	AutoRemove bool   `yaml:"autoremove"`
 }
 
-func newWithDefaults() *TestConfig {
+func newWithDefaults() *RunConfig {
 	ns := NamespaceConfig{
 		AutoRemove: true,
 		Temporary:  false,
 	}
 
-	var config = Config{Namespace: ns}
-	return &TestConfig{Config: config}
+	var config = Config{Recursive: true, Namespace: ns}
+	return &RunConfig{Config: config}
 }
 
-func LoadConfig(file string) (*TestConfig, error) {
+func LoadConfig(file string) (*RunConfig, error) {
 	config := newWithDefaults()
 	data, err := ioutil.ReadFile(file)
 	if err != nil && os.IsNotExist(err) {

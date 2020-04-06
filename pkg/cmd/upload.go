@@ -63,15 +63,19 @@ func (o *uploadCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 }
 
 func (o *uploadCmdOptions) run(cmd *cobra.Command, args []string) error {
-	artifact, err := uploadLocalArtifact(o.RootCmdOptions, args[0])
+	artifact, err := uploadLocalArtifact(o.RootCmdOptions, args[0], o.Namespace)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "Uploaded artifact %s\n", artifact)
+	_, err = fmt.Fprintf(cmd.OutOrStdout(), "Uploaded artifact %s\n", artifact)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func uploadLocalArtifact(opts *RootCmdOptions, path string) (string, error) {
+func uploadLocalArtifact(opts *RootCmdOptions, path string, namespace string) (string, error) {
 	config, err := client.GetOutOfClusterConfig(opts.KubeConfig)
 	if err != nil {
 		return "", err
@@ -81,7 +85,7 @@ func uploadLocalArtifact(opts *RootCmdOptions, path string) (string, error) {
 	options := snap.SnapOptions{
 		Bucket: bucket,
 	}
-	s3, err := snap.NewSnap(config, opts.Namespace, false, options)
+	s3, err := snap.NewSnap(config, namespace, false, options)
 	if err != nil {
 		return "", err
 	}
