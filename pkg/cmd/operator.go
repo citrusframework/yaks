@@ -28,8 +28,8 @@ func newCmdOperator(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	}
 	cmd := cobra.Command{
 		Use:   "operator",
-		Short: "Run the Yaks operator",
-		Long:  `Run the Yaks operator locally.`,
+		Short: "Run the YAKS operator",
+		Long:  `Run the YAKS operator locally.`,
 		Run:   impl.run,
 	}
 
