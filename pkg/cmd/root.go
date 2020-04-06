@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const yaksCommandLongDescription = `Yaks is Yet Another Kamel Subproject.
+const yaksCommandLongDescription = `YAKS is Yet Another Kubernetes Service.
 `
 
 // RootCmdOptions --
@@ -43,7 +43,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	}
 	var cmd = cobra.Command{
 		Use:   "yaks",
-		Short: "Yaks is a awesome client tool for running tests natively on Kubernetes",
+		Short: "YAKS is a awesome client tool for running tests natively on Kubernetes",
 		Long:  yaksCommandLongDescription,
 	}
 

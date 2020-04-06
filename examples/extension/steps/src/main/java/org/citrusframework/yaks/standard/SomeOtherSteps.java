@@ -12,9 +12,9 @@ public class SomeOtherSteps {
 	@CitrusResource
     private TestRunner runner;
 
-    @Then("^Yaks can be extended!$")
+    @Then("^YAKS can be extended!$")
     public void yaksCanBeExtended() {
-        runner.echo("Yaks can be extended!");
+        runner.echo("YAKS can be extended!");
     }
 
 }

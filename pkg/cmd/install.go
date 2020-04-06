@@ -34,8 +34,8 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	cmd := cobra.Command{
 		PersistentPreRunE: impl.preRun,
 		Use:               "install",
-		Short:             "Install Yaks on a Kubernetes cluster",
-		Long:              `Installs Yaks on a Kubernetes or OpenShift cluster.`,
+		Short:             "Install YAKS on a Kubernetes cluster",
+		Long:              `Installs YAKS on a Kubernetes or OpenShift cluster.`,
 		RunE:              impl.install,
 	}
 
@@ -71,7 +71,7 @@ func (o *installCmdOptions) install(_ *cobra.Command, _ []string) error {
 	}
 
 	if o.clusterSetupOnly {
-		fmt.Println("Yaks cluster setup completed successfully")
+		fmt.Println("YAKS cluster setup completed successfully")
 	} else {
 		c, err := o.GetCmdClient()
 		if err != nil {
@@ -88,9 +88,9 @@ func (o *installCmdOptions) install(_ *cobra.Command, _ []string) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Yaks setup completed successfully")
+			fmt.Println("YAKS setup completed successfully")
 		} else {
-			fmt.Println("Yaks operator installation skipped")
+			fmt.Println("YAKS operator installation skipped")
 		}
 	}
 

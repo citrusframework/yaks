@@ -1,4 +1,4 @@
-# OperatorSource used to publish the Yaks operator directly on OperatorHub
+# OperatorSource used to publish the YAKS operator directly on OperatorHub
 apiVersion: operators.coreos.com/v1
 kind: OperatorSource
 metadata:
