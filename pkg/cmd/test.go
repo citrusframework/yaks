@@ -54,6 +54,13 @@ const (
 	ConfigFile = "yaks-config.yaml"
 )
 
+const (
+	CucumberOptions = "CUCUMBER_OPTIONS"
+	CucumberGlue = "CUCUMBER_GLUE"
+	CucumberFeatures = "CUCUMBER_FEATURES"
+	CucumberFilterTags = "CUCUMBER_FILTER_TAGS"
+)
+
 func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	options := testCmdOptions{
 		RootCmdOptions: rootCmdOptions,
@@ -73,6 +80,10 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	cmd.Flags().StringArrayVarP(&options.uploads, "upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
 	cmd.Flags().StringArrayVarP(&options.env, "env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
+	cmd.Flags().StringArrayVarP(&options.tags, "tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
+	cmd.Flags().StringArrayVarP(&options.features, "feature", "f", nil, "Feature file to include in the test run")
+	cmd.Flags().StringArrayVarP(&options.glue, "glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
+	cmd.Flags().StringVarP(&options.options, "options", "o", "", "Cucumber runtime options")
 
 	return &cmd
 }
@@ -83,6 +94,10 @@ type testCmdOptions struct {
 	uploads      []string
 	settings     string
 	env          []string
+	tags         []string
+	features     []string
+	glue		 []string
+	options		 string
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -284,8 +299,8 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		}
 	}
 
-	if o.env != nil {
-		test.Spec.Env = o.env
+	if err := o.setupEnvSettings(&test, runConfig); err != nil {
+		return nil, err
 	}
 
 	existed := false
@@ -361,6 +376,42 @@ func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 		}
 		o.dependencies = append(o.dependencies, additionalDep)
 	}
+	return nil
+}
+
+func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) error {
+	env := make([]string, 0)
+
+	if o.tags != nil {
+		env = append(env, CucumberFilterTags + "=" + strings.Join(o.tags, ","))
+	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
+		env = append(env, CucumberFilterTags + "=" + strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
+	}
+
+	if o.features != nil {
+		env = append(env, CucumberFeatures + "=" + strings.Join(o.features, ","))
+	}
+
+	if o.glue != nil {
+		env = append(env, CucumberGlue + "=" + strings.Join(o.glue, ","))
+	} else if len(runConfig.Config.Runtime.Cucumber.Glue) > 0 {
+		env = append(env, CucumberGlue + "=" + strings.Join(runConfig.Config.Runtime.Cucumber.Glue, ","))
+	}
+
+	if len(o.options) > 0 {
+		env = append(env, CucumberOptions + "=" + o.options)
+	} else if len(runConfig.Config.Runtime.Cucumber.Options) > 0 {
+		env = append(env, CucumberOptions + "=" + runConfig.Config.Runtime.Cucumber.Options)
+	}
+
+	if o.env != nil {
+		copy(env, o.env)
+	}
+
+	if len(env) > 0 {
+		test.Spec.Env = env
+	}
+
 	return nil
 }
 

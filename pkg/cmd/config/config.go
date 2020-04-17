@@ -31,6 +31,17 @@ type RunConfig struct {
 type Config struct {
 	Recursive bool `yaml:"recursive"`
 	Namespace NamespaceConfig
+	Runtime   RuntimeConfig
+}
+
+type RuntimeConfig struct {
+	Cucumber 	CucumberConfig
+}
+
+type CucumberConfig struct {
+	Tags 	   []string `yaml:"tags"`
+	Glue 	   []string `yaml:"glue"`
+	Options    string   `yaml:"options"`
 }
 
 type NamespaceConfig struct {
