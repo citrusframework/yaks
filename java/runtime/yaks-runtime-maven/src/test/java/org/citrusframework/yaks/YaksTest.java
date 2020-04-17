@@ -24,18 +24,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = {
-                "com.consol.citrus.cucumber.step.runner.core",
-                "org.citrusframework.yaks.http",
-                "org.citrusframework.yaks.swagger",
-                "org.citrusframework.yaks.camel",
-                "org.citrusframework.yaks.camelk",
-                "org.citrusframework.yaks.jdbc",
-                "org.citrusframework.yaks.jms",
-                "org.citrusframework.yaks.kafka",
-                "org.citrusframework.yaks.standard",
-                "org.citrusframework.yaks.hooks",
-        },
+        extraGlue = { "com.consol.citrus.cucumber.step.runner.core" },
         plugin = { "org.citrusframework.yaks.report.TestReporter" }
 )
 public class YaksTest {

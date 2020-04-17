@@ -399,6 +399,40 @@ You can add the configuration file when running the test via `yaks` CLI like fol
 yaks test --settings yaks.dependency.yaml camel-route.feature
 ```
 
+## Runtime configuration
+
+There are several runtime options that you can set in order to configure which tests to run for instance. Each test directory
+can have its own `yaks-config.yaml` configuration file that holds the runtime options for this specific test suite.
+
+```yaml
+config:
+  runtime:
+    cucumber:
+      tags:
+      - "not @ignored"
+      glue:
+      - "org.citrusframework.yaks"
+      - "com.company.steps.custom"
+```
+
+The sample above uses different runtime options for Cucumber to specify a tag filter and some custom glue packages that 
+should be loaded. The given runtime options will be set as environment variables in the YAKS runtime pod.
+
+You can also specify the Cucumber options that get passed to the Cucumber runtime.
+
+```yaml
+config:
+  runtime:
+    cucumber:
+      options: "--strict --monochrome --glue org.citrusframework.yaks"
+```
+
+Also we can make use of command line options when using the `yaks` binary.
+
+```bash
+yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+```
+
 ## For YAKS Developers
 
 Requirements:

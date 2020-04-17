@@ -1,0 +1,8 @@
+config:
+  runtime:
+    cucumber:
+      tags:
+      - "not @ignored"
+      glue:
+      - "org.citrusframework.yaks"
+      - "com.company.steps.custom"
