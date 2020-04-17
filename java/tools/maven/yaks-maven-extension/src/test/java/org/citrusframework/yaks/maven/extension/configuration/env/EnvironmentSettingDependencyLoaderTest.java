@@ -36,7 +36,7 @@ public class EnvironmentSettingDependencyLoaderTest {
     private Properties properties = new Properties();
 
     @Test
-    public void shouldLoadFromSystemProperties() throws LifecycleExecutionException {
+    public void shouldLoadFromEnv() throws LifecycleExecutionException {
         EnvironmentSettingDependencyLoader loader = new EnvironmentSettingDependencyLoader() {
             @Override
             protected String getEnvSetting(String name) {
@@ -49,7 +49,7 @@ public class EnvironmentSettingDependencyLoaderTest {
     }
 
     @Test
-    public void shouldLoadFromSystemPropertiesWithVersionResolving() throws LifecycleExecutionException {
+    public void shouldLoadFromEnvWithVersionResolving() throws LifecycleExecutionException {
         EnvironmentSettingDependencyLoader loader = new EnvironmentSettingDependencyLoader() {
             @Override
             protected String getEnvSetting(String name) {

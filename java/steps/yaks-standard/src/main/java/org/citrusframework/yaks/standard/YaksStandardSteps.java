@@ -43,4 +43,9 @@ public class YaksStandardSteps {
     public void print(String message) {
         runner.run(echo(message));
     }
+
+    @Then("^(?:log|print)$")
+    public void printMultiline(String message) {
+        runner.run(echo(message));
+    }
 }
