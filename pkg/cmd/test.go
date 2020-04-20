@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"strings"
@@ -147,6 +148,12 @@ func (o *testCmdOptions) runTest(source string) error {
 		return err
 	}
 
+	baseDir := getBaseDir(source)
+	defer runSteps(runConfig.Post, baseDir)
+	if err = runSteps(runConfig.Pre, baseDir); err != nil {
+		return err
+	}
+
 	_, err = o.createAndRunTest(c, source, runConfig)
 	return err
 }
@@ -180,6 +187,12 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 		return err
 	}
 
+	baseDir := getBaseDir(source)
+	defer runSteps(runConfig.Post, baseDir)
+	if err = runSteps(runConfig.Pre, baseDir); err != nil {
+		return err
+	}
+
 	for _, f := range files {
 		name := path.Join(source, f.Name())
 		if f.IsDir() && runConfig.Config.Recursive {
@@ -200,6 +213,19 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 	return err
 }
 
+func getBaseDir(source string) string {
+	if isRemoteFile(source) {
+		return ""
+	}
+
+	if isDir(source) {
+		return source
+	} else {
+		dir, _ := path.Split(source);
+		return dir
+	}
+}
+
 func printSummary(results map[string]error) {
 	summary := "\n\nTest suite results:\n"
 	for k, v := range results {
@@ -214,6 +240,12 @@ func printSummary(results map[string]error) {
 
 func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 	var configFile string
+	var runConfig *config.RunConfig
+
+	if isRemoteFile(source) {
+		return config.NewWithDefaults(), nil
+	}
+
 	if isDir(source) {
 		// search for config file in given directory
 		configFile = path.Join(source, ConfigFile)
@@ -222,8 +254,6 @@ func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) 
 		dir, _ := path.Split(source);
 		configFile = path.Join(dir, ConfigFile);
 	}
-
-	var runConfig *config.RunConfig
 
 	runConfig, err := config.LoadConfig(configFile)
 	if err != nil {
@@ -490,6 +520,39 @@ func isDir(fileName string) bool {
 	}
 
 	return false
+}
+
+func runSteps(steps []config.StepConfig, baseDir string) error {
+	for _, step := range steps {
+		if len(step.Script) > 0 {
+			var scriptFile string
+
+			if len(baseDir) > 0 && !path.IsAbs(step.Script) {
+				scriptFile = path.Join(baseDir, step.Script)
+			} else {
+				scriptFile = step.Script
+			}
+
+			if out, err := exec.Command(scriptFile).Output(); err == nil {
+				fmt.Printf("Running script %s: \n%s\n", step.Script, out)
+			} else {
+				fmt.Printf("Failed to run script %s: \n%s\n", step.Script, err)
+				return err
+			}
+		}
+
+		if len(step.Run) > 0 {
+			tokens := strings.Split(step.Run, " ")
+			if out, err := exec.Command(tokens[0], tokens[1:]...).Output(); err == nil {
+				fmt.Printf("Running command %s: \n%s\n", step.Run, out)
+			} else {
+				fmt.Printf("Failed to run command %s: \n%s\n", step.Run, err)
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func initializeTempNamespace(name string, c client.Client, context context.Context) (metav1.Object, error) {
