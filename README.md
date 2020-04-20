@@ -433,6 +433,32 @@ Also we can make use of command line options when using the `yaks` binary.
 yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
 ```
 
+## Pre/Post scripts
+
+You can run scripts before/after a test group. Just add your commands to the `yaks-config.yaml` configuration for the test group.
+
+```yaml
+config:
+  namespace:
+    temporary: false
+    autoRemove: true
+pre:
+  - script: prepare.sh
+  - run: echo Start!
+post:
+  - script: finish.sh
+  - run: echo Bye!
+```
+
+The section `pre` runs before a test group and `post` is added after the test group has finished. The post steps are run even if the tests or pre steps fail
+for some reason. This ensures that cleanup tasks are performed also in case of errors. 
+
+The `script` option provides a file path to bash script to execute. The user has to make sure that the script is executable. If no absolute file path is 
+given it is assumed to be a file path relative to the current test group directory.
+
+With `run` you can add any shell command. At the moment only single line commands are supported here. You can add multiple `run` commands in a `pre`
+or `post` section.
+
 ## For YAKS Developers
 
 Requirements:

@@ -1,0 +1,10 @@
+config:
+  namespace:
+    temporary: false
+    autoRemove: true
+pre:
+  - script: prepare.sh
+  - run: echo Start!
+post:
+  - script: finish.sh
+  - run: echo Bye!

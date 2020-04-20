@@ -26,16 +26,23 @@ import (
 
 type RunConfig struct {
 	Config Config `yaml:"config"`
+	Pre    []StepConfig `yaml:"pre"`
+	Post   []StepConfig `yaml:"post"`
 }
 
 type Config struct {
-	Recursive bool `yaml:"recursive"`
-	Namespace NamespaceConfig
-	Runtime   RuntimeConfig
+	Recursive 	bool `yaml:"recursive"`
+	Namespace 	NamespaceConfig
+	Runtime   	RuntimeConfig
+}
+
+type StepConfig struct {
+	Run    		string `yaml:"run"`
+	Script 		string `yaml:"script"`
 }
 
 type RuntimeConfig struct {
-	Cucumber 	CucumberConfig
+	Cucumber    CucumberConfig
 }
 
 type CucumberConfig struct {
@@ -50,7 +57,7 @@ type NamespaceConfig struct {
 	AutoRemove bool   `yaml:"autoremove"`
 }
 
-func newWithDefaults() *RunConfig {
+func NewWithDefaults() *RunConfig {
 	ns := NamespaceConfig{
 		AutoRemove: true,
 		Temporary:  false,
@@ -61,7 +68,7 @@ func newWithDefaults() *RunConfig {
 }
 
 func LoadConfig(file string) (*RunConfig, error) {
-	config := newWithDefaults()
+	config := NewWithDefaults()
 	data, err := ioutil.ReadFile(file)
 	if err != nil && os.IsNotExist(err) {
 		return config, nil
