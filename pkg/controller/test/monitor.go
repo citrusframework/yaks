@@ -55,7 +55,7 @@ func (action *monitorAction) Handle(ctx context.Context, test *v1alpha1.Test) (*
 
 	if expectedDigest != test.Status.Digest {
 		// Restart the test
-		test.Status.Phase = v1alpha1.IntegrationTestPhaseNone
+		test.Status.Phase = v1alpha1.TestPhaseNone
 	}
 
 	return test, nil

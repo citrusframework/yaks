@@ -126,6 +126,11 @@ func (in *TestResults) DeepCopyInto(out *TestResults) {
 		*out = make([]TestResult, len(*in))
 		copy(*out, *in)
 	}
+	if in.Errors != nil {
+		in, out := &in.Errors, &out.Errors
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

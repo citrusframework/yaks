@@ -20,12 +20,11 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"strings"
-
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"path"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -74,20 +73,27 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 
 func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1.Test) error {
 	var reportJson = []byte(status.ContainerStatuses[0].State.Terminated.Message)
-	err := json.Unmarshal(reportJson, &test.Status.Results)
+	if err := json.Unmarshal(reportJson, &test.Status.Results); err != nil {
+		return err
+	}
 
 	errors := make([]string, 0)
 	for _, result := range test.Status.Results.Tests {
 		if result.ErrorType != "" {
-			errors = append(errors, result.Name + " failed with " + result.ErrorType + ": " + result.ErrorMessage)
+			_, testName := path.Split(result.Name)
+			errors = append(errors, testName + " failed with " + result.ErrorType + ": " + result.ErrorMessage)
 		}
 	}
 
 	if len(errors) > 0 {
-		test.Status.Errors = strings.Join(errors[:], ",");
+		bytes, err := json.Marshal(errors)
+		if err != nil {
+			return err
+		}
+		test.Status.Errors = string(bytes);
 	}
 
-	return err
+	return nil
 }
 
 func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {
