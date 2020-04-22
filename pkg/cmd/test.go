@@ -580,8 +580,12 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 
 func runScript(scriptFile, desc, namespace, baseDir string) error {
 	command := exec.Command(scriptFile)
+
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("YAKS_NAMESPACE=%s", namespace))
+
+	command.Dir = baseDir
+
 	if out, err := command.Output(); err == nil {
 		fmt.Printf("Running %s: \n%s\n", desc, out)
 	} else {
