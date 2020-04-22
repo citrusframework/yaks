@@ -463,6 +463,10 @@ given it is assumed to be a file path relative to the current test group directo
 With `run` you can add any shell command. At the moment only single line commands are supported here. You can add multiple `run` commands in a `pre`
 or `post` section.
 
+Scripts can leverage the following environment variables that are set automatically by the Yaks runtime:
+
+- **YAKS_NAMESPACE**: always contains the namespace where the tests will be executed, no matter if the namespace is fixed or temporary
+
 ## For YAKS Developers
 
 Requirements:
