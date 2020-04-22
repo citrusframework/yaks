@@ -56,9 +56,9 @@ const (
 )
 
 const (
-	CucumberOptions = "CUCUMBER_OPTIONS"
-	CucumberGlue = "CUCUMBER_GLUE"
-	CucumberFeatures = "CUCUMBER_FEATURES"
+	CucumberOptions    = "CUCUMBER_OPTIONS"
+	CucumberGlue       = "CUCUMBER_GLUE"
+	CucumberFeatures   = "CUCUMBER_FEATURES"
 	CucumberFilterTags = "CUCUMBER_FILTER_TAGS"
 )
 
@@ -97,8 +97,8 @@ type testCmdOptions struct {
 	env          []string
 	tags         []string
 	features     []string
-	glue		 []string
-	options		 string
+	glue         []string
+	options      string
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -128,7 +128,7 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 func (o *testCmdOptions) runTest(source string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return err;
+		return err
 	}
 
 	var runConfig *config.RunConfig
@@ -136,10 +136,12 @@ func (o *testCmdOptions) runTest(source string) error {
 		return err
 	}
 
+	testNamespace := runConfig.Config.Namespace.Name
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
 			return err
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
+			testNamespace = namespace.GetName()
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
@@ -149,8 +151,8 @@ func (o *testCmdOptions) runTest(source string) error {
 	}
 
 	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, baseDir)
-	if err = runSteps(runConfig.Pre, baseDir); err != nil {
+	defer runSteps(runConfig.Post, testNamespace, baseDir)
+	if err = runSteps(runConfig.Pre, testNamespace, baseDir); err != nil {
 		return err
 	}
 
@@ -169,10 +171,12 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 		return err
 	}
 
+	var testNamespace = runConfig.Config.Namespace.Name
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
 			return err
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
+			testNamespace = namespace.GetName()
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
@@ -188,8 +192,8 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 	}
 
 	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, baseDir)
-	if err = runSteps(runConfig.Pre, baseDir); err != nil {
+	defer runSteps(runConfig.Post, testNamespace, baseDir)
+	if err = runSteps(runConfig.Pre, testNamespace, baseDir); err != nil {
 		return err
 	}
 
@@ -221,7 +225,7 @@ func getBaseDir(source string) string {
 	if isDir(source) {
 		return source
 	} else {
-		dir, _ := path.Split(source);
+		dir, _ := path.Split(source)
 		return dir
 	}
 }
@@ -251,8 +255,8 @@ func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) 
 		configFile = path.Join(source, ConfigFile)
 	} else {
 		// search for config file in same directory as given file
-		dir, _ := path.Split(source);
-		configFile = path.Join(dir, ConfigFile);
+		dir, _ := path.Split(source)
+		configFile = path.Join(dir, ConfigFile)
 	}
 
 	runConfig, err := config.LoadConfig(configFile)
@@ -261,13 +265,13 @@ func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) 
 	}
 
 	if runConfig.Config.Namespace.Name == "" && !runConfig.Config.Namespace.Temporary {
-		runConfig.Config.Namespace.Name = o.Namespace;
+		runConfig.Config.Namespace.Name = o.Namespace
 	}
 
 	return runConfig, nil
 }
 
-func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig,c client.Client) (metav1.Object, error) {
+func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c client.Client) (metav1.Object, error) {
 	namespaceName := "yaks-" + uuid.New().String()
 	namespace, err := initializeTempNamespace(namespaceName, c, o.Context)
 	if err != nil {
@@ -413,25 +417,25 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 	env := make([]string, 0)
 
 	if o.tags != nil {
-		env = append(env, CucumberFilterTags + "=" + strings.Join(o.tags, ","))
+		env = append(env, CucumberFilterTags+"="+strings.Join(o.tags, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
-		env = append(env, CucumberFilterTags + "=" + strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
+		env = append(env, CucumberFilterTags+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
 	}
 
 	if o.features != nil {
-		env = append(env, CucumberFeatures + "=" + strings.Join(o.features, ","))
+		env = append(env, CucumberFeatures+"="+strings.Join(o.features, ","))
 	}
 
 	if o.glue != nil {
-		env = append(env, CucumberGlue + "=" + strings.Join(o.glue, ","))
+		env = append(env, CucumberGlue+"="+strings.Join(o.glue, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Glue) > 0 {
-		env = append(env, CucumberGlue + "=" + strings.Join(runConfig.Config.Runtime.Cucumber.Glue, ","))
+		env = append(env, CucumberGlue+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Glue, ","))
 	}
 
 	if len(o.options) > 0 {
-		env = append(env, CucumberOptions + "=" + o.options)
+		env = append(env, CucumberOptions+"="+o.options)
 	} else if len(runConfig.Config.Runtime.Cucumber.Options) > 0 {
-		env = append(env, CucumberOptions + "=" + runConfig.Config.Runtime.Cucumber.Options)
+		env = append(env, CucumberOptions+"="+runConfig.Config.Runtime.Cucumber.Options)
 	}
 
 	if o.env != nil {
@@ -522,8 +526,8 @@ func isDir(fileName string) bool {
 	return false
 }
 
-func runSteps(steps []config.StepConfig, baseDir string) error {
-	for _, step := range steps {
+func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
+	for idx, step := range steps {
 		if len(step.Script) > 0 {
 			var scriptFile string
 
@@ -533,25 +537,54 @@ func runSteps(steps []config.StepConfig, baseDir string) error {
 				scriptFile = step.Script
 			}
 
-			if out, err := exec.Command(scriptFile).Output(); err == nil {
-				fmt.Printf("Running script %s: \n%s\n", step.Script, out)
-			} else {
-				fmt.Printf("Failed to run script %s: \n%s\n", step.Script, err)
+			if err := runScript(scriptFile, fmt.Sprintf("script %s", scriptFile), namespace, baseDir); err != nil {
 				return err
 			}
 		}
 
 		if len(step.Run) > 0 {
-			tokens := strings.Split(step.Run, " ")
-			if out, err := exec.Command(tokens[0], tokens[1:]...).Output(); err == nil {
-				fmt.Printf("Running command %s: \n%s\n", step.Run, out)
-			} else {
-				fmt.Printf("Failed to run command %s: \n%s\n", step.Run, err)
+			// Let's save it to a bash script to allow for multiline scripts
+			file, err := ioutil.TempFile("", "yaks-script-*.sh")
+			if err != nil {
+				return err
+			}
+			defer os.Remove(file.Name())
+
+			_, err = file.WriteString("#!/bin/bash\n\n")
+			if err != nil {
+				return err
+			}
+
+			_, err = file.WriteString(step.Run)
+			if err != nil {
+				return err
+			}
+
+			if err = file.Close(); err != nil {
+				return err
+			}
+
+			// Make it executable
+			if err = os.Chmod(file.Name(), 0777); err != nil {
+				return err
+			}
+
+			if err := runScript(file.Name(), fmt.Sprintf("inline command %d", idx), namespace, baseDir); err != nil {
 				return err
 			}
 		}
 	}
 
+	return nil
+}
+
+func runScript(scriptFile, desc, namespace, baseDir string) error {
+	if out, err := exec.Command(scriptFile).Output(); err == nil {
+		fmt.Printf("Running %s: \n%s\n", desc, out)
+	} else {
+		fmt.Printf("Failed to run %s: \n%v\n", desc, err)
+		return err
+	}
 	return nil
 }
 

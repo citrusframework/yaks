@@ -445,6 +445,10 @@ config:
 pre:
   - script: prepare.sh
   - run: echo Start!
+  - run: |
+      echo "Multiline"
+      echo "Commands are also"
+      echo "Supported!"
 post:
   - script: finish.sh
   - run: echo Bye!
