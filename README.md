@@ -441,7 +441,7 @@ You can run scripts before/after a test group. Just add your commands to the `ya
 config:
   namespace:
     temporary: false
-    autoRemove: true
+    autoremove: true
 pre:
   - script: prepare.sh
   - run: echo Start!
