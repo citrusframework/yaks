@@ -296,9 +296,11 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	cmdOptionsCopy := o.RootCmdOptions
-	cmdOptionsCopy.Namespace = namespaceName
-	if err := newCmdInstall(cmdOptionsCopy).Execute(); err != nil {
+	if err := setupCluster(o.RootCmdOptions); err != nil {
+		return namespace, err
+	}
+
+	if err := setupOperator(o.RootCmdOptions, namespaceName); err != nil {
 		return namespace, err
 	}
 
