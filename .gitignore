@@ -5,6 +5,7 @@
 
 build/_maven_*
 build/_output
+_output
 
 /yaks
 /yaks-*

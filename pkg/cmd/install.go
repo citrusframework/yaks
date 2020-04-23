@@ -56,43 +56,56 @@ type installCmdOptions struct {
 // nolint: gocyclo
 func (o *installCmdOptions) install(_ *cobra.Command, _ []string) error {
 	if !o.skipClusterSetup {
-		// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
-		clientProvider := client.Provider{Get: o.NewCmdClient}
-
-		err := install.SetupClusterwideResourcesOrCollect(o.Context, clientProvider, nil)
-		if err != nil && k8serrors.IsForbidden(err) {
-			fmt.Println("Current user is not authorized to create cluster-wide objects like custom resource definitions or cluster roles: ", err)
-
-			meg := `please login as cluster-admin and execute "yaks install --cluster-setup" to install cluster-wide resources (one-time operation)`
-			return errors.New(meg)
-		} else if err != nil {
+		if err := setupCluster(o.RootCmdOptions); err != nil {
 			return err
 		}
+	} else {
+		fmt.Println("YAKS cluster setup skipped")
 	}
 
 	if o.clusterSetupOnly {
 		fmt.Println("YAKS cluster setup completed successfully")
-	} else {
-		c, err := o.GetCmdClient()
-		if err != nil {
-			return err
-		}
-
-		namespace := o.Namespace
-
-		if !o.skipOperatorSetup {
-			cfg := install.OperatorConfiguration{
-				Namespace: namespace,
-			}
-			err = install.OperatorOrCollect(o.Context, c, cfg, nil)
-			if err != nil {
-				return err
-			}
-			fmt.Println("YAKS setup completed successfully")
-		} else {
-			fmt.Println("YAKS operator installation skipped")
-		}
+		return nil
 	}
 
+	if o.skipOperatorSetup {
+		fmt.Println("YAKS operator installation skipped")
+		return nil
+	}
+
+	err := setupOperator(o.RootCmdOptions, o.Namespace)
+	return err
+}
+
+func setupCluster(o *RootCmdOptions) error {
+	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
+	clientProvider := client.Provider{Get: o.NewCmdClient}
+
+	err := install.SetupClusterwideResourcesOrCollect(o.Context, clientProvider, nil)
+	if err != nil && k8serrors.IsForbidden(err) {
+		fmt.Println("Current user is not authorized to create cluster-wide objects like custom resource definitions or cluster roles: ", err)
+
+		meg := `please login as cluster-admin and execute "yaks install --cluster-setup" to install cluster-wide resources (one-time operation)`
+		return errors.New(meg)
+	}
+
+	return err
+}
+
+func setupOperator(o *RootCmdOptions, namespace string) error {
+	c, err := o.GetCmdClient()
+	if err != nil {
+		return err
+	}
+
+	cfg := install.OperatorConfiguration{
+		Namespace: namespace,
+	}
+	err = install.OperatorOrCollect(o.Context, c, cfg, nil)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("YAKS setup completed successfully")
 	return nil
 }

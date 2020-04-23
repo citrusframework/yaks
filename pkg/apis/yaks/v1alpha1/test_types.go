@@ -74,6 +74,7 @@ type TestList struct {
 type TestResults struct {
 	Summary TestSummary  `json:"summary,omitempty"`
 	Tests	[]TestResult `json:"tests,omitempty"`
+	Errors 	[]string 	 `json:"errors,omitempty"`
 }
 
 type TestSummary struct {
@@ -99,7 +100,7 @@ const (
 	TestKind string = "Test"
 
 	// TestPhaseNone --
-	IntegrationTestPhaseNone TestPhase = ""
+	TestPhaseNone TestPhase = ""
 	// TestPhasePending --
 	TestPhasePending TestPhase = "Pending"
 	// TestPhaseRunning --

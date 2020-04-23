@@ -335,7 +335,7 @@ use of version properties for these versions available in the YAKS base image:
 You can add dependencies also by specifying the dependencies as command line parameter when running the test via `yaks` CLI.
 
 ```bash
-yaks test --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
+$ yaks test --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
 ```
 
 This will add a environment setting in the YAKS runtime container and the dependency will be loaded automatically
@@ -355,7 +355,7 @@ yaks.dependency.bar=org.bar:bar-artifact:1.5.0
 You can add the property file when running the test via `yaks` CLI like follows:
 
 ```bash
-yaks test --settings yaks.properties camel-route.feature
+$ yaks test --settings yaks.properties camel-route.feature
 ```
 
 #### Load dependencies via configuration file
@@ -396,7 +396,7 @@ dependencies:
 You can add the configuration file when running the test via `yaks` CLI like follows:
 
 ```bash
-yaks test --settings yaks.dependency.yaml camel-route.feature
+$ yaks test --settings yaks.dependency.yaml camel-route.feature
 ```
 
 ## Runtime configuration
@@ -430,7 +430,7 @@ config:
 Also we can make use of command line options when using the `yaks` binary.
 
 ```bash
-yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+$ yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
 ```
 
 ## Pre/Post scripts
@@ -466,6 +466,73 @@ or `post` section.
 Scripts can leverage the following environment variables that are set automatically by the Yaks runtime:
 
 - **YAKS_NAMESPACE**: always contains the namespace where the tests will be executed, no matter if the namespace is fixed or temporary
+
+## Reporting options
+
+After running some YAKS tests you may want to review the test results and generate a summary report. As we are using CRDs on the Kubernetes or OpenShift platform we
+can review the status of the custom resources after the test run in order to get some test results.
+
+```bash
+$ oc get tests
+
+NAME         PHASE     TOTAL     PASSED    FAILED    SKIPPED
+helloworld   Passed    2         2         0         0
+foo-test     Passed    1         1         0         0
+bar-test     Passed    1         1         0         0
+```
+
+You can also view error details when adding the `wide` option
+
+```bash
+$ oc get tests -o wide
+
+NAME         PHASE     TOTAL     PASSED    FAILED    SKIPPED    ERRORS
+helloworld   Passed    2         1         1         0          [ "helloworld.feature:10 Failed caused by ValidationException - Expected 'foo' but was 'bar'" ]
+foo-test     Passed    1         1         0         0
+bar-test     Passed    1         1         0         0
+```
+
+The YAKS CLI is able to fetch those results in order to generate a summary report locally:
+
+```bash
+$ yaks report --fetch
+
+Test results: Total: 4, Passed: 4, Failed: 0, Skipped: 0
+	classpath:org/citrusframework/yaks/helloworld.feature:3: Passed
+	classpath:org/citrusframework/yaks/helloworld.feature:7: Passed
+	classpath:org/citrusframework/yaks/foo-test.feature:3: Passed
+	classpath:org/citrusframework/yaks/bar-test.feature:3: Passed
+```
+
+The report supports different output formats (summary, json, junit). For JUnit style reports use the `junit` output.
+
+```bash
+$ yaks report --fetch --output junit
+
+<?xml version="1.0" encoding="UTF-8"?><testsuite name="org.citrusframework.yaks.JUnitReport" errors="0" failures="0" skipped="0" tests="4" time="0">
+  <testcase name="helloworld.feature:3" classname="classpath:org/citrusframework/yaks/helloworld.feature:3" time="0"></testcase>
+  <testcase name="helloworld.feature:7" classname="classpath:org/citrusframework/yaks/helloworld.feature:7" time="0"></testcase>
+  <testcase name="foo-test.feature:3" classname="classpath:org/citrusframework/yaks/foo-test.feature:3" time="0"></testcase>
+  <testcase name="bar-test.feature:3" classname="classpath:org/citrusframework/yaks/bar-test.feature:3" time="0"></testcase>
+</testsuite>
+```
+
+The JUnit report is also saved to the local disk in the file `_output/junit-reports.xml`.
+
+The `_output` directory is also used to store individual test results for each test executed via the YAKS CLI. 
+So after a test run you can also review the results in that `_output` directory. The YAKS report command can also view those results in `_output` directory 
+in any given output format. Simply leave out the `--fetch` option when generating the report and YAKS will use the test results stored in the 
+local `_output` folder.
+
+```bash
+$ yaks report
+Test results: Total: 5, Passed: 5, Failed: 0, Skipped: 0
+	classpath:org/citrusframework/yaks/helloworld.feature:3: Passed
+	classpath:org/citrusframework/yaks/helloworld.feature:7: Passed
+	classpath:org/citrusframework/yaks/test1.feature:3: Passed
+	classpath:org/citrusframework/yaks/test2.feature:3: Passed
+	classpath:org/citrusframework/yaks/test3.feature:3: Passed
+```
 
 ## For YAKS Developers
 

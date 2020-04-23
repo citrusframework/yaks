@@ -54,6 +54,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	cmd.AddCommand(newCmdInstall(&options))
 	cmd.AddCommand(newCmdOperator(&options))
 	cmd.AddCommand(newCmdUpload(&options))
+	cmd.AddCommand(newCmdReport(&options))
 	cmd.AddCommand(newCmdVersion(&options))
 
 	return &cmd, nil

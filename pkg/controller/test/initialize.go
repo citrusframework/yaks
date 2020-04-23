@@ -42,7 +42,7 @@ func (action *initializeAction) Name() string {
 
 // CanHandle tells whether this action can handle the test
 func (action *initializeAction) CanHandle(build *v1alpha1.Test) bool {
-	return build.Status.Phase == v1alpha1.IntegrationTestPhaseNone
+	return build.Status.Phase == v1alpha1.TestPhaseNone
 }
 
 // Handle handles the test

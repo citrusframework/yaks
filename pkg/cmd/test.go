@@ -36,6 +36,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"github.com/citrusframework/yaks/pkg/cmd/report"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"github.com/fatih/color"
@@ -85,6 +86,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	cmd.Flags().StringArrayVarP(&options.features, "feature", "f", nil, "Feature file to include in the test run")
 	cmd.Flags().StringArrayVarP(&options.glue, "glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
 	cmd.Flags().StringVarP(&options.options, "options", "o", "", "Cucumber runtime options")
+	cmd.Flags().VarP(&options.report, "report", "r", "Create test report in given output format")
 
 	return &cmd
 }
@@ -97,8 +99,9 @@ type testCmdOptions struct {
 	env          []string
 	tags         []string
 	features     []string
-	glue         []string
-	options      string
+	glue		 []string
+	options		 string
+	report		 report.OutputFormat
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -113,19 +116,25 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	var err error
 	source := args[0]
 
-	results := make(map[string]error)
-	defer printSummary(results)
+	results := v1alpha1.TestResults{}
+	defer report.PrintSummaryReport(&results)
+	if o.report != report.DefaultOutput && o.report != report.SummaryOutput {
+		defer report.GenerateReport(&results, o.report)
+	}
 
 	if isDir(source) {
 		err = o.runTestGroup(source, &results)
+		if err == nil && len(results.Errors) > 0 {
+			err = errors.New("There are test failures!")
+		}
 	} else {
-		results[source] = o.runTest(source)
+		err = o.runTest(source, &results)
 	}
 
 	return err
 }
 
-func (o *testCmdOptions) runTest(source string) error {
+func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		return err
@@ -156,11 +165,19 @@ func (o *testCmdOptions) runTest(source string) error {
 		return err
 	}
 
-	_, err = o.createAndRunTest(c, source, runConfig)
+	var test *v1alpha1.Test
+	test, err = o.createAndRunTest(c, source, runConfig)
+	if test != nil {
+		report.AppendTestResults(results, test.Status.Results)
+
+		if saveErr := report.SaveTestResults(test); saveErr != nil {
+			fmt.Printf("Failed to save test results: %s", saveErr.Error())
+		}
+	}
 	return err
 }
 
-func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) error {
+func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResults) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		return err
@@ -187,7 +204,6 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 
 	var files []os.FileInfo
 	if files, err = ioutil.ReadDir(source); err != nil {
-		(*results)[source] = err
 		return err
 	}
 
@@ -197,24 +213,37 @@ func (o *testCmdOptions) runTestGroup(source string, results *map[string]error) 
 		return err
 	}
 
+	suiteErrors := make([]string, 0)
 	for _, f := range files {
 		name := path.Join(source, f.Name())
 		if f.IsDir() && runConfig.Config.Recursive {
 			groupError := o.runTestGroup(name, results)
 			if groupError != nil {
-				err = errors.New("There are test failures!")
-				(*results)[name] = groupError
+				suiteErrors = append(suiteErrors, groupError.Error())
 			}
 		} else if strings.HasSuffix(f.Name(), FileSuffix) {
-			_, testError := o.createAndRunTest(c, name, runConfig)
-			(*results)[name] = testError
+			var test *v1alpha1.Test
+			var testError error
+			test, testError = o.createAndRunTest(c, name, runConfig)
+			if test != nil {
+				report.AppendTestResults(results, test.Status.Results)
+
+				if saveErr := report.SaveTestResults(test); saveErr != nil {
+					fmt.Printf("Failed to save test results: %s", saveErr.Error())
+				}
+			}
+
 			if testError != nil {
-				err = errors.New("There are test failures!")
+				suiteErrors = append(suiteErrors, testError.Error())
 			}
 		}
 	}
 
-	return err
+	if len(suiteErrors) > 0 {
+        results.Errors = append(results.Errors, suiteErrors...)
+	}
+
+	return nil
 }
 
 func getBaseDir(source string) string {
@@ -228,18 +257,6 @@ func getBaseDir(source string) string {
 		dir, _ := path.Split(source)
 		return dir
 	}
-}
-
-func printSummary(results map[string]error) {
-	summary := "\n\nTest suite results:\n"
-	for k, v := range results {
-		result := "Passed"
-		if v != nil {
-			result = v.Error()
-		}
-		summary += fmt.Sprintf("\t%s: %s\n", k, result)
-	}
-	fmt.Print(summary)
 }
 
 func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
@@ -279,9 +296,11 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	cmdOptionsCopy := o.RootCmdOptions
-	cmdOptionsCopy.Namespace = namespaceName
-	if err := newCmdInstall(cmdOptionsCopy).Execute(); err != nil {
+	if err := setupCluster(o.RootCmdOptions); err != nil {
+		return namespace, err
+	}
+
+	if err := setupOperator(o.RootCmdOptions, namespaceName); err != nil {
 		return namespace, err
 	}
 
@@ -394,12 +413,8 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		return nil, err
 	}
 
-	err = status.AsError()
-	if err != nil {
-		return nil, err
-	}
 	fmt.Printf("Test %s\n", string(status))
-	return &test, nil
+	return &test, status.AsError()
 }
 
 func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
