@@ -61,6 +61,8 @@ const (
 	CucumberGlue       = "CUCUMBER_GLUE"
 	CucumberFeatures   = "CUCUMBER_FEATURES"
 	CucumberFilterTags = "CUCUMBER_FILTER_TAGS"
+
+	DefaultStepTimeout = "30m"
 )
 
 func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
@@ -99,9 +101,9 @@ type testCmdOptions struct {
 	env          []string
 	tags         []string
 	features     []string
-	glue		 []string
-	options		 string
-	report		 report.OutputFormat
+	glue         []string
+	options      string
+	report       report.OutputFormat
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -240,7 +242,7 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 	}
 
 	if len(suiteErrors) > 0 {
-        results.Errors = append(results.Errors, suiteErrors...)
+		results.Errors = append(results.Errors, suiteErrors...)
 	}
 
 	return nil
@@ -544,7 +546,11 @@ func isDir(fileName string) bool {
 func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 	for idx, step := range steps {
 		if len(step.Script) > 0 {
-			if err := runScript(step.Script, fmt.Sprintf("script %s", step.Script), namespace, baseDir); err != nil {
+			desc := step.Name
+			if desc == "" {
+				desc = fmt.Sprintf("script %s", step.Script)
+			}
+			if err := runScript(step.Script, desc, namespace, baseDir, step.Timeout); err != nil {
 				return err
 			}
 		}
@@ -576,7 +582,11 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 				return err
 			}
 
-			if err := runScript(file.Name(), fmt.Sprintf("inline command %d", idx), namespace, baseDir); err != nil {
+			desc := step.Name
+			if desc == "" {
+				desc = fmt.Sprintf("inline command %d", idx)
+			}
+			if err := runScript(file.Name(), desc, namespace, baseDir, step.Timeout); err != nil {
 				return err
 			}
 		}
@@ -585,8 +595,18 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 	return nil
 }
 
-func runScript(scriptFile, desc, namespace, baseDir string) error {
-	command := exec.Command(scriptFile)
+func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
+	if timeout == "" {
+		timeout = DefaultStepTimeout
+	}
+	actualTimeout, err := time.ParseDuration(timeout)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), actualTimeout)
+	defer cancel()
+
+	command := exec.CommandContext(ctx, scriptFile)
 
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("YAKS_NAMESPACE=%s", namespace))
