@@ -563,7 +563,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 			}
 			defer os.Remove(file.Name())
 
-			_, err = file.WriteString("#!/bin/bash\n\n")
+			_, err = file.WriteString("#!/bin/bash\n\nset -e\n\n")
 			if err != nil {
 				return err
 			}
