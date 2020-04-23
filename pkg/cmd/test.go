@@ -578,9 +578,11 @@ func runScript(scriptFile, desc, namespace, baseDir string) error {
 
 	command.Dir = baseDir
 
-	if out, err := command.Output(); err == nil {
-		fmt.Printf("Running %s: \n%s\n", desc, out)
-	} else {
+	command.Stderr = os.Stderr
+	command.Stdout = os.Stdout
+
+	fmt.Printf("Running %s: \n", desc)
+	if err := command.Run(); err != nil {
 		fmt.Printf("Failed to run %s: \n%v\n", desc, err)
 		return err
 	}
