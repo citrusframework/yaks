@@ -445,7 +445,9 @@ config:
 pre:
   - script: prepare.sh
   - run: echo Start!
-  - run: |
+  - name: Optional name
+    timeout: 30m
+    run: |
       echo "Multiline"
       echo "Commands are also"
       echo "Supported!"
@@ -462,6 +464,10 @@ given it is assumed to be a file path relative to the current test group directo
 
 With `run` you can add any shell command. At the moment only single line commands are supported here. You can add multiple `run` commands in a `pre`
 or `post` section.
+
+Each step can also define a human readable `name` that will be printed before its execution.
+
+By default a step must complete within 30 minutes (`30m`). The timeout can be changed using the `timeout` option in the step declaration (in Golang duration format).
 
 Scripts can leverage the following environment variables that are set automatically by the Yaks runtime:
 

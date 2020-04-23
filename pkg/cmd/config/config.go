@@ -25,34 +25,36 @@ import (
 )
 
 type RunConfig struct {
-	Config Config `yaml:"config"`
+	Config Config       `yaml:"config"`
 	Pre    []StepConfig `yaml:"pre"`
 	Post   []StepConfig `yaml:"post"`
 }
 
 type Config struct {
-	Recursive 	bool `yaml:"recursive"`
-	Namespace 	NamespaceConfig
-	Runtime   	RuntimeConfig
+	Recursive bool `yaml:"recursive"`
+	Namespace NamespaceConfig
+	Runtime   RuntimeConfig
 }
 
 type StepConfig struct {
-	Run    		string `yaml:"run"`
-	Script 		string `yaml:"script"`
+	Run     string `yaml:"run"`
+	Script  string `yaml:"script"`
+	Name    string `yaml:"name"`
+	Timeout string `yaml:"timeout"`
 }
 
 type RuntimeConfig struct {
-	Cucumber    CucumberConfig
+	Cucumber CucumberConfig
 }
 
 type CucumberConfig struct {
-	Tags 	   []string `yaml:"tags"`
-	Glue 	   []string `yaml:"glue"`
-	Options    string   `yaml:"options"`
+	Tags    []string `yaml:"tags"`
+	Glue    []string `yaml:"glue"`
+	Options string   `yaml:"options"`
 }
 
 type NamespaceConfig struct {
-	Name 	   string `yaml:"name"`
+	Name       string `yaml:"name"`
 	Temporary  bool   `yaml:"temporary"`
 	AutoRemove bool   `yaml:"autoremove"`
 }
