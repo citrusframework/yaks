@@ -544,15 +544,7 @@ func isDir(fileName string) bool {
 func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 	for idx, step := range steps {
 		if len(step.Script) > 0 {
-			var scriptFile string
-
-			if len(baseDir) > 0 && !path.IsAbs(step.Script) {
-				scriptFile = path.Join(baseDir, step.Script)
-			} else {
-				scriptFile = step.Script
-			}
-
-			if err := runScript(scriptFile, fmt.Sprintf("script %s", scriptFile), namespace, baseDir); err != nil {
+			if err := runScript(step.Script, fmt.Sprintf("script %s", step.Script), namespace, baseDir); err != nil {
 				return err
 			}
 		}
@@ -601,9 +593,11 @@ func runScript(scriptFile, desc, namespace, baseDir string) error {
 
 	command.Dir = baseDir
 
-	if out, err := command.Output(); err == nil {
-		fmt.Printf("Running %s: \n%s\n", desc, out)
-	} else {
+	command.Stderr = os.Stderr
+	command.Stdout = os.Stdout
+
+	fmt.Printf("Running %s: \n", desc)
+	if err := command.Run(); err != nil {
 		fmt.Printf("Failed to run %s: \n%v\n", desc, err)
 		return err
 	}
