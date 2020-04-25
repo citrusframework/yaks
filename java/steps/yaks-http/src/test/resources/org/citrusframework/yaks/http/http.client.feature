@@ -1,7 +1,8 @@
 Feature: Http client
 
   Background:
-    Given URL: http://localhost:8080
+    Given variable port is "8080"
+    Given URL: http://localhost:${port}
 
   Scenario: GET
     When send GET /todo

@@ -18,8 +18,6 @@
 package org.citrusframework.yaks.http;
 
 import javax.net.ssl.SSLContext;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -118,16 +116,11 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^(?:URL|url): ([^\\s]+)$")
     public void setUrl(String url) {
-        try {
-            URL requestURL = new URL(url);
-            if (requestURL.getProtocol().equalsIgnoreCase("https")) {
-                httpClient.getEndpointConfiguration().setRequestFactory(sslRequestFactory());
-            }
-
-            this.requestUrl = url;
-        } catch (MalformedURLException e) {
-            throw new CitrusRuntimeException(e);
+        if (url.startsWith("https")) {
+            httpClient.getEndpointConfiguration().setRequestFactory(sslRequestFactory());
         }
+
+        this.requestUrl = url;
     }
 
     @Then("^(?:expect|verify) HTTP response header ([^\\s]+)(?:=| is )\"(.+)\"$")

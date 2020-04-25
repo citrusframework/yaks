@@ -57,6 +57,8 @@ const (
 )
 
 const (
+	NamespaceEnv = "YAKS_NAMESPACE"
+
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
 	CucumberFeatures   = "CUCUMBER_FEATURES"
@@ -433,6 +435,8 @@ func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) error {
 	env := make([]string, 0)
 
+	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
+
 	if o.tags != nil {
 		env = append(env, CucumberFilterTags+"="+strings.Join(o.tags, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
@@ -609,7 +613,7 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 	command := exec.CommandContext(ctx, scriptFile)
 
 	command.Env = os.Environ()
-	command.Env = append(command.Env, fmt.Sprintf("YAKS_NAMESPACE=%s", namespace))
+	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
 
 	command.Dir = baseDir
 
