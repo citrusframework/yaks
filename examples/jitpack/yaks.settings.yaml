@@ -9,12 +9,11 @@ repositories:
       snapshots:
         enabled: "false"
   - repository:
-      id: "jboss-ea"
-      name: "JBoss Community Early Access Release Repository"
-      url: "https://repository.jboss.org/nexus/content/groups/ea/"
-      layout: "default"
+      id: "jitpack.io"
+      name: "JitPack Repository"
+      url: "https://jitpack.io"
 dependencies:
   - dependency:
-      groupId: org.apache.camel
-      artifactId: camel-groovy
-      version: "@camel.version@"
+      groupId: com.github.citrusframework
+      artifactId: yaks-step-extension
+      version: "0.0.1"

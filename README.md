@@ -396,7 +396,96 @@ dependencies:
 You can add the configuration file when running the test via `yaks` CLI like follows:
 
 ```bash
-$ yaks test --settings yaks.dependency.yaml camel-route.feature
+$ yaks test --settings yaks.settings.yaml camel-route.feature
+```
+
+### Adding custom Maven repositories
+
+When adding custom runtime dependencies those artifacts might not be available on the public central Maven repository.
+Instead you may need to add a custom repository that holds your artifacts.
+
+You can do this with several configuration options:
+
+#### Add Maven repository via System property or environment setting
+
+You can add repositories also by specifying the repositories as command line parameter when running the test via `yaks` CLI.
+
+```bash
+$ yaks test --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
+```
+
+This will add a environment setting in the YAKS runtime container and the repository will be added to the Maven runtime project model.
+
+#### Add Maven repository via property file
+
+YAKS supports adding Maven repository information to a property file called `yaks.properties`. The dependency is added through
+Maven repository id and url in the property file using a common property key prefix `yaks.repository.`
+
+```properties
+# Maven repositories
+yaks.repository.central=https://repo.maven.apache.org/maven2/
+yaks.repository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
+```
+
+You can add the property file when running the test via `yaks` CLI like follows:
+
+```bash
+$ yaks test --settings yaks.properties my.feature
+```
+
+#### Add Maven repository via configuration file
+
+More complex repository configuration might require to add a configuration file as `.yaml` or `.json`.
+
+The configuration file is able to declare multiple repositories:
+
+```yaml
+repositories:
+  - repository:
+      id: "central"
+      name: "Maven Central"
+      url: "https://repo.maven.apache.org/maven2/"
+      releases:
+        enabled: "true"
+        updatePolicy: "daily"
+      snapshots:
+        enabled: "false"
+  - repository:
+      id: "jboss-ea"
+      name: "JBoss Community Early Access Release Repository"
+      url: "https://repository.jboss.org/nexus/content/groups/ea/"
+      layout: "default"
+```
+
+```json
+{
+  "repositories": [
+      {
+        "id": "central",
+        "name": "Maven Central",
+        "url": "https://repo.maven.apache.org/maven2/",
+        "releases": {
+          "enabled": "true",
+          "updatePolicy": "daily"
+        },
+        "snapshots": {
+          "enabled": "false"
+        }
+      },
+      {
+        "id": "jboss-ea",
+        "name": "JBoss Community Early Access Release Repository",
+        "url": "https://repository.jboss.org/nexus/content/groups/ea/",
+        "layout": "default"
+      }
+    ]
+}
+```
+
+You can add the configuration file when running the test via `yaks` CLI like follows:
+
+```bash
+$ yaks test --settings yaks.settings.yaml my.feature
 ```
 
 ## Runtime configuration
@@ -441,7 +530,7 @@ You can run scripts before/after a test group. Just add your commands to the `ya
 config:
   namespace:
     temporary: false
-    autoremove: true
+    autoRemove: true
 pre:
   - script: prepare.sh
   - run: echo Start!

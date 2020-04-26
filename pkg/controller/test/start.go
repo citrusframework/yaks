@@ -175,12 +175,6 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
 		},
 		)
-	} else if test.Spec.Settings.Content != "" {
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
-			Name:  "YAKS_DEPENDENCIES",
-			Value: test.Spec.Settings.Content,
-		},
-		)
 	}
 
 	if err := action.injectSnap(ctx, &pod); err != nil {

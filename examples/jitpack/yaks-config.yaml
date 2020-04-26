@@ -1,0 +1,6 @@
+config:
+  runtime:
+    cucumber:
+      glue:
+      - "org.citrusframework.yaks"
+      - "dev.yaks.testing.standard"
