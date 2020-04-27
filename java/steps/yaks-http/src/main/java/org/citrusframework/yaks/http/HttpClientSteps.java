@@ -29,6 +29,7 @@ import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.container.Wait;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpClientActionBuilder;
 import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
@@ -85,6 +86,8 @@ public class HttpClientSteps implements HttpSteps {
     private DataDictionary outboundDictionary;
     private DataDictionary inboundDictionary;
 
+    private long timeout;
+
     @Before
     public void before(Scenario scenario) {
         if (httpClient == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
@@ -92,6 +95,8 @@ public class HttpClientSteps implements HttpSteps {
         } else {
             httpClient = new HttpClientBuilder().build();
         }
+
+        timeout = httpClient.getEndpointConfiguration().getTimeout();
 
         requestHeaders = new HashMap<>();
         responseHeaders = new HashMap<>();
@@ -121,6 +126,45 @@ public class HttpClientSteps implements HttpSteps {
         }
 
         this.requestUrl = url;
+    }
+
+    @Given("^HTTP request timeout is (\\d+)(?: ms| milliseconds)$")
+    public void configureTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    @Given("^(?:URL|url) is healthy$")
+    public void healthCheck() {
+        waitForHttpUrl(requestUrl);
+    }
+
+    @Given("^wait for (?:URL|url) ([^\\s]+)$")
+    public void waitForHttpUrl(String url) {
+        waitForHttpStatus(url, 200);
+    }
+
+    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url) ([^\\s]+)$")
+    public void waitForHttpUrlUsingMethod(String method, String url) {
+        waitForHttpStatusUsingMethod(method, url, 200);
+    }
+
+    @Given("^wait for (?:URL|url) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
+    public void waitForHttpStatus(String url, Integer statusCode) {
+        runner.given(Wait.Builder.waitFor().http()
+                .milliseconds(timeout)
+                .interval(timeout / 10)
+                .status(statusCode)
+                .url(url));
+    }
+
+    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
+    public void waitForHttpStatusUsingMethod(String method, String url, Integer statusCode) {
+        runner.given(Wait.Builder.waitFor().http()
+                .milliseconds(timeout)
+                .method(method)
+                .interval(timeout / 10)
+                .status(statusCode)
+                .url(url));
     }
 
     @Then("^(?:expect|verify) HTTP response header ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -274,6 +318,7 @@ public class HttpClientSteps implements HttpSteps {
         }
         bodyValidationExpressions.clear();
 
+        responseBuilder.timeout(timeout);
         responseBuilder.messageType(responseMessageType);
 
         if (inboundDictionary != null) {
