@@ -4,6 +4,14 @@ Feature: Http client
     Given variable port is "8080"
     Given URL: http://localhost:${port}
 
+  Scenario: Health check
+    And URL is healthy
+
+  Scenario: Wait for Http URL condition
+    Given HTTP request timeout is 5000 milliseconds
+    Then wait for URL http://localhost:${port}/todo to return 200 OK
+    And wait for GET on URL http://localhost:${port}/todo
+
   Scenario: GET
     When send GET /todo
     Then verify HTTP response body: {"id": "@ignore@", "task": "Sample task", "completed": 0}

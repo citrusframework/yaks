@@ -62,6 +62,7 @@ public class HttpEndpointConfiguration {
         Map<String, EndpointAdapter> mappings = new HashMap<>();
 
         mappings.put(HttpMethod.GET.name(), handleGetRequestAdapter(contextFactory));
+        mappings.put(HttpMethod.HEAD.name(), handleHeadRequestAdapter(contextFactory));
         mappings.put(HttpMethod.POST.name(), handlePostRequestAdapter());
         mappings.put(HttpMethod.PUT.name(), handlePutRequestAdapter());
         mappings.put(HttpMethod.DELETE.name(), handleDeleteRequestAdapter());
@@ -101,6 +102,15 @@ public class HttpEndpointConfiguration {
         responseEndpointAdapter.getMessageHeader().put(HttpMessageHeaders.HTTP_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         responseEndpointAdapter.getMessageHeader().put("X-TodoId", "citrus:randomNumber(5)");
         responseEndpointAdapter.setMessagePayload("{\"id\": \"citrus:randomNumber(5)\", \"task\": \"Sample task\", \"completed\": 0}");
+        responseEndpointAdapter.setTestContextFactory(contextFactory);
+        return responseEndpointAdapter;
+    }
+
+    @Bean
+    public EndpointAdapter handleHeadRequestAdapter(TestContextFactory contextFactory) {
+        StaticResponseEndpointAdapter responseEndpointAdapter = new StaticResponseEndpointAdapter();
+        responseEndpointAdapter.getMessageHeader().put(HttpMessageHeaders.HTTP_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        responseEndpointAdapter.getMessageHeader().put("X-TodoId", "citrus:randomNumber(5)");
         responseEndpointAdapter.setTestContextFactory(contextFactory);
         return responseEndpointAdapter;
     }
