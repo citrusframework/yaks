@@ -57,7 +57,9 @@ const (
 )
 
 const (
-	NamespaceEnv = "YAKS_NAMESPACE"
+	NamespaceEnv       = "YAKS_NAMESPACE"
+	RepositoriesEnv    = "YAKS_REPOSITORIES"
+	DependenciesEnv    = "YAKS_DEPENDENCIES"
 
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
@@ -82,6 +84,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 		SilenceUsage:      true,
 	}
 
+	cmd.Flags().StringArrayVar(&options.repositories, "maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
 	cmd.Flags().StringArrayVarP(&options.dependencies, "dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringArrayVarP(&options.uploads, "upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
@@ -97,6 +100,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 
 type testCmdOptions struct {
 	*RootCmdOptions
+	repositories []string
 	dependencies []string
 	uploads      []string
 	settings     string
@@ -343,17 +347,10 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		},
 	}
 
-	settings, err := o.newSettings()
-
-	if err != nil {
+	if settings, err := o.newSettings(); err != nil {
 		return nil, err
 	} else if settings != nil {
 		test.Spec.Settings = *settings
-	} else if len(o.dependencies) > 0 {
-		test.Spec.Settings = v1alpha1.SettingsSpec{
-			Name:    "",
-			Content: strings.Join(o.dependencies, ","),
-		}
 	}
 
 	if err := o.setupEnvSettings(&test, runConfig); err != nil {
@@ -459,6 +456,14 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 		env = append(env, CucumberOptions+"="+runConfig.Config.Runtime.Cucumber.Options)
 	}
 
+	if len(o.repositories) > 0 {
+		env = append(env, RepositoriesEnv+"="+strings.Join(o.repositories, ","))
+	}
+
+	if len(o.dependencies) > 0 {
+		env = append(env, DependenciesEnv+"="+strings.Join(o.dependencies, ","))
+	}
+
 	if o.env != nil {
 		copy(env, o.env)
 	}
@@ -471,15 +476,6 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 }
 
 func (o *testCmdOptions) newSettings() (*v1alpha1.SettingsSpec, error) {
-	runtimeDependencies := o.dependencies
-
-	if len(runtimeDependencies) > 0 {
-		settings := v1alpha1.SettingsSpec{
-			Content: strings.Join(runtimeDependencies, ","),
-		}
-		return &settings, nil
-	}
-
 	if o.settings == "" {
 		return nil, nil
 	}

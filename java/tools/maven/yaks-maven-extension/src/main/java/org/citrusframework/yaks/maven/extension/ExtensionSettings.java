@@ -34,6 +34,9 @@ public final class ExtensionSettings {
     public static final String DEPENDENCIES_SETTING_KEY = "yaks.dependencies";
     public static final String DEPENDENCIES_SETTING_ENV = "YAKS_DEPENDENCIES";
 
+    public static final String REPOSITORIES_SETTING_KEY = "yaks.repositories";
+    public static final String REPOSITORIES_SETTING_ENV = "YAKS_REPOSITORIES";
+
     /**
      * Prevent instantiation of utility class.
      */

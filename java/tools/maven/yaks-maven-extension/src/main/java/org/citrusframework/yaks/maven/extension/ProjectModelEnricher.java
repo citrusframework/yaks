@@ -19,16 +19,16 @@ package org.citrusframework.yaks.maven.extension;
 
 import java.util.List;
 
-import org.citrusframework.yaks.maven.extension.configuration.FileBasedDependencyLoader;
-import org.citrusframework.yaks.maven.extension.configuration.cucumber.FeatureTagsDependencyLoader;
-import org.citrusframework.yaks.maven.extension.configuration.env.EnvironmentSettingDependencyLoader;
-import org.citrusframework.yaks.maven.extension.configuration.properties.SystemPropertyDependencyLoader;
 import org.apache.maven.execution.ProjectExecutionEvent;
 import org.apache.maven.execution.ProjectExecutionListener;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
+import org.citrusframework.yaks.maven.extension.configuration.FileBasedDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.cucumber.FeatureTagsDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.env.EnvironmentSettingDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.properties.SystemPropertyDependencyLoader;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -40,7 +40,7 @@ import org.codehaus.plexus.logging.Logger;
  * @author Christoph Deppisch
  */
 @Component( role = ProjectExecutionListener.class )
-public class ResourceInjectionListener implements ProjectExecutionListener {
+public class ProjectModelEnricher implements ProjectExecutionListener {
 
     @Requirement
     private Logger logger;
@@ -77,7 +77,6 @@ public class ResourceInjectionListener implements ProjectExecutionListener {
      */
     private void injectProjectDependencies(Model projectModel) throws LifecycleExecutionException {
         logger.info("Add dynamic project dependencies ...");
-
         List<Dependency> dependencyList = projectModel.getDependencies();
         dependencyList.addAll(new FileBasedDependencyLoader().load(projectModel.getProperties(), logger));
         dependencyList.addAll(new SystemPropertyDependencyLoader().load(projectModel.getProperties(), logger));

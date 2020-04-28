@@ -56,7 +56,7 @@ type CucumberConfig struct {
 type NamespaceConfig struct {
 	Name       string `yaml:"name"`
 	Temporary  bool   `yaml:"temporary"`
-	AutoRemove bool   `yaml:"autoremove"`
+	AutoRemove bool   `yaml:"autoRemove"`
 }
 
 func NewWithDefaults() *RunConfig {

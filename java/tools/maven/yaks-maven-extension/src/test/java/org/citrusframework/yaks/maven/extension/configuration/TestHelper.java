@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Repository;
 import org.assertj.core.api.Assertions;
 
 /**
@@ -66,5 +67,28 @@ public final class TestHelper {
         Assertions.assertThat(dependencyList).hasSize(2);
         Assertions.assertThat(dependencyList).anyMatch(dependency -> dependency.toString().equals(foo.toString()));
         Assertions.assertThat(dependencyList).anyMatch(dependency -> dependency.toString().equals(bar.toString()));
+    }
+
+    /**
+     * Verify that default mock repositories are present in the given list od repositories. This verification can be shared by multiple
+     * tests that load the repository list in different ways (e.g. via Json, Yaml, System properties, ...)
+     * @param repositoryList
+     */
+    public static void verifyRepositories(List<Repository> repositoryList) {
+        Repository central = new Repository();
+        central.setId("central");
+        central.setName("Maven Central");
+        central.setUrl("https://repo.maven.apache.org/maven2/");
+
+        Repository jboss = new Repository();
+        jboss.setId("jboss-ea");
+        jboss.setName("JBoss Community Early Access Release Repository");
+        jboss.setUrl("https://repository.jboss.org/nexus/content/groups/ea/");
+
+        Assertions.assertThat(repositoryList).hasSize(2);
+        Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getId().equals(central.getId()));
+        Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getUrl().equals(central.getUrl()));
+        Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getId().equals(jboss.getId()));
+        Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getUrl().equals(jboss.getUrl()));
     }
 }

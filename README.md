@@ -1,10 +1,30 @@
 ![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=master)
 
-# YAKS 
-
 ![logo][1]
 
+# YAKS 
+
 YAKS Cloud-Native BDD testing or simply: Yet Another Kubernetes Service
+
+* [Getting started](#getting-started)
+  * [Installation](#installation)
+  * [Running](#running-the-hello-world)
+* [Steps](#steps)
+  * [Citrus Steps](#citrus-steps)
+  * Apache Camel Steps
+  * [Camel K Steps](#camel-k-steps)
+  * [JDBC Steps](#jdbc-steps)
+  * Http Steps
+  * Open API Steps
+  * Kafka Steps
+  * Jms Steps
+  * [Custom Steps](#custom-steps)
+* [Runtime configuration](#runtime-configuration)
+  * [Add custom runtime dependencies](#add-custom-runtime-dependencies)
+  * [Add custom Maven repositories](#add-custom-maven-repositories)
+* [Pre/Post scripts](#prepos-scripts)
+* [Reporting options](#reporting-options)
+* [For YAKS developers](#for-yaks-developers)
 
 ## Getting Started
 
@@ -212,7 +232,12 @@ hello   Passed
 
 You can now change the test to use more complex steps and run it again with `./yaks test hello.feature`.
 
-### Using Citrus features
+## Steps
+
+Each line in a BDD feature file is backed by a step implementation that covers the actual runtime logic executed. YAKS
+provides a set of out-of-the-box step implementations that you can just use in your feature file.
+
+### Citrus steps
 
 The Citrus framework provides a lot of features and predefined steps that can be used to write feature files.
 
@@ -233,7 +258,7 @@ Feature: Integration Works
 
 ```
 
-### Using Camel K steps
+### Camel K steps
 
 If the subject under test is a Camel K integration, you can leverage the YAKS Camel K bindings
 that provide useful steps for checking the status of integrations.
@@ -248,7 +273,7 @@ For example:
 
 The Camel K extension library is provided by default in YAKS. 
 
-### Using JDBC steps
+### JDBC steps
 
 YAKS provides a library that allows to execute SQL actions on relational DBs (limited to PostgreSQL for this POC).
 
@@ -257,7 +282,7 @@ You can find examples of JDBC steps in the [examples](/examples/jdbc.feature) fi
 There's also an example that uses [JDBC and REST together](/examples/task-api.feature) and targets the 
 [Syndesis TODO App](https://github.com/syndesisio/todo-example) database.
 
-### Using custom steps
+### Custom steps
 
 It's often useful to plug some custom steps into the testing environment. Custom steps help keeping the 
 tests short and self-explanatory and at the same time help teams to add generic assertions that are meaningful in their 
@@ -280,7 +305,41 @@ This happens transparently to the user.
 
 The local library can also be uploaded to the Snap Minio server prior to running the test, using the `yaks upload` command.  
 
-### Adding custom runtime dependencies
+## Runtime configuration
+
+There are several runtime options that you can set in order to configure which tests to run for instance. Each test directory
+can have its own `yaks-config.yaml` configuration file that holds the runtime options for this specific test suite.
+
+```yaml
+config:
+  runtime:
+    cucumber:
+      tags:
+      - "not @ignored"
+      glue:
+      - "org.citrusframework.yaks"
+      - "com.company.steps.custom"
+```
+
+The sample above uses different runtime options for Cucumber to specify a tag filter and some custom glue packages that 
+should be loaded. The given runtime options will be set as environment variables in the YAKS runtime pod.
+
+You can also specify the Cucumber options that get passed to the Cucumber runtime.
+
+```yaml
+config:
+  runtime:
+    cucumber:
+      options: "--strict --monochrome --glue org.citrusframework.yaks"
+```
+
+Also we can make use of command line options when using the `yaks` binary.
+
+```bash
+$ yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+```
+
+### Add custom runtime dependencies
 
 The YAKS testing framework provides a base runtime image that holds all required libraries and artifacts to execute tests. You may need to add
 additional runtime dependencies though in order to extend the framework capabilities.
@@ -396,41 +455,96 @@ dependencies:
 You can add the configuration file when running the test via `yaks` CLI like follows:
 
 ```bash
-$ yaks test --settings yaks.dependency.yaml camel-route.feature
+$ yaks test --settings yaks.settings.yaml camel-route.feature
 ```
 
-## Runtime configuration
+### Add custom Maven repositories
 
-There are several runtime options that you can set in order to configure which tests to run for instance. Each test directory
-can have its own `yaks-config.yaml` configuration file that holds the runtime options for this specific test suite.
+When adding custom runtime dependencies those artifacts might not be available on the public central Maven repository.
+Instead you may need to add a custom repository that holds your artifacts.
 
-```yaml
-config:
-  runtime:
-    cucumber:
-      tags:
-      - "not @ignored"
-      glue:
-      - "org.citrusframework.yaks"
-      - "com.company.steps.custom"
-```
+You can do this with several configuration options:
 
-The sample above uses different runtime options for Cucumber to specify a tag filter and some custom glue packages that 
-should be loaded. The given runtime options will be set as environment variables in the YAKS runtime pod.
+#### Add Maven repository via System property or environment setting
 
-You can also specify the Cucumber options that get passed to the Cucumber runtime.
-
-```yaml
-config:
-  runtime:
-    cucumber:
-      options: "--strict --monochrome --glue org.citrusframework.yaks"
-```
-
-Also we can make use of command line options when using the `yaks` binary.
+You can add repositories also by specifying the repositories as command line parameter when running the test via `yaks` CLI.
 
 ```bash
-$ yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+$ yaks test --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
+```
+
+This will add a environment setting in the YAKS runtime container and the repository will be added to the Maven runtime project model.
+
+#### Add Maven repository via property file
+
+YAKS supports adding Maven repository information to a property file called `yaks.properties`. The dependency is added through
+Maven repository id and url in the property file using a common property key prefix `yaks.repository.`
+
+```properties
+# Maven repositories
+yaks.repository.central=https://repo.maven.apache.org/maven2/
+yaks.repository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
+```
+
+You can add the property file when running the test via `yaks` CLI like follows:
+
+```bash
+$ yaks test --settings yaks.properties my.feature
+```
+
+#### Add Maven repository via configuration file
+
+More complex repository configuration might require to add a configuration file as `.yaml` or `.json`.
+
+The configuration file is able to declare multiple repositories:
+
+```yaml
+repositories:
+  - repository:
+      id: "central"
+      name: "Maven Central"
+      url: "https://repo.maven.apache.org/maven2/"
+      releases:
+        enabled: "true"
+        updatePolicy: "daily"
+      snapshots:
+        enabled: "false"
+  - repository:
+      id: "jboss-ea"
+      name: "JBoss Community Early Access Release Repository"
+      url: "https://repository.jboss.org/nexus/content/groups/ea/"
+      layout: "default"
+```
+
+```json
+{
+  "repositories": [
+      {
+        "id": "central",
+        "name": "Maven Central",
+        "url": "https://repo.maven.apache.org/maven2/",
+        "releases": {
+          "enabled": "true",
+          "updatePolicy": "daily"
+        },
+        "snapshots": {
+          "enabled": "false"
+        }
+      },
+      {
+        "id": "jboss-ea",
+        "name": "JBoss Community Early Access Release Repository",
+        "url": "https://repository.jboss.org/nexus/content/groups/ea/",
+        "layout": "default"
+      }
+    ]
+}
+```
+
+You can add the configuration file when running the test via `yaks` CLI like follows:
+
+```bash
+$ yaks test --settings yaks.settings.yaml my.feature
 ```
 
 ## Pre/Post scripts
@@ -441,7 +555,7 @@ You can run scripts before/after a test group. Just add your commands to the `ya
 config:
   namespace:
     temporary: false
-    autoremove: true
+    autoRemove: true
 pre:
   - script: prepare.sh
   - run: echo Start!
@@ -540,7 +654,7 @@ Test results: Total: 5, Passed: 5, Failed: 0, Skipped: 0
 	classpath:org/citrusframework/yaks/test3.feature:3: Passed
 ```
 
-## For YAKS Developers
+## For YAKS developers
 
 Requirements:
 - Go 1.12+
