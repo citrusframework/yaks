@@ -109,7 +109,7 @@ public class SwaggerSteps {
                 throw new IllegalStateException("Failed to retrieve Swagger Open API specification as web resource: " + resource, e);
             }
         } else {
-            SwaggerResourceLoader.fromFile(resource);
+            swagger = SwaggerResourceLoader.fromFile(resource);
 
             Scheme scheme = Optional.ofNullable(swagger.getSchemes())
                     .orElse(Collections.singletonList(Scheme.HTTP))

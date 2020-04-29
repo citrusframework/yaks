@@ -355,34 +355,6 @@ public class SwaggerTestDataGenerator {
     }
 
     /**
-     * Create validation expression using functions according to parameter type and format.
-     * @param parameter
-     * @return
-     */
-    public static String createValidationExpression(AbstractSerializableParameter parameter) {
-        switch (parameter.getType()) {
-            case "integer":
-                return "@isNumber()@";
-            case "string":
-                if (parameter.getFormat() != null && parameter.getFormat().equals("date")) {
-                    return "\"@matchesDatePattern('yyyy-MM-dd')@\"";
-                } else if (parameter.getFormat() != null && parameter.getFormat().equals("date-time")) {
-                    return "\"@matchesDatePattern('yyyy-MM-dd'T'hh:mm:ss')@\"";
-                } else if (StringUtils.hasText(parameter.getPattern())) {
-                    return "\"@matches(" + parameter.getPattern() + ")@\"";
-                } else if (!CollectionUtils.isEmpty(parameter.getEnum())) {
-                    return "\"@matches(" + (parameter.getEnum().stream().collect(Collectors.joining("|"))) + ")@\"";
-                } else {
-                    return "@notEmpty()@";
-                }
-            case "boolean":
-                return "@matches(true|false)@";
-            default:
-                return "@ignore@";
-        }
-    }
-
-    /**
      * Create random value expression using functions according to parameter type and format.
      * @param parameter
      * @return

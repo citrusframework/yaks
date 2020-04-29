@@ -46,6 +46,7 @@
     <postgresql.version>9.4.1212</postgresql.version>
     <testcontainers.version>1.10.7</testcontainers.version>
     <swagger.parser.version>1.0.34</swagger.parser.version>
+    <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
     <activemq.version>5.15.11</activemq.version>
