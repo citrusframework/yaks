@@ -1,7 +1,7 @@
-Feature: Petstore API
+Feature: Petstore API V3
 
   Background:
-    Given OpenAPI specification: http://localhost:8080/petstore/v2/openapi.json
+    Given OpenAPI specification: http://localhost:8080/petstore/v3/openapi.json
     Given variable petId is "citrus:randomNumber(5)"
     Given inbound dictionary
       | $.name          | @assertThat(anyOf(is(hasso),is(cutie),is(fluffy)))@ |

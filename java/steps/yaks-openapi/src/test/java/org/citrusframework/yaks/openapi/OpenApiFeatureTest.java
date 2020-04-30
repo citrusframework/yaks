@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.swagger;
+package org.citrusframework.yaks.openapi;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -27,9 +27,10 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = { "com.consol.citrus.cucumber.step.runner.core",
-                 "org.citrusframework.yaks.swagger",
-                 "org.citrusframework.yaks.http" },
+        extraGlue = {
+                "com.consol.citrus.cucumber.step.runner.core",
+                "org.citrusframework.yaks.http"
+        },
         plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
-public class SwaggerFeatureTest {
+public class OpenApiFeatureTest {
 }

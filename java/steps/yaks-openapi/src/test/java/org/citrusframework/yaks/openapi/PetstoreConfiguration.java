@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.swagger;
+package org.citrusframework.yaks.openapi;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -116,15 +116,17 @@ public class PetstoreConfiguration {
                                             .map(Object::toString)
                                             .orElse("/openapi.json");
 
-                if (requestUri.endsWith("openapi.json")) {
-                     setMessagePayload("citrus:readFile('classpath:org/citrusframework/yaks/swagger/petstore-api.json')");
+                if (requestUri.endsWith("/v2/openapi.json")) {
+                     setMessagePayload("citrus:readFile('classpath:org/citrusframework/yaks/openapi/petstore-v2.json')");
+                } else if (requestUri.endsWith("/v3/openapi.json")) {
+                     setMessagePayload("citrus:readFile('classpath:org/citrusframework/yaks/openapi/petstore-v3.json')");
                 } else {
                     int petId = Integer.parseInt(requestUri.substring(requestUri.lastIndexOf("/") + 1));
                     getMessageHeader().put(HttpMessageHeaders.HTTP_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
 
                     if (petId > 0) {
                         getTestContext().setVariable("petId", petId);
-                        setMessagePayload("citrus:readFile('classpath:org/citrusframework/yaks/swagger/pet.json')");
+                        setMessagePayload("citrus:readFile('classpath:org/citrusframework/yaks/openapi/pet.json')");
                     } else {
                         getMessageHeader().put(HttpMessageHeaders.HTTP_STATUS_CODE, HttpStatus.NOT_FOUND);
                     }

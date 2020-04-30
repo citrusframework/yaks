@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.swagger;
+package org.citrusframework.yaks.openapi;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -28,22 +28,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 import com.consol.citrus.util.FileUtils;
-import io.swagger.models.Swagger;
-import io.swagger.parser.SwaggerParser;
+import io.apicurio.datamodels.Library;
+import io.apicurio.datamodels.openapi.models.OasDocument;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.ssl.SSLContexts;
 
 /**
- * Loads Swagger Open API specifications from different locations like file resource or web resource.
+ * Loads Open API specifications from different locations like file resource or web resource.
  * @author Christoph Deppisch
  */
-public final class SwaggerResourceLoader {
+public final class OpenApiResourceLoader {
 
     /**
      * Prevent instantiation of utility class.
      */
-    private SwaggerResourceLoader() {
+    private OpenApiResourceLoader() {
         super();
     }
 
@@ -52,11 +52,11 @@ public final class SwaggerResourceLoader {
      * @param resource
      * @return
      */
-    public static Swagger fromFile(String resource) {
+    public static OasDocument fromFile(String resource) {
         try {
-            return new SwaggerParser().parse(FileUtils.readToString(FileUtils.getFileResource(resource)));
+            return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(FileUtils.getFileResource(resource)));
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to parse Swagger Open API specification: " + resource, e);
+            throw new IllegalStateException("Failed to parse Open API specification: " + resource, e);
         }
     }
 
@@ -65,7 +65,7 @@ public final class SwaggerResourceLoader {
      * @param url
      * @return
      */
-    public static Swagger fromWebResource(URL url) {
+    public static OasDocument fromWebResource(URL url) {
         HttpURLConnection con = null;
         try {
             con = (HttpURLConnection) url.openConnection();
@@ -73,13 +73,13 @@ public final class SwaggerResourceLoader {
 
             int status = con.getResponseCode();
             if (status > 299) {
-                throw new IllegalStateException("Failed to retrieve Swagger Open API specification: " + url.toString(),
+                throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(),
                         new IOException(FileUtils.readToString(con.getErrorStream())));
             } else {
-                return new SwaggerParser().parse(FileUtils.readToString(con.getInputStream()));
+                return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(con.getInputStream()));
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to retrieve Swagger Open API specification: " + url.toString(), e);
+            throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(), e);
         } finally {
             if (con != null) {
                 con.disconnect();
@@ -92,7 +92,7 @@ public final class SwaggerResourceLoader {
      * @param url
      * @return
      */
-    public static Swagger fromSecuredWebResource(URL url) {
+    public static OasDocument fromSecuredWebResource(URL url) {
         Objects.requireNonNull(url);
 
         HttpsURLConnection con = null;
@@ -110,15 +110,15 @@ public final class SwaggerResourceLoader {
 
             int status = con.getResponseCode();
             if (status > 299) {
-                throw new IllegalStateException("Failed to retrieve Swagger Open API specification: " + url.toString(),
+                throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(),
                         new IOException(FileUtils.readToString(con.getErrorStream())));
             } else {
-                return new SwaggerParser().parse(FileUtils.readToString(con.getInputStream()));
+                return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(con.getInputStream()));
             }
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new IllegalStateException("Failed to create https client for ssl connection", e);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to retrieve Swagger Open API specification: " + url.toString(), e);
+            throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(), e);
         } finally {
             if (con != null) {
                 con.disconnect();
