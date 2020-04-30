@@ -36,7 +36,6 @@
     <module>yaks-jms</module>
     <module>yaks-kafka</module>
     <module>yaks-standard</module>
-    <module>yaks-swagger</module>
     <module>yaks-openapi</module>
   </modules>
 </project>
