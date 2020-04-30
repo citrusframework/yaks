@@ -81,7 +81,7 @@
     </dependency>
     <dependency>
       <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-swagger</artifactId>
+      <artifactId>yaks-openapi</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -56,7 +56,7 @@ public final class OpenApiResourceLoader {
         try {
             return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(FileUtils.getFileResource(resource)));
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to parse Swagger Open API specification: " + resource, e);
+            throw new IllegalStateException("Failed to parse Open API specification: " + resource, e);
         }
     }
 
@@ -118,7 +118,7 @@ public final class OpenApiResourceLoader {
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new IllegalStateException("Failed to create https client for ssl connection", e);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to retrieve Swagger Open API specification: " + url.toString(), e);
+            throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(), e);
         } finally {
             if (con != null) {
                 con.disconnect();
