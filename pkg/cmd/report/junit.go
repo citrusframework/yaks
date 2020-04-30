@@ -70,9 +70,9 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 
 	// need to workaround marshalling in order to overwrite local element name of root element
 	tmp := struct {
-		TestSuite
-		XMLName struct{} `xml:"testsuite"`
-	}{TestSuite: report.Suite}
+		JUnitReport
+		XMLName struct{} `xml:"testsuites"`
+	}{JUnitReport: report}
 	if bytes, err := xml.MarshalIndent(tmp,"", "  "); err == nil {
 		junitReport := XmlProcessingInstruction + string(bytes)
 
