@@ -108,7 +108,7 @@ public final class Oas30ModelHelper {
             basePath = serverUrl;
         }
 
-        return basePath.length() > 0 ? basePath : "/";
+        return basePath.startsWith("/") ? basePath : "/" + basePath;
     }
 
     public static Map<String, OasSchema> getSchemaDefinitions(Oas30Document openApiDoc) {

@@ -91,7 +91,7 @@ public class OpenApiSteps {
                 } else {
                     openApiDoc = OpenApiResourceLoader.fromWebResource(url);
                 }
-                clientSteps.setUrl(String.format("%s://%s%s/%s", url.getProtocol(), url.getHost(), url.getPort() > 0 ? ":" + url.getPort() : "", OasModelHelper.getBasePath(openApiDoc)));
+                clientSteps.setUrl(String.format("%s://%s%s%s", url.getProtocol(), url.getHost(), url.getPort() > 0 ? ":" + url.getPort() : "", OasModelHelper.getBasePath(openApiDoc)));
             } catch (MalformedURLException e) {
                 throw new IllegalStateException("Failed to retrieve Open API specification as web resource: " + resource, e);
             }
@@ -105,7 +105,7 @@ public class OpenApiSteps {
                     .findFirst()
                     .orElse("http");
 
-            clientSteps.setUrl(String.format("%s://%s/%s", schemeToUse, OasModelHelper.getHost(openApiDoc), OasModelHelper.getBasePath(openApiDoc)));
+            clientSteps.setUrl(String.format("%s://%s%s", schemeToUse, OasModelHelper.getHost(openApiDoc), OasModelHelper.getBasePath(openApiDoc)));
         }
     }
 

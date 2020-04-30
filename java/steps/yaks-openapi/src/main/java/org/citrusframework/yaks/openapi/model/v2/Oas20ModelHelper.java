@@ -52,7 +52,7 @@ public final class Oas20ModelHelper {
 
     public static String getBasePath(Oas20Document openApiDoc) {
         return Optional.ofNullable(openApiDoc.basePath)
-                .map(basePath -> basePath.startsWith("/") ? basePath.substring(1) : basePath).orElse("");
+                .map(basePath -> basePath.startsWith("/") ? basePath : "/" + basePath).orElse("/");
     }
 
     public static Map<String, OasSchema> getSchemaDefinitions(Oas20Document openApiDoc) {
