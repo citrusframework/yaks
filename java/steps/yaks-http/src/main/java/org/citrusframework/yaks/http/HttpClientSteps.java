@@ -83,8 +83,8 @@ public class HttpClientSteps implements HttpSteps {
     private String requestBody;
     private String responseBody;
 
-    private DataDictionary outboundDictionary;
-    private DataDictionary inboundDictionary;
+    private DataDictionary<?> outboundDictionary;
+    private DataDictionary<?> inboundDictionary;
 
     private long timeout;
 
@@ -110,7 +110,7 @@ public class HttpClientSteps implements HttpSteps {
         inboundDictionary = null;
     }
 
-    @Given("^http-client \"([^\"\\s]+)\"$")
+    @Given("^HTTP client \"([^\"\\s]+)\"$")
     public void setClient(String id) {
         if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
             throw new CitrusRuntimeException("Unable to find http client for id: " + id);
@@ -138,33 +138,38 @@ public class HttpClientSteps implements HttpSteps {
         waitForHttpUrl(requestUrl);
     }
 
-    @Given("^wait for (?:URL|url) ([^\\s]+)$")
-    public void waitForHttpUrl(String url) {
-        waitForHttpStatus(url, 200);
+    @Given("^(?:URL|url|path) ([^\\s]+) is healthy$")
+    public void healthCheck(String urlOrPath) {
+        waitForHttpUrl(getRequestUrl(urlOrPath));
     }
 
-    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url) ([^\\s]+)$")
-    public void waitForHttpUrlUsingMethod(String method, String url) {
-        waitForHttpStatusUsingMethod(method, url, 200);
+    @Given("^wait for (?:URL|url|path) ([^\\s]+)$")
+    public void waitForHttpUrl(String urlOrPath) {
+        waitForHttpStatus(getRequestUrl(urlOrPath), 200);
     }
 
-    @Given("^wait for (?:URL|url) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
-    public void waitForHttpStatus(String url, Integer statusCode) {
+    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url|path) ([^\\s]+)$")
+    public void waitForHttpUrlUsingMethod(String method, String urlOrPath) {
+        waitForHttpStatusUsingMethod(method, getRequestUrl(urlOrPath), 200);
+    }
+
+    @Given("^wait for (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
+    public void waitForHttpStatus(String urlOrPath, Integer statusCode) {
         runner.given(Wait.Builder.waitFor().http()
                 .milliseconds(timeout)
                 .interval(timeout / 10)
                 .status(statusCode)
-                .url(url));
+                .url(getRequestUrl(urlOrPath)));
     }
 
-    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
-    public void waitForHttpStatusUsingMethod(String method, String url, Integer statusCode) {
+    @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
+    public void waitForHttpStatusUsingMethod(String method, String urlOrPath, Integer statusCode) {
         runner.given(Wait.Builder.waitFor().http()
                 .milliseconds(timeout)
                 .method(method)
                 .interval(timeout / 10)
                 .status(statusCode)
-                .url(url));
+                .url(getRequestUrl(urlOrPath)));
     }
 
     @Then("^(?:expect|verify) HTTP response header ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -361,11 +366,35 @@ public class HttpClientSteps implements HttpSteps {
     }
 
     /**
+     * Helper method concatenating base request URL and given relative URL resource path. In case given parameter us a full qualified
+     * URL itself use this URL as a result. Adds error handling in case base request URL is not set properly and avoids duplicate path
+     * separators in concatenated URLs.
+     *
+     * @param urlOrPath
+     * @return
+     */
+    private String getRequestUrl(String urlOrPath) {
+        if (StringUtils.hasText(urlOrPath) && urlOrPath.startsWith("http")) {
+            return urlOrPath;
+        }
+
+        if (!StringUtils.hasText(requestUrl)) {
+            throw new IllegalStateException("Must provide a base request URL first when using relative resource path: " + urlOrPath);
+        }
+
+        if (!StringUtils.hasText(urlOrPath) || urlOrPath.equals("/")) {
+            return requestUrl;
+        }
+
+        return (requestUrl.endsWith("/") ? requestUrl : requestUrl + "/") + (urlOrPath.startsWith("/") ? urlOrPath.substring(1) : urlOrPath);
+    }
+
+    /**
      * Specifies the inboundDictionary.
      *
      * @param inboundDictionary
      */
-    public void setInboundDictionary(DataDictionary inboundDictionary) {
+    public void setInboundDictionary(DataDictionary<?> inboundDictionary) {
         this.inboundDictionary = inboundDictionary;
     }
 
@@ -374,7 +403,7 @@ public class HttpClientSteps implements HttpSteps {
      *
      * @param outboundDictionary
      */
-    public void setOutboundDictionary(DataDictionary outboundDictionary) {
+    public void setOutboundDictionary(DataDictionary<?> outboundDictionary) {
         this.outboundDictionary = outboundDictionary;
     }
 }

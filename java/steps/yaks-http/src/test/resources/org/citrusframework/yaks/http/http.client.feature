@@ -5,12 +5,18 @@ Feature: Http client
     Given URL: http://localhost:${port}
 
   Scenario: Health check
-    And URL is healthy
+    Given URL is healthy
+    And URL http://localhost:${port}/todo is healthy
+    And path /todo is healthy
 
   Scenario: Wait for Http URL condition
     Given HTTP request timeout is 5000 milliseconds
     Then wait for URL http://localhost:${port}/todo to return 200 OK
+    And wait for path /todo to return 200 OK
+    And wait for GET on URL http://localhost:${port}/todo to return 200 OK
+    And wait for GET on URL /todo to return 200 OK
     And wait for GET on URL http://localhost:${port}/todo
+    And wait for GET on path /todo
 
   Scenario: GET
     When send GET /todo
