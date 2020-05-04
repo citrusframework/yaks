@@ -1,4 +1,4 @@
-Feature: Integration Works
+Feature: Http client
 
   Background:
     Given URL: https://swapi.co/api/films

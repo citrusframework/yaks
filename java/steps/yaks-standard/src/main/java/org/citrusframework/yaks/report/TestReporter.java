@@ -62,7 +62,8 @@ public class TestReporter extends CitrusReporter {
     }
 
     private void addTestDetail(TestCaseStarted event) {
-        testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getUri() + ":" + event.getTestCase().getLine()));
+        testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
+                event.getTestCase().getUri() + ":" + event.getTestCase().getLine()));
     }
 
     /**
@@ -79,7 +80,7 @@ public class TestReporter extends CitrusReporter {
             if (testDetail.isPresent()) {
                 testDetail.get().setCause(event.getResult().getError());
             } else {
-                testResults.addTestResult(new TestResult(event.getTestCase().getId(),
+                testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
                                             event.getTestCase().getUri() + ":" + event.getTestCase().getLine(), event.getResult().getError()));
             }
         }

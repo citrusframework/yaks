@@ -151,7 +151,8 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 		if len(test.ErrorMessage) > 0 {
 			result = fmt.Sprintf("Failure caused by %s - %s", test.ErrorType, test.ErrorMessage)
 		}
-		summary += fmt.Sprintf("\t%s: %s\n", test.Name, result)
+		_, className := path.Split(test.ClassName)
+		summary += fmt.Sprintf("\t%s (%s): %s\n", test.Name, className, result)
 	}
 
 	if len(results.Errors) > 0 {

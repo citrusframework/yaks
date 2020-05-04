@@ -20,6 +20,7 @@ package test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -80,8 +81,9 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 	errors := make([]string, 0)
 	for _, result := range test.Status.Results.Tests {
 		if result.ErrorType != "" {
-			_, testName := path.Split(result.Name)
-			errors = append(errors, testName + " failed with " + result.ErrorType + ": " + result.ErrorMessage)
+			_, className := path.Split(result.ClassName)
+			errors = append(errors, fmt.Sprintf("Test %s (%s) failed with %s; %s",
+				result.Name, className, result.ErrorType, result.ErrorMessage))
 		}
 	}
 

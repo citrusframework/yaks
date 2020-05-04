@@ -51,10 +51,9 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 	}
 
 	for _, result := range results.Tests {
-		_, testName := path.Split(result.Name)
 		testCase := TestCase{
-			Name: testName,
-			ClassName: result.Name,
+			Name: result.Name,
+			ClassName: result.ClassName,
 		}
 
 		if len(result.ErrorMessage) > 0 {

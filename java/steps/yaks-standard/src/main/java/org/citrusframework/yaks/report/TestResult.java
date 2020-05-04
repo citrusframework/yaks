@@ -29,16 +29,19 @@ class TestResult {
 
     private final UUID id;
     private final String name;
+    private final String classname;
     private Throwable cause;
 
-    public TestResult(UUID id, String name) {
+    public TestResult(UUID id, String name, String classname) {
         this.id = id;
         this.name = name;
+        this.classname = classname;
     }
 
-    public TestResult(UUID id, String name, Throwable cause) {
+    public TestResult(UUID id, String name, String classname, Throwable cause) {
         this.id = id;
         this.name = name;
+        this.classname = classname;
         this.cause = cause;
     }
 
@@ -49,6 +52,10 @@ class TestResult {
 
     public String getName() {
         return name;
+    }
+
+    public String getClassname() {
+        return classname;
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
