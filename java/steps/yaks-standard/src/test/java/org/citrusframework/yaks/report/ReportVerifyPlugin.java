@@ -48,7 +48,7 @@ public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
                             "\"summary\":" +
                                 "{\"passed\":1,\"failed\":0,\"skipped\":0,\"pending\":0,\"undefined\":0,\"total\":1}," +
                             "\"tests\":[" +
-                                "{\"name\":\"classpath:org/citrusframework/yaks/report/report.feature:3\"}" +
+                                "{\"name\":\"Success test\",\"classname\":\"classpath:org/citrusframework/yaks/report/report.feature:3\"}" +
                             "]" +
                         "}", lines.get(0));
             } catch (IOException e) {

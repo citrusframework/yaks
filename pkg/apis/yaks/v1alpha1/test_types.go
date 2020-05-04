@@ -88,6 +88,7 @@ type TestSummary struct {
 
 type TestResult struct {
 	Name         string  `json:"name,omitempty"`
+	ClassName    string  `json:"classname,omitempty"`
 	ErrorType    string  `json:"errorType,omitempty"`
 	ErrorMessage string  `json:"errorMessage,omitempty"`
 }
