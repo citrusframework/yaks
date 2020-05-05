@@ -20,6 +20,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -347,7 +348,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		},
 	}
 
-	if settings, err := o.newSettings(); err != nil {
+	if settings, err := o.newSettings(runConfig); err != nil {
 		return nil, err
 	} else if settings != nil {
 		test.Spec.Settings = *settings
@@ -475,25 +476,40 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 	return nil
 }
 
-func (o *testCmdOptions) newSettings() (*v1alpha1.SettingsSpec, error) {
-	if o.settings == "" {
-		return nil, nil
+func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
+	if o.settings != "" {
+		rawName := o.settings
+		settingsFileName := kubernetes.SanitizeFileName(rawName)
+		configData, err := o.loadData(rawName)
+
+		if err != nil {
+			return nil, err
+		}
+
+		settings := v1alpha1.SettingsSpec{
+			Name:    settingsFileName,
+			Content: configData,
+		}
+
+		return &settings, nil
 	}
 
-	rawName := o.settings
-	settingsFileName := kubernetes.SanitizeFileName(rawName)
-	configData, err := o.loadData(rawName)
+	if len(runConfig.Config.Runtime.Settings.Dependencies) > 0 || len(runConfig.Config.Runtime.Settings.Repositories) > 0 {
+		configData, err := yaml.Marshal(runConfig.Config.Runtime.Settings)
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+
+		settings := v1alpha1.SettingsSpec{
+			Name:    "yaks.settings.yaml",
+			Content: string(configData),
+		}
+
+		return &settings, nil
 	}
 
-	settings := v1alpha1.SettingsSpec{
-		Name:    settingsFileName,
-		Content: configData,
-	}
-
-	return &settings, nil
+	return nil, nil
 }
 
 func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *config.RunConfig) error {

@@ -277,9 +277,9 @@ The Camel K extension library is provided by default in YAKS.
 
 YAKS provides a library that allows to execute SQL actions on relational DBs (limited to PostgreSQL for this POC).
 
-You can find examples of JDBC steps in the [examples](/examples/jdbc.feature) file.
+You can find examples of JDBC steps in the [examples](/examples/jdbc/jdbc.feature) file.
 
-There's also an example that uses [JDBC and REST together](/examples/task-api.feature) and targets the 
+There's also an example that uses [JDBC and REST together](/examples/openapi/task-api.feature) and targets the 
 [Syndesis TODO App](https://github.com/syndesisio/todo-example) database.
 
 ### Http steps

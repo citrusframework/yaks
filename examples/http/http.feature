@@ -1,7 +1,7 @@
 Feature: Http client
 
   Background:
-    Given URL: https://swapi.co/api/films
+    Given URL: https://github.com/citrusframework/yaks
 
   Scenario: Get a result from API
     When send GET /

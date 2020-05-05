@@ -35,9 +35,7 @@ cp -r runtime/yaks-runtime-maven $PWD/../build/_maven_project
 # fresh build YAKS java modules
 echo Build YAKS modules ...
 
-./mvnw \
-    --quiet \
-    clean install $@
+./mvnw clean install $@
 
 # install YAKS Maven extension to runtime project in image
 echo Install YAKS Maven extension
@@ -59,7 +57,6 @@ echo Copy project dependencies ...
 echo Install YAKS artifacts ...
 
 ./mvnw \
-    --quiet \
     -DskipTests \
     -Dmaven.repo.local=$PWD/../build/_maven_repository \
     jar:jar \

@@ -1,0 +1,20 @@
+repositories:
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jboss-ea"
+    name: "JBoss Community Early Access Release Repository"
+    url: "https://repository.jboss.org/nexus/content/groups/ea/"
+    layout: "default"
+dependencies:
+  - groupId: org.apache.camel
+    artifactId: camel-groovy
+    version: "@camel.version@"
+  - groupId: com.consol.citrus
+    artifactId: citrus-validation-text
+    version: "@citrus.version@"
