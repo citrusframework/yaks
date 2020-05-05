@@ -24,6 +24,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Repository;
+import org.apache.maven.model.RepositoryPolicy;
 import org.citrusframework.yaks.maven.extension.configuration.AbstractConfigFileRepositoryLoader;
 import org.codehaus.plexus.logging.Logger;
 
@@ -78,8 +81,23 @@ public class JsonFileRepositoryLoader extends AbstractConfigFileRepositoryLoader
                 Repository repository = new Repository();
 
                 repository.setId(model.get("id").textValue());
-                repository.setName(model.get("name").textValue());
                 repository.setUrl(model.get("url").textValue());
+
+                if (model.get("name") != null) {
+                    repository.setName(model.get("name").textValue());
+                }
+
+                if (model.get("layout") != null) {
+                    repository.setLayout(model.get("layout").textValue());
+                }
+
+                if (model.get("releases") != null) {
+                    repository.setReleases(getRepositoryPolicy((ObjectNode) model.get("releases")));
+                }
+
+                if (model.get("snapshots") != null) {
+                    repository.setReleases(getRepositoryPolicy((ObjectNode) model.get("snapshots")));
+                }
 
                 logger.info(String.format("Add Repository %s=%s", repository.getId(), repository.getUrl()));
                 repositoryList.add(repository);
@@ -89,5 +107,17 @@ public class JsonFileRepositoryLoader extends AbstractConfigFileRepositoryLoader
         }
 
         return repositoryList;
+    }
+
+    /**
+     * Construct repository policy from given key-value model.
+     * @param policyModel
+     * @return
+     */
+    private RepositoryPolicy getRepositoryPolicy(ObjectNode policyModel) {
+        RepositoryPolicy policy = new RepositoryPolicy();
+        policy.setEnabled(Optional.ofNullable(policyModel.get("enabled")).map(Object::toString).orElse("true"));
+        policy.setUpdatePolicy(Optional.ofNullable(policyModel.get("updatePolicy")).map(Objects::toString).orElse("always"));
+        return policy;
     }
 }

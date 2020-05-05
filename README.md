@@ -613,14 +613,12 @@ The configuration file is able to declare multiple dependencies:
 
 ```yaml
 dependencies:
-  - dependency:
-      groupId: org.foo
-      artifactId: foo-artifact
-      version: 1.0.0
-  - dependency:
-      groupId: org.bar
-      artifactId: bar-artifact
-      version: 1.5.0
+  - groupId: org.foo
+    artifactId: foo-artifact
+    version: 1.0.0
+  - groupId: org.bar
+    artifactId: bar-artifact
+    version: 1.5.0
 ```
 
 ```json
@@ -688,20 +686,18 @@ The configuration file is able to declare multiple repositories:
 
 ```yaml
 repositories:
-  - repository:
-      id: "central"
-      name: "Maven Central"
-      url: "https://repo.maven.apache.org/maven2/"
-      releases:
-        enabled: "true"
-        updatePolicy: "daily"
-      snapshots:
-        enabled: "false"
-  - repository:
-      id: "jboss-ea"
-      name: "JBoss Community Early Access Release Repository"
-      url: "https://repository.jboss.org/nexus/content/groups/ea/"
-      layout: "default"
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jboss-ea"
+    name: "JBoss Community Early Access Release Repository"
+    url: "https://repository.jboss.org/nexus/content/groups/ea/"
+    layout: "default"
 ```
 
 ```json
