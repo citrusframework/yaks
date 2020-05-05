@@ -34,7 +34,6 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.postgresql.Driver;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 import static com.consol.citrus.actions.ExecuteSQLAction.Builder.sql;
@@ -74,8 +73,8 @@ public class JdbcSteps {
     public void setConnection(DataTable properties) {
         Map<String, String> connectionProps = properties.asMap(String.class, String.class);
 
-        String driver = connectionProps.getOrDefault("driver", Driver.class.getName());
-        String url = connectionProps.getOrDefault("url", "");
+        String driver = connectionProps.getOrDefault("driver", "org.postgresql.Driver");
+        String url = connectionProps.getOrDefault("url", "jdbc:postgresql://localhost:5432/testdb");
         String username = connectionProps.getOrDefault("username", "test");
         String password = connectionProps.getOrDefault("password", "test");
         boolean suppressClose = Boolean.parseBoolean(connectionProps.getOrDefault("suppressClose", Boolean.TRUE.toString()));

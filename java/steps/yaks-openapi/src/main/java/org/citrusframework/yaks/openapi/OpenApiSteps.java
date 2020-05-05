@@ -32,6 +32,7 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.variable.dictionary.AbstractDataDictionary;
 import com.consol.citrus.variable.dictionary.json.JsonPathMappingDataDictionary;
 import io.apicurio.datamodels.openapi.models.OasDocument;
 import io.apicurio.datamodels.openapi.models.OasOperation;
@@ -64,8 +65,8 @@ public class OpenApiSteps {
     private OasDocument openApiDoc;
     private OasOperation operation;
 
-    private JsonPathMappingDataDictionary outboundDictionary;
-    private JsonPathMappingDataDictionary inboundDictionary;
+    private AbstractDataDictionary<String> outboundDictionary;
+    private AbstractDataDictionary<String> inboundDictionary;
 
     @Before
     public void before(Scenario scenario) {

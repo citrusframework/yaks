@@ -17,9 +17,6 @@
 
 package org.citrusframework.yaks.jdbc;
 
-import java.util.function.Consumer;
-
-import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
@@ -27,7 +24,6 @@ import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
@@ -42,12 +38,12 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public class JdbcStepsTest {
 
     @ClassRule
-    public static GenericContainer testdbContainer = new PostgreSQLContainer()
+    public static PostgreSQLContainer<?> testdbContainer = new PostgreSQLContainer<>()
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("secret")
             .withInitScript("test-db-init.sql")
-            .withCreateContainerCmdModifier((Consumer<CreateContainerCmd>) modifier -> modifier.withPortBindings(
+            .withCreateContainerCmdModifier(modifier -> modifier.withPortBindings(
                     new PortBinding(Ports.Binding.bindPort(PostgreSQLContainer.POSTGRESQL_PORT),
                     new ExposedPort(PostgreSQLContainer.POSTGRESQL_PORT))));
 }

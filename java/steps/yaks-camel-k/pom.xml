@@ -36,7 +36,7 @@
 
     <dependency>
       <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-core</artifactId>
+      <artifactId>citrus-base</artifactId>
     </dependency>
     <dependency>
       <groupId>com.consol.citrus</groupId>
@@ -52,12 +52,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-
   </dependencies>
 
 </project>
