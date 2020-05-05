@@ -85,13 +85,22 @@ public class HttpServerSteps implements HttpSteps {
         bodyValidationExpressions = new HashMap<>();
     }
 
-    @Given("^http-server \"([^\"\\s]+)\"$")
+    @Given("^HTTP server \"([^\"\\s]+)\"$")
     public void setServer(String id) {
         if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
             throw new CitrusRuntimeException("Unable to find http server for id: " + id);
         }
 
         httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(id, HttpServer.class);
+    }
+
+    @Given("^HTTP server listening on port (\\d+)$")
+    public void createServer(int port) {
+        httpServer = new HttpServerBuilder()
+                .port(port)
+                .build();
+
+        httpServer.start();
     }
 
     @Then("^(?:expect|verify) HTTP request header: ([^\\s]+)(?:=| is )\"(.+)\"$")
