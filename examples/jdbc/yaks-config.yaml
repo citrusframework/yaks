@@ -1,0 +1,7 @@
+config:
+  runtime:
+    settings:
+      dependencies:
+        - groupId: org.postgresql
+          artifactId: postgresql
+          version: "@postgresql.version@"

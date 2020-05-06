@@ -4,3 +4,15 @@ config:
       glue:
       - "org.citrusframework.yaks"
       - "dev.yaks.testing.standard"
+    settings:
+      repositories:
+        - id: "central"
+          name: "Maven Central"
+          url: "https://repo.maven.apache.org/maven2/"
+        - id: "jitpack.io"
+          name: "JitPack Repository"
+          url: "https://jitpack.io"
+      dependencies:
+        - groupId: com.github.citrusframework
+          artifactId: yaks-step-extension
+          version: "0.0.1"

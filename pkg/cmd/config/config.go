@@ -45,12 +45,37 @@ type StepConfig struct {
 
 type RuntimeConfig struct {
 	Cucumber CucumberConfig
+	Settings SettingsConfig
 }
 
 type CucumberConfig struct {
 	Tags    []string `yaml:"tags"`
 	Glue    []string `yaml:"glue"`
 	Options string   `yaml:"options"`
+}
+
+type SettingsConfig struct {
+	Repositories []RepositoryConfig
+	Dependencies []DependencyConfig
+}
+
+type RepositoryConfig struct {
+	Id        string `yaml:"id"`
+	Name      string `yaml:"name,omitempty"`
+	Url       string `yaml:"url"`
+	Layout    string `yaml:"layout,omitempty"`
+	Releases  PolicyConfig `yaml:"releases,omitempty"`
+	Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
+}
+
+type PolicyConfig struct {
+	Enabled      string `yaml:"enabled,omitempty"`
+	UpdatePolicy string `yaml:"updatePolicy,omitempty"`
+}
+type DependencyConfig struct {
+	GroupId    string `yaml:"groupId"`
+	ArtifactId string `yaml:"artifactId"`
+	Version    string `yaml:"version"`
 }
 
 type NamespaceConfig struct {

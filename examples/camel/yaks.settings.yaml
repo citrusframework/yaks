@@ -12,9 +12,6 @@ repositories:
     url: "https://repository.jboss.org/nexus/content/groups/ea/"
     layout: "default"
 dependencies:
-  - groupId: org.foo
-    artifactId: foo-artifact
-    version: 1.0.0
-  - groupId: org.bar
-    artifactId: bar-artifact
-    version: 1.5.0
+  - groupId: org.apache.camel
+    artifactId: camel-groovy
+    version: "@camel.version@"

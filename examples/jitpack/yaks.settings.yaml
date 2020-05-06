@@ -1,19 +1,16 @@
 repositories:
-  - repository:
-      id: "central"
-      name: "Maven Central"
-      url: "https://repo.maven.apache.org/maven2/"
-      releases:
-        enabled: "true"
-        updatePolicy: "daily"
-      snapshots:
-        enabled: "false"
-  - repository:
-      id: "jitpack.io"
-      name: "JitPack Repository"
-      url: "https://jitpack.io"
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jitpack.io"
+    name: "JitPack Repository"
+    url: "https://jitpack.io"
 dependencies:
-  - dependency:
-      groupId: com.github.citrusframework
-      artifactId: yaks-step-extension
-      version: "0.0.1"
+  - groupId: com.github.citrusframework
+    artifactId: yaks-step-extension
+    version: "0.0.1"

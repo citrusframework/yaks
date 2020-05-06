@@ -1,0 +1,7 @@
+config:
+  runtime:
+    settings:
+      dependencies:
+        - groupId: org.apache.camel
+          artifactId: camel-groovy
+          version: "@camel.version@"

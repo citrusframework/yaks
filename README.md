@@ -277,9 +277,9 @@ The Camel K extension library is provided by default in YAKS.
 
 YAKS provides a library that allows to execute SQL actions on relational DBs (limited to PostgreSQL for this POC).
 
-You can find examples of JDBC steps in the [examples](/examples/jdbc.feature) file.
+You can find examples of JDBC steps in the [examples](/examples/jdbc/jdbc.feature) file.
 
-There's also an example that uses [JDBC and REST together](/examples/task-api.feature) and targets the 
+There's also an example that uses [JDBC and REST together](/examples/openapi/task-api.feature) and targets the 
 [Syndesis TODO App](https://github.com/syndesisio/todo-example) database.
 
 ### Http steps
@@ -613,14 +613,12 @@ The configuration file is able to declare multiple dependencies:
 
 ```yaml
 dependencies:
-  - dependency:
-      groupId: org.foo
-      artifactId: foo-artifact
-      version: 1.0.0
-  - dependency:
-      groupId: org.bar
-      artifactId: bar-artifact
-      version: 1.5.0
+  - groupId: org.foo
+    artifactId: foo-artifact
+    version: 1.0.0
+  - groupId: org.bar
+    artifactId: bar-artifact
+    version: 1.5.0
 ```
 
 ```json
@@ -688,20 +686,18 @@ The configuration file is able to declare multiple repositories:
 
 ```yaml
 repositories:
-  - repository:
-      id: "central"
-      name: "Maven Central"
-      url: "https://repo.maven.apache.org/maven2/"
-      releases:
-        enabled: "true"
-        updatePolicy: "daily"
-      snapshots:
-        enabled: "false"
-  - repository:
-      id: "jboss-ea"
-      name: "JBoss Community Early Access Release Repository"
-      url: "https://repository.jboss.org/nexus/content/groups/ea/"
-      layout: "default"
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jboss-ea"
+    name: "JBoss Community Early Access Release Repository"
+    url: "https://repository.jboss.org/nexus/content/groups/ea/"
+    layout: "default"
 ```
 
 ```json

@@ -46,9 +46,19 @@
         <executions>
           <execution>
             <phase>process-test-resources</phase>
-            <id>broker</id>
+            <id>start-broker</id>
             <goals>
               <goal>run</goal>
+            </goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop-broker</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>stop</goal>
             </goals>
             <configuration>
               <skip>${skipTests}</skip>
