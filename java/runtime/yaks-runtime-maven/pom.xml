@@ -92,6 +92,21 @@
 
     <!-- ****************************** -->
     <!--                                -->
+    <!-- DEFAULT VALIDATION MODULES     -->
+    <!--                                -->
+    <!-- ****************************** -->
+
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-validation-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-validation-text</artifactId>
+    </dependency>
+
+    <!-- ****************************** -->
+    <!--                                -->
     <!-- OTHERS                         -->
     <!--                                -->
     <!-- ****************************** -->
@@ -99,13 +114,13 @@
     <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-junit</artifactId>
+      <scope>test</scope>
     </dependency>
-
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-core-spring</artifactId>
+      <scope>test</scope>
     </dependency>
-
   </dependencies>
 
 </project>
