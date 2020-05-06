@@ -11,15 +11,15 @@ Feature: Task API
     Given variables
       | taskId  | citrus:randomNumber(4) |
       | task    | Test CamelK with YAKS! |
-    Given SQL update: INSERT INTO todo (id, task, completed) VALUES (${taskId}, '${task}', 0)
-    When send GET /todo/${taskId}
+    Given SQL update: INSERT INTO todo (id, task, completed) VALUES (${taskId}, '${task}', '0')
+    When send GET /api/${taskId}
     Then verify HTTP response header Content-Type="application/json"
     Then verify HTTP response body
       """
       {
-        "id": ${taskId},
+        "id": "${taskId}",
         "task": "${task}",
-        "completed": false
+        "completed": "0"
       }
       """
     And receive HTTP 200 OK
@@ -30,18 +30,21 @@ Feature: Task API
     Given HTTP request body
       """
       {
-        "task": "Task #${taskId}"
+        "id": "${taskId}",
+        "task": "Task #${taskId}",
+        "completed": "0"
       }
       """
-    When send POST /todo
+    When send POST /api
     Then receive HTTP 201 CREATED
     And verify column FOUND_TASKS=1
 
   Scenario: DELETE task
     Given variables
       | toDelete  | citrus:randomNumber(4) |
-    Given SQL update: INSERT INTO todo (id, task, completed) VALUES (${toDelete}, 'citrus:randomString(10)', 0)
+    Given SQL update: INSERT INTO todo (id, task, completed) VALUES (${toDelete}, 'citrus:randomString(10)', '0')
     Given SQL query: SELECT COUNT(task) AS FOUND_TASKS FROM todo WHERE id='${toDelete}'
-    When send DELETE /todo/${toDelete}
+    Given verify column FOUND_TASKS=1
+    When send DELETE /api/${toDelete}
     Then receive HTTP 204 NO_CONTENT
     And verify column FOUND_TASKS=0
