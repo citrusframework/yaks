@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = { "org.citrusframework.yaks.camel" },
-        plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
+        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+)
 public class CamelFeatureTest {
 }

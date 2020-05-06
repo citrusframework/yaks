@@ -27,10 +27,8 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = {
-                "org.citrusframework.yaks.hooks",
-                "org.citrusframework.yaks.standard"
-        },
-        plugin = { "org.citrusframework.yaks.report.TestReporter" } )
+        extraGlue = { "org.citrusframework.yaks.hooks" },
+        plugin = { "pretty", "org.citrusframework.yaks.report.TestReporter" }
+)
 public class StandardFeatureTest {
 }

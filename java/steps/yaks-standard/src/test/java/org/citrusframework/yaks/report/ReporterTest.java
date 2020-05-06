@@ -27,11 +27,13 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = {
-                "org.citrusframework.yaks",
+        extraGlue = {
+                "org.citrusframework.yaks.standard",
+                "org.citrusframework.yaks.hooks",
                 "com.consol.citrus.cucumber.step.runner.core"
         },
         plugin = {
+                "pretty",
                 "org.citrusframework.yaks.report.TestReporter",
                 "org.citrusframework.yaks.report.ReportVerifyPlugin"
         }

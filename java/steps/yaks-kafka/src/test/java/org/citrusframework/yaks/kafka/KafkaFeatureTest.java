@@ -21,15 +21,11 @@ import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
 import org.junit.runner.RunWith;
 
-import org.springframework.context.annotation.Bean;
-
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
-
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = { "com.consol.citrus.cucumber.step.runner.core", "org.citrusframework.yaks.kafka" },
-        plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
+        extraGlue = { "com.consol.citrus.cucumber.step.runner.core" },
+        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+)
 public class KafkaFeatureTest {
 }

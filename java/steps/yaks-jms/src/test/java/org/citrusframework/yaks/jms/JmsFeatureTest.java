@@ -24,7 +24,8 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        glue = { "com.consol.citrus.cucumber.step.runner.core", "org.citrusframework.yaks.jms" },
-        plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
+        extraGlue = { "com.consol.citrus.cucumber.step.runner.core" },
+        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+)
 public class JmsFeatureTest {
 }

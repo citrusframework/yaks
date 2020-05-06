@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
                 "com.consol.citrus.cucumber.step.runner.core",
                 "org.citrusframework.yaks.http"
         },
-        plugin = { "com.consol.citrus.cucumber.CitrusReporter" } )
+        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+)
 public class OpenApiFeatureTest {
 }
