@@ -24,11 +24,6 @@
       "groupId": "org.apache.camel",
       "artifactId": "camel-groovy",
       "version": "@camel.version@"
-    },
-    {
-      "groupId": "com.consol.citrus",
-      "artifactId": "citrus-validation-text",
-      "version": "@citrus.version@"
     }
   ]
 }

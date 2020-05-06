@@ -1,7 +1,7 @@
 Feature: Http client
 
   Background:
-    Given URL: https://github.com/citrusframework/yaks
+    Given URL: https://api.github.com/
 
   Scenario: Get a result from API
     When send GET /

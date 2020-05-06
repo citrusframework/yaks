@@ -2,9 +2,6 @@ config:
   runtime:
     settings:
       dependencies:
-        - groupId: com.consol.citrus
-          artifactId: citrus-validation-json
-          version: "@citrus.version@"
         - groupId: org.postgresql
           artifactId: postgresql
           version: "@postgresql.version@"
