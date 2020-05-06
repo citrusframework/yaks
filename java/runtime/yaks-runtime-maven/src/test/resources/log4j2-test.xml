@@ -26,6 +26,35 @@
     <Root level="INFO">
       <AppenderRef ref="STDOUT"/>
     </Root>
+
+    <!-- Our own classes-->
+    <Logger name="org.citrusframework.yaks" additivity="false" level="DEBUG">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="com.consol.citrus" additivity="false" level="DEBUG">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="Logger.Message_IN" additivity="false" level="DEBUG">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="Logger.Message_OUT" additivity="false" level="DEBUG">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="org.springframework" additivity="false" level="WARN">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="org.eclipse" additivity="false" level="WARN">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
+
+    <Logger name="org.apache" additivity="false" level="WARN">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
   </Loggers>
 
 </Configuration>
