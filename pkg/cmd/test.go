@@ -465,6 +465,10 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 		env = append(env, DependenciesEnv+"="+strings.Join(o.dependencies, ","))
 	}
 
+	for _, envConfig := range runConfig.Config.Runtime.Env {
+		env = append(env, envConfig.Name+"="+envConfig.Value)
+	}
+
 	if o.env != nil {
 		copy(env, o.env)
 	}

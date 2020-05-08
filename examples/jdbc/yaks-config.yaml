@@ -1,5 +1,8 @@
 config:
   runtime:
+    env:
+      - name: CITRUS_DEFAULT_MESSAGE_TYPE
+        value: PLAINTEXT
     settings:
       dependencies:
         - groupId: org.postgresql

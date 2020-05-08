@@ -46,12 +46,18 @@ type StepConfig struct {
 type RuntimeConfig struct {
 	Cucumber CucumberConfig
 	Settings SettingsConfig
+	Env 	 []EnvConfig
 }
 
 type CucumberConfig struct {
 	Tags    []string `yaml:"tags"`
 	Glue    []string `yaml:"glue"`
 	Options string   `yaml:"options"`
+}
+
+type EnvConfig struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
 type SettingsConfig struct {
