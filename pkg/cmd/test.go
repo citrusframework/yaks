@@ -30,6 +30,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	r "runtime"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -625,8 +626,14 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), actualTimeout)
 	defer cancel()
+	var executor string
+	if r.GOOS == "windows" {
+		executor = "powershell.exe"
+	} else {
+		executor = "/bin/bash"
+	}
 
-	command := exec.CommandContext(ctx, scriptFile)
+	command := exec.CommandContext(ctx, executor, scriptFile)
 
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
