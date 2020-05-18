@@ -31,6 +31,14 @@ YAKS Cloud-Native BDD testing or simply: Yet Another Kubernetes Service
 YAKS allows you to perform Could-Native BDD testing. Cloud-Native here means that your tests execute within a POD in a 
 Kubernetes cluster. All you need to do is to write some BDD feature specs using the [Gherkin syntax from Cucumber](https://cucumber.io/docs/gherkin/).
 
+### Windows prerequisite
+For full support of Yaks on Windows please enable "Windows Subsystem for Linux". You can do it manually by heading to Control Panel > Programs > Turn 
+Windows Features On or Off and checking "Windows Subsystem for Linux". Or you can simply execute this command in powershell:
+
+`Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux`
+
+This action requires a full reboot of the system.
+
 ### Installation
 
 The easiest way to getting started with YAKS is using the **YAKS CLI**.
