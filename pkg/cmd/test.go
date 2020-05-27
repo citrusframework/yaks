@@ -149,12 +149,10 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 		return err
 	}
 
-	testNamespace := runConfig.Config.Namespace.Name
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
 			return err
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
-			testNamespace = namespace.GetName()
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
@@ -164,8 +162,8 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 	}
 
 	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, testNamespace, baseDir)
-	if err = runSteps(runConfig.Pre, testNamespace, baseDir); err != nil {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, baseDir)
+	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, baseDir); err != nil {
 		return err
 	}
 
@@ -192,12 +190,10 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 		return err
 	}
 
-	var testNamespace = runConfig.Config.Namespace.Name
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
 			return err
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
-			testNamespace = namespace.GetName()
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
@@ -212,8 +208,8 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 	}
 
 	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, testNamespace, baseDir)
-	if err = runSteps(runConfig.Pre, testNamespace, baseDir); err != nil {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, baseDir)
+	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, baseDir); err != nil {
 		return err
 	}
 
