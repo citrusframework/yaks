@@ -467,7 +467,7 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 	}
 
 	if o.env != nil {
-		copy(env, o.env)
+		env = append(env, o.env...)
 	}
 
 	if len(env) > 0 {
