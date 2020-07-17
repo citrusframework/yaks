@@ -18,7 +18,6 @@
 package org.citrusframework.yaks.jms;
 
 import javax.jms.ConnectionFactory;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,7 +32,6 @@ import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
 import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
-import com.consol.citrus.jms.message.JmsMessage;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -67,6 +65,8 @@ public class JmsSteps {
 
         connectionFactory = ConnectionFactoryCreator.lookup(connectionSettings.get("type"))
                                                     .create(connectionSettings);
+
+        citrus.getCitrusContext().getReferenceResolver().bind("connectionFactory", connectionFactory);
     }
 
     @Given("^(?:JMS|jms) destination: (.+)$")
