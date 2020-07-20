@@ -1,0 +1,5 @@
+config:
+  runtime:
+    env:
+      - name: YAKS_NAMESPACE
+        value: event-example

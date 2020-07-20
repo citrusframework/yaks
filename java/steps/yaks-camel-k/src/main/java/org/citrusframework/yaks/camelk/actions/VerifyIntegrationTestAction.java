@@ -27,7 +27,6 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
-import org.citrusframework.yaks.camelk.CamelKHelper;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +104,7 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
      */
     private String getIntegrationPodLogs(Pod pod) {
         PodResource<Pod, DoneablePod> podRes = client.pods()
-                .inNamespace(CamelKHelper.namespace())
+                .inNamespace(CamelKSettings.getNamespace())
                 .withName(pod.getMetadata().getName());
 
         String containerName = null;
@@ -152,7 +151,7 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
      * @return
      */
     private Pod getRunningIntegrationPod(String integration) {
-        PodList pods = client.pods().inNamespace(CamelKHelper.namespace()).withLabel("camel.apache.org/integration", integration).list();
+        PodList pods = client.pods().inNamespace(CamelKSettings.getNamespace()).withLabel("camel.apache.org/integration", integration).list();
         if (pods.getItems().size() == 0) {
             return null;
         }

@@ -25,6 +25,8 @@ import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
 import org.assertj.core.api.Assertions;
+import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.YaksVariableNames;
 import org.junit.Test;
 
 /**
@@ -37,8 +39,13 @@ public class InjectEnvVarsHookTest {
     public void shouldInjectEnvVars() {
         InjectEnvVarsHook hook = new InjectEnvVarsHook() {
             @Override
-            protected Optional<String> getEnvSetting(String name) {
+            protected Optional<String> getNamespaceSetting() {
                 return Optional.of("foo");
+            }
+
+            @Override
+            protected Optional<String> getClusterWildcardSetting() {
+                return Optional.of("foo.cluster.io");
             }
         };
 
@@ -48,8 +55,8 @@ public class InjectEnvVarsHookTest {
 
         hook.injectEnvVars(null);
 
-        Assertions.assertThat(context.getVariable(InjectEnvVarsHook.YAKS_NAMESPACE)).isEqualTo("foo");
-        Assertions.assertThat(context.getVariable(InjectEnvVarsHook.CLUSTER_WILDCARD_DOMAIN)).isEqualTo("foo");
+        Assertions.assertThat(context.getVariable(YaksVariableNames.NAMESPACE.value())).isEqualTo("foo");
+        Assertions.assertThat(context.getVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value())).isEqualTo("foo.cluster.io");
     }
 
     @Test
@@ -57,11 +64,12 @@ public class InjectEnvVarsHookTest {
     public void shouldInjectEnvVarsDefaultValues() {
         InjectEnvVarsHook hook = new InjectEnvVarsHook() {
             @Override
-            protected Optional<String> getEnvSetting(String name) {
-                if (name.equals(InjectEnvVarsHook.YAKS_NAMESPACE)) {
-                    return Optional.of("foo");
-                }
+            protected Optional<String> getNamespaceSetting() {
+                return Optional.of("foo");
+            }
 
+            @Override
+            protected Optional<String> getClusterWildcardSetting() {
                 return Optional.empty();
             }
         };
@@ -72,7 +80,7 @@ public class InjectEnvVarsHookTest {
 
         hook.injectEnvVars(null);
 
-        Assertions.assertThat(context.getVariable(InjectEnvVarsHook.YAKS_NAMESPACE)).isEqualTo("foo");
-        Assertions.assertThat(context.getVariable(InjectEnvVarsHook.CLUSTER_WILDCARD_DOMAIN)).isEqualTo("foo" + InjectEnvVarsHook.DEFAULT_DOMAIN_SUFFIX);
+        Assertions.assertThat(context.getVariable(YaksVariableNames.NAMESPACE.value())).isEqualTo("foo");
+        Assertions.assertThat(context.getVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value())).isEqualTo("foo." + YaksSettings.DEFAULT_DOMAIN_SUFFIX);
     }
 }

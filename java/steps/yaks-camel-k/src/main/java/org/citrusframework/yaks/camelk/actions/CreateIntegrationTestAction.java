@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.citrusframework.yaks.camelk.CamelKHelper;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +106,7 @@ public class CreateIntegrationTestAction extends AbstractTestAction {
         final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
 
         try {
-            Map<String, Object> result = client.customResource(crdContext).createOrReplace(CamelKHelper.namespace(), mapper.writeValueAsString(i));
+            Map<String, Object> result = client.customResource(crdContext).createOrReplace(CamelKSettings.getNamespace(), mapper.writeValueAsString(i));
             if (result.get("message") != null) {
                 throw new CitrusRuntimeException(result.get("message").toString());
             }

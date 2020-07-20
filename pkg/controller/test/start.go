@@ -173,9 +173,18 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  "YAKS_SETTINGS_FILE",
 			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
-		},
-		)
+		})
 	}
+
+	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		Name:  "YAKS_TEST_NAME",
+		Value: test.Name,
+	})
+
+	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		Name:  "YAKS_TEST_ID",
+		Value: test.Status.TestID,
+	})
 
 	if err := action.injectSnap(ctx, &pod); err != nil {
 		return nil, err

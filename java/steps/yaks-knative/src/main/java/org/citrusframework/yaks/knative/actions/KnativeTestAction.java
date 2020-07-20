@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.citrusframework.yaks.knative.actions;
+
+import com.consol.citrus.actions.AbstractTestAction;
+import com.consol.citrus.context.TestContext;
+import org.citrusframework.yaks.knative.KnativeSettings;
+import org.citrusframework.yaks.knative.KnativeVariableNames;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Base action provides access to Knative properties such as broker name. These properties are read from
+ * environment settings or explicitly set as part of the test case and get stored as test variables in the current context.
+ * This base class gives convenient access to the test variables and provides a fallback if no variable is set.
+ *
+ * @author Christoph Deppisch
+ */
+public abstract class KnativeTestAction extends AbstractTestAction {
+
+    /** Logger */
+    protected static Logger LOG = LoggerFactory.getLogger(KnativeTestAction.class);
+
+    /**
+     * Resolves namespace name from given test context using the stored test variable.
+     * Fallback to the namespace given in Knative environment settings when no test variable is present.
+     * @param context
+     * @return
+     */
+    protected String namespace(TestContext context) {
+        if (context.getVariables().containsKey(KnativeVariableNames.NAMESPACE.value())) {
+            context.getVariable(KnativeVariableNames.NAMESPACE.value());
+        }
+
+        return KnativeSettings.getNamespace();
+    }
+
+    /**
+     * Resolves the current broker name that has been set in the test context as test variable.
+     * Fallback to the broker given in Knative environment settings when no test variable is present.
+     * @param context
+     * @return
+     */
+    protected String brokerName(TestContext context) {
+        if (context.getVariables().containsKey(KnativeVariableNames.BROKER_NAME.value())) {
+            context.getVariable(KnativeVariableNames.BROKER_NAME.value());
+        }
+
+        return KnativeSettings.getBrokerName();
+    }
+}
