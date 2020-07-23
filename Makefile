@@ -27,7 +27,7 @@ clean:
 generate:
 	operator-sdk generate k8s
 
-build: build-yaks
+build: build-resources build-yaks
 
 test: build
 	go test ./...
@@ -45,7 +45,7 @@ docker-image:
 	mkdir -p build/_output/bin
 	operator-sdk build $(IMAGE_NAME):$(VERSION)
 
-images-no-test: package-artifacts-no-test docker-image
+images-no-test: build package-artifacts-no-test docker-image
 
 images: test package-artifacts docker-image
 
