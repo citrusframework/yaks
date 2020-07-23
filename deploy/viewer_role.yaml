@@ -3,21 +3,33 @@ kind: Role
 metadata:
   name: yaks-viewer
   labels:
-    app: "yaks"
+    org.citrusframework.yaks/app: "yaks"
 rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
-  - endpoints
-  - persistentvolumeclaims
   - pods
-  - serviceaccounts
-  - services
+  - persistentvolumeclaims
   - secrets
+  - serviceaccounts
   verbs:
   - get
   - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - ""
@@ -42,6 +54,35 @@ rules:
   - camel.apache.org
   resources:
   - integrations
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - brokers
+  - triggers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - channels
+  - inmemorychannels
+  - subscriptions
   verbs:
   - create
   - delete

@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: yaks-viewer
   labels:
-    app: "yaks"
+    org.citrusframework.yaks/app: "yaks"
 subjects:
 - kind: ServiceAccount
   name: yaks-viewer

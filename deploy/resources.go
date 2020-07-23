@@ -31,6 +31,7 @@ kind: Deployment
 metadata:
   name: yaks
   labels:
+    org.citrusframework.yaks/app: "yaks"
     org.citrusframework.yaks/component: operator
 spec:
   replicas: 1
@@ -68,8 +69,9 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: yaks
+  labels:
+    org.citrusframework.yaks/app: "yaks"
 rules:
 - apiGroups:
   - ""
@@ -157,6 +159,35 @@ rules:
   - update
   - watch
 - apiGroups:
+    - eventing.knative.dev
+  resources:
+    - brokers
+    - triggers
+  verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - messaging.knative.dev
+  resources:
+    - channels
+    - inmemorychannels
+    - subscriptions
+  verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
   - org.citrusframework.yaks
   resources:
   - '*'
@@ -170,6 +201,8 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: yaks
+  labels:
+    org.citrusframework.yaks/app: "yaks"
 subjects:
 - kind: ServiceAccount
   name: yaks
@@ -185,6 +218,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: yaks
+  labels:
+    org.citrusframework.yaks/app: "yaks"
 
 `
 	Resources["user_cluster_role.yaml"] =
@@ -211,6 +246,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: yaks:edit
   labels:
+    org.citrusframework.yaks/app: "yaks"
     # Add these permissions to the "admin" and "edit" default roles.
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -233,21 +269,33 @@ kind: Role
 metadata:
   name: yaks-viewer
   labels:
-    app: "yaks"
+    org.citrusframework.yaks/app: "yaks"
 rules:
 - apiGroups:
   - ""
   resources:
-  - configmaps
-  - endpoints
-  - persistentvolumeclaims
   - pods
-  - serviceaccounts
-  - services
+  - persistentvolumeclaims
   - secrets
+  - serviceaccounts
   verbs:
   - get
   - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - configmaps
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - ""
@@ -281,6 +329,35 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - brokers
+  - triggers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - channels
+  - inmemorychannels
+  - subscriptions
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
 
 `
 	Resources["viewer_role_binding.yaml"] =
@@ -290,7 +367,7 @@ apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: yaks-viewer
   labels:
-    app: "yaks"
+    org.citrusframework.yaks/app: "yaks"
 subjects:
 - kind: ServiceAccount
   name: yaks-viewer
@@ -307,7 +384,7 @@ kind: ServiceAccount
 metadata:
   name: yaks-viewer
   labels:
-    app: "yaks"
+    org.citrusframework.yaks/app: "yaks"
 
 `
 	Resources["crds/yaks_v1alpha1_test_cr.yaml"] =

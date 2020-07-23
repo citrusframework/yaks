@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: yaks
   labels:
+    org.citrusframework.yaks/app: "yaks"
     org.citrusframework.yaks/component: operator
 spec:
   replicas: 1

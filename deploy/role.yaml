@@ -1,8 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  creationTimestamp: null
   name: yaks
+  labels:
+    org.citrusframework.yaks/app: "yaks"
 rules:
 - apiGroups:
   - ""
@@ -89,6 +90,35 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+    - eventing.knative.dev
+  resources:
+    - brokers
+    - triggers
+  verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+    - messaging.knative.dev
+  resources:
+    - channels
+    - inmemorychannels
+    - subscriptions
+  verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
 - apiGroups:
   - org.citrusframework.yaks
   resources:
