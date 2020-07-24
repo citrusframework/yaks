@@ -157,7 +157,9 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
             return null;
         }
         for (Pod p : pods.getItems()) {
-            if (p.getStatus() != null && "Running".equals(p.getStatus().getPhase())) {
+            if (p.getStatus() != null
+                    && "Running".equals(p.getStatus().getPhase())
+                    && p.getStatus().getContainerStatuses().stream().allMatch(status -> status.getReady())) {
                 return p;
             }
         }
