@@ -17,12 +17,11 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import com.consol.citrus.actions.AbstractTestAction;
+import com.consol.citrus.TestAction;
 import com.consol.citrus.context.TestContext;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeVariableNames;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base action provides access to Knative properties such as broker name. These properties are read from
@@ -31,18 +30,22 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christoph Deppisch
  */
-public abstract class KnativeTestAction extends AbstractTestAction {
+public interface KnativeAction extends TestAction {
 
-    /** Logger */
-    protected static Logger LOG = LoggerFactory.getLogger(KnativeTestAction.class);
+    /**
+     * Gets the Kubernetes client.
+     * @return
+     */
+    KubernetesClient getKubernetesClient();
 
     /**
      * Resolves namespace name from given test context using the stored test variable.
      * Fallback to the namespace given in Knative environment settings when no test variable is present.
+     *
      * @param context
      * @return
      */
-    protected String namespace(TestContext context) {
+    default String namespace(TestContext context) {
         if (context.getVariables().containsKey(KnativeVariableNames.NAMESPACE.value())) {
             context.getVariable(KnativeVariableNames.NAMESPACE.value());
         }
@@ -53,10 +56,11 @@ public abstract class KnativeTestAction extends AbstractTestAction {
     /**
      * Resolves the current broker name that has been set in the test context as test variable.
      * Fallback to the broker given in Knative environment settings when no test variable is present.
+     *
      * @param context
      * @return
      */
-    protected String brokerName(TestContext context) {
+    default String brokerName(TestContext context) {
         if (context.getVariables().containsKey(KnativeVariableNames.BROKER_NAME.value())) {
             context.getVariable(KnativeVariableNames.BROKER_NAME.value());
         }
@@ -64,3 +68,4 @@ public abstract class KnativeTestAction extends AbstractTestAction {
         return KnativeSettings.getBrokerName();
     }
 }
+

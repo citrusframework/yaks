@@ -17,13 +17,10 @@
 
 package org.citrusframework.yaks.knative;
 
-import java.util.Collections;
-
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
 import com.consol.citrus.http.server.HttpServerBuilder;
@@ -33,15 +30,13 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.citrusframework.yaks.knative.actions.KnativeTestAction;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.springframework.http.HttpStatus;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+import static org.citrusframework.yaks.knative.actions.KnativeActionBuilder.knative;
 
 /**
  * @author Christoph Deppisch
@@ -139,46 +134,17 @@ public class ReceiveEventSteps {
     }
 
     @Given("^create Knative event consumer service ([^\\s]+) with target port (\\d+)$")
-    public void createService(String serviceName, int port) {
-        setServicePort(port);
+    public void createService(String serviceName, int targetPort) {
+        setServicePort(targetPort);
         if (!httpServer.isRunning()) {
             httpServer.start();
         }
 
-        runner.given(new KnativeTestAction() {
-            @Override
-            public void doExecute(TestContext context) {
-                k8sClient.services().inNamespace(namespace(context)).createNew()
-                        .withNewMetadata()
-                        .withNamespace(namespace(context))
-                        .withName(serviceName)
-                        .withLabels(KnativeSettings.getDefaultLabels())
-                        .endMetadata()
-                        .withNewSpec()
-                        // add selector to the very specific Pod that is running the test right now. This way the service will route all traffic to the test
-                        .withSelector(Collections.singletonMap("org.citrusframework.yaks/test-id", KnativeSettings.getTestId()))
-                        .withPorts(new ServicePortBuilder()
-                                .withProtocol("TCP")
-                                .withPort(80)
-                                .withTargetPort(new IntOrString(port))
-                                .build())
-                        .endSpec()
-                        .done();
-            }
-        });
+        runner.given(knative().client(k8sClient).createService(serviceName).targetPort(targetPort));
 
         if (KnativeSettings.isAutoRemoveResources()) {
             runner.then(doFinally()
-                    .actions(
-                            new KnativeTestAction() {
-                                @Override
-                                public void doExecute(TestContext context) {
-                                    k8sClient.services().inNamespace(namespace(context))
-                                            .withName(serviceName)
-                                            .delete();
-                                }
-                            }
-                    ));
+                    .actions(knative().client(k8sClient).deleteService(serviceName)));
         }
     }
 

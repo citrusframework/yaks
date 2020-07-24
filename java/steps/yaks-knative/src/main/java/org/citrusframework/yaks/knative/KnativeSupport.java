@@ -44,7 +44,7 @@ public final class KnativeSupport {
         // prevent instantiation of utility class
     }
 
-    static KubernetesClient getKubernetesClient(Citrus citrus) {
+    public static KubernetesClient getKubernetesClient(Citrus citrus) {
         if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KubernetesClient.class).size() == 1L) {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
@@ -52,7 +52,7 @@ public final class KnativeSupport {
         }
     }
 
-    static KnativeClient getKnativeClient(Citrus citrus) {
+    public static KnativeClient getKnativeClient(Citrus citrus) {
         if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KnativeClient.class).size() == 1L) {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KnativeClient.class);
         } else {
@@ -60,7 +60,7 @@ public final class KnativeSupport {
         }
     }
 
-    static Yaml yaml() {
+    public static Yaml yaml() {
         Representer representer = new Representer() {
             @Override
             protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
@@ -76,11 +76,11 @@ public final class KnativeSupport {
         return new Yaml(representer);
     }
 
-    static ObjectMapper json() {
+    public static ObjectMapper json() {
         return OBJECT_MAPPER;
     }
 
-    static <T> void createResource(KubernetesClient k8sClient, String namespace,
+    public static <T> void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, T resource) {
         try {
             k8sClient.customResource(context).createOrReplace(namespace, KnativeSupport.yaml().dump(resource));
@@ -98,20 +98,18 @@ public final class KnativeSupport {
         }
     }
 
-    static CustomResourceDefinitionContext eventingCRDContext(String resourceName) {
-        return new CustomResourceDefinitionContext.Builder()
-                .withName(String.format("%s.eventing.knative.dev", resourceName))
-                .withGroup("eventing.knative.dev")
-                .withVersion("v1")
-                .withPlural(resourceName)
-                .withScope("Namespaced")
-                .build();
+    public static CustomResourceDefinitionContext eventingCRDContext(String resourceName) {
+        return knativeCRDContext("eventing", resourceName);
     }
 
-    static CustomResourceDefinitionContext messagingCRDContext(String resourceName) {
+    public static CustomResourceDefinitionContext messagingCRDContext(String resourceName) {
+        return knativeCRDContext("messaging", resourceName);
+    }
+
+    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String resourceName) {
         return new CustomResourceDefinitionContext.Builder()
-                .withName(String.format("%s.messaging.knative.dev", resourceName))
-                .withGroup("messaging.knative.dev")
+                .withName(String.format("%s.%s.knative.dev", resourceName, knativeComponent))
+                .withGroup(String.format("%s.knative.dev", knativeComponent))
                 .withVersion("v1")
                 .withPlural(resourceName)
                 .withScope("Namespaced")

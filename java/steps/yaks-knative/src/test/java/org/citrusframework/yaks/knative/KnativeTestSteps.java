@@ -19,6 +19,7 @@ package org.citrusframework.yaks.knative;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.actions.AbstractTestAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
@@ -28,8 +29,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.knative.eventing.v1alpha1.Trigger;
 import io.fabric8.knative.messaging.v1alpha1.SubscriptionList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.assertj.core.api.Assertions;
-import org.citrusframework.yaks.knative.actions.KnativeTestAction;
+import org.citrusframework.yaks.knative.actions.KnativeAction;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.springframework.http.HttpStatus;
 
@@ -131,5 +133,12 @@ public class KnativeTestSteps {
                 Assertions.assertThat(subscriptions.getItems().get(0).getSpec().getSubscriber().getRef().getName()).isEqualTo(serviceName);
             }
         });
+    }
+
+    private static abstract class KnativeTestAction extends AbstractTestAction implements KnativeAction {
+        @Override
+        public KubernetesClient getKubernetesClient() {
+            return null;
+        }
     }
 }
