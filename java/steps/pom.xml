@@ -32,6 +32,7 @@
     <module>yaks-camel</module>
     <module>yaks-camel-k</module>
     <module>yaks-http</module>
+    <module>yaks-knative</module>
     <module>yaks-jdbc</module>
     <module>yaks-jms</module>
     <module>yaks-kafka</module>

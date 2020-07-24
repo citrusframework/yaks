@@ -25,16 +25,14 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
+import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.YaksVariableNames;
 
 /**
  * Cucumber hook injects environment variables as test variables before the scenario is executed.
  * @author Christoph Deppisch
  */
 public class InjectEnvVarsHook {
-
-    public static final String DEFAULT_DOMAIN_SUFFIX = ".svc.cluster.local";
-    public static final String CLUSTER_WILDCARD_DOMAIN = "CLUSTER_WILDCARD_DOMAIN";
-    public static final String YAKS_NAMESPACE = "YAKS_NAMESPACE";
 
     @CitrusResource
     private TestCaseRunner runner;
@@ -45,32 +43,31 @@ public class InjectEnvVarsHook {
             @Override
             public void doExecute(TestContext context) {
                 if (scenario != null) {
-                    context.setVariable("SCENARIO_ID", scenario.getId());
-                    context.setVariable("SCENARIO_NAME", scenario.getName());
+                    context.setVariable(YaksVariableNames.SCENARIO_ID.value(), scenario.getId());
+                    context.setVariable(YaksVariableNames.SCENARIO_NAME.value(), scenario.getName());
                 }
 
-                Optional<String> namespaceEnv = getEnvSetting(YAKS_NAMESPACE);
-                Optional<String> domainEnv = getEnvSetting(CLUSTER_WILDCARD_DOMAIN);
+                Optional<String> namespaceEnv = getNamespaceSetting();
+                Optional<String> domainEnv = getClusterWildcardSetting();
 
                 if (namespaceEnv.isPresent()) {
-                    context.setVariable(YAKS_NAMESPACE, namespaceEnv.get());
+                    context.setVariable(YaksVariableNames.NAMESPACE.value(), namespaceEnv.get());
 
                     if (!domainEnv.isPresent()) {
-                        context.setVariable(CLUSTER_WILDCARD_DOMAIN, namespaceEnv.get() + DEFAULT_DOMAIN_SUFFIX);
+                        context.setVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value(), namespaceEnv.get() + "." + YaksSettings.DEFAULT_DOMAIN_SUFFIX);
                     }
                 }
 
-                domainEnv.ifPresent(var -> context.setVariable(CLUSTER_WILDCARD_DOMAIN, var));
+                domainEnv.ifPresent(var -> context.setVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value(), var));
             }
         });
     }
 
-    /**
-     * Read environment setting. If setting is not present default to empty value.
-     * @param name
-     * @return
-     */
-    protected Optional<String> getEnvSetting(String name) {
-        return Optional.ofNullable(System.getenv(name));
+    protected Optional<String> getClusterWildcardSetting() {
+        return Optional.ofNullable(YaksSettings.getClusterWildcardDomain());
+    }
+
+    protected Optional<String> getNamespaceSetting() {
+        return Optional.ofNullable(YaksSettings.getDefaultNamespace());
     }
 }

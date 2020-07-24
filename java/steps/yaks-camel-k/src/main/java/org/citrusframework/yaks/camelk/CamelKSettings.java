@@ -17,6 +17,8 @@
 
 package org.citrusframework.yaks.camelk;
 
+import org.citrusframework.yaks.YaksSettings;
+
 /**
  * @author Christoph Deppisch
  */
@@ -61,6 +63,6 @@ public final class CamelKSettings {
      * @return
      */
     public static String getNamespace() {
-        return System.getProperty(NAMESPACE_PROPERTY, System.getenv(NAMESPACE_ENV));
+        return System.getProperty(NAMESPACE_PROPERTY, System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : YaksSettings.getDefaultNamespace());
     }
 }

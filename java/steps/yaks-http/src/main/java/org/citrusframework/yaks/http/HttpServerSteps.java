@@ -67,12 +67,24 @@ public class HttpServerSteps implements HttpSteps {
     private String requestBody;
     private String responseBody;
 
+    public static final String HTTP_SERVER_NAME = "yaksHttpServer";
+
     @Before
     public void before(Scenario scenario) {
         if (httpServer == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
             httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
         } else {
-            httpServer = new HttpServerBuilder().build();
+            httpServer = new HttpServerBuilder()
+                    .name(HTTP_SERVER_NAME)
+                    .build();
+
+            citrus.getCitrusContext().getReferenceResolver().bind(HTTP_SERVER_NAME, httpServer);
+
+            try {
+                httpServer.afterPropertiesSet();
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to initialize Http server", e);
+            }
         }
 
         requestHeaders = new HashMap<>();
@@ -99,6 +111,12 @@ public class HttpServerSteps implements HttpSteps {
         httpServer = new HttpServerBuilder()
                 .port(port)
                 .build();
+
+        try {
+            httpServer.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to initialize Http server", e);
+        }
 
         httpServer.start();
     }
@@ -204,6 +222,10 @@ public class HttpServerSteps implements HttpSteps {
      * @param request
      */
     private void receiveServerRequest(HttpMessage request) {
+        if (!httpServer.isRunning()) {
+            httpServer.start();
+        }
+
         HttpServerActionBuilder.HttpServerReceiveActionBuilder receiveBuilder = http().server(httpServer).receive();
         HttpServerRequestActionBuilder requestBuilder;
 
@@ -242,6 +264,10 @@ public class HttpServerSteps implements HttpSteps {
      * @param response
      */
     private void sendServerResponse(HttpMessage response) {
+        if (!httpServer.isRunning()) {
+            httpServer.start();
+        }
+
         runner.run(http().server(httpServer).send()
                 .response(response.getStatusCode())
                 .messageType(responseMessageType)
