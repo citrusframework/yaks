@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class IntegrationBuilderTest {
 
-	public static final String TEST_INTEGRATION = "{\"apiVersion\":\"camel.apache.org/v1alpha1\"," +
+	public static final String TEST_INTEGRATION = "{\"apiVersion\":\"camel.apache.org/v1\"," +
 			"\"kind\":\"Integration\"," +
 			"\"metadata\":{\"name\":\"bar\"}," +
 			"\"spec\":{\"sources\":[{\"content\":\"from(\\\"timer:x\\\").log('${body}')\",\"name\":\"bar.groovy\"}]," +

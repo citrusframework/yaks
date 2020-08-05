@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class Integration {
 
 	public static final String CRD_GROUP = "camel.apache.org";
-	public static final String CRD_VERSION = "v1alpha1";
+	public static final String CRD_VERSION = "v1";
 	public static final String CRD_INTEGRATION_NAME = "integrations.camel.apache.org";
 
 	private String apiVersion = CRD_GROUP + "/" + CRD_VERSION;
