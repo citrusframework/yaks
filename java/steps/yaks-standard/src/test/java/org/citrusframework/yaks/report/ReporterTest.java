@@ -29,8 +29,7 @@ import org.junit.runner.RunWith;
         strict = true,
         extraGlue = {
                 "org.citrusframework.yaks.standard",
-                "org.citrusframework.yaks.hooks",
-                "com.consol.citrus.cucumber.step.runner.core"
+                "org.citrusframework.yaks.hooks"
         },
         plugin = {
                 "pretty",

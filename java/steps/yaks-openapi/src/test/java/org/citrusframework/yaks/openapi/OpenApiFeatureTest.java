@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
         strict = true,
         extraGlue = {
-                "com.consol.citrus.cucumber.step.runner.core",
+                "org.citrusframework.yaks.standard",
                 "org.citrusframework.yaks.http"
         },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }

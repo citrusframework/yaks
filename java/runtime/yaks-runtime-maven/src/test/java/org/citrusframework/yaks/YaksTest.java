@@ -24,7 +24,6 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        extraGlue = { "com.consol.citrus.cucumber.step.runner.core" },
         plugin = { "pretty", "org.citrusframework.yaks.report.TestReporter" }
 )
 public class YaksTest {
