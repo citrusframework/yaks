@@ -403,7 +403,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 				}
 			}
 			return false, nil
-		}, 10*time.Minute)
+		}, 30*time.Minute)
 
 		cancel()
 	}()
