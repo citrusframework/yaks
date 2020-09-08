@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         strict = true,
-        extraGlue = { "com.consol.citrus.cucumber.step.runner.core" },
+        extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
 public class KafkaFeatureTest {

@@ -1,4 +1,4 @@
-Feature: hello world
+Feature: Hello world
 
   Scenario: print slogan
     Given YAKS does Cloud-Native BDD testing

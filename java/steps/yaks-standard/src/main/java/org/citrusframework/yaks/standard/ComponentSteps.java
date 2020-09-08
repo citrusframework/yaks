@@ -17,35 +17,21 @@
 
 package org.citrusframework.yaks.standard;
 
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.Citrus;
+import com.consol.citrus.annotations.CitrusFramework;
+import com.consol.citrus.message.DefaultMessageQueue;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
 
-import static com.consol.citrus.actions.EchoAction.Builder.echo;
+/**
+ * @author Christoph Deppisch
+ */
+public class ComponentSteps {
 
-public class YaksStandardSteps {
+    @CitrusFramework
+    private Citrus citrus;
 
-    @CitrusResource
-    private TestCaseRunner runner;
-
-    @Given("^YAKS does Cloud-Native BDD testing$")
-    public void itDoesBDD() {
-        print("YAKS does Cloud-Native BDD testing");
-    }
-
-    @Then("^YAKS rocks!$")
-    public void yaksRocks() {
-        print("YAKS rocks!");
-    }
-
-    @Then("^(?:log|print) '(.+)'$")
-    public void print(String message) {
-        runner.run(echo(message));
-    }
-
-    @Then("^(?:log|print)$")
-    public void printMultiline(String message) {
-        runner.run(echo(message));
+    @Given("^(?:create|new) message queue ([^\"\\s]+)$")
+    public void createMessageQueue(String name) {
+        citrus.getCitrusContext().getReferenceResolver().bind(name, new DefaultMessageQueue());
     }
 }

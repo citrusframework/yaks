@@ -137,7 +137,7 @@ public class CamelSteps {
                 ClassLoader cl = Thread.currentThread().getContextClassLoader();
                 GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
 
-                 DelegatingScript script = (DelegatingScript) sh.parse(route);
+                DelegatingScript script = (DelegatingScript) sh.parse(route);
 
                 // set the delegate target
                 script.setDelegate(this);
