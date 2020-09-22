@@ -38,5 +38,6 @@
     <module>yaks-kafka</module>
     <module>yaks-standard</module>
     <module>yaks-openapi</module>
+    <module>yaks-groovy</module>
   </modules>
 </project>
