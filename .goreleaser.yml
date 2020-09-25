@@ -6,7 +6,7 @@ builds:
 - env:
   - CGO_ENABLED=0
   hooks:
-    pre: ./hack/before_release.sh {{ .Tag }}
+    pre: ./script/before_release.sh {{ .Tag }}
   main: ./cmd/manager/main.go
   binary: yaks
   ldflags: -X github.com/citrusframework/yaks/version.Version={{ .Tag }}
@@ -36,6 +36,6 @@ dockers:
   extra_files:
   - build
   image_templates:
-  - 'docker.io/yaks/yaks:{{ .Tag }}'
-  - 'docker.io/yaks/yaks:v{{ .Major }}.{{ .Minor }}'
-  - 'docker.io/yaks/yaks:latest'
+  - 'docker.io/citrusframework/yaks:{{ .Tag }}'
+  - 'docker.io/citrusframework/yaks:v{{ .Major }}.{{ .Minor }}'
+  - 'docker.io/citrusframework/yaks:latest'

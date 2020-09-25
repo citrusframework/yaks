@@ -1,17 +1,29 @@
+# IDEs
 .idea
 *.iml
+.project
+.metadata
+.gopath
 
 .DS_Store
 
+# Temporary Build Files
 build/_maven_*
 build/_output
 _output
-
-/yaks
-/yaks-*
-
 target/
 
+# Binary files
+/yaks
+/yaks-*
+/license-check
+
+# envrc
 .envrc
 
-/dist
+# Released Packages
+*.tar.gz
+
+# cask packages
+.cask/
+dist/

@@ -16,9 +16,26 @@ limitations under the License.
 package openshift
 
 import (
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
+	"strings"
 )
+
+// IsOpenShift returns true if we are connected to a OpenShift cluster or given cluster type marks cluster as OpenShift
+func IsOpenShiftClusterType(c kubernetes.Interface, clusterType string) (bool, error) {
+	var res bool
+	var err error
+	if clusterType != "" {
+		res = strings.EqualFold(clusterType, string(v1alpha1.ClusterTypeOpenShift))
+	} else {
+		res, err = IsOpenShift(c)
+		if err != nil {
+			return false, err
+		}
+	}
+	return res, nil
+}
 
 // IsOpenShift returns true if we are connected to a OpenShift cluster
 func IsOpenShift(client kubernetes.Interface) (bool, error) {

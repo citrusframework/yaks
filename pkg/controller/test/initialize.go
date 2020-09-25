@@ -19,10 +19,10 @@ package test
 
 import (
 	"context"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/util/digest"
-	"github.com/citrusframework/yaks/version"
 	"github.com/rs/xid"
 )
 
@@ -55,6 +55,6 @@ func (action *initializeAction) Handle(ctx context.Context, test *v1alpha1.Test)
 	test.Status.Phase = v1alpha1.TestPhasePending
 	test.Status.TestID = xid.New().String()
 	test.Status.Digest = testDigest
-	test.Status.Version = version.Version
+	test.Status.Version = defaults.Version
 	return test, nil
 }

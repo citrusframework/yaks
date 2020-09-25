@@ -18,70 +18,180 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/util/olm"
+	"os"
+	"time"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-func newCmdInstall(rootCmdOptions *RootCmdOptions) *cobra.Command {
-	impl := installCmdOptions{
+func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdOptions) {
+	options := installCmdOptions{
 		RootCmdOptions: rootCmdOptions,
 	}
 	cmd := cobra.Command{
-		PersistentPreRunE: impl.preRun,
-		Use:               "install",
-		Short:             "Install YAKS on a Kubernetes cluster",
-		Long:              `Installs YAKS on a Kubernetes or OpenShift cluster.`,
-		RunE:              impl.install,
+		PersistentPreRunE: options.preRun,
+		Use:     "install",
+		Short:   "Installs YAKS on a Kubernetes cluster",
+		Long:    `Installs YAKS on a Kubernetes or OpenShift cluster.`,
+		PreRunE: options.decode,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := options.install(cmd, args); err != nil {
+				if k8serrors.IsAlreadyExists(err) {
+					return errors.Wrap(err, "YAKS seems already installed (use the --force option to overwrite existing resources)")
+				}
+				return err
+			}
+			return nil
+		},
 	}
 
-	cmd.Flags().BoolVar(&impl.clusterSetupOnly, "cluster-setup", false, "Execute cluster-wide operations only (may require admin rights)")
-	cmd.Flags().BoolVar(&impl.skipOperatorSetup, "skip-operator-setup", false, "Do not install the operator in the namespace (in case there's a global one)")
-	cmd.Flags().BoolVar(&impl.skipClusterSetup, "skip-cluster-setup", false, "Skip the cluster-setup phase")
+	cmd.Flags().Bool("cluster-setup", false, "Execute cluster-wide operations only (may require admin rights)")
+	cmd.Flags().String("cluster-type", "", "Set explicitly the cluster type to Kubernetes or OpenShift")
+	cmd.Flags().Bool("skip-operator-setup", false, "Do not install the operator in the namespace (in case there's a global one)")
+	cmd.Flags().Bool("skip-cluster-setup", false, "Skip the cluster-setup phase")
+	cmd.Flags().Bool("global", false, "Configure the operator to watch all namespaces. No integration platform is created.")
+	cmd.Flags().Bool("force", false, "Force replacement of configuration resources when already present.")
+	cmd.Flags().String("operator-image", "", "Set the operator Image used for the operator deployment")
+	cmd.Flags().String("operator-image-pull-policy", "", "Set the operator ImagePullPolicy used for the operator deployment")
+	cmd.Flags().StringP("output", "o", "", "Output format. One of: json|yaml")
 
-	return &cmd
+	// olm
+	cmd.Flags().Bool("olm", true, "Try to install everything via OLM (Operator Lifecycle Manager) if available")
+	cmd.Flags().String("olm-operator-name", olm.DefaultOperatorName, "Name of the YAKS operator in the OLM source or marketplace")
+	cmd.Flags().String("olm-package", olm.DefaultPackage, "Name of the YAKS package in the OLM source or marketplace")
+	cmd.Flags().String("olm-channel", olm.DefaultChannel, "Name of the YAKS channel in the OLM source or marketplace")
+	cmd.Flags().String("olm-source", olm.DefaultSource, "Name of the OLM source providing the YAKS package (defaults to the standard Operator Hub source)")
+	cmd.Flags().String("olm-source-namespace", olm.DefaultSourceNamespace, "Namespace where the OLM source is available")
+	cmd.Flags().String("olm-starting-csv", olm.DefaultStartingCSV, "Allow to install a specific version from the operator source instead of latest available "+
+		"from the channel")
+	cmd.Flags().String("olm-global-namespace", olm.DefaultGlobalNamespace, "A namespace containing an OperatorGroup that defines global scope for the "+
+		"operator (used in combination with the --global flag)")
+
+	return &cmd, &options
 }
 
 type installCmdOptions struct {
 	*RootCmdOptions
-	clusterSetupOnly  bool
-	skipOperatorSetup bool
-	skipClusterSetup  bool
+	ClusterSetupOnly        bool     `mapstructure:"cluster-setup"`
+	SkipOperatorSetup       bool     `mapstructure:"skip-operator-setup"`
+	SkipClusterSetup        bool     `mapstructure:"skip-cluster-setup"`
+	OperatorImage           string   `mapstructure:"operator-image"`
+	OperatorImagePullPolicy string   `mapstructure:"operator-image-pull-policy"`
+	Global                  bool     `mapstructure:"global"`
+	Force                   bool     `mapstructure:"force"`
+	Olm                     bool     `mapstructure:"olm"`
+	ClusterType             string   `mapstructure:"cluster-type"`
+	OutputFormat            string   `mapstructure:"output"`
+	olmOptions   			olm.Options
 }
 
 // nolint: gocyclo
-func (o *installCmdOptions) install(_ *cobra.Command, _ []string) error {
-	if !o.skipClusterSetup {
-		if err := setupCluster(o.RootCmdOptions); err != nil {
-			return err
-		}
-	} else {
-		fmt.Println("YAKS cluster setup skipped")
+func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
+	var collection *kubernetes.Collection
+	if o.OutputFormat != "" {
+		collection = kubernetes.NewCollection()
 	}
 
-	if o.clusterSetupOnly {
-		fmt.Println("YAKS cluster setup completed successfully")
-		return nil
-	}
-
-	if o.skipOperatorSetup {
-		fmt.Println("YAKS operator installation skipped")
-		return nil
-	}
-
-	err := setupOperator(o.RootCmdOptions, o.Namespace)
-	return err
-}
-
-func setupCluster(o *RootCmdOptions) error {
 	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
 	clientProvider := client.Provider{Get: o.NewCmdClient}
 
-	err := install.SetupClusterwideResourcesOrCollect(o.Context, clientProvider, nil)
+	installViaOLM := false
+	if o.Olm {
+		var err error
+		var olmClient client.Client
+		if olmClient, err = clientProvider.Get(); err != nil {
+			return err
+		}
+		var olmAvailable bool
+		if olmAvailable, err = olm.IsAPIAvailable(o.Context, olmClient, o.Namespace); err != nil {
+			return errors.Wrap(err, "error while checking OLM availability. Run with '--olm=false' to skip this check")
+		}
+
+		if olmAvailable {
+			if installViaOLM, err = olm.HasPermissionToInstall(o.Context, olmClient, o.Namespace, o.Global, o.olmOptions); err != nil {
+				return errors.Wrap(err, "error while checking permissions to install operator via OLM. Run with '--olm=false' to skip this check")
+			}
+			if !installViaOLM {
+				fmt.Fprintln(cobraCmd.OutOrStdout(), "OLM is available but current user has not enough permissions to create the operator. "+
+					"You can either ask your administrator to provide permissions (preferred) or run the install command with the `--olm=false` flag.")
+				os.Exit(1)
+			}
+		}
+
+		if installViaOLM {
+			fmt.Fprintln(cobraCmd.OutOrStdout(), "OLM is available in the cluster")
+			var installed bool
+			if installed, err = olm.Install(o.Context, olmClient, o.Namespace, o.Global, o.olmOptions, collection); err != nil {
+				return err
+			}
+			if !installed {
+				fmt.Fprintln(cobraCmd.OutOrStdout(), "OLM resources are already available: skipping installation")
+			}
+
+			if err = install.WaitForAllCRDInstallation(o.Context, clientProvider, 90*time.Second); err != nil {
+				return err
+			}
+		}
+	}
+
+	if !o.SkipClusterSetup && !installViaOLM {
+		err := setupCluster(o.Context, clientProvider, collection)
+		if err != nil {
+			return err
+		}
+	}
+
+	if o.ClusterSetupOnly {
+		if collection == nil {
+			fmt.Fprintln(cobraCmd.OutOrStdout(), "YAKS cluster setup completed successfully")
+		}
+	} else {
+		c, err := o.GetCmdClient()
+		if err != nil {
+			return err
+		}
+
+		if !o.SkipOperatorSetup && !installViaOLM {
+			err = o.setupOperator(c, collection)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cobraCmd.OutOrStdout(), "YAKS operator installation completed")
+		} else if o.SkipOperatorSetup {
+			fmt.Fprintln(cobraCmd.OutOrStdout(), "YAKS operator installation skipped")
+		}
+
+		if collection == nil {
+			strategy := ""
+			if installViaOLM {
+				strategy = "via OLM subscription"
+			}
+			if o.Global {
+				fmt.Println("YAKS installed in namespace", o.Namespace, strategy, "(global mode)")
+			} else {
+				fmt.Println("YAKS installed in namespace", o.Namespace, strategy)
+			}
+		}
+	}
+
+	if collection != nil {
+		return o.printOutput(collection)
+	}
+
+	return nil
+}
+
+func setupCluster(ctx context.Context, clientProvider client.Provider, collection *kubernetes.Collection) error {
+	err := install.SetupClusterWideResourcesOrCollect(ctx, clientProvider, collection)
 	if err != nil && k8serrors.IsForbidden(err) {
 		fmt.Println("Current user is not authorized to create cluster-wide objects like custom resource definitions or cluster roles: ", err)
 
@@ -92,20 +202,53 @@ func setupCluster(o *RootCmdOptions) error {
 	return err
 }
 
-func setupOperator(o *RootCmdOptions, namespace string) error {
-	c, err := o.GetCmdClient()
-	if err != nil {
-		return err
-	}
-
+func (o *installCmdOptions) setupOperator(c client.Client, collection *kubernetes.Collection) error {
 	cfg := install.OperatorConfiguration{
-		Namespace: namespace,
+		CustomImage:           o.OperatorImage,
+		CustomImagePullPolicy: o.OperatorImagePullPolicy,
+		Namespace:             o.Namespace,
+		Global:                o.Global,
+		ClusterType:           o.ClusterType,
 	}
-	err = install.OperatorOrCollect(o.Context, c, cfg, nil)
-	if err != nil {
+	err := install.OperatorOrCollect(o.Context, c, cfg, collection, o.Force)
+
+	return err
+}
+
+func (o *installCmdOptions) printOutput(collection *kubernetes.Collection) error {
+	lst := collection.AsKubernetesList()
+	switch o.OutputFormat {
+	case "yaml":
+		data, err := kubernetes.ToYAML(lst)
+		if err != nil {
+			return err
+		}
+		fmt.Print(string(data))
+	case "json":
+		data, err := kubernetes.ToJSON(lst)
+		if err != nil {
+			return err
+		}
+		fmt.Print(string(data))
+	default:
+		return errors.New("unknown output format: " + o.OutputFormat)
+	}
+	return nil
+}
+
+func (o *installCmdOptions) decode(cmd *cobra.Command, _ []string) error {
+	path := pathToRoot(cmd)
+	if err := decodeKey(o, path); err != nil {
 		return err
 	}
 
-	fmt.Println("YAKS setup completed successfully")
+	o.olmOptions.OperatorName = viper.GetString(path + ".olm-operator-name")
+	o.olmOptions.Package = viper.GetString(path + ".olm-package")
+	o.olmOptions.Channel = viper.GetString(path + ".olm-channel")
+	o.olmOptions.Source = viper.GetString(path + ".olm-source")
+	o.olmOptions.SourceNamespace = viper.GetString(path + ".olm-source-namespace")
+	o.olmOptions.StartingCSV = viper.GetString(path + ".olm-starting-csv")
+	o.olmOptions.GlobalNamespace = viper.GetString(path + ".olm-global-namespace")
+
 	return nil
 }

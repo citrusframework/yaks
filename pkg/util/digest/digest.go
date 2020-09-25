@@ -20,16 +20,16 @@ package digest
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/version"
 )
 
 // ComputeForTest returns a digest of the fields that are relevant for detecting changes
 func ComputeForTest(test *v1alpha1.Test) (string, error) {
 	hash := sha256.New()
 	// Operator version is relevant
-	if _, err := hash.Write([]byte(version.Version)); err != nil {
+	if _, err := hash.Write([]byte(defaults.Version)); err != nil {
 		return "", err
 	}
 	// Source is relevant

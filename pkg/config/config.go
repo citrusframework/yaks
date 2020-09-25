@@ -3,7 +3,7 @@ package config
 import (
 	"os"
 
-	"github.com/citrusframework/yaks/version"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 )
 
 func GetTestBaseImage() string {
@@ -15,5 +15,5 @@ func GetTestBaseImage() string {
 }
 
 func getDefaultTestBaseImage() string {
-	return "yaks/yaks:" + version.Version
+	return "docker.io/citrusframework/yaks:" + defaults.Version
 }

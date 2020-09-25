@@ -68,7 +68,7 @@ public class KnativeSettings {
 
     private static final String DEFAULT_LABELS_PROPERTY = KNATIVE_PROPERTY_PREFIX + "default.labels";
     private static final String DEFAULT_LABELS_ENV = KNATIVE_ENV_PREFIX + "DEFAULT_LABELS";
-    private static final String DEFAULT_LABELS_DEFAULT = "org.citrusframework.yaks/app=yaks";
+    private static final String DEFAULT_LABELS_DEFAULT = "app=yaks";
 
     private static final String TEST_ID_PROPERTY = "yaks.test.id";
     private static final String TEST_ID_ENV = "YAKS_TEST_ID";

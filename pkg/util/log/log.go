@@ -21,9 +21,8 @@ import (
 	"fmt"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-
 	"github.com/go-logr/logr"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Log --
@@ -116,7 +115,7 @@ func WithValues(keysAndValues ...interface{}) Logger {
 }
 
 // ForTest --
-func ForIntegration(target *v1alpha1.Test) Logger {
+func ForTest(target *v1alpha1.Test) Logger {
 	return Log.ForTest(target)
 }
 

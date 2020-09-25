@@ -9,6 +9,16 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// ClusterType is the kind of orchestration cluster the framework is installed into
+type ClusterType string
+
+const (
+	// ClusterTypeOpenShift is used when targeting a OpenShift cluster
+	ClusterTypeOpenShift ClusterType = "OpenShift"
+	// ClusterTypeKubernetes is used when targeting a Kubernetes cluster
+	ClusterTypeKubernetes ClusterType = "Kubernetes"
+)
+
 // TestSpec defines the desired state of Test
 // +k8s:openapi-gen=true
 type TestSpec struct {
@@ -50,10 +60,18 @@ type TestStatus struct {
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:openapi-gen=true
+// +genclient
+// +kubebuilder:resource:path=tests,scope=Namespaced,categories=yaks;testing
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The test phase"
+// +kubebuilder:printcolumn:name="Total",type=string,JSONPath=`.status.results.summary.total`,description="The total amount of tests"
+// +kubebuilder:printcolumn:name="Passed",type=string,JSONPath=`.status.results.summary.passed`,description="Passed tests"
+// +kubebuilder:printcolumn:name="Failed",type=string,JSONPath=`.status.results.summary.failed`,description="Failed tests"
+// +kubebuilder:printcolumn:name="Skipped",type=string,JSONPath=`.status.results.summary.skipped`,description="Skipped tests"
+// +kubebuilder:printcolumn:name="Errors",type=string,JSONPath=`.status.errors`,description="Test error details"
 
 // Test is the Schema for the tests API
-// +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
 type Test struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -93,26 +111,26 @@ type TestResult struct {
 	ErrorMessage string  `json:"errorMessage,omitempty"`
 }
 
-// TestPhase --
+// TestPhase
 type TestPhase string
 
 const (
-	// TestKind --
+	// TestKind
 	TestKind string = "Test"
 
-	// TestPhaseNone --
+	// TestPhaseNone
 	TestPhaseNone TestPhase = ""
-	// TestPhasePending --
+	// TestPhasePending
 	TestPhasePending TestPhase = "Pending"
-	// TestPhaseRunning --
+	// TestPhaseRunning
 	TestPhaseRunning TestPhase = "Running"
-	// TestPhasePassed --
+	// TestPhasePassed
 	TestPhasePassed TestPhase = "Passed"
-	// TestPhaseFailed --
+	// TestPhaseFailed
 	TestPhaseFailed TestPhase = "Failed"
-	// TestPhaseError --
+	// TestPhaseError
 	TestPhaseError TestPhase = "Error"
-	// TestPhaseDeleting --
+	// TestPhaseDeleting
 	TestPhaseDeleting TestPhase = "Deleting"
 )
 
@@ -126,15 +144,11 @@ func (phase TestPhase) AsError() error {
 type Language string
 
 const (
-	// LanguageGherkin --
+	// LanguageGherkin
 	LanguageGherkin Language = "feature"
 )
 
 // TestLanguages is the list of all supported test languages
 var TestLanguages = []Language{
 	LanguageGherkin,
-}
-
-func init() {
-	SchemeBuilder.Register(&Test{}, &TestList{})
 }

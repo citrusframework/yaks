@@ -18,6 +18,7 @@ limitations under the License.
 package config
 
 import (
+	"github.com/citrusframework/yaks/pkg/util/olm"
 	"io/ioutil"
 	"os"
 
@@ -33,6 +34,7 @@ type RunConfig struct {
 type Config struct {
 	Recursive bool `yaml:"recursive"`
 	Namespace NamespaceConfig
+	Operator  OperatorConfig
 	Runtime   RuntimeConfig
 }
 
@@ -90,14 +92,24 @@ type NamespaceConfig struct {
 	AutoRemove bool   `yaml:"autoRemove"`
 }
 
+type OperatorConfig struct {
+	Global    bool `yaml:"global"`
+	Namespace string `yaml:"namespace"`
+}
+
 func NewWithDefaults() *RunConfig {
-	ns := NamespaceConfig{
+	ns := NamespaceConfig {
 		AutoRemove: true,
 		Temporary:  false,
 	}
 
-	var config = Config{Recursive: true, Namespace: ns}
-	return &RunConfig{Config: config}
+	operator := OperatorConfig {
+		Global: true,
+		Namespace: olm.DefaultGlobalNamespace,
+	}
+
+	var config = Config {Recursive: true, Namespace: ns, Operator: operator}
+	return &RunConfig {Config: config}
 }
 
 func LoadConfig(file string) (*RunConfig, error) {
