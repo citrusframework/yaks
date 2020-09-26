@@ -23,7 +23,7 @@ metadata:
     app: "yaks"
 rules:
 - apiGroups:
-  - org.citrusframework.yaks
+  - yaks.citrusframework.org
   resources:
   - "*"
   verbs:

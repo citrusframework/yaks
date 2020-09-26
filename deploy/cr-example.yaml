@@ -15,7 +15,7 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-apiVersion: org.citrusframework.yaks/v1alpha1
+apiVersion: yaks.citrusframework.org/v1alpha1
 kind: Test
 metadata:
   name: example-test

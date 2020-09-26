@@ -25,6 +25,6 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
 rules:
-- apiGroups: ["org.citrusframework.yaks"]
+- apiGroups: ["yaks.citrusframework.org"]
   resources: ["*"]
   verbs: ["*"]

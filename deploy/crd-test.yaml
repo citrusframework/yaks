@@ -23,7 +23,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.8
   creationTimestamp: null
-  name: tests.org.citrusframework.yaks
+  name: tests.yaks.citrusframework.org
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
@@ -50,7 +50,7 @@ spec:
     description: Test error details
     name: Errors
     type: string
-  group: org.citrusframework.yaks
+  group: yaks.citrusframework.org
   names:
     categories:
     - yaks

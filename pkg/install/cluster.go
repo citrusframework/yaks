@@ -106,7 +106,7 @@ func AreAllCRDInstalled(ctx context.Context, c client.Client) (bool, error) {
 
 // IsCRDInstalled check if the given CRD kind is installed
 func IsCRDInstalled(ctx context.Context, c client.Client, kind string, version string) (bool, error) {
-	lst, err := c.Discovery().ServerResourcesForGroupVersion(fmt.Sprintf("org.citrusframework.yaks/%s", version))
+	lst, err := c.Discovery().ServerResourcesForGroupVersion(fmt.Sprintf("yaks.citrusframework.org/%s", version))
 	if err != nil && k8serrors.IsNotFound(err) {
 		return false, nil
 	} else if err != nil {

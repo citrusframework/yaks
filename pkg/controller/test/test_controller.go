@@ -97,7 +97,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 			pod := a.Object.(*v1.Pod)
 			var requests []reconcile.Request
 
-			if testName, ok := pod.Labels["org.citrusframework.yaks/test"]; ok {
+			if testName, ok := pod.Labels["yaks.citrusframework.org/test"]; ok {
 				requests = append(requests, reconcile.Request{
 					NamespacedName: types.NamespacedName{
 						Namespace: pod.Namespace,

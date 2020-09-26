@@ -21,7 +21,7 @@ metadata:
   annotations:
     alm-examples: |-
       [{
-        "apiVersion": "org.citrusframework.yaks/v1alpha1",
+        "apiVersion": "yaks.citrusframework.org/v1alpha1",
         "kind": "Test",
         "metadata": {
           "name": "example"
@@ -50,7 +50,7 @@ spec:
     - description: A YAKS test
       displayName: Test
       kind: Test
-      name: tests.org.citrusframework.yaks
+      name: tests.yaks.citrusframework.org
       specDescriptors:
       - description: The test source
         displayName: Source
@@ -95,7 +95,7 @@ spec:
     The example below defines a simple test resource.
 
     ```
-    apiVersion: org.citrusframework.yaks/v1alpha1
+    apiVersion: yaks.citrusframework.org/v1alpha1
     kind: Test
     metadata:
       name: example
@@ -152,7 +152,7 @@ spec:
             metadata:
               labels:
                 app: yaks
-                org.citrusframework.yaks/component: operator
+                yaks.citrusframework.org/component: operator
                 name: yaks-operator
             spec:
               containers:
@@ -182,7 +182,7 @@ spec:
       permissions:
       - rules:
         - apiGroups:
-          - org.citrusframework.yaks
+          - yaks.citrusframework.org
           resources:
           - "*"
           verbs:

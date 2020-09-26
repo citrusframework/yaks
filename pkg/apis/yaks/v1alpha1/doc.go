@@ -17,5 +17,5 @@ limitations under the License.
 
 // Package v1alpha1 contains API Schema definitions for the yaks v1alpha1 API group
 // +k8s:deepcopy-gen=package,register
-// +groupName=org.citrusframework.yaks
+// +groupName=yaks.citrusframework.org
 package v1alpha1

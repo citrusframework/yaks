@@ -51,7 +51,7 @@ deploy_crd() {
   name=$1
   plural=$2
 
-  deploy_crd_file ./deploy/crds/org.citrusframework.yaks_$plural.yaml \
+  deploy_crd_file ./deploy/crds/yaks.citrusframework.org_$plural.yaml \
     ./deploy/crd-$name.yaml \
     ./deploy/olm-catalog/yaks/$version/$plural.yaks.citrusframework.org.crd.yaml
 }

@@ -21,7 +21,7 @@ metadata:
   name: yaks-operator
   labels:
     app: "yaks"
-    org.citrusframework.yaks/component: operator
+    yaks.citrusframework.org/component: operator
 spec:
   replicas: 1
   strategy:
@@ -33,7 +33,7 @@ spec:
     metadata:
       labels:
         name: yaks-operator
-        org.citrusframework.yaks/component: operator
+        yaks.citrusframework.org/component: operator
         app: "yaks"
     spec:
       serviceAccountName: yaks-operator

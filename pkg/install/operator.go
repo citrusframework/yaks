@@ -52,7 +52,7 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 	customizer := func(o runtime.Object) runtime.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["org.citrusframework.yaks/component"] == "operator" {
+				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
 					d.Spec.Template.Spec.Containers[0].Image = cfg.CustomImage
 				}
 			}
@@ -60,7 +60,7 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 
 		if cfg.CustomImagePullPolicy != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["org.citrusframework.yaks/component"] == "operator" {
+				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
 					d.Spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullPolicy(cfg.CustomImagePullPolicy)
 				}
 			}
@@ -68,7 +68,7 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 
 		if cfg.Global {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["org.citrusframework.yaks/component"] == "operator" {
+				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
 					// Make the operator watch all namespaces
 					envvar.SetVal(&d.Spec.Template.Spec.Containers[0].Env, "WATCH_NAMESPACE", "")
 				}

@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	yaksVersionAnnotation = "org.citrusframework.yaks/version"
+	yaksVersionAnnotation = "yaks.citrusframework.org/version"
 )
 
 // The following variables may be overridden at build time
