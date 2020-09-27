@@ -47,5 +47,5 @@ go run k8s.io/code-generator/cmd/informer-gen \
 	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/informers
 
 # hack to fix non go-module compliance
-cp -R $rootdir/github.com/citrusframework/yaks/pkg/ $rootdir
+cp -R $rootdir/github.com/citrusframework/yaks/pkg/ $rootdir/pkg
 rm -rf $rootdir/github.com

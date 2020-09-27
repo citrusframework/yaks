@@ -1981,6 +1981,7 @@ k8s.io/client-go v0.17.6/go.mod h1:tX5eAbQR/Kbqv+5R93rzHQoyRnPjjW2mm9i0lXnW218=
 k8s.io/cloud-provider v0.0.0-20191016115326-20453efc2458/go.mod h1:O5SO5xcgxrjJV9EC9R/47RuBpbk5YX9URDBlg++FA5o=
 k8s.io/cloud-provider v0.17.6/go.mod h1:8A676iHjWLrjc72gYOayHoPbPGsHsqmWyxayArgX2r8=
 k8s.io/code-generator v0.0.0-20191004115455-8e001e5d1894/go.mod h1:mJUgkl06XV4kstAnLHAIzJPVCOzVR+ZcfPIv4fUsFCY=
+k8s.io/code-generator v0.17.6 h1:2e0zgYsJmkc66HHEq7MoG1HgCEDCYLT08Y4VBcdzTkk=
 k8s.io/code-generator v0.17.6/go.mod h1:iiHz51+oTx+Z9D0vB3CH3O4HDDPWrvZyUgUYaIE9h9M=
 k8s.io/component-base v0.0.0-20191016111319-039242c015a9/go.mod h1:SuWowIgd/dtU/m/iv8OD9eOxp3QZBBhTIiWMsBQvKjI=
 k8s.io/component-base v0.17.6/go.mod h1:jgRLWl0B0rOzFNtxQ9E4BphPmDqoMafujdau6AdG2Xo=
@@ -1991,6 +1992,7 @@ k8s.io/gengo v0.0.0-20190306031000-7a1b7fb0289f/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8
 k8s.io/gengo v0.0.0-20190822140433-26a664648505/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/gengo v0.0.0-20191108084044-e500ee069b5c/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
+k8s.io/gengo v0.0.0-20200205140755-e0e292d8aa12 h1:pZzawYyz6VRNPVYpqGv61LWCimQv1BihyeqFrp50/G4=
 k8s.io/gengo v0.0.0-20200205140755-e0e292d8aa12/go.mod h1:ezvh/TsK7cY6rbqRK0oQQ8IAqLxYwwyPxAX1Pzy0ii0=
 k8s.io/helm v2.16.3+incompatible/go.mod h1:LZzlS4LQBHfciFOurYBFkCMTaZ0D1l+p0teMg7TSULI=
 k8s.io/klog v0.0.0-20181102134211-b9b56d5dfc92/go.mod h1:Gq+BEi5rUBO/HRz0bTSXDUcqjScdoY3a9IHpCEIOOfk=
