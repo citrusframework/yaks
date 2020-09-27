@@ -120,6 +120,9 @@ set-version:
 set-module-version:
 	./script/set_modules_version.sh $(VERSION)
 
+set-next-snapshot:
+	./script/next_snapshot.sh
+
 git-tag:
 	./script/git_tag.sh $(VERSION) $(RELEASE_GIT_REMOTE)
 
@@ -141,9 +144,11 @@ images-push-staging:
 	docker tag $(IMAGE_NAME):$(VERSION) $(STAGING_IMAGE_NAME):$(VERSION)
 	docker push $(STAGING_IMAGE_NAME):$(VERSION)
 
-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile images-push git-tag
+prepare-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile
 
-release-staging: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile images-push-staging git-tag
+release: prepare-release images-push git-tag
+
+release-staging: prepare-release images-push-staging git-tag
 
 release-nightly: clean codegen set-module-version set-version images cross-compile images-push
 
