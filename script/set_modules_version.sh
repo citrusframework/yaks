@@ -28,4 +28,4 @@ target_tag=v$target_version
 
 api_rule="s/github.com\/citrusframework\/yaks\/pkg\/apis\/yaks [A-Za-z0-9\.\-]+.*$/github.com\/citrusframework\/yaks\/pkg\/apis\/yaks $target_tag/"
 
-sed -i -r "$api_rule" $location/../go.mod
+sed -i '' -E "$api_rule" $location/../go.mod

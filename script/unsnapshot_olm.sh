@@ -20,7 +20,6 @@
 location=$(dirname $0)
 olm_catalog=${location}/../deploy/olm-catalog
 
-
 for d in $(find ${olm_catalog} -type d -name "*-SNAPSHOT*");
 do
   mv ${d} ${d//-SNAPSHOT/}
@@ -41,9 +40,9 @@ done
 
 for f in $(find ${olm_catalog}/yaks -type f);
 do
-  sed -i 's/-SNAPSHOT//g' $f
+  sed -i '' 's/-SNAPSHOT//g' $f
 done
 for f in $(find ${olm_catalog}/yaks -type f);
 do
-  sed -i 's/-snapshot//g' $f
+  sed -i '' 's/-snapshot//g' $f
 done
