@@ -23,7 +23,7 @@ builds:
 - env:
   - CGO_ENABLED=0
   hooks:
-    pre: ./script/before_release.sh {{ .Tag }}
+    pre: ./script/prepare_release.sh {{ .Tag }}
   main: ./cmd/manager/main.go
   binary: yaks
   ldflags: -X github.com/citrusframework/yaks/version.Version={{ .Tag }}

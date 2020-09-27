@@ -24,8 +24,9 @@ fi
 
 cd $location/..
 
-for f in ./deploy/*.yaml; do
-  sed -i "s/image:.*yaks\/yaks.*$/image: yaks\/yaks:$1/g" $f
-done
+version=$(make -s version | tr '[:lower:]' '[:upper:]')
+version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
 
-make clean build-resources package-artifacts-no-test
+sed -i '' -E "s/VERSION := $version_num\-SNAPSHOT$/VERSION := $1/g" Makefile
+
+make clean prepare-release images-no-test

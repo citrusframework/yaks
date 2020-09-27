@@ -144,13 +144,13 @@ images-push-staging:
 	docker tag $(IMAGE_NAME):$(VERSION) $(STAGING_IMAGE_NAME):$(VERSION)
 	docker push $(STAGING_IMAGE_NAME):$(VERSION)
 
-prepare-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile
+prepare-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources cross-compile
 
-release: prepare-release images-push git-tag
+release: prepare-release images images-push git-tag
 
-release-staging: prepare-release images-push-staging git-tag
+release-staging: prepare-release images images-push-staging git-tag
 
-release-nightly: clean codegen set-module-version set-version images cross-compile images-push
+release-nightly: clean codegen set-module-version set-version cross-compile images images-push
 
 package-artifacts-no-test:
 	./script/package_maven_artifacts.sh -DskipTests
