@@ -131,7 +131,7 @@ cross-compile:
 
 docker-image:
 	mkdir -p build/_output/bin
-	operator-sdk build $(IMAGE_NAME):$(VERSION)
+	operator-sdk build --image-builder docker $(IMAGE_NAME):$(VERSION)
 
 images-no-test: build package-artifacts-no-test docker-image
 

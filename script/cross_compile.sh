@@ -20,12 +20,13 @@ rootdir=${location}/..
 
 basename=yaks
 
-if [ "$#" -ne 1 ]; then
-    echo "usage: $0 version"
+if [ "$#" -ne 2 ]; then
+    echo "usage: $0 version build_flags"
     exit 1
 fi
 
 version=$1
+build_flags=$2
 
 cross_compile () {
 	local label=$1
@@ -39,7 +40,7 @@ cross_compile () {
 
 	echo "Generating ${label}${extension}..."
 
-	go build -o ${rootdir}/${label}${extension} ./cmd/manager/...
+  eval go build "$build_flags" -o ${rootdir}/${label}${extension} ./cmd/manager/...
 }
 
 cross_compile ${basename}-${version}-linux-64bit linux amd64

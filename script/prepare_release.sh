@@ -29,4 +29,4 @@ version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
 
 sed -i '' -E "s/VERSION := $version_num\-SNAPSHOT$/VERSION := $1/g" Makefile
 
-make clean prepare-release images-no-test
+make clean prepare-release build package-artifacts-no-test
