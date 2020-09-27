@@ -34,12 +34,6 @@ func main() {
 	fileName := os.Args[1]
 	licenseName := os.Args[2]
 
-	if strings.HasPrefix(fileName, "./java/.idea") {
-		return
-	} else if strings.Contains(fileName, ".mvn/wrapper/") {
-		return
-	}
-
 	fileBin, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("cannot read file %s: %v\n", fileName, err))

@@ -18,7 +18,7 @@
 location=$(dirname $0)
 rootdir=$location/../
 
-blacklist=("zz_generated" "zz_desc_generated" "./.mvn/wrapper" "./docs/" "./.idea" "./build/")
+blacklist=("zz_generated" "zz_desc_generated" "./java/.mvn/wrapper" "./examples/extension/steps/.mvn/wrapper" "./docs/" "./.idea" "./java/.idea" "./build/")
 
 cd $rootdir
 go build ./cmd/util/license-check/
@@ -28,28 +28,28 @@ check_licenses() {
 	header=$2
 
 	set +e
-    failed=0
-    find . -type f -name "$files" -print0 | while IFS= read -r -d '' file; do
-        check=true
-        for b in ${blacklist[*]}; do
-        	if [[ "$file" == *"$b"* ]]; then
-        	  #echo "skip $file"
-        	  check=false
-        	fi
-        done
-    	if [ "$check" = true ]; then
-    		#echo "exec $file"
-    		./license-check "$file" $header
-    		if [ $? -ne 0 ]; then
-    	  		failed=1
-    		fi
-    	fi
-    done
-    set -e
-
-    if [ $failed -ne 0 ]; then
-      exit 1
+  failed=0
+  find . -type f -name "$files" -print0 | while IFS= read -r -d '' file; do
+      check=true
+      for b in ${blacklist[*]}; do
+        if [[ "$file" == *"$b"* ]]; then
+          #echo "skip $file"
+          check=false
+        fi
+      done
+    if [ "$check" = true ]; then
+      #echo "exec $file"
+      ./license-check "$file" $header
+      if [ $? -ne 0 ]; then
+          failed=1
+      fi
     fi
+  done
+  set -e
+
+  if [ $failed -ne 0 ]; then
+    exit 1
+  fi
 }
 
 

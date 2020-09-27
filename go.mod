@@ -3,8 +3,8 @@ module github.com/citrusframework/yaks
 go 1.13
 
 require (
-	github.com/citrusframework/yaks/pkg/apis/yaks v0.0.0
 	github.com/Masterminds/semver v1.5.0
+	github.com/citrusframework/yaks/pkg/apis/yaks v0.0.0
 	github.com/container-tools/snap v0.0.5
 	github.com/container-tools/spectrum v0.3.2
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc

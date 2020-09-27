@@ -141,9 +141,9 @@ images-push-staging:
 	docker tag $(IMAGE_NAME):$(VERSION) $(STAGING_IMAGE_NAME):$(VERSION)
 	docker push $(STAGING_IMAGE_NAME):$(VERSION)
 
-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm images cross-compile images-push git-tag
+release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile images-push git-tag
 
-release-staging: clean codegen set-module-version set-version check-licenses unsnapshot-olm images cross-compile images-push-staging git-tag
+release-staging: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources images cross-compile images-push-staging git-tag
 
 release-nightly: clean codegen set-module-version set-version images cross-compile images-push
 
@@ -156,7 +156,10 @@ package-artifacts:
 unsnapshot-olm:
 	./script/unsnapshot_olm.sh
 
+unsnapshot-sources:
+	./script/unsnapshot_sources.sh
+
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm codegen cross-compile test docker-image images images-no-test images-push images-push-staging package-artifacts package-artifacts-no-test release set-version git-tag check-licenses release-staging release-nightly version
+.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm unsnapshot-sources codegen cross-compile test docker-image images images-no-test images-push images-push-staging package-artifacts package-artifacts-no-test release set-version git-tag check-licenses release-staging release-nightly version

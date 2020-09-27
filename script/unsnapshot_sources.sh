@@ -15,34 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Prefer removing snapshot to regenerating, because changes done to snapshot file may get lost
-
 location=$(dirname $0)
-olm_catalog=${location}/../deploy/olm-catalog
+java_sources=${location}/../java
 
-for d in $(find ${olm_catalog} -type d -name "*-SNAPSHOT*");
-do
-  mv ${d} ${d//-SNAPSHOT/}
-done
-for d in $(find ${olm_catalog} -type d -name "*-snapshot*");
-do
-  mv ${d} ${d//-snapshot/}
-done
+blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store")
 
-for f in $(find ${olm_catalog} -type f -name "*-SNAPSHOT*");
+for f in $(find ${java_sources} -type f);
 do
-  mv ${f} ${f//-SNAPSHOT/}
-done
-for f in $(find ${olm_catalog} -type f -name "*-snapshot*");
-do
-  mv ${f} ${f//-snapshot/}
-done
-
-for f in $(find ${olm_catalog}/yaks -type f);
-do
-  sed -i '' 's/-SNAPSHOT//g' $f
-done
-for f in $(find ${olm_catalog}/yaks -type f);
-do
-  sed -i '' 's/-snapshot//g' $f
+  check=true
+  for b in ${blacklist[*]}; do
+    if [[ "$f" == *"$b"* ]]; then
+      #echo "skip $f"
+      check=false
+    fi
+  done
+  if [ "$check" = true ]; then
+    sed -i '' 's/-SNAPSHOT//g' $f
+  fi
 done
