@@ -49,3 +49,7 @@ go run k8s.io/code-generator/cmd/informer-gen \
 # hack to fix non go-module compliance
 cp -R $rootdir/github.com/citrusframework/yaks/pkg/ $rootdir/pkg
 rm -rf $rootdir/github.com
+
+# hack to fix test scoped file by renaming
+mv $rootdir/pkg/client/yaks/clientset/versioned/typed/yaks/v1alpha1/fake/fake_test.go \
+   $rootdir/pkg/client/yaks/clientset/versioned/typed/yaks/v1alpha1/fake/fake_tests.go
