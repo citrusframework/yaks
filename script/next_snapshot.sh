@@ -21,7 +21,7 @@ location=$(dirname $0)
 
 java_sources=${location}/../java
 
-blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store")
+blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
 
 version=$(make -s version | tr '[:lower:]' '[:upper:]')
 version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
@@ -33,7 +33,6 @@ echo "Increasing version to $next_version"
 $location/set_version.sh $next_version
 
 version_rule="s/$version_num\-SNAPSHOT/$next_version_num\-SNAPSHOT/g"
-echo "$version_rule"
 
 for f in $(find ${java_sources} -type f);
 do

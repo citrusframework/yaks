@@ -29,6 +29,7 @@ fi
 GO111MODULE=off go clean
 
 # remove built binaries
+rm -f license-check
 rm -f yaks
 rm -f yaks-*
 

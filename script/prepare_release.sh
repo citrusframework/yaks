@@ -15,18 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-location=$(dirname $0)
-
 if [ "$#" -ne 1 ]; then
     echo "usage: $0 version"
     exit 1
 fi
 
+location=$(dirname $0)
+version=$1
+
 cd $location/..
 
-version=$(make -s version | tr '[:lower:]' '[:upper:]')
-version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
-
-sed -i '' -E "s/VERSION := $version_num\-SNAPSHOT$/VERSION := $1/g" Makefile
-
-make clean prepare-release build package-artifacts-no-test
+make VERSION="$version" clean prepare-release build package-artifacts-no-test

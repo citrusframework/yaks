@@ -21,9 +21,6 @@ IMAGE_NAME := docker.io/citrusframework/yaks
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
-# Used to push pre-release artifacts
-STAGING_IMAGE_NAME := docker.io/yaks/yaks
-
 # OLM (Operator Lifecycle Manager and Operator Hub): uncomment to override operator settings at build time
 #GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultOperatorName=yaks-operator
 #GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultPackage=yaks
@@ -140,17 +137,11 @@ images: test package-artifacts docker-image
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
-images-push-staging:
-	docker tag $(IMAGE_NAME):$(VERSION) $(STAGING_IMAGE_NAME):$(VERSION)
-	docker push $(STAGING_IMAGE_NAME):$(VERSION)
-
 prepare-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources cross-compile
 
 release: prepare-release images images-push git-tag
 
-release-staging: prepare-release images images-push-staging git-tag
-
-release-nightly: clean codegen set-module-version set-version cross-compile images images-push
+release-snapshot: clean codegen set-module-version set-version cross-compile images images-push
 
 package-artifacts-no-test:
 	./script/package_maven_artifacts.sh -DskipTests
@@ -167,4 +158,4 @@ unsnapshot-sources:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm unsnapshot-sources codegen cross-compile test docker-image images images-no-test images-push images-push-staging package-artifacts package-artifacts-no-test release set-version git-tag check-licenses release-staging release-nightly version
+.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm unsnapshot-sources codegen cross-compile test docker-image images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version git-tag check-licenses version

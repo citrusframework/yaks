@@ -27,10 +27,9 @@ version=$1
 image_name=${2:-docker.io\/citrusframework\/yaks}
 sanitized_image_name=${image_name//\//\\\/}
 
-
 for f in $(find $location/../deploy -type f -name "*.yaml" | grep -v olm-catalog);
 do
     sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
 done
 
-echo "YAKS version set to: $version and image name to: $image_name"
+echo "YAKS version set to: $version and image name to: $sanitized_image_name:$version"

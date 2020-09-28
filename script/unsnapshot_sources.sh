@@ -18,7 +18,7 @@
 location=$(dirname $0)
 java_sources=${location}/../java
 
-blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store")
+blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
 
 for f in $(find ${java_sources} -type f);
 do

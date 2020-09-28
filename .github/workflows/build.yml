@@ -36,62 +36,124 @@ on:
       - 'NOTICE'
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Info
-      run: |
-        ls -lart
-    - name: Set Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13.x
     - name: Set Up Java
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Run Tests
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Cache modules
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Test
       run: |
-        make test package-artifacts
+        make check-licenses test package-artifacts
 
-  release:
+  snapshot:
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Info
-      run: |
-        ls -lart
-    - name: Set Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13.x
     - name: Set Up Java
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Tag Release
-      uses: mathieudutour/github-tag-action@v4
+    - name: Install Go
+      uses: actions/setup-go@v1
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        go-version: 1.13.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Cache modules
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Prerequisites
+      run: |
+        export OPERATOR_SDK_VERSION=v0.19.4
+        curl -L https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk-${OPERATOR_SDK_VERSION}-x86_64-linux-gnu -o operator-sdk
+        chmod a+x operator-sdk
+        sudo mv operator-sdk /usr/local/bin
     - name: Prepare Release Environment
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
       run: |
+        TAG=${GITHUB_REF##*/}
+        VERSION=${TAG:1}
+        echo "Using VERSION=$VERSION"
+        echo "::set-env name=VERSION::$VERSION"
+
+        IMAGE_NAME=docker.io/yaks/yaks
+        echo "Using IMAGE_NAME=$IMAGE_NAME"
+        echo "::set-env name=IMAGE_NAME::$IMAGE_NAME"
+
         git fetch --prune --unshallow
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-    - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@v1
-      with:
-        version: v0.127.0
-        args: release --rm-dist
+    - name: Build
+      run: |
+        make VERSION=$VERSION IMAGE_NAME=$IMAGE_NAME release-snapshot
+    - name: Check
+      run: ls -l
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@latest
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.VERSION }}
+        release_name: Release ${{ env.VERSION }}
+        body: |
+          YAKS snapshot build for testing (unstable).
+
+          To test it, download the client for your OS and run:
+
+          ```
+          yaks install
+          ```
+        draft: false
+        prerelease: true
+    - name: Upload Client Linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-linux-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-linux-64bit.tar.gz
+        asset_content_type: application/tar+gzip
+    - name: Upload Client Mac
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-mac-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-mac-64bit.tar.gz
+        asset_content_type: application/tar+gzip
+    - name: Upload Client Windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-windows-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-windows-64bit.tar.gz
+        asset_content_type: application/tar+gzip

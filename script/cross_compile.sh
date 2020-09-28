@@ -16,7 +16,9 @@
 # limitations under the License.
 
 location=$(dirname $0)
-rootdir=${location}/..
+builddir=$(realpath ${location}/../xtmp)
+
+rm -rf ${builddir}
 
 basename=yaks
 
@@ -38,11 +40,25 @@ cross_compile () {
 		extension=".exe"
 	fi
 
-	echo "Generating ${label}${extension}..."
+  echo "Generating ${label}${extension}..."
 
-  eval go build "$build_flags" -o ${rootdir}/${label}${extension} ./cmd/manager/...
+	targetdir=${builddir}/${label}
+	eval go build "$build_flags" -o ${targetdir}/yaks${extension} ./cmd/manager/...
+
+	if [ -n "$GPG_PASS" ]; then
+	    gpg --output ${targetdir}/yaks${extension}.asc --armor --detach-sig --passphrase ${GPG_PASS} ${targetdir}/yaks${extension}
+	fi
+
+    pushd . && cd ${targetdir} && sha512sum -b yaks${extension} > yaks${extension}.sha512 && popd
+
+	cp ${location}/../LICENSE ${targetdir}/
+	cp ${location}/../NOTICE ${targetdir}/
+
+	pushd . && cd ${targetdir} && tar -zcvf ../../${label}.tar.gz . && popd
 }
 
 cross_compile ${basename}-${version}-linux-64bit linux amd64
 cross_compile ${basename}-${version}-mac-64bit darwin amd64
 cross_compile ${basename}-${version}-windows-64bit windows amd64
+
+rm -rf ${builddir}
