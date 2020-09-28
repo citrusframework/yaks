@@ -30,6 +30,11 @@ do
     fi
   done
   if [ "$check" = true ]; then
-    sed -i '' 's/-SNAPSHOT//g' $f
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i 's/-SNAPSHOT//g' $f
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' 's/-SNAPSHOT//g' $f
+    fi
   fi
 done
