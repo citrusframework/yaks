@@ -44,6 +44,11 @@ do
     fi
   done
   if [ "$check" = true ]; then
-    sed -i '' "$version_rule" $f
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i "$version_rule" $f
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' "$version_rule" $f
+    fi
   fi
 done

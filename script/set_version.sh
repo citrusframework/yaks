@@ -29,7 +29,12 @@ sanitized_image_name=${image_name//\//\\\/}
 
 for f in $(find $location/../deploy -type f -name "*.yaml" | grep -v olm-catalog);
 do
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
     sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+  fi
 done
 
 echo "YAKS version set to: $version and image name to: $sanitized_image_name:$version"
