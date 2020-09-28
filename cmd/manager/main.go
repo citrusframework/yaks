@@ -36,6 +36,7 @@ func main() {
 	// Cancel ctx as soon as main returns
 	defer cancel()
 
+	// Add modeline options to the command
 	rootCmd, err := cmd.NewYaksCommand(ctx)
 	exitOnError(err)
 

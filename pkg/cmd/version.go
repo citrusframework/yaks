@@ -20,7 +20,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/citrusframework/yaks/version"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 	"github.com/spf13/cobra"
 )
 
@@ -44,6 +44,6 @@ type versionCmdOptions struct {
 }
 
 func (o *versionCmdOptions) run(cmd *cobra.Command, _ []string) error {
-	_, err := fmt.Fprintln(cmd.OutOrStdout(), version.Version)
+	_, err := fmt.Fprintln(cmd.OutOrStdout(), defaults.Version)
 	return err
 }

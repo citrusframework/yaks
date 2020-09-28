@@ -20,11 +20,9 @@ package install
 import (
 	"context"
 	"github.com/citrusframework/yaks/deploy"
-
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,14 +37,15 @@ var IdentityResourceCustomizer = func(object runtime.Object) runtime.Object {
 }
 
 // Resources installs named resources from the project resource directory
-func Resources(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, names ...string) error {
-	return ResourcesOrCollect(ctx, c, namespace, nil, customizer, names...)
+func Resources(ctx context.Context, c client.Client, namespace string, force bool, customizer ResourceCustomizer, names ...string) error {
+	return ResourcesOrCollect(ctx, c, namespace, nil, force, customizer, names...)
 }
 
 // ResourcesOrCollect --
-func ResourcesOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, customizer ResourceCustomizer, names ...string) error {
+func ResourcesOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection,
+	force bool, customizer ResourceCustomizer, names ...string) error {
 	for _, name := range names {
-		if err := ResourceOrCollect(ctx, c, namespace, collection, customizer, name); err != nil {
+		if err := ResourceOrCollect(ctx, c, namespace, collection, force, customizer, name); err != nil {
 			return err
 		}
 	}
@@ -54,27 +53,28 @@ func ResourcesOrCollect(ctx context.Context, c client.Client, namespace string, 
 }
 
 // Resource installs a single named resource from the project resource directory
-func Resource(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, name string) error {
-	return ResourceOrCollect(ctx, c, namespace, nil, customizer, name)
+func Resource(ctx context.Context, c client.Client, namespace string, force bool, customizer ResourceCustomizer, name string) error {
+	return ResourceOrCollect(ctx, c, namespace, nil, force, customizer, name)
 }
 
 // ResourceOrCollect --
-func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, customizer ResourceCustomizer, name string) error {
-	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.Resources[name])
+func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection,
+	force bool, customizer ResourceCustomizer, name string) error {
+	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(name))
 	if err != nil {
 		return err
 	}
 
-	return RuntimeObjectOrCollect(ctx, c, namespace, collection, customizer(obj))
+	return RuntimeObjectOrCollect(ctx, c, namespace, collection, force, customizer(obj))
 }
 
 // RuntimeObject installs a single runtime object
-func RuntimeObject(ctx context.Context, c client.Client, namespace string, obj runtime.Object) error {
-	return RuntimeObjectOrCollect(ctx, c, namespace, nil, obj)
+func RuntimeObject(ctx context.Context, c client.Client, namespace string, force bool, obj runtime.Object) error {
+	return RuntimeObjectOrCollect(ctx, c, namespace, nil, force, obj)
 }
 
 // RuntimeObjectOrCollect --
-func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, obj runtime.Object) error {
+func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, force bool, obj runtime.Object) error {
 	if collection != nil {
 		// Adding to the collection before setting the namespace
 		collection.Add(obj)
@@ -85,20 +85,25 @@ func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace stri
 		metaObject.SetNamespace(namespace)
 	}
 
-	err := c.Create(ctx, obj)
-	if err != nil && errors.IsAlreadyExists(err) {
-		// Don't recreate Service object
-		if obj.GetObjectKind().GroupVersionKind().Kind == "Service" {
-			return nil
+	if obj.GetObjectKind().GroupVersionKind().Kind == "PersistentVolumeClaim" {
+		if err := c.Create(ctx, obj); err != nil && !errors.IsAlreadyExists(err) {
+			return err
 		}
-		// Don't recreate tests, etc
-		if obj.GetObjectKind().GroupVersionKind().Kind == v1alpha1.TestKind {
-			return nil
-		}
-		if obj.GetObjectKind().GroupVersionKind().Kind == "PersistentVolumeClaim" {
-			return nil
-		}
-		return c.Update(ctx, obj)
 	}
-	return err
+
+	if force {
+		if err := kubernetes.ReplaceResource(ctx, c, obj); err != nil {
+			return err
+		}
+		// For some resources, also reset the status
+		if obj.GetObjectKind().GroupVersionKind().Kind == v1alpha1.TestKind {
+			if err := c.Status().Update(ctx, obj); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// Just try to create them
+	return c.Create(ctx, obj)
 }

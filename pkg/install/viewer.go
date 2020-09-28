@@ -19,15 +19,80 @@ package install
 
 import (
 	"context"
+	"github.com/citrusframework/yaks/pkg/util/camelk"
+	"github.com/citrusframework/yaks/pkg/util/knative"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
 
 	"github.com/citrusframework/yaks/pkg/client"
 )
 
 // ViewerServiceAccountRoles installs the viewer service account and related roles in the given namespace
 func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace string) error {
-	return ResourcesOrCollect(ctx, c, namespace, nil, IdentityResourceCustomizer,
-		"viewer_service_account.yaml",
-		"viewer_role.yaml",
-		"viewer_role_binding.yaml",
+	isOpenShift, err := openshift.IsOpenShift(c)
+	if err != nil {
+		return err
+	}
+	if isOpenShift {
+		if err := installViewerServiceAccountRolesOpenShift(ctx, c, namespace); err != nil {
+			return err
+		}
+	} else {
+		if err := installViewerServiceAccountRolesKubernetes(ctx, c, namespace); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Knative resources (roles and bindings)
+	isKnative, err := knative.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isKnative {
+		if err := installViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Camel K resources (roles and bindings)
+	isCamelK, err := camelk.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isCamelK {
+		if err := installViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func installViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Client, namespace string) error {
+	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+		"viewer-service-account.yaml",
+		"viewer-role-openshift.yaml",
+		"viewer-role-binding.yaml",
+	)
+}
+
+func installViewerServiceAccountRolesKubernetes(ctx context.Context, c client.Client, namespace string) error {
+	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+		"viewer-service-account.yaml",
+		"viewer-role-kubernetes.yaml",
+		"viewer-role-binding.yaml",
+	)
+}
+
+func installViewerServiceAccountRolesKnative(ctx context.Context, c client.Client, namespace string) error {
+	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+		"viewer-role-knative.yaml",
+		"viewer-role-binding-knative.yaml",
+	)
+}
+
+func installViewerServiceAccountRolesCamelK(ctx context.Context, c client.Client, namespace string) error {
+	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+		"viewer-role-camel-k.yaml",
+		"viewer-role-binding-camel-k.yaml",
 	)
 }

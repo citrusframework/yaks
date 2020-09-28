@@ -86,9 +86,9 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Namespace: test.Namespace,
 			Name:      TestPodNameFor(test),
 			Labels: map[string]string{
-				"org.citrusframework.yaks/app":     "yaks",
-				"org.citrusframework.yaks/test":    test.Name,
-				"org.citrusframework.yaks/test-id": test.Status.TestID,
+				"app":     "yaks",
+				"yaks.citrusframework.org/test":    test.Name,
+				"yaks.citrusframework.org/test-id": test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -213,9 +213,9 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 			Namespace: test.Namespace,
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
-				"org.citrusframework.yaks/app":     "yaks",
-				"org.citrusframework.yaks/test":    test.Name,
-				"org.citrusframework.yaks/test-id": test.Status.TestID,
+				"app":     "yaks",
+				"yaks.citrusframework.org/test":    test.Name,
+				"yaks.citrusframework.org/test-id": test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{

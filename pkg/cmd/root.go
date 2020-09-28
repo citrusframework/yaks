@@ -25,8 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const yaksCommandLongDescription = `YAKS is Yet Another Kubernetes Service.
-`
+const yaksCommandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
 
 // RootCmdOptions --
 type RootCmdOptions struct {
@@ -51,7 +50,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	cmd.PersistentFlags().StringVarP(&options.Namespace, "namespace", "n", "", "Namespace to use for all operations")
 
 	cmd.AddCommand(newCmdTest(&options))
-	cmd.AddCommand(newCmdInstall(&options))
+	cmd.AddCommand(cmdOnly(newCmdInstall(&options)))
 	cmd.AddCommand(newCmdOperator(&options))
 	cmd.AddCommand(newCmdUpload(&options))
 	cmd.AddCommand(newCmdReport(&options))

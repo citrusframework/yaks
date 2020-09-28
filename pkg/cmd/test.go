@@ -20,6 +20,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/install"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
@@ -302,15 +303,42 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	if err := setupCluster(o.RootCmdOptions); err != nil {
-		return namespace, err
-	}
+	if !runConfig.Config.Operator.Global {
+		// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
+		clientProvider := client.Provider{Get: o.NewCmdClient}
 
-	if err := setupOperator(o.RootCmdOptions, namespaceName); err != nil {
-		return namespace, err
+		if err := setupCluster(o.Context, clientProvider, nil); err != nil {
+			return namespace, err
+		}
+
+		if err := o.setupOperator(c, namespaceName); err != nil {
+			return namespace, err
+		}
 	}
 
 	return namespace, nil
+}
+
+func (o *testCmdOptions) setupOperator(c client.Client, namespace string) error {
+	var cluster v1alpha1.ClusterType
+	if isOpenshift, err := openshift.IsOpenShift(c); err != nil {
+		return err;
+	} else if isOpenshift {
+		cluster = v1alpha1.ClusterTypeKubernetes
+	} else {
+		cluster = v1alpha1.ClusterTypeKubernetes
+	}
+
+	cfg := install.OperatorConfiguration{
+		CustomImage:           "",
+		CustomImagePullPolicy: "",
+		Namespace:             namespace,
+		Global:                false,
+		ClusterType:           string(cluster),
+	}
+	err := install.OperatorOrCollect(o.Context, c, cfg, nil, true)
+
+	return err
 }
 
 func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
@@ -532,7 +560,7 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *
 		KubeConfig: client.GetValidKubeConfig(o.KubeConfig),
 		//TailLines: &tail,
 		ContainerQuery: regexp.MustCompile(".*"),
-		LabelSelector:  labels.SelectorFromSet(labels.Set{"org.citrusframework.yaks/test": name}),
+		LabelSelector:  labels.SelectorFromSet(labels.Set{"yaks.citrusframework.org/test": name}),
 		//LabelSelector: labels.SelectorFromSet(labels.Set{"name": "yaks"}),
 		ContainerState: stern.ContainerState(stern.RUNNING),
 		Since:          172800000000000,

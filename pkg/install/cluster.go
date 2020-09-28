@@ -20,6 +20,7 @@ package install
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -36,21 +37,21 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// SetupClusterwideResources --
-func SetupClusterwideResources(ctx context.Context, clientProvider client.Provider) error {
-	return SetupClusterwideResourcesOrCollect(ctx, clientProvider, nil)
-}
-
-// SetupClusterwideResourcesOrCollect --
-func SetupClusterwideResourcesOrCollect(ctx context.Context, clientProvider client.Provider, collection *kubernetes.Collection) error {
+// SetupClusterWideResourcesOrCollect --
+func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider client.Provider, collection *kubernetes.Collection) error {
 	// Get a client to install the CRD
 	c, err := clientProvider.Get()
 	if err != nil {
 		return err
 	}
 
-	// Install CRD for Test
-	if err := installCRD(ctx, c, "Test", "crds/yaks_v1alpha1_test_crd.yaml", collection); err != nil {
+	// Install CRD for Test (if needed)
+	if err := installCRD(ctx, c, "Test", "v1alpha1", "crd-test.yaml", collection); err != nil {
+		return err
+	}
+
+	// Wait for all CRDs to be installed before proceeding
+	if err := WaitForAllCRDInstallation(ctx, clientProvider, 25*time.Second); err != nil {
 		return err
 	}
 
@@ -66,8 +67,9 @@ func SetupClusterwideResourcesOrCollect(ctx context.Context, clientProvider clie
 		}
 	}
 
-	// Wait for all CRDs to be installed before proceeding
-	if err := WaitForAllCRDInstallation(ctx, clientProvider, 25*time.Second); err != nil {
+	// Install OpenShift Console download links if possible
+	err = OpenShiftConsoleDownloadLink(ctx, c)
+	if err != nil {
 		return err
 	}
 
@@ -99,12 +101,12 @@ func WaitForAllCRDInstallation(ctx context.Context, clientProvider client.Provid
 
 // AreAllCRDInstalled check if all the required CRDs are installed
 func AreAllCRDInstalled(ctx context.Context, c client.Client) (bool, error) {
-	return IsCRDInstalled(ctx, c, "Test")
+	return IsCRDInstalled(ctx, c, "Test", "v1alpha1")
 }
 
 // IsCRDInstalled check if the given CRD kind is installed
-func IsCRDInstalled(ctx context.Context, c client.Client, kind string) (bool, error) {
-	lst, err := c.Discovery().ServerResourcesForGroupVersion("org.citrusframework.yaks/v1alpha1")
+func IsCRDInstalled(ctx context.Context, c client.Client, kind string, version string) (bool, error) {
+	lst, err := c.Discovery().ServerResourcesForGroupVersion(fmt.Sprintf("yaks.citrusframework.org/%s", version))
 	if err != nil && k8serrors.IsNotFound(err) {
 		return false, nil
 	} else if err != nil {
@@ -118,8 +120,8 @@ func IsCRDInstalled(ctx context.Context, c client.Client, kind string) (bool, er
 	return false, nil
 }
 
-func installCRD(ctx context.Context, c client.Client, kind string, resourceName string, collection *kubernetes.Collection) error {
-	crd := []byte(deploy.Resources[resourceName])
+func installCRD(ctx context.Context, c client.Client, kind string, version string, resourceName string, collection *kubernetes.Collection) error {
+	crd := deploy.Resource(resourceName)
 	if collection != nil {
 		unstr, err := kubernetes.LoadRawResourceFromYaml(string(crd))
 		if err != nil {
@@ -130,7 +132,7 @@ func installCRD(ctx context.Context, c client.Client, kind string, resourceName 
 	}
 
 	// Installing Integration CRD
-	installed, err := IsCRDInstalled(ctx, c, kind)
+	installed, err := IsCRDInstalled(ctx, c, kind, version)
 	if err != nil {
 		return err
 	}
@@ -160,7 +162,7 @@ func installCRD(ctx context.Context, c client.Client, kind string, resourceName 
 	return nil
 }
 
-// IsClusterRoleInstalled check if cluster role camel-k:edit is installed
+// IsClusterRoleInstalled check if cluster role yaks:edit is installed
 func IsClusterRoleInstalled(ctx context.Context, c client.Client) (bool, error) {
 	clusterRole := rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
@@ -185,7 +187,7 @@ func IsClusterRoleInstalled(ctx context.Context, c client.Client) (bool, error) 
 }
 
 func installClusterRole(ctx context.Context, c client.Client, collection *kubernetes.Collection) error {
-	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.Resources["user_cluster_role.yaml"])
+	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString("/user-cluster-role.yaml"))
 	if err != nil {
 		return err
 	}
