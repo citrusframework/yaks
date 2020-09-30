@@ -32,5 +32,5 @@ func GetTestBaseImage() string {
 }
 
 func getDefaultTestBaseImage() string {
-	return "docker.io/citrusframework/yaks:" + defaults.Version
+	return defaults.ImageName + ":" + defaults.Version
 }
