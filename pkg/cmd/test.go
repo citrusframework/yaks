@@ -96,6 +96,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
 	cmd.Flags().StringArrayVarP(&options.features, "feature", "f", nil, "Feature file to include in the test run")
 	cmd.Flags().StringArrayVarP(&options.glue, "glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
 	cmd.Flags().StringVarP(&options.options, "options", "o", "", "Cucumber runtime options")
+	cmd.Flags().StringVar(&options.dumpFormat, "dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
 	cmd.Flags().VarP(&options.report, "report", "r", "Create test report in given output format")
 
 	return &cmd
@@ -112,6 +113,7 @@ type testCmdOptions struct {
 	features     []string
 	glue         []string
 	options      string
+	dumpFormat   string
 	report       report.OutputFormat
 }
 
@@ -381,6 +383,29 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 
 	if err := o.setupEnvSettings(&test, runConfig); err != nil {
 		return nil, err
+	}
+
+	switch o.dumpFormat {
+		case "":
+			// continue..
+		case "yaml":
+			data, err := kubernetes.ToYAML(&test)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Print(string(data))
+			return nil, nil
+
+		case "json":
+			data, err := kubernetes.ToJSON(&test)
+			if err != nil {
+				return nil, err
+			}
+			fmt.Print(string(data))
+			return nil, nil
+
+		default:
+			return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.dumpFormat)
 	}
 
 	existed := false

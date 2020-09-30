@@ -21,11 +21,11 @@ metadata:
   name: example-test
 spec:
   source:
-    name: simple.feature
+    name: example.feature
     language: feature
     content: |-
-      Feature: integration runs
+      Feature: hello world
 
-        Scenario:
-          Given integration simple is running
-          Then integration simple should print Hello Camel
+        Scenario: print slogan
+          Given YAKS does Cloud-Native BDD testing
+          Then YAKS rocks!
