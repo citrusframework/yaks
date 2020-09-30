@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/citrusframework/yaks/pkg/apis/yaks v0.0.0
 	github.com/container-tools/snap v0.0.5
 	github.com/container-tools/spectrum v0.3.2
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
@@ -73,6 +72,3 @@ replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503
 
 // Using a fork that removes the https ping before using http in case of insecure registry (for Spectrum)
 replace github.com/google/go-containerregistry => github.com/nicolaferraro/go-containerregistry v0.0.0-20200428072705-e7aced86aca8
-
-// Local modules
-replace github.com/citrusframework/yaks/pkg/apis/yaks => ./pkg/apis/yaks

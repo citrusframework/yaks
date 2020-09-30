@@ -114,9 +114,6 @@ build-olm:
 set-version:
 	./script/set_version.sh $(VERSION) $(IMAGE_NAME)
 
-set-module-version:
-	./script/set_modules_version.sh $(VERSION)
-
 set-next-snapshot:
 	./script/next_snapshot.sh
 
@@ -137,11 +134,11 @@ images: test package-artifacts docker-image
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
-prepare-release: clean codegen set-module-version set-version check-licenses unsnapshot-olm unsnapshot-sources cross-compile
+prepare-release: clean codegen set-version check-licenses unsnapshot-olm unsnapshot-sources cross-compile
 
 release: prepare-release images images-push git-tag
 
-release-snapshot: clean codegen set-module-version set-version cross-compile images images-push
+release-snapshot: clean codegen set-version cross-compile images images-push
 
 package-artifacts-no-test:
 	./script/package_maven_artifacts.sh -DskipTests
