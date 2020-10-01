@@ -85,7 +85,7 @@ func IsOperatorInstalled(ctx context.Context, client client.Client, namespace st
 	return false, nil
 }
 
-// HasPermissionToInstall checks if the current user/service-account has the right permissions to install camel k via OLM
+// HasPermissionToInstall checks if the current user/service-account has the right permissions to install yaks via OLM
 func HasPermissionToInstall(ctx context.Context, client client.Client, namespace string, global bool, options Options) (bool, error) {
 	if ok, err := kubernetes.CheckPermission(client, olmv1alpha1.GroupName, "clusterserviceversions", namespace, options.Package, "list"); err != nil {
 		return false, err

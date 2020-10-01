@@ -22,24 +22,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCmdOperator(rootCmdOptions *RootCmdOptions) *cobra.Command {
-	impl := operatorCmdOptions{
-		RootCmdOptions: rootCmdOptions,
-	}
+func newCmdOperator() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "operator",
 		Short: "Run the YAKS operator",
 		Long:  `Run the YAKS operator locally.`,
-		Run:   impl.run,
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			operator.Run()
+		},
 	}
 
 	return &cmd
-}
-
-type operatorCmdOptions struct {
-	*RootCmdOptions
-}
-
-func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
-	operator.Run()
 }

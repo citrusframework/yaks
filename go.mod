@@ -5,14 +5,13 @@ go 1.13
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/container-tools/snap v0.0.5
-	github.com/container-tools/spectrum v0.3.2
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/fatih/color v1.9.0
+	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-logr/logr v0.1.0
 	github.com/google/uuid v1.1.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/opencontainers/runc v1.0.0-rc2.0.20190611121236-6cc515888830 // indirect
 	github.com/openshift/api v3.9.1-0.20190927182313-d4a64ec2cbd8+incompatible
 	github.com/operator-framework/operator-lifecycle-manager v0.0.0-20200321030439-57b580e57e88
 	github.com/operator-framework/operator-sdk v0.17.1
@@ -32,8 +31,6 @@ require (
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
 	knative.dev/eventing v0.16.2
-	knative.dev/pkg v0.0.0-20200702222342-ea4d6e985ba0
-	knative.dev/serving v0.16.0
 	sigs.k8s.io/controller-runtime v0.5.2
 )
 

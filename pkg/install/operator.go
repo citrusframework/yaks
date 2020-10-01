@@ -26,7 +26,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/rbac/v1beta1"
+	v1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -75,29 +75,35 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 			}
 
 			// Turn Role & RoleBinding into their equivalent cluster types
-			if r, ok := o.(*v1beta1.Role); ok {
+			if r, ok := o.(*v1.Role); ok {
 				if strings.HasPrefix(r.Name, "yaks-operator") {
-					o = &v1beta1.ClusterRole{
+					o = &v1.ClusterRole{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: cfg.Namespace,
 							Name:      r.Name,
+							Labels: map[string]string{
+								"app": "yaks",
+							},
 						},
 						Rules: r.Rules,
 					}
 				}
 			}
 
-			if rb, ok := o.(*v1beta1.RoleBinding); ok {
+			if rb, ok := o.(*v1.RoleBinding); ok {
 				if strings.HasPrefix(rb.Name, "yaks-operator") {
 					rb.Subjects[0].Namespace = cfg.Namespace
 
-					o = &v1beta1.ClusterRoleBinding{
+					o = &v1.ClusterRoleBinding{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: cfg.Namespace,
 							Name:      rb.Name,
+							Labels: map[string]string{
+								"app": "yaks",
+							},
 						},
 						Subjects: rb.Subjects,
-						RoleRef: v1beta1.RoleRef{
+						RoleRef: v1.RoleRef{
 							APIGroup: rb.RoleRef.APIGroup,
 							Kind:     "ClusterRole",
 							Name:     rb.RoleRef.Name,

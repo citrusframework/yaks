@@ -20,26 +20,45 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/citrusframework/yaks/pkg/util/defaults"
 	"github.com/spf13/cobra"
 )
 
-// VersionVariant may be overridden at build time
-var VersionVariant = ""
+// ******************************
+//
+//
+//
+// ******************************
 
-func newCmdVersion() *cobra.Command {
+const zshCompletionCmdLongDescription = `
+To configure your zsh shell to load completions for each session add to your zshrc
+
+if [ $commands[yaks] ]; then
+  source <(yaks completion zsh)
+fi
+`
+
+// ******************************
+//
+// COMMAND
+//
+// ******************************
+
+func newCmdCompletionZsh(root *cobra.Command) *cobra.Command {
 	return &cobra.Command{
-		Use:   "version",
-		Short: "Display version information",
+		Use:   "zsh",
+		Short: "Generates zsh completion scripts",
+		Long:  zshCompletionCmdLongDescription,
 		Run: func(_ *cobra.Command, _ []string) {
-			if VersionVariant != "" {
-				fmt.Printf("YAKS %s %s\n", VersionVariant, defaults.Version)
-			} else {
-				fmt.Printf("YAKS %s\n", defaults.Version)
+			err := root.GenZshCompletion(root.OutOrStdout())
+			if err != nil {
+				fmt.Print(err.Error())
 			}
 		},
 		Annotations: map[string]string{
 			offlineCommandLabel: "true",
 		},
 	}
+}
+
+func configureKnownZshCompletions(command *cobra.Command) {
 }
