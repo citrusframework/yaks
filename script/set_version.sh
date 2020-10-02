@@ -17,15 +17,18 @@
 
 set -e
 
-if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-    echo "usage: $0 version [image_name]"
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    echo "usage: $0 version snapshot_version [image_name]"
     exit 1
 fi
 
 location=$(dirname $0)
 version=$1
-image_name=${2:-docker.io\/yaks\/yaks}
+snapshot_version=$2
+image_name=${3:-docker.io\/yaks\/yaks}
 sanitized_image_name=${image_name//\//\\\/}
+
+# Update olm-catalog
 
 for f in $(find $location/../deploy -type f -name "*.yaml" | grep -v olm-catalog);
 do
@@ -34,6 +37,31 @@ do
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
     sed -i '' -E "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+  fi
+done
+
+# Update Java sources
+
+java_sources=${location}/../java
+
+blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
+
+for f in $(find ${java_sources} -type f);
+do
+  check=true
+  for b in ${blacklist[*]}; do
+    if [[ "$f" == *"$b"* ]]; then
+      #echo "skip $f"
+      check=false
+    fi
+  done
+  if [ "$check" = true ]; then
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i "s/$snapshot_version/$version/g" $f
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' "s/$snapshot_version/$version/g" $f
+    fi
   fi
 done
 

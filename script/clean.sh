@@ -38,6 +38,7 @@ cd ${location}/../java
 # Maven clean
 
 ./mvnw \
+    --quiet \
     clean
 
 # Dir clean

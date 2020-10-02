@@ -96,10 +96,6 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
       run: |
-        SNAPSHOT_VERSION=$(make version)
-        echo "Using SNAPSHOT_VERSION=$SNAPSHOT_VERSION"
-        echo "::set-env name=SNAPSHOT_VERSION::$SNAPSHOT_VERSION"
-
         VERSION=$(make version | sed s/-SNAPSHOT/-$(date +%Y%m%d%H%M)/)
         echo "Using VERSION=$VERSION"
         echo "::set-env name=VERSION::$VERSION"
@@ -112,7 +108,7 @@ jobs:
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Build
       run: |
-        make clean VERSION=$SNAPSHOT_VERSION IMAGE_NAME=$IMAGE_NAME release-snapshot
+        make clean IMAGE_NAME=$IMAGE_NAME release-snapshot
         make clean VERSION=$VERSION IMAGE_NAME=$IMAGE_NAME release-snapshot
     - name: Check
       run: ls -l
