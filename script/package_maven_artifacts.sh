@@ -41,7 +41,7 @@ echo Build YAKS modules ...
 echo Install YAKS Maven extension
 
 mkdir -p $PWD/../build/_maven_project/yaks-runtime-maven/.mvn
-cp tools/maven/yaks-maven-extension/target/classes/extensions.xml $PWD/../build/_maven_project/yaks-runtime-maven/.mvn/
+mv $PWD/../build/_maven_project/yaks-runtime-maven/extensions.xml $PWD/../build/_maven_project/yaks-runtime-maven/.mvn/
 
 # copy all dependencies to image m2 repository
 echo Copy project dependencies ...

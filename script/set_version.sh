@@ -37,4 +37,4 @@ do
   fi
 done
 
-echo "YAKS version set to: $version and image name to: $sanitized_image_name:$version"
+echo "YAKS version set to: $version and image name to: $image_name:$version"
