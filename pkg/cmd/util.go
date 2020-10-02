@@ -20,44 +20,61 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"log"
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	p "github.com/gertd/go-pluralize"
 )
 
-func (command *RootCmdOptions) preRun(cmd *cobra.Command, _ []string) error {
-	if command.Namespace == "" {
-		current, err := client.GetCurrentNamespace(command.KubeConfig)
-		if err != nil {
-			return errors.Wrap(err, "cannot get current namespace")
+const (
+	offlineCommandLabel = "yaks.citrusframework.org/cmd.offline"
+)
+
+func bindPFlagsHierarchy(cmd *cobra.Command) error {
+	for _, c := range cmd.Commands() {
+		if err := bindPFlags(c); err != nil {
+			return err
 		}
-		err = cmd.Flag("namespace").Value.Set(current)
-		if err != nil {
+
+		if err := bindPFlagsHierarchy(c); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-// GetCmdClient returns the client that can be used from command line tools
-func (command *RootCmdOptions) GetCmdClient() (client.Client, error) {
-	// Get the pre-computed client
-	if command._client != nil {
-		return command._client, nil
-	}
-	var err error
-	command._client, err = command.NewCmdClient()
-	return command._client, err
-}
+func bindPFlags(cmd *cobra.Command) error {
+	prefix := pathToRoot(cmd)
+	pl := p.NewClient()
 
-// NewCmdClient returns a new client that can be used from command line tools
-func (command *RootCmdOptions) NewCmdClient() (client.Client, error) {
-	return client.NewOutOfClusterClient(command.KubeConfig)
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		name := flag.Name
+		name = strings.ReplaceAll(name, "_", "-")
+		name = strings.ReplaceAll(name, ".", "-")
+
+		if err := viper.BindPFlag(prefix+"."+name, flag); err != nil {
+			log.Printf("error binding flag %s with prefix %s to viper: %v", flag.Name, prefix, err)
+		}
+
+		// this is a little bit of an hack to register plural version of properties
+		// based on the naming conventions used by the flag type because it is not
+		// possible to know what is the type of a flag
+		flagType := strings.ToUpper(flag.Value.Type())
+		if strings.Contains(flagType, "SLICE") || strings.Contains(flagType, "ARRAY") {
+			if err := viper.BindPFlag(prefix+"."+pl.Plural(name), flag); err != nil {
+				log.Printf("error binding plural flag %s with prefix %s to viper: %v", flag.Name, prefix, err)
+			}
+		}
+	})
+
+	return nil
 }
 
 func pathToRoot(cmd *cobra.Command) string {
@@ -114,6 +131,17 @@ func decodeKey(target interface{}, key string) error {
 	return nil
 }
 
+func decode(target interface{}) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		path := pathToRoot(cmd)
+		if err := decodeKey(target, path); err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
 func stringToSliceHookFunc(comma rune) mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Kind,
@@ -143,3 +171,8 @@ func stringToSliceHookFunc(comma rune) mapstructure.DecodeHookFunc {
 func cmdOnly(cmd *cobra.Command, options interface{}) *cobra.Command {
 	return cmd
 }
+
+func isOfflineCommand(cmd *cobra.Command) bool {
+	return cmd.Annotations[offlineCommandLabel] == "true"
+}
+

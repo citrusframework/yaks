@@ -19,42 +19,159 @@ package cmd
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"os"
+	"strings"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/spf13/cobra"
 )
 
-const yaksCommandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
+const (
+	ConfigNameEnv       = "YAKS_CONFIG_NAME"
+	ConfigPathEnv    = "YAKS_CONFIG_PATH"
+
+	commandShortDescription = `YAKS is a client tool for running tests natively on Kubernetes`
+	commandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
+)
 
 // RootCmdOptions --
 type RootCmdOptions struct {
-	Context    context.Context
-	_client    client.Client
-	KubeConfig string
-	Namespace  string
+	RootContext   context.Context    `mapstructure:"-"`
+	Context       context.Context    `mapstructure:"-"`
+	ContextCancel context.CancelFunc `mapstructure:"-"`
+	_client       client.Client      `mapstructure:"-"`
+	KubeConfig    string             `mapstructure:"kube-config"`
+	Namespace     string             `mapstructure:"namespace"`
 }
 
 // NewYaksCommand --
 func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
+	childCtx, childCancel := context.WithCancel(ctx)
 	options := RootCmdOptions{
-		Context: ctx,
+		RootContext:   ctx,
+		Context:       childCtx,
+		ContextCancel: childCancel,
 	}
+
+	var err error
 	var cmd = cobra.Command{
+		BashCompletionFunction: bashCompletionFunction,
+		PersistentPreRunE:      options.preRun,
 		Use:   "yaks",
-		Short: "YAKS is a awesome client tool for running tests natively on Kubernetes",
-		Long:  yaksCommandLongDescription,
+		Short: commandShortDescription,
+		Long:  commandLongDescription,
 	}
 
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")
 	cmd.PersistentFlags().StringVarP(&options.Namespace, "namespace", "n", "", "Namespace to use for all operations")
 
-	cmd.AddCommand(newCmdTest(&options))
+	cmd.AddCommand(newCmdCompletion(&cmd))
+	cmd.AddCommand(newCmdVersion())
+	cmd.AddCommand(cmdOnly(newCmdTest(&options)))
 	cmd.AddCommand(cmdOnly(newCmdInstall(&options)))
-	cmd.AddCommand(newCmdOperator(&options))
-	cmd.AddCommand(newCmdUpload(&options))
-	cmd.AddCommand(newCmdReport(&options))
-	cmd.AddCommand(newCmdVersion(&options))
+	cmd.AddCommand(cmdOnly(newCmdUninstall(&options)))
+	cmd.AddCommand(newCmdOperator())
+	cmd.AddCommand(cmdOnly(newCmdUpload(&options)))
+	cmd.AddCommand(cmdOnly(newCmdReport(&options)))
 
-	return &cmd, nil
+	if err := addHelpSubCommands(&cmd, &options); err != nil {
+		return &cmd, err
+	}
+
+	err = postAddCommandInit(&cmd)
+
+	return &cmd, err
+}
+
+func postAddCommandInit(cmd *cobra.Command) error {
+	if err := bindPFlagsHierarchy(cmd); err != nil {
+		return err
+	}
+
+	configName := os.Getenv(ConfigNameEnv)
+	if configName == "" {
+		configName = DefaultConfigName
+	}
+
+	viper.SetConfigName(configName)
+
+	configPath := os.Getenv(ConfigPathEnv)
+	if configPath != "" {
+		// if a specific config path is set, don't add
+		// default locations
+		viper.AddConfigPath(configPath)
+	} else {
+		viper.AddConfigPath(".")
+		viper.AddConfigPath(".yaks")
+		viper.AddConfigPath("$HOME/.yaks")
+	}
+
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(
+		".", "_",
+		"-", "_",
+	))
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addHelpSubCommands(cmd *cobra.Command, options *RootCmdOptions) error {
+	cmd.InitDefaultHelpCmd()
+
+	var helpCmd *cobra.Command
+	for _, c := range cmd.Commands() {
+		if c.Name() == "help" {
+			helpCmd = c
+			break
+		}
+	}
+
+	if helpCmd == nil {
+		return errors.New("could not find any configured help command")
+	}
+
+	return nil
+}
+
+func (command *RootCmdOptions) preRun(cmd *cobra.Command, _ []string) error {
+	if command.Namespace == "" && !isOfflineCommand(cmd) {
+		var current string
+		c, err := command.GetCmdClient()
+		if err != nil {
+			return errors.Wrap(err, "cannot get command client")
+		}
+		current, err = c.GetCurrentNamespace(command.KubeConfig)
+		if err != nil {
+			return errors.Wrap(err, "cannot get current namespace")
+		}
+		err = cmd.Flag("namespace").Value.Set(current)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetCmdClient returns the client that can be used from command line tools
+func (command *RootCmdOptions) GetCmdClient() (client.Client, error) {
+	// Get the pre-computed client
+	if command._client != nil {
+		return command._client, nil
+	}
+	var err error
+	command._client, err = command.NewCmdClient()
+	return command._client, err
+}
+
+// NewCmdClient returns a new client that can be used from command line tools
+func (command *RootCmdOptions) NewCmdClient() (client.Client, error) {
+	return client.NewOutOfClusterClient(command.KubeConfig)
 }

@@ -15,6 +15,7 @@
 
 VERSIONFILE := pkg/util/defaults/defaults.go
 VERSION := 0.1.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.1.0-SNAPSHOT
 LAST_RELEASED_VERSION := 0.1.0
 LOCAL_REPOSITORY := /tmp/artifacts/m2
 IMAGE_NAME := docker.io/yaks/yaks
@@ -112,7 +113,7 @@ build-olm:
 	./script/build_olm.sh $(VERSION)
 
 set-version:
-	./script/set_version.sh $(VERSION) $(IMAGE_NAME)
+	./script/set_version.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
 
 set-next-snapshot:
 	./script/next_snapshot.sh
@@ -134,7 +135,7 @@ images: test package-artifacts docker-image
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
-prepare-release: clean codegen set-version check-licenses unsnapshot-olm unsnapshot-sources cross-compile
+prepare-release: clean codegen set-version check-licenses unsnapshot-olm cross-compile
 
 release: prepare-release images images-push git-tag
 
@@ -152,7 +153,10 @@ unsnapshot-olm:
 unsnapshot-sources:
 	./script/unsnapshot_sources.sh
 
+snapshot-version:
+	@echo $(SNAPSHOT_VERSION)
+
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm unsnapshot-sources codegen cross-compile test docker-image images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version git-tag check-licenses version
+.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm codegen cross-compile test docker-image images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version git-tag check-licenses snapshot-version version

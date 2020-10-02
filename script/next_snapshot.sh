@@ -18,37 +18,22 @@
 set -e
 
 location=$(dirname $0)
-
-java_sources=${location}/../java
-
-blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
+make_file=$location/../Makefile
 
 version=$(make -s version | tr '[:lower:]' '[:upper:]')
 version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
-next_version_num=$(echo $version_num | awk 'BEGIN { FS = "." } ; {print $1"."$2"."++$3}')
+next_version_num=$(echo $version_num | awk 'BEGIN { FS = "." } ; {print $1"."++$2".0"}')
 next_version="$next_version_num-SNAPSHOT"
 
 echo "Increasing version to $next_version"
 
-$location/set_version.sh $next_version
+$location/set_version.sh $next_version $version
 
 version_rule="s/$version_num\-SNAPSHOT/$next_version_num\-SNAPSHOT/g"
 
-for f in $(find ${java_sources} -type f);
-do
-  check=true
-  for b in ${blacklist[*]}; do
-    if [[ "$f" == *"$b"* ]]; then
-      #echo "skip $f"
-      check=false
-    fi
-  done
-  if [ "$check" = true ]; then
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "$version_rule" $f
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' "$version_rule" $f
-    fi
-  fi
-done
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  sed -i "$version_rule" $make_file
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  # Mac OSX
+  sed -i '' "$version_rule" $make_file
+fi

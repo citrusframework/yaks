@@ -25,37 +25,36 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func newCmdReport(rootCmdOptions *RootCmdOptions) *cobra.Command {
+func newCmdReport(rootCmdOptions *RootCmdOptions) (*cobra.Command, *reportCmdOptions) {
 	options := reportCmdOptions{
 		RootCmdOptions: rootCmdOptions,
 	}
 
 	cmd := cobra.Command{
-		PersistentPreRunE: options.preRun,
 		Use:               "report [options]",
 		Short:             "Generate test report from last test run",
 		Long:              `Generate test report from last test run. Test results are fetched from cluster and/or collected from local test output.`,
+		PreRunE:           decode(&options),
 		RunE:              options.run,
-		SilenceUsage:      true,
 	}
 
-	cmd.Flags().BoolVar(&options.fetch, "fetch", false, "Fetch latest test results from cluster.")
-	cmd.Flags().VarP(&options.output, "output", "o", "The report output format, one of 'summary', 'json', 'junit'")
-	cmd.Flags().BoolVarP(&options.clean, "clean", "c", false,"Clean the report output folder before fetching results")
+	cmd.Flags().Bool("fetch", false, "Fetch latest test results from cluster.")
+	cmd.Flags().StringP( "output", "o", "summary", "The report output format, one of 'summary', 'json', 'junit'")
+	cmd.Flags().BoolP( "clean", "c", false,"Clean the report output folder before fetching results")
 
-	return &cmd
+	return &cmd, &options
 }
 
 type reportCmdOptions struct {
 	*RootCmdOptions
-	clean bool
-	fetch bool
-	output report.OutputFormat
+	Clean 		 bool	`mapstructure:"clean"`
+	Fetch 		 bool	`mapstructure:"fetch"`
+	OutputFormat report.OutputFormat `mapstructure:"output"`
 }
 
 func (o *reportCmdOptions) run(cmd *cobra.Command, _ []string) error {
 	var results v1alpha1.TestResults
-	if o.fetch {
+	if o.Fetch {
 		if fetched, err := o.FetchResults(); err == nil {
 			results = *fetched
 		} else {
@@ -67,7 +66,7 @@ func (o *reportCmdOptions) run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	content, err := report.GenerateReport(&results, o.output)
+	content, err := report.GenerateReport(&results, o.OutputFormat)
 	if err != nil {
 		return err
 	}
@@ -85,7 +84,7 @@ func (o *reportCmdOptions) FetchResults() (*v1alpha1.TestResults, error) {
 		return nil, err;
 	}
 
-	if o.clean {
+	if o.Clean {
 		err = report.CleanReports()
 		if err != nil {
 			return nil, err

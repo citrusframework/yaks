@@ -72,49 +72,48 @@ const (
 	DefaultStepTimeout = "30m"
 )
 
-func newCmdTest(rootCmdOptions *RootCmdOptions) *cobra.Command {
+func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions) {
 	options := testCmdOptions{
 		RootCmdOptions: rootCmdOptions,
 	}
 
 	cmd := cobra.Command{
-		PersistentPreRunE: options.preRun,
-		Use:               "test [options] [test file to execute]",
-		Short:             "Execute a test on Kubernetes",
-		Long:              `Deploys and execute a pod on Kubernetes for running tests.`,
-		PreRunE:           options.validateArgs,
-		RunE:              options.run,
-		SilenceUsage:      true,
+		Use:             "test [options] [test file to execute]",
+		Short:           "Execute a test on Kubernetes",
+		Long:            `Deploys and executes a test on Kubernetes.`,
+		Args:            options.validateArgs,
+		PreRunE:         decode(&options),
+		RunE:            options.run,
 	}
 
-	cmd.Flags().StringArrayVar(&options.repositories, "maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
-	cmd.Flags().StringArrayVarP(&options.dependencies, "dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
-	cmd.Flags().StringArrayVarP(&options.uploads, "upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
-	cmd.Flags().StringVarP(&options.settings, "settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
-	cmd.Flags().StringArrayVarP(&options.env, "env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
-	cmd.Flags().StringArrayVarP(&options.tags, "tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
-	cmd.Flags().StringArrayVarP(&options.features, "feature", "f", nil, "Feature file to include in the test run")
-	cmd.Flags().StringArrayVarP(&options.glue, "glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
-	cmd.Flags().StringVarP(&options.options, "options", "o", "", "Cucumber runtime options")
-	cmd.Flags().StringVar(&options.dumpFormat, "dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
-	cmd.Flags().VarP(&options.report, "report", "r", "Create test report in given output format")
+	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
+	cmd.Flags().StringArrayP("dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
+	cmd.Flags().StringArrayP("upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
+	cmd.Flags().StringP("settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
+	cmd.Flags().StringArrayP("env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
+	cmd.Flags().StringArrayP("tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
+	cmd.Flags().StringArrayP("feature", "f", nil, "Feature file to include in the test run")
+	cmd.Flags().StringArrayP("glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
+	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
+	cmd.Flags().String("dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
+	cmd.Flags().StringP("report", "r", "junit", "Create test report in given output format")
 
-	return &cmd
+	return &cmd, &options
 }
 
 type testCmdOptions struct {
 	*RootCmdOptions
-	repositories []string
-	dependencies []string
-	uploads      []string
-	settings     string
-	env          []string
-	tags         []string
-	features     []string
-	glue         []string
-	options      string
-	dumpFormat   string
-	report       report.OutputFormat
+	Repositories []string `mapstructure:"maven-repository"`
+	Dependencies []string `mapstructure:"dependency"`
+	Uploads      []string `mapstructure:"upload"`
+	Settings     string `mapstructure:"settings"`
+	Env          []string `mapstructure:"env"`
+	Tags         []string `mapstructure:"tag"`
+	Features     []string `mapstructure:"feature"`
+	Glue         []string `mapstructure:"glue"`
+	Options      string `mapstructure:"options"`
+	DumpFormat   string `mapstructure:"dump"`
+	ReportFormat report.OutputFormat `mapstructure:"report"`
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -131,8 +130,8 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 
 	results := v1alpha1.TestResults{}
 	defer report.PrintSummaryReport(&results)
-	if o.report != report.DefaultOutput && o.report != report.SummaryOutput {
-		defer report.GenerateReport(&results, o.report)
+	if o.ReportFormat != report.DefaultOutput && o.ReportFormat != report.SummaryOutput {
+		defer report.GenerateReport(&results, o.ReportFormat)
 	}
 
 	if isDir(source) {
@@ -385,7 +384,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		return nil, err
 	}
 
-	switch o.dumpFormat {
+	switch o.DumpFormat {
 		case "":
 			// continue..
 		case "yaml":
@@ -405,7 +404,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 			return nil, nil
 
 		default:
-			return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.dumpFormat)
+			return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.DumpFormat)
 	}
 
 	existed := false
@@ -470,12 +469,12 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 }
 
 func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
-	for _, lib := range o.uploads {
+	for _, lib := range o.Uploads {
 		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib, runConfig.Config.Namespace.Name)
 		if err != nil {
 			return err
 		}
-		o.dependencies = append(o.dependencies, additionalDep)
+		o.Dependencies = append(o.Dependencies, additionalDep)
 	}
 	return nil
 }
@@ -485,42 +484,42 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 
 	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
 
-	if o.tags != nil {
-		env = append(env, CucumberFilterTags+"="+strings.Join(o.tags, ","))
+	if o.Tags != nil {
+		env = append(env, CucumberFilterTags+"="+strings.Join(o.Tags, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
 		env = append(env, CucumberFilterTags+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
 	}
 
-	if o.features != nil {
-		env = append(env, CucumberFeatures+"="+strings.Join(o.features, ","))
+	if o.Features != nil {
+		env = append(env, CucumberFeatures+"="+strings.Join(o.Features, ","))
 	}
 
-	if o.glue != nil {
-		env = append(env, CucumberGlue+"="+strings.Join(o.glue, ","))
+	if o.Glue != nil {
+		env = append(env, CucumberGlue+"="+strings.Join(o.Glue, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Glue) > 0 {
 		env = append(env, CucumberGlue+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Glue, ","))
 	}
 
-	if len(o.options) > 0 {
-		env = append(env, CucumberOptions+"="+o.options)
+	if len(o.Options) > 0 {
+		env = append(env, CucumberOptions+"="+o.Options)
 	} else if len(runConfig.Config.Runtime.Cucumber.Options) > 0 {
 		env = append(env, CucumberOptions+"="+runConfig.Config.Runtime.Cucumber.Options)
 	}
 
-	if len(o.repositories) > 0 {
-		env = append(env, RepositoriesEnv+"="+strings.Join(o.repositories, ","))
+	if len(o.Repositories) > 0 {
+		env = append(env, RepositoriesEnv+"="+strings.Join(o.Repositories, ","))
 	}
 
-	if len(o.dependencies) > 0 {
-		env = append(env, DependenciesEnv+"="+strings.Join(o.dependencies, ","))
+	if len(o.Dependencies) > 0 {
+		env = append(env, DependenciesEnv+"="+strings.Join(o.Dependencies, ","))
 	}
 
 	for _, envConfig := range runConfig.Config.Runtime.Env {
 		env = append(env, envConfig.Name+"="+envConfig.Value)
 	}
 
-	if o.env != nil {
-		env = append(env, o.env...)
+	if o.Env != nil {
+		env = append(env, o.Env...)
 	}
 
 	if len(env) > 0 {
@@ -531,8 +530,8 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 }
 
 func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
-	if o.settings != "" {
-		rawName := o.settings
+	if o.Settings != "" {
+		rawName := o.Settings
 		settingsFileName := kubernetes.SanitizeFileName(rawName)
 		configData, err := o.loadData(rawName)
 

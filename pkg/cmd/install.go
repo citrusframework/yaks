@@ -38,7 +38,6 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdO
 		RootCmdOptions: rootCmdOptions,
 	}
 	cmd := cobra.Command{
-		PersistentPreRunE: options.preRun,
 		Use:     "install",
 		Short:   "Installs YAKS on a Kubernetes cluster",
 		Long:    `Installs YAKS on a Kubernetes or OpenShift cluster.`,
