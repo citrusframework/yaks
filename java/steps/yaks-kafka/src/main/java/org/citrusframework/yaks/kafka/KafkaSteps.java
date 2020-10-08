@@ -17,9 +17,8 @@
 
 package org.citrusframework.yaks.kafka;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
@@ -29,7 +28,10 @@ import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
 import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
 import com.consol.citrus.kafka.message.KafkaMessage;
 import com.consol.citrus.kafka.message.KafkaMessageHeaders;
+import com.consol.citrus.message.Message;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -39,71 +41,199 @@ import static com.consol.citrus.actions.SendMessageAction.Builder.send;
 
 public class KafkaSteps {
 
-    private static final long TIMEOUT = System.getenv("YAKS_KAFKA_TIMEOUT") != null ? Integer.parseInt(System.getenv("YAKS_KAFKA_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
-
     @CitrusResource
     private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
 
-    private KafkaEndpoint kafka;
+    private Map<String, Object> headers = new HashMap<>();
+    private String body;
+
+    private KafkaEndpoint kafkaEndpoint;
+
+    private String messageKey;
+    private Integer partition;
+    private String topic = "test";
+
+    private long timeout = KafkaSettings.getConsumerTimeout();
+
+    private static final String KAFKA_ENDPOINT_NAME = "kafkaEndpoint";
+
+    @Before
+    public void before(Scenario scenario) {
+        if (kafkaEndpoint == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KafkaEndpoint.class).size() == 1L) {
+                kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(KafkaEndpoint.class);
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(KAFKA_ENDPOINT_NAME)) {
+                kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(KAFKA_ENDPOINT_NAME, KafkaEndpoint.class);
+            } else {
+                kafkaEndpoint = new KafkaEndpointBuilder().build();
+                citrus.getCitrusContext().getReferenceResolver().bind(KAFKA_ENDPOINT_NAME, kafkaEndpoint);
+            }
+        }
+
+        headers = new HashMap<>();
+        body = null;
+
+        messageKey = null;
+        partition = null;
+    }
 
     @Given("^(?:K|k)afka connection$")
     public void setConnection(DataTable properties) {
         Map<String, String> connectionProps = properties.asMap(String.class, String.class);
 
         String url = connectionProps.getOrDefault("url", "localhost:9092");
-        String topic = connectionProps.getOrDefault("topic", "test");
+        String topicName = connectionProps.getOrDefault("topic", this.topic);
         String consumerGroup = connectionProps.getOrDefault("consumerGroup", KafkaMessageHeaders.KAFKA_PREFIX + "group");
+        String offsetReset = connectionProps.getOrDefault("offsetReset", "earliest");
 
-        KafkaEndpointBuilder builder = new KafkaEndpointBuilder()
-                .server(url)
-                .topic(topic)
-                .consumerGroup(consumerGroup);
-
-        kafka = builder.build();
+        setTopic(topicName);
+        kafkaEndpoint.getEndpointConfiguration().setServer(url);
+        kafkaEndpoint.getEndpointConfiguration().setOffsetReset(offsetReset);
+        kafkaEndpoint.getEndpointConfiguration().setConsumerGroup(consumerGroup);
     }
 
-    @When("^send message to Kafka with body and headers: (.+)")
-    @Given("^message in Kafka with body and headers: (.+)$")
-    public void sendToKafka(String body, DataTable headers) {
-       toKafka(body, headers.asMap(String.class, Object.class));
+    @Given("^(?:K|k)afka producer configuration$")
+    public void setProducerConfig(DataTable properties) {
+        Map<String, Object> producerProperties = properties.asMap(String.class, Object.class);
+        kafkaEndpoint.getEndpointConfiguration().setProducerProperties(producerProperties);
     }
 
-    @When("^send message to Kafka with body: (.+)")
-    @Given("^message in Kafka with body: (.+)$")
-    public void sendToKafka(String body) {
-        toKafka(body, Collections.emptyMap());
+    @Given("^(?:K|k)afka consumer configuration$")
+    public void setConsumerConfig(DataTable properties) {
+        Map<String, Object> consumerProperties = properties.asMap(String.class, Object.class);
+        kafkaEndpoint.getEndpointConfiguration().setConsumerProperties(consumerProperties);
     }
 
-    @When("^send message to Kafka with body")
-    @Given("^message in Kafka with body$")
-    public void sendToKafkaFull(String body) {
-        sendToKafka(body);
+    @Given("^(?:K|k)afka message key: (.+)$")
+    public void setMessageKey(String key) {
+        this.messageKey = key;
     }
 
-    @Then("^(?:expect|verify) message in Kafka with body: (.+)$")
-    public void receiveFromKafka(String body) {
-        fromKafka(body, Collections.emptyMap());
+    @Given("^(?:K|k)afka consumer timeout is (\\d+)(?: ms| milliseconds)$")
+    public void setConsumerTimeout(int milliseconds) {
+        this.timeout = milliseconds;
     }
 
-    @Then("^(?:expect|verify) message in Kafka with body$")
-    public void receiveFromKafkaFull(String body) {
-        receiveFromKafka(body);
+    @Given("^(?:K|k)afka topic partition: (\\d+)$")
+    public void setPartition(int partition) {
+        this.partition = partition;
     }
 
-    @Then("^(?:expect|verify) message in Kafka with body and headers: (.+)$")
+    @Given("^(?:K|k)afka topic: (.+)$")
+    public void setTopic(String topicName) {
+        this.topic = topicName;
+        kafkaEndpoint.getEndpointConfiguration().setTopic(topicName);
+    }
+
+    @Given("^(?:K|k)afka message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    @Then("^(?:expect|verify) (?:K|k)afka message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    public void addMessageHeader(String name, Object value) {
+        headers.put(name, value);
+    }
+
+    @Given("^(?:K|k)afka message headers$")
+    public void addMessageHeaders(DataTable headers) {
+        Map<String, Object> headerPairs = headers.asMap(String.class, Object.class);
+        headerPairs.forEach(this::addMessageHeader);
+    }
+
+    @Given("^(?:K|k)afka message body$")
+    @Then("^(?:expect|verify) (?:K|k)afka message body$")
+    public void setMessageBodyMultiline(String body) {
+        setMessageBody(body);
+    }
+
+    @Given("^(?:K|k)afka message body: (.+)$")
+    @Then("^(?:expect|verify) (?:K|k)afka message body: (.+)$")
+    public void setMessageBody(String body) {
+        this.body = body;
+    }
+
+    @When("^send (?:K|k)afka message$")
+    public void sendMessage() {
+        runner.run(send().endpoint(kafkaEndpoint)
+                .message(createKafkaMessage()));
+
+        body = null;
+        headers.clear();
+    }
+
+    @Then("^receive (?:K|k)afka message$")
+    public void receiveMessage() {
+        runner.run(receive().endpoint(kafkaEndpoint)
+                .timeout(timeout)
+                .message(createKafkaMessage()));
+
+        body = null;
+        headers.clear();
+    }
+
+    @When("^send (?:K|k)afka message to topic (.+)$")
+    public void sendMessage(String topicName) {
+        setTopic(topicName);
+        sendMessage();
+    }
+
+    @Then("^receive (?:K|k)afka message on topic (.+)")
+    public void receiveMessage(String topicName) {
+        setTopic(topicName);
+        receiveMessage();
+    }
+
+    @When("^send (?:K|k)afka message with body and headers: (.+)$")
+    @Given("^message in (?:K|k)afka with body and headers: (.+)$")
+    public void sendMessageBodyAndHeaders(String body, DataTable headers) {
+        setMessageBody(body);
+        addMessageHeaders(headers);
+        sendMessage();
+    }
+
+    @When("^send (?:K|k)afka message with body: (.+)$")
+    @Given("^message in (?:K|k)afka with body: (.+)$")
+    public void sendMessageBody(String body) {
+        setMessageBody(body);
+        sendMessage();
+    }
+
+    @When("^send (?:K|k)afka message with body$")
+    @Given("^message in (?:K|k)afka with body$")
+    public void sendMessageBodyMultiline(String body) {
+        sendMessageBody(body);
+    }
+
+    @Then("^(?:expect|verify) (?:K|k)afka message with body and headers: (.+)$")
     public void receiveFromKafka(String body, DataTable headers) {
-        fromKafka(body, headers.asMap(String.class, Object.class));
+        setMessageBody(body);
+        addMessageHeaders(headers);
+        receiveMessage();
     }
 
-    private void toKafka(String body, Map<String,Object> headers) {
-        runner.run(send().endpoint(kafka).message(new KafkaMessage(body, headers)));
+    @Then("^(?:expect|verify) (?:K|k)afka message with body: (.+)$")
+    public void receiveMessageBody(String body) {
+        setMessageBody(body);
+        receiveMessage();
     }
 
-    private void fromKafka(String body, Map<String,Object> headers) {
-       runner.run(receive().endpoint(kafka).timeout(TIMEOUT).message(new KafkaMessage(body, headers)));
+    @Then("^(?:expect|verify) (?:K|k)afka message with body$")
+    public void receiveMessageBodyMultiline(String body) {
+        receiveMessageBody(body);
+    }
+
+    private Message createKafkaMessage() {
+        KafkaMessage message = new KafkaMessage(body, headers)
+                .topic(topic);
+
+        if (messageKey != null) {
+            message.messageKey(messageKey);
+        }
+
+        if (partition != null) {
+            message.partition(partition);
+        }
+        return message;
     }
 
 }
