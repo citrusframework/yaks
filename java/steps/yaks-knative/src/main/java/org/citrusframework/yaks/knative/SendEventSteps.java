@@ -69,13 +69,15 @@ public class SendEventSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpClient == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
-            httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
-            timeout = httpClient.getEndpointConfiguration().getTimeout();
-        } else {
-            httpClient = new HttpClientBuilder()
-                    .timeout(timeout)
-                    .build();
+        if (httpClient == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
+                httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
+                timeout = httpClient.getEndpointConfiguration().getTimeout();
+            } else {
+                httpClient = new HttpClientBuilder()
+                        .timeout(timeout)
+                        .build();
+            }
         }
 
         eventData = null;

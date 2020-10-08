@@ -90,10 +90,12 @@ public class HttpClientSteps implements HttpSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpClient == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
-            httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
-        } else {
-            httpClient = new HttpClientBuilder().build();
+        if (httpClient == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
+                httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
+            } else {
+                httpClient = new HttpClientBuilder().build();
+            }
         }
 
         timeout = httpClient.getEndpointConfiguration().getTimeout();
