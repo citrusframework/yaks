@@ -1,8 +1,10 @@
-![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=master)
-
 # YAKS ![logo][1] 
 
-YAKS is Cloud Native BDD testing or simply: Yet Another Kubernetes Service!
+[![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=master)](https://github.com/citrusframework/yaks/actions) 
+[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/openshift/origin.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0")
+[![Chat on Zulip](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://citrusframework.zulipchat.com)
+
+YAKS is a platform to enable Cloud Native BDD testing on Kubernetes!
 
 * [Getting started](#getting-started)
   * [Installation](#installation)
@@ -27,8 +29,13 @@ YAKS is Cloud Native BDD testing or simply: Yet Another Kubernetes Service!
 
 ## Getting Started
 
-YAKS allows you to perform Could Native BDD testing. Cloud Native here means that your tests execute within a POD in a 
-Kubernetes cluster. All you need to do is to write some BDD feature specs using the [Gherkin syntax from Cucumber](https://cucumber.io/docs/gherkin/).
+YAKS allows you to perform Could Native BDD testing. Cloud Native here means that your tests executes within a Kubernetes POD. 
+
+With the YAKS operator installed, you can run tests by creating a `Test` custom resource on the cluster.
+
+Tests are defined using [Gherkin](https://cucumber.io/docs/gherkin/) syntax. As a framework YAKS provides a set of predefined steps which
+help to connect with different messaging transports (Http REST, JMS, Kafka, Knative eventing) and verify responses with
+assertions on message header and body content.
 
 ### Windows prerequisite
 For full support of Yaks on Windows please enable "Windows Subsystem for Linux". You can do it manually by heading to Control Panel > Programs > Turn 
