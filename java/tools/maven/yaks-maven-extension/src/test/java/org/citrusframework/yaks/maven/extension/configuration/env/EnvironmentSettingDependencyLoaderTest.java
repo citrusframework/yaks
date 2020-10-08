@@ -39,7 +39,7 @@ public class EnvironmentSettingDependencyLoaderTest {
     public void shouldLoadFromEnv() throws LifecycleExecutionException {
         EnvironmentSettingDependencyLoader loader = new EnvironmentSettingDependencyLoader() {
             @Override
-            protected String getEnvSetting(String name) {
+            public String getEnvSetting(String name) {
                 return "org.foo:foo-artifact:1.0.0,org.bar:bar-artifact:1.5.0";
             }
         };
@@ -52,7 +52,7 @@ public class EnvironmentSettingDependencyLoaderTest {
     public void shouldLoadFromEnvWithVersionResolving() throws LifecycleExecutionException {
         EnvironmentSettingDependencyLoader loader = new EnvironmentSettingDependencyLoader() {
             @Override
-            protected String getEnvSetting(String name) {
+            public String getEnvSetting(String name) {
                 return "org.foo:foo-artifact:@foo.version@,org.bar:bar-artifact:@bar.version@";
             }
         };

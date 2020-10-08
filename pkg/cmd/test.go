@@ -547,7 +547,9 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 		return &settings, nil
 	}
 
-	if len(runConfig.Config.Runtime.Settings.Dependencies) > 0 || len(runConfig.Config.Runtime.Settings.Repositories) > 0 {
+	if len(runConfig.Config.Runtime.Settings.Dependencies) > 0 ||
+		len(runConfig.Config.Runtime.Settings.Repositories) > 0 ||
+		len(runConfig.Config.Runtime.Settings.Loggers) > 0 {
 		configData, err := yaml.Marshal(runConfig.Config.Runtime.Settings)
 
 		if err != nil {

@@ -19,7 +19,6 @@ package org.citrusframework.yaks.maven.extension.configuration.env;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Repository;
@@ -33,7 +32,7 @@ import org.codehaus.plexus.logging.Logger;
  *
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingRepositoryLoader implements RepositoryLoader {
+public class EnvironmentSettingRepositoryLoader implements RepositoryLoader, EnvironmentSettingLoader {
 
     @Override
     public List<Repository> load(Logger logger) throws LifecycleExecutionException {
@@ -55,14 +54,5 @@ public class EnvironmentSettingRepositoryLoader implements RepositoryLoader {
         }
 
         return repositoryList;
-    }
-
-    /**
-     * Read environment setting. If setting is not present default to empty value.
-     * @param name
-     * @return
-     */
-    protected String getEnvSetting(String name) {
-        return Optional.ofNullable(System.getenv(name)).orElse("");
     }
 }

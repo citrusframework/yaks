@@ -1,6 +1,6 @@
-#
+# ---------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements. See the NOTICE file distributed with
+# contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
 # The ASF licenses this file to You under the Apache License, Version 2.0
 # (the "License"); you may not use this file except in compliance with
@@ -13,16 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+# ---------------------------------------------------------------------------
 
-# Maven repositories
-yaks.repository.central=https://repo.maven.apache.org/maven2/
-yaks.repository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
-
-# Include these dependencies additional dependencies
-yaks.dependency.foo=org.foo:foo-artifact:1.0.0
-yaks.dependency.bar=org.bar:bar-artifact:1.5.0
-
-logging.level.root=INFO
-logging.level.org.foo=DEBUG
-logging.level.org.bar=WARN
+config:
+  runtime:
+    settings:
+      loggers:
+        - name: root
+          level: INFO
+        - name: org.citrusframework.yaks
+          level: DEBUG
+        - name: com.consol.citrus
+          level: INFO
+        - name: Logger.Message_IN
+          level: DEBUG
+        - name: Logger.Message_OUT
+          level: DEBUG

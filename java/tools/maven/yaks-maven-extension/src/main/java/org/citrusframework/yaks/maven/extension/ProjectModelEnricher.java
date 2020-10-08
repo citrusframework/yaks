@@ -17,18 +17,31 @@
 
 package org.citrusframework.yaks.maven.extension;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.execution.ProjectExecutionEvent;
 import org.apache.maven.execution.ProjectExecutionListener;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Resource;
+import org.apache.maven.project.MavenProject;
 import org.citrusframework.yaks.maven.extension.configuration.FileBasedDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.FileBasedLoggingConfigurationLoader;
+import org.citrusframework.yaks.maven.extension.configuration.LoggingConfigurationLoader;
 import org.citrusframework.yaks.maven.extension.configuration.cucumber.FeatureTagsDependencyLoader;
 import org.citrusframework.yaks.maven.extension.configuration.env.EnvironmentSettingDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.env.EnvironmentSettingLoggingConfigurationLoader;
 import org.citrusframework.yaks.maven.extension.configuration.properties.SystemPropertyDependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.properties.SystemPropertyLoggingConfigurationLoader;
 import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.component.annotations.Requirement;
 import org.codehaus.plexus.logging.Logger;
@@ -50,6 +63,7 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
         Model projectModel = projectExecutionEvent.getProject().getModel();
         injectProjectDependencies(projectModel);
         injectTestResources(projectModel);
+        loadLoggingConfiguration(projectExecutionEvent.getProject());
     }
 
     /**
@@ -71,7 +85,7 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
 
     /**
      * Dynamically add project dependencies based on different configuration sources such as environment variables,
-     * system properties configuration files.
+     * system properties and configuration files.
      * @param projectModel
      * @throws LifecycleExecutionException
      */
@@ -82,6 +96,33 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
         dependencyList.addAll(new SystemPropertyDependencyLoader().load(projectModel.getProperties(), logger));
         dependencyList.addAll(new EnvironmentSettingDependencyLoader().load(projectModel.getProperties(), logger));
         dependencyList.addAll(new FeatureTagsDependencyLoader().load(projectModel.getProperties(), logger));
+    }
+
+    /**
+     * Dynamically load logger configuration based on different configuration sources such as environment variables,
+     * system properties and configuration files.
+     * @throws LifecycleExecutionException
+     * @param project
+     */
+    private void loadLoggingConfiguration(MavenProject project) throws LifecycleExecutionException {
+        logger.info("Load logger configuration ...");
+        final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
+
+        Level rootLevel = Level.ERROR;
+        rootLevel = new FileBasedLoggingConfigurationLoader().load(builder, logger).orElse(rootLevel);
+        rootLevel = new SystemPropertyLoggingConfigurationLoader().load(builder, logger).orElse(rootLevel);
+        rootLevel = new EnvironmentSettingLoggingConfigurationLoader().load(builder, logger).orElse(rootLevel);
+
+        builder.add(builder.newRootLogger(rootLevel).add(builder.newAppenderRef("STDOUT")));
+
+        try {
+            ByteArrayOutputStream configuration = new ByteArrayOutputStream();
+            builder.writeXmlConfiguration(configuration);
+            Files.write(Paths.get(project.getBasedir().toURI()).resolve("src/test/resources/log4j2-test.xml"),
+                        configuration.toByteArray(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            throw new LifecycleExecutionException("Failed to write Log4j2 configuration file", e);
+        }
     }
 
     @Override

@@ -37,6 +37,10 @@ public final class ExtensionSettings {
     public static final String REPOSITORIES_SETTING_KEY = "yaks.repositories";
     public static final String REPOSITORIES_SETTING_ENV = "YAKS_REPOSITORIES";
 
+    public static final String LOGGERS_SETTING_KEY = "yaks.loggers";
+    public static final String LOGGERS_SETTING_ENV = "YAKS_LOGGERS";
+    public static final String LOGGING_LEVEL_PREFIX = "logging.level.";
+
     /**
      * Prevent instantiation of utility class.
      */
