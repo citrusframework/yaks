@@ -71,19 +71,23 @@ public class HttpServerSteps implements HttpSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpServer == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
-            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
-        } else {
-            httpServer = new HttpServerBuilder()
-                    .name(HTTP_SERVER_NAME)
-                    .build();
+        if (httpServer == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(HTTP_SERVER_NAME)) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HTTP_SERVER_NAME, HttpServer.class);
+            } else {
+                httpServer = new HttpServerBuilder()
+                        .name(HTTP_SERVER_NAME)
+                        .build();
 
-            citrus.getCitrusContext().getReferenceResolver().bind(HTTP_SERVER_NAME, httpServer);
+                citrus.getCitrusContext().getReferenceResolver().bind(HTTP_SERVER_NAME, httpServer);
 
-            try {
-                httpServer.afterPropertiesSet();
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to initialize Http server", e);
+                try {
+                    httpServer.afterPropertiesSet();
+                } catch (Exception e) {
+                    throw new IllegalStateException("Failed to initialize Http server", e);
+                }
             }
         }
 
