@@ -29,7 +29,7 @@
     </Root>
 
     <!-- Our own classes-->
-    <Logger name="org.citrusframework.yaks" additivity="false" level="DEBUG">
+    <Logger name="org.citrusframework.yaks" additivity="false" level="INFO">
       <AppenderRef ref="STDOUT"/>
     </Logger>
 

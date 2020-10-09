@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	ConfigNameEnv       = "YAKS_CONFIG_NAME"
-	ConfigPathEnv    = "YAKS_CONFIG_PATH"
+	ConfigNameEnv = "YAKS_CONFIG_NAME"
+	ConfigPathEnv = "YAKS_CONFIG_PATH"
 
 	commandShortDescription = `YAKS is a client tool for running tests natively on Kubernetes`
 	commandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
