@@ -63,6 +63,7 @@ const (
 	NamespaceEnv       = "YAKS_NAMESPACE"
 	RepositoriesEnv    = "YAKS_REPOSITORIES"
 	DependenciesEnv    = "YAKS_DEPENDENCIES"
+	LoggersEnv         = "YAKS_LOGGERS"
 
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
@@ -87,6 +88,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions
 	}
 
 	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
+	cmd.Flags().StringArrayP("logger", "l", nil, "Adds logger configuration setting log levels.")
 	cmd.Flags().StringArrayP("dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringArrayP("upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringP("settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
@@ -105,6 +107,7 @@ type testCmdOptions struct {
 	*RootCmdOptions
 	Repositories []string `mapstructure:"maven-repository"`
 	Dependencies []string `mapstructure:"dependency"`
+	Logger       []string `mapstructure:"logger"`
 	Uploads      []string `mapstructure:"upload"`
 	Settings     string `mapstructure:"settings"`
 	Env          []string `mapstructure:"env"`
@@ -512,6 +515,10 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 
 	if len(o.Dependencies) > 0 {
 		env = append(env, DependenciesEnv+"="+strings.Join(o.Dependencies, ","))
+	}
+
+	if len(o.Logger) > 0 {
+		env = append(env, LoggersEnv+"="+strings.Join(o.Logger, ","))
 	}
 
 	for _, envConfig := range runConfig.Config.Runtime.Env {
