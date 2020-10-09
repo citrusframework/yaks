@@ -62,6 +62,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 		Use:   "yaks",
 		Short: commandShortDescription,
 		Long:  commandLongDescription,
+		SilenceUsage: true,
 	}
 
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")
