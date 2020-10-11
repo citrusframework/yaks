@@ -15,8 +15,52 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-config:
-  runtime:
-    env:
-      - name: YAKS_NAMESPACE
-        value: event-example
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-operator-knative
+  labels:
+    app: "yaks"
+rules:
+- apiGroups:
+  - eventing.knative.dev
+  resources:
+  - brokers
+  - triggers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - messaging.knative.dev
+  resources:
+  - channels
+  - inmemorychannels
+  - subscriptions
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - sources.knative.dev
+  resources:
+  - "*"
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch

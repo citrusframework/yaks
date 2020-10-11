@@ -21,7 +21,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/util/camelk"
 	"github.com/citrusframework/yaks/pkg/util/envvar"
+	"github.com/citrusframework/yaks/pkg/util/knative"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	appsv1 "k8s.io/api/apps/v1"
@@ -129,6 +131,28 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 		}
 	}
 
+	// Additionally, install Knative resources (roles and bindings)
+	isKnative, err := knative.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isKnative {
+		if err := installKnative(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Camel K resources (roles and bindings)
+	isCamelK, err := camelk.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isCamelK {
+		if err := installCamelK(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
 	if errmtr := installServiceMonitors(ctx, c, cfg.Namespace, customizer, collection, force); errmtr != nil {
 		if k8serrors.IsAlreadyExists(errmtr) {
 			return errmtr
@@ -154,6 +178,20 @@ func installKubernetes(ctx context.Context, c client.Client, namespace string, c
 		"operator-role-kubernetes.yaml",
 		"operator-role-binding.yaml",
 		"operator-deployment.yaml",
+	)
+}
+
+func installKnative(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+		"operator-role-knative.yaml",
+		"operator-role-binding-knative.yaml",
+	)
+}
+
+func installCamelK(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+		"operator-role-camel-k.yaml",
+		"operator-role-binding-camel-k.yaml",
 	)
 }
 
