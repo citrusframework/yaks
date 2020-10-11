@@ -24,7 +24,7 @@ import (
 )
 
 func GetTestBaseImage() string {
-	customEnv := os.Getenv("TEST_BASE_IMAGE")
+	customEnv := os.Getenv("YAKS_TEST_BASE_IMAGE")
 	if customEnv != "" {
 		return customEnv
 	}

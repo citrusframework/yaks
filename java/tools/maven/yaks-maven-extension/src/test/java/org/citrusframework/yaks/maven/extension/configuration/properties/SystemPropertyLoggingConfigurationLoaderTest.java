@@ -17,53 +17,46 @@
 
 package org.citrusframework.yaks.maven.extension.configuration.properties;
 
-import java.util.List;
-import java.util.Properties;
+import java.util.Optional;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
-import org.apache.maven.model.Dependency;
-import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.maven.extension.ExtensionSettings;
+import org.citrusframework.yaks.maven.extension.configuration.LoggingConfigurationLoader;
 import org.citrusframework.yaks.maven.extension.configuration.TestHelper;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Christoph Deppisch
  */
-public class SystemPropertyDependencyLoaderTest {
+public class SystemPropertyLoggingConfigurationLoaderTest {
 
-    private SystemPropertyDependencyLoader loader = new SystemPropertyDependencyLoader();
+    private SystemPropertyLoggingConfigurationLoader loader = new SystemPropertyLoggingConfigurationLoader();
 
     private ConsoleLogger logger = new ConsoleLogger();
-    private Properties properties = new Properties();
+    private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test
     public void shouldLoadFromSystemProperties() throws LifecycleExecutionException {
+        System.setProperty(ExtensionSettings.LOGGERS_SETTING_KEY, "root=info,org.foo=debug,org.bar=warn");
 
-        System.setProperty(ExtensionSettings.DEPENDENCIES_SETTING_KEY, "org.foo:foo-artifact:1.0.0,org.bar:bar-artifact:1.5.0");
+        Optional<Level> rootLevel = loader.load(builder, logger);
+        Assert.assertTrue(rootLevel.isPresent());
+        Assert.assertEquals(Level.INFO, rootLevel.get());
 
-        List<Dependency> dependencyList = loader.load(properties, logger);
-        TestHelper.verifyDependencies(dependencyList);
-    }
-
-    @Test
-    public void shouldLoadFromSystemPropertiesWithVersionResolving() throws LifecycleExecutionException {
-
-        System.setProperty(ExtensionSettings.DEPENDENCIES_SETTING_KEY, "org.foo:foo-artifact:@foo.version@,org.bar:bar-artifact:@bar.version@");
-
-        properties.put("foo.version", "1.0.0");
-        properties.put("bar.version", "1.5.0");
-
-        List<Dependency> dependencyList = loader.load(properties, logger);
-        TestHelper.verifyDependencies(dependencyList);
+        TestHelper.verifyLoggingConfiguration(builder);
     }
 
     @Test
     public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
-        System.setProperty(ExtensionSettings.DEPENDENCIES_SETTING_KEY, "");
-        List<Dependency> dependencyList = loader.load(properties, logger);
-        Assertions.assertThat(dependencyList).isEmpty();
+        System.setProperty(ExtensionSettings.LOGGERS_SETTING_KEY, "");
+        Optional<Level> rootLevel = loader.load(builder, logger);
+        Assert.assertFalse(rootLevel.isPresent());
+        TestHelper.verifyDefaultLoggingConfiguration(builder);
     }
 
 }

@@ -17,15 +17,20 @@
 
 package org.citrusframework.yaks.maven.extension.configuration;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Repository;
 import org.assertj.core.api.Assertions;
+import org.junit.Assert;
 
 /**
  * @author Christoph Deppisch
@@ -90,5 +95,51 @@ public final class TestHelper {
         Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getUrl().equals(central.getUrl()));
         Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getId().equals(jboss.getId()));
         Assertions.assertThat(repositoryList).anyMatch(repository -> repository.getUrl().equals(jboss.getUrl()));
+    }
+
+    public static void verifyDefaultLoggingConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
+        String log4j2 = "<?xml version=\"1.0\" ?>" + System.lineSeparator() +
+            "<Configuration>" + System.lineSeparator() +
+            "  <Appenders>" + System.lineSeparator() +
+            "    <Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" + System.lineSeparator() +
+            "      <PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" + System.lineSeparator() +
+            "    </Console>" + System.lineSeparator() +
+            "  </Appenders>" + System.lineSeparator() +
+            "</Configuration>" + System.lineSeparator();
+
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try {
+            builder.writeXmlConfiguration(result);
+            Assert.assertEquals(log4j2, new String(result.toByteArray()));
+        } catch (IOException e) {
+            Assert.fail(String.format("Failed to write logging configuration as XML - %s", e.getMessage()));
+        }
+    }
+
+    public static void verifyLoggingConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
+        String log4j2 = "<?xml version=\"1.0\" ?>" + System.lineSeparator() +
+            "<Configuration>" + System.lineSeparator() +
+            "  <Appenders>" + System.lineSeparator() +
+            "    <Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" + System.lineSeparator() +
+            "      <PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" + System.lineSeparator() +
+            "    </Console>" + System.lineSeparator() +
+            "  </Appenders>" + System.lineSeparator() +
+            "  <Loggers>" + System.lineSeparator() +
+            "    <Logger name=\"org.foo\" level=\"DEBUG\" additivity=\"false\">" + System.lineSeparator() +
+            "      <AppenderRef ref=\"STDOUT\"/>" + System.lineSeparator() +
+            "    </Logger>" + System.lineSeparator() +
+            "    <Logger name=\"org.bar\" level=\"WARN\" additivity=\"false\">" + System.lineSeparator() +
+            "      <AppenderRef ref=\"STDOUT\"/>" + System.lineSeparator() +
+            "    </Logger>" + System.lineSeparator() +
+            "  </Loggers>" + System.lineSeparator() +
+            "</Configuration>" + System.lineSeparator();
+
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        try {
+            builder.writeXmlConfiguration(result);
+            Assert.assertEquals(log4j2, new String(result.toByteArray()));
+        } catch (IOException e) {
+            Assert.fail(String.format("Failed to write logging configuration as XML - %s", e.getMessage()));
+        }
     }
 }

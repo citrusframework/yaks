@@ -17,38 +17,49 @@
 
 package org.citrusframework.yaks.maven.extension.configuration.env;
 
-import java.util.List;
+import java.util.Optional;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
-import org.apache.maven.model.Repository;
-import org.assertj.core.api.Assertions;
+import org.citrusframework.yaks.maven.extension.configuration.LoggingConfigurationLoader;
 import org.citrusframework.yaks.maven.extension.configuration.TestHelper;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingRepositoryLoaderTest {
+public class EnvironmentSettingLoggingConfigurationLoaderTest {
 
     private ConsoleLogger logger = new ConsoleLogger();
+    private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
+
     @Test
     public void shouldLoadFromEnv() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader() {
+        EnvironmentSettingLoggingConfigurationLoader loader = new EnvironmentSettingLoggingConfigurationLoader() {
             @Override
             public String getEnvSetting(String name) {
-                return "central=https://repo.maven.apache.org/maven2/,jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/";
+                return "root=info,org.foo=debug,org.bar=warn";
             }
         };
 
-        List<Repository> repositoryList = loader.load(logger);
-        TestHelper.verifyRepositories(repositoryList);
+        Optional<Level> rootLevel = loader.load(builder, logger);
+        Assert.assertTrue(rootLevel.isPresent());
+        Assert.assertEquals(Level.INFO, rootLevel.get());
+        Configurator.initialize(builder.build());
+
+        TestHelper.verifyLoggingConfiguration(builder);
     }
 
     @Test
     public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader();
-        List<Repository> repositoryList = loader.load(logger);
-        Assertions.assertThat(repositoryList).isEmpty();
+        EnvironmentSettingLoggingConfigurationLoader loader = new EnvironmentSettingLoggingConfigurationLoader();
+        Optional<Level> rootLevel = loader.load(builder, logger);
+        Assert.assertFalse(rootLevel.isPresent());
+        TestHelper.verifyDefaultLoggingConfiguration(builder);
     }
 }

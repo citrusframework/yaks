@@ -35,3 +35,10 @@ dependencies:
   - groupId: org.bar
     artifactId: bar-artifact
     version: 1.5.0
+loggers:
+  - name: root
+    level: INFO
+  - name: org.foo
+    level: DEBUG
+  - name: org.bar
+    level: WARN

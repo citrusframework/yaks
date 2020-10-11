@@ -65,6 +65,7 @@ type EnvConfig struct {
 type SettingsConfig struct {
 	Repositories []RepositoryConfig
 	Dependencies []DependencyConfig
+	Loggers 	 []LoggerConfig
 }
 
 type RepositoryConfig struct {
@@ -80,10 +81,16 @@ type PolicyConfig struct {
 	Enabled      string `yaml:"enabled,omitempty"`
 	UpdatePolicy string `yaml:"updatePolicy,omitempty"`
 }
+
 type DependencyConfig struct {
 	GroupId    string `yaml:"groupId"`
 	ArtifactId string `yaml:"artifactId"`
 	Version    string `yaml:"version"`
+}
+
+type LoggerConfig struct {
+	Name  string `yaml:"name"`
+	Level string `yaml:"level"`
 }
 
 type NamespaceConfig struct {

@@ -79,4 +79,9 @@ class TestResult {
     public void setCause(Throwable cause) {
         this.cause = cause;
     }
+
+    @JsonIgnore
+    public Throwable getCause() {
+        return cause;
+    }
 }

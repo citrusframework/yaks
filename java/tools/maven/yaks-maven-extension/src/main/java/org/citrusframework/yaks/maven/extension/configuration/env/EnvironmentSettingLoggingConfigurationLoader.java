@@ -17,14 +17,14 @@
 
 package org.citrusframework.yaks.maven.extension.configuration.env;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.Optional;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
-import org.apache.maven.model.Dependency;
 import org.citrusframework.yaks.maven.extension.ExtensionSettings;
-import org.citrusframework.yaks.maven.extension.configuration.DependencyLoader;
+import org.citrusframework.yaks.maven.extension.configuration.LoggingConfigurationLoader;
 import org.codehaus.plexus.logging.Logger;
 
 /**
@@ -33,24 +33,21 @@ import org.codehaus.plexus.logging.Logger;
  *
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingDependencyLoader implements DependencyLoader, EnvironmentSettingLoader {
+public class EnvironmentSettingLoggingConfigurationLoader implements LoggingConfigurationLoader, EnvironmentSettingLoader {
 
     @Override
-    public List<Dependency> load(Properties properties, Logger logger) throws LifecycleExecutionException {
-        List<Dependency> dependencyList = new ArrayList<>();
+    public Optional<Level> load(ConfigurationBuilder<BuiltConfiguration> builder, Logger logger) throws LifecycleExecutionException {
+        Level rootLevel = null;
+        String loggers = getEnvSetting(ExtensionSettings.LOGGERS_SETTING_ENV);
 
-        String coordinates = getEnvSetting(ExtensionSettings.DEPENDENCIES_SETTING_ENV);
-
-        if (coordinates.length() > 0) {
-            for (String coordinate : coordinates.split(",")) {
-                dependencyList.add(build(coordinate, properties, logger));
-            }
-
-            if (!dependencyList.isEmpty()) {
-                logger.info(String.format("Add %s dependencies found in environment variables", dependencyList.size()));
+        if (loggers.length() > 0) {
+            for (String configuration : loggers.split(",")) {
+                String loggerName=configuration.split("=")[0];
+                String level=configuration.split("=")[1];
+                rootLevel = configureLogger(loggerName, level, builder, logger).orElse(rootLevel);
             }
         }
 
-        return dependencyList;
+        return Optional.ofNullable(rootLevel);
     }
 }

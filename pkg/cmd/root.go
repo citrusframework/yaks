@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	ConfigNameEnv       = "YAKS_CONFIG_NAME"
-	ConfigPathEnv    = "YAKS_CONFIG_PATH"
+	ConfigNameEnv = "YAKS_CONFIG_NAME"
+	ConfigPathEnv = "YAKS_CONFIG_PATH"
 
 	commandShortDescription = `YAKS is a client tool for running tests natively on Kubernetes`
 	commandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
@@ -62,6 +62,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 		Use:   "yaks",
 		Short: commandShortDescription,
 		Long:  commandLongDescription,
+		SilenceUsage: true,
 	}
 
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")

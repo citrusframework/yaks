@@ -107,16 +107,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 				{
 					Name:  "test",
 					Image: config.GetTestBaseImage(),
-					Command: []string{
-						"mvn",
-						"-f",
-						"/deployments/data/yaks-runtime-maven",
-						"-Dremoteresources.skip=true",
-						"-Dmaven.repo.local=/deployments/artifacts/m2",
-						"-s",
-						"/deployments/artifacts/settings.xml",
-						"test",
-					},
+					Command: getMavenArgLine(),
 					TerminationMessagePolicy: "FallbackToLogsOnError",
 					TerminationMessagePath:   "/dev/termination-log",
 					ImagePullPolicy:          v1.PullIfNotPresent,
@@ -191,6 +182,28 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 	}
 
 	return &pod, nil
+}
+
+func getMavenArgLine() []string {
+	argLine := make([]string, 0)
+
+	// add base flags
+	argLine = append(argLine, "mvn", "-B", "-q")
+
+	// add pom file path
+	argLine = append(argLine, "-f", "/deployments/data/yaks-runtime-maven")
+
+	// add settings file
+	argLine = append(argLine, "-s", "/deployments/artifacts/settings.xml")
+
+	// add test goal
+	argLine = append(argLine, "test")
+
+	// add system property settings
+	argLine = append(argLine, "-Dremoteresources.skip=true", "-Dmaven.repo.local=/deployments/artifacts/m2")
+
+
+	return argLine
 }
 
 func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alpha1.Test) *v1.ConfigMap {
