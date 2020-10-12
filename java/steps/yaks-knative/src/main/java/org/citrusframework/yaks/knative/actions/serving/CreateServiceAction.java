@@ -54,7 +54,7 @@ public class CreateServiceAction extends AbstractKnativeAction {
                 .endMetadata()
                 .withNewSpec()
                     // add selector to the very specific Pod that is running the test right now. This way the service will route all traffic to the test
-                    .withSelector(Collections.singletonMap("org.citrusframework.yaks/test-id", KnativeSettings.getTestId()))
+                    .withSelector(Collections.singletonMap("yaks.citrusframework.org/test-id", KnativeSettings.getTestId()))
                     .withPorts(new ServicePortBuilder()
                             .withProtocol(context.replaceDynamicContentInString(protocol))
                             .withPort(Integer.parseInt(context.replaceDynamicContentInString(port)))
