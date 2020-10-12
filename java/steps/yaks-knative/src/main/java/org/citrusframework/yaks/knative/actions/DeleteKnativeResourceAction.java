@@ -40,7 +40,7 @@ public class DeleteKnativeResourceAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         KnativeSupport.deleteResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.knativeCRDContext(component, kind), resourceName);
+                KnativeSupport.knativeCRDContext(component, kind, KnativeSupport.knativeApiVersion()), resourceName);
     }
 
     /**

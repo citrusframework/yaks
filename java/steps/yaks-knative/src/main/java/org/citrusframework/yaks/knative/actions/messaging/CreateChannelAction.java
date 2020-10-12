@@ -40,7 +40,7 @@ public class CreateChannelAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Channel channel = new ChannelBuilder()
-            .withApiVersion("messaging.knative.dev/v1")
+            .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(channelName))
@@ -49,7 +49,7 @@ public class CreateChannelAction extends AbstractKnativeAction {
             .build();
 
         KnativeSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.messagingCRDContext("channels"), channel);
+                KnativeSupport.messagingCRDContext("channels", KnativeSupport.knativeApiVersion()), channel);
     }
 
     /**

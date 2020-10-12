@@ -57,7 +57,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         addFilterOnAttributes(triggerSpec, context);
 
         TriggerBuilder triggerBuilder = new TriggerBuilder()
-                .withApiVersion("eventing.knative.dev/v1")
+                .withApiVersion(String.format("eventing.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(triggerName))
@@ -66,7 +66,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
                 .withSpec(triggerSpec.build());
 
         KnativeSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.eventingCRDContext("triggers"), triggerBuilder.build());
+                KnativeSupport.eventingCRDContext("triggers", KnativeSupport.knativeApiVersion()), triggerBuilder.build());
     }
 
     private void addFilterOnAttributes(TriggerSpecBuilder triggerSpec, TestContext context) {
@@ -81,7 +81,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         if (channelName != null) {
             triggerSpec.withNewSubscriber()
                     .withNewRef()
-                        .withApiVersion("messaging.knative.dev/v1")
+                        .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                         .withKind("InMemoryChannel")
                         .withName(context.replaceDynamicContentInString(channelName))
                     .endRef()
