@@ -19,6 +19,7 @@ package test
 
 import (
 	"context"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -166,6 +167,18 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
 		})
 	}
+
+	var clusterType v1alpha1.ClusterType
+	if isOpenshift, err := openshift.IsOpenShift(action.client); err == nil && isOpenshift {
+		clusterType = v1alpha1.ClusterTypeOpenShift
+	} else {
+		clusterType = v1alpha1.ClusterTypeKubernetes
+	}
+
+	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		Name:  "YAKS_CLUSTER_TYPE",
+		Value: strings.ToUpper(string(clusterType)),
+	})
 
 	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
 		Name:  "YAKS_TEST_NAME",
