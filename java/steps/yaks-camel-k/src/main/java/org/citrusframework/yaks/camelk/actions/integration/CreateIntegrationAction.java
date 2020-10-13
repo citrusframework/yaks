@@ -15,27 +15,19 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.actions;
+package org.citrusframework.yaks.camelk.actions.integration;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.consol.citrus.AbstractTestActionBuilder;
-import com.consol.citrus.actions.AbstractTestAction;
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
+import org.citrusframework.yaks.camelk.CamelKSupport;
+import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.Integration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Test action creates new Camel-K integration with given name and source code. Uses given Kubernetes client to
@@ -43,30 +35,23 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christoph Deppisch
  */
-public class CreateIntegrationTestAction extends AbstractTestAction {
+public class CreateIntegrationAction extends AbstractCamelKAction {
 
-    /** Logger */
-    private static Logger LOG = LoggerFactory.getLogger(CreateIntegrationTestAction.class);
-
-    private final KubernetesClient client;
     private final String integrationName;
     private final String source;
     private final String dependencies;
     private final String traits;
-    private final ObjectMapper mapper;
 
     /**
      * Constructor using given builder.
      * @param builder
      */
-    public CreateIntegrationTestAction(Builder builder) {
+    public CreateIntegrationAction(Builder builder) {
         super("create-integration", builder);
-        this.client = builder.client;
         this.integrationName = builder.integrationName;
         this.source = builder.source;
         this.dependencies = builder.dependencies;
         this.traits = builder.traits;
-        this.mapper = builder.mapper;
     }
 
     @Override
@@ -85,46 +70,27 @@ public class CreateIntegrationTestAction extends AbstractTestAction {
 
         if (traits != null && !traits.isEmpty()) {
             final Map<String, Integration.TraitConfig> traitConfigMap = new HashMap<>();
-            for(String t : context.replaceDynamicContentInString(traits).split(",")){
+            for (String t : context.replaceDynamicContentInString(traits).split(",")){
                 //traitName.key=value
-                if(!validateTraitFormat(t)) {
+                if (!validateTraitFormat(t)) {
                     throw new IllegalArgumentException("Trait" + t + "does not match format traitName.key=value");
                 }
                 final String[] trait = t.split("\\.",2);
                 final String[] traitConfig = trait[1].split("=", 2);
-                if(traitConfigMap.containsKey(trait[0])) {
+                if (traitConfigMap.containsKey(trait[0])) {
                     traitConfigMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
                 } else {
-                    traitConfigMap.put(trait[0],  new Integration.TraitConfig(traitConfig[0], traitConfig[1]));
+                    traitConfigMap.put(trait[0], new Integration.TraitConfig(traitConfig[0], traitConfig[1]));
                 }
             }
             integrationBuilder.traits(traitConfigMap);
         }
 
         final Integration i = integrationBuilder.build();
-
-        final CustomResourceDefinitionContext crdContext = getIntegrationCRD();
-
-        try {
-            Map<String, Object> result = client.customResource(crdContext).createOrReplace(CamelKSettings.getNamespace(), mapper.writeValueAsString(i));
-            if (result.get("message") != null) {
-                throw new CitrusRuntimeException(result.get("message").toString());
-            }
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create Camel-K integration via JSON object", e);
-        }
+        CamelKSupport.createResource(getKubernetesClient(), CamelKSettings.getNamespace(),
+                CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion()), i);
 
         LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
-    }
-
-    private CustomResourceDefinitionContext getIntegrationCRD() {
-        return new CustomResourceDefinitionContext.Builder()
-                .withName(Integration.CRD_INTEGRATION_NAME)
-                .withGroup(Integration.CRD_GROUP)
-                .withVersion(Integration.CRD_VERSION)
-                .withPlural("integrations")
-                .withScope("Namespaced")
-                .build();
     }
 
     private boolean validateTraitFormat(String trait) {
@@ -139,14 +105,12 @@ public class CreateIntegrationTestAction extends AbstractTestAction {
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractTestActionBuilder<CreateIntegrationTestAction, Builder> {
+    public static final class Builder extends AbstractCamelKAction.Builder<CreateIntegrationAction, Builder> {
 
-        private KubernetesClient client = new DefaultKubernetesClient();
         private String integrationName;
         private String source;
         private String dependencies;
         private String traits;
-        private ObjectMapper mapper = new ObjectMapper();
 
         /**
          * Fluent API action building entry method used in Java DSL.
@@ -156,12 +120,7 @@ public class CreateIntegrationTestAction extends AbstractTestAction {
             return new Builder();
         }
 
-        public Builder client(KubernetesClient client) {
-            this.client = client;
-            return this;
-        }
-
-        public Builder integrationName(String integrationName) {
+        public Builder integration(String integrationName) {
             this.integrationName = integrationName;
             return this;
         }
@@ -181,14 +140,9 @@ public class CreateIntegrationTestAction extends AbstractTestAction {
             return this;
         }
 
-        public Builder mapper(ObjectMapper mapper) {
-            this.mapper = mapper;
-            return this;
-        }
-
         @Override
-        public CreateIntegrationTestAction build() {
-            return new CreateIntegrationTestAction(this);
+        public CreateIntegrationAction build() {
+            return new CreateIntegrationAction(this);
         }
     }
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative.actions;
+package org.citrusframework.yaks.camelk.actions;
 
 import com.consol.citrus.AbstractTestActionBuilder;
 import com.consol.citrus.actions.AbstractTestAction;
@@ -26,15 +26,15 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Christoph Deppisch
  */
-public abstract class AbstractKnativeAction extends AbstractTestAction implements KnativeAction {
+public abstract class AbstractCamelKAction extends AbstractTestAction implements CamelKAction {
 
     /** Logger */
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     private final KubernetesClient kubernetesClient;
 
-    public AbstractKnativeAction(String name, Builder<?, ?> builder) {
-        super("knative:" + name, builder);
+    public AbstractCamelKAction(String name, Builder<?, ?> builder) {
+        super("camel-k:" + name, builder);
 
         this.kubernetesClient = builder.kubernetesClient;
     }
@@ -47,7 +47,7 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
     /**
      * Action builder.
      */
-    public static abstract class Builder<T extends KnativeAction, B extends Builder<T, B>> extends AbstractTestActionBuilder<T, B> {
+    public static abstract class Builder<T extends CamelKAction, B extends Builder<T, B>> extends AbstractTestActionBuilder<T, B> {
 
         private KubernetesClient kubernetesClient;
 

@@ -15,31 +15,24 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.model;
+package org.citrusframework.yaks.camelk;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.consol.citrus.util.FileUtils;
+import org.citrusframework.yaks.camelk.model.Integration;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.StringUtils;
+
 public class IntegrationBuilderTest {
 
-	public static final String TEST_INTEGRATION = "{\"apiVersion\":\"camel.apache.org/v1\"," +
-			"\"kind\":\"Integration\"," +
-			"\"metadata\":{\"name\":\"bar\"}," +
-			"\"spec\":{\"sources\":[{\"content\":\"from(\\\"timer:x\\\").log('${body}')\",\"name\":\"bar.groovy\"}]," +
-			"\"dependencies\":[\"mvn:fake.dependency:id:version-1\"]," +
-			"\"traits\":{\"route\":{\"configuration\":{\"enabled\":\"true\"}},\"quarkus\":{\"configuration\":{\"native\":\"true\",\"enabled\":\"true\"}}}" +
-			"}}";
-
-
 	@Test
-	public void buildComplexIntegrationTest() throws JsonProcessingException {
+	public void buildComplexIntegrationTest() throws IOException {
 		Map<String, Integration.TraitConfig> traits = new HashMap<>();
 		Integration.TraitConfig quarkus = new Integration.TraitConfig("enabled", "true");
 		quarkus.add("native", "true");
@@ -52,10 +45,8 @@ public class IntegrationBuilderTest {
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
 				.build();
 
-		final ObjectMapper obj = new ObjectMapper();
-		final String json = obj.writeValueAsString(i);
-
-		Assert.assertEquals(TEST_INTEGRATION, json);
-
+		final String json = CamelKSupport.json().writeValueAsString(i);
+		Assert.assertEquals(StringUtils.trimAllWhitespace(
+				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
 	}
 }

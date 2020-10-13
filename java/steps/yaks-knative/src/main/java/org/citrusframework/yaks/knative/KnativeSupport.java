@@ -83,7 +83,7 @@ public final class KnativeSupport {
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, T resource) {
         try {
-            k8sClient.customResource(context).createOrReplace(namespace, KnativeSupport.yaml().dump(resource));
+            k8sClient.customResource(context).createOrReplace(namespace, yaml().dump(resource));
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to create Knative resource", e);
         }
@@ -98,20 +98,20 @@ public final class KnativeSupport {
         }
     }
 
-    public static CustomResourceDefinitionContext eventingCRDContext(String resourceName, String version) {
-        return knativeCRDContext("eventing", resourceName, version);
+    public static CustomResourceDefinitionContext eventingCRDContext(String kind, String version) {
+        return knativeCRDContext("eventing", kind, version);
     }
 
-    public static CustomResourceDefinitionContext messagingCRDContext(String resourceName, String version) {
-        return knativeCRDContext("messaging", resourceName, version);
+    public static CustomResourceDefinitionContext messagingCRDContext(String kind, String version) {
+        return knativeCRDContext("messaging", kind, version);
     }
 
-    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String resourceName, String version) {
+    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String kind, String version) {
         return new CustomResourceDefinitionContext.Builder()
-                .withName(String.format("%s.%s.knative.dev", resourceName, knativeComponent))
+                .withName(String.format("%s.%s.knative.dev", kind, knativeComponent))
                 .withGroup(String.format("%s.knative.dev", knativeComponent))
                 .withVersion(version)
-                .withPlural(resourceName)
+                .withPlural(kind)
                 .withScope("Namespaced")
                 .build();
     }

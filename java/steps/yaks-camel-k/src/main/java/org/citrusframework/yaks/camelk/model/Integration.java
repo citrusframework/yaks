@@ -23,25 +23,20 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.citrusframework.yaks.camelk.CamelKSettings;
+import org.citrusframework.yaks.camelk.CamelKSupport;
 
 public class Integration {
-
-	public static final String CRD_GROUP = "camel.apache.org";
-	public static final String CRD_VERSION = "v1";
-	public static final String CRD_INTEGRATION_NAME = "integrations.camel.apache.org";
-
-	private String apiVersion = CRD_GROUP + "/" + CRD_VERSION;
-	private String kind = "Integration";
 
 	private IntegrationMetadata metadata;
 	private IntegrationSpec spec;
 
 	public String getApiVersion() {
-		return apiVersion;
+		return CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getApiVersion();
 	}
 
 	public String getKind() {
-		return kind;
+		return "Integration";
 	}
 
 	public IntegrationMetadata getMetadata() {

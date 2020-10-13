@@ -48,6 +48,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Use a custom Kubernetes client.
+     * @param kubernetesClient
      */
     public KnativeActionBuilder client(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
@@ -56,6 +57,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Create service instance.
+     * @param serviceName the name of the Knative service.
      */
     public CreateServiceAction.Builder createService(String serviceName) {
         CreateServiceAction.Builder builder = new CreateServiceAction.Builder()
@@ -67,6 +69,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Delete service instance.
+     * @param serviceName the name of the Knative service.
      */
     public DeleteServiceAction.Builder deleteService(String serviceName) {
         DeleteServiceAction.Builder builder = new DeleteServiceAction.Builder()
@@ -78,6 +81,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Create channel instance.
+     * @param channelName the name of the Knative channel.
      */
     public CreateChannelAction.Builder createChannel(String channelName) {
         CreateChannelAction.Builder builder = new CreateChannelAction.Builder()
@@ -89,6 +93,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Delete channel instance.
+     * @param channelName the name of the Knative channel.
      */
     public DeleteKnativeResourceAction.Builder deleteChannel(String channelName) {
         DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
@@ -102,6 +107,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Create subscription instance.
+     * @param subscriptionName the name of the Knative subscription.
      */
     public CreateSubscriptionAction.Builder createSubscription(String subscriptionName) {
         CreateSubscriptionAction.Builder builder = new CreateSubscriptionAction.Builder()
@@ -113,6 +119,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Delete subscription instance.
+     * @param subscriptionName the name of the Knative subscription.
      */
     public DeleteKnativeResourceAction.Builder deleteSubscription(String subscriptionName) {
         DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
@@ -126,6 +133,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Create trigger instance.
+     * @param triggerName the name of the Knative trigger.
      */
     public CreateTriggerAction.Builder createTrigger(String triggerName) {
         CreateTriggerAction.Builder builder = new CreateTriggerAction.Builder()
@@ -137,6 +145,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Delete trigger instance.
+     * @param triggerName the name of the Knative trigger.
      */
     public DeleteKnativeResourceAction.Builder deleteTrigger(String triggerName) {
         DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
@@ -150,6 +159,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Create broker instance.
+     * @param brokerName the name of the Knative broker.
      */
     public CreateBrokerAction.Builder createBroker(String brokerName) {
         CreateBrokerAction.Builder builder = new CreateBrokerAction.Builder()
@@ -161,6 +171,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /**
      * Delete broker instance.
+     * @param brokerName the name of the Knative broker.
      */
     public DeleteKnativeResourceAction.Builder deleteBroker(String brokerName) {
         DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
@@ -173,7 +184,8 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
     }
 
     /**
-     * Delete broker instance.
+     * Verify given broker instance is running.
+     * @param brokerName the name of the Knative broker.
      */
     public VerifyBrokerAction.Builder verifyBroker(String brokerName) {
         VerifyBrokerAction.Builder builder = new VerifyBrokerAction.Builder()
