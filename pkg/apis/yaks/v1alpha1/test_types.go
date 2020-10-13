@@ -46,6 +46,7 @@ type TestSpec struct {
 	Source   SourceSpec   `json:"source,omitempty"`
 	Settings SettingsSpec `json:"config,omitempty"`
 	Env      []string     `json:"env,omitempty"`
+	Secret   string       `json:"secret,omitempty"`
 }
 
 // SourceSpec--

@@ -49,6 +49,7 @@ type RuntimeConfig struct {
 	Cucumber CucumberConfig
 	Settings SettingsConfig
 	Env 	 []EnvConfig
+	Secret   string
 }
 
 type CucumberConfig struct {

@@ -63,6 +63,7 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
         Model projectModel = projectExecutionEvent.getProject().getModel();
         injectProjectDependencies(projectModel);
         injectTestResources(projectModel);
+        injectSecrets(projectModel);
         loadLoggingConfiguration(projectExecutionEvent.getProject());
     }
 
@@ -80,6 +81,23 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
             projectModel.getBuild().getTestResources().add(mountedTests);
 
             logger.info("Add mounted test resources in directory: " + ExtensionSettings.getMountedTestsPath());
+        }
+    }
+
+    /**
+     * Dynamically add test resource directory pointing to mounted secrets directory. Mounted directory usually gets added
+     * as volume mount and holds property files holding secrets to load in this project.
+     * @param projectModel
+     */
+    private void injectSecrets(Model projectModel) {
+        if (ExtensionSettings.hasMountedSecrets()) {
+            Resource mountedSecrets = new Resource();
+            mountedSecrets.setDirectory(ExtensionSettings.getMountedSecretsPath() + "/..data");
+            mountedSecrets.setTargetPath(projectModel.getBuild().getTestOutputDirectory() + "/secrets");
+            mountedSecrets.setFiltering(false);
+            projectModel.getBuild().getTestResources().add(mountedSecrets);
+
+            logger.info("Add mounted secret resources in directory: " + ExtensionSettings.getMountedSecretsPath());
         }
     }
 

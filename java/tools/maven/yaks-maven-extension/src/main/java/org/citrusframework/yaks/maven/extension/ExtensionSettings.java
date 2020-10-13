@@ -27,6 +27,9 @@ public final class ExtensionSettings {
     public static final String TESTS_PATH_KEY = "yaks.tests.path";
     public static final String TESTS_PATH_ENV = "YAKS_TESTS_PATH";
 
+    public static final String SECRETS_PATH_KEY = "yaks.secrets.path";
+    public static final String SECRETS_PATH_ENV = "YAKS_SECRETS_PATH";
+
     public static final String SETTINGS_FILE_DEFAULT = "classpath:yaks.properties";
     public static final String SETTINGS_FILE_KEY = "yaks.settings.file";
     public static final String SETTINGS_FILE_ENV = "YAKS_SETTINGS_FILE";
@@ -58,11 +61,28 @@ public final class ExtensionSettings {
     }
 
     /**
+     * Gets the external secrets path mount. Usually added to the runtime image via volume mount using K8s secrets.
+     * @return
+     */
+    public static String getMountedSecretsPath() {
+        return System.getProperty(ExtensionSettings.SECRETS_PATH_KEY, System.getenv(ExtensionSettings.SECRETS_PATH_ENV) != null ?
+                System.getenv(ExtensionSettings.SECRETS_PATH_ENV) : "");
+    }
+
+    /**
      * Checks for mounted tests path setting.
      * @return
      */
     public static boolean hasMountedTests() {
         return getMountedTestsPath().length() > 0;
+    }
+
+    /**
+     * Checks for mounted secrets path setting.
+     * @return
+     */
+    public static boolean hasMountedSecrets() {
+        return getMountedSecretsPath().length() > 0;
     }
 
     /**

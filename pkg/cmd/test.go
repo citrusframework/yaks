@@ -387,6 +387,10 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		return nil, err
 	}
 
+	if runConfig.Config.Runtime.Secret != "" {
+		test.Spec.Secret = runConfig.Config.Runtime.Secret;
+	}
+
 	switch o.DumpFormat {
 		case "":
 			// continue..

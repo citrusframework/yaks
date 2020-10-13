@@ -19,6 +19,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"strings"
 
@@ -33,6 +34,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	TestLabel = "yaks.citrusframework.org/test"
+	TestIdLabel = "yaks.citrusframework.org/test-id"
+	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
 )
 
 // NewStartAction creates a new start action
@@ -61,12 +68,12 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 		return nil, err
 	}
 
-	cm := action.newTestingConfigMap(ctx, test)
-	pod, err := action.newTestingPod(ctx, test, cm)
+	configMap := action.newTestingConfigMap(ctx, test)
+	pod, err := action.newTestingPod(ctx, test, configMap)
 	if err != nil {
 		return nil, err
 	}
-	resources := []runtime.Object{cm, pod}
+	resources := []runtime.Object{configMap, pod}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
 		return nil, err
 	}
@@ -75,7 +82,7 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	return test, nil
 }
 
-func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Test, cm *v1.ConfigMap) (*v1.Pod, error) {
+func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Test, configMap *v1.ConfigMap) (*v1.Pod, error) {
 	controller := true
 	blockOwnerDeletion := true
 	pod := v1.Pod{
@@ -88,8 +95,8 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			Name:      TestPodNameFor(test),
 			Labels: map[string]string{
 				"app":     "yaks",
-				"yaks.citrusframework.org/test":    test.Name,
-				"yaks.citrusframework.org/test-id": test.Status.TestID,
+				TestLabel:    test.Name,
+				TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -117,6 +124,10 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 							Name:      "tests",
 							MountPath: "/etc/yaks/tests",
 						},
+						{
+							Name:      "secrets",
+							MountPath: "/etc/yaks/secrets",
+						},
 					},
 					Env: []v1.EnvVar{
 						{
@@ -126,6 +137,10 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 						{
 							Name:  "YAKS_TESTS_PATH",
 							Value: "/etc/yaks/tests",
+						},
+						{
+							Name:  "YAKS_SECRETS_PATH",
+							Value: "/etc/yaks/secrets",
 						},
 					},
 				},
@@ -137,7 +152,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 					VolumeSource: v1.VolumeSource{
 						ConfigMap: &v1.ConfigMapVolumeSource{
 							LocalObjectReference: v1.LocalObjectReference{
-								Name: cm.Name,
+								Name: configMap.Name,
 							},
 						},
 					},
@@ -178,17 +193,17 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
 		Name:  "YAKS_CLUSTER_TYPE",
 		Value: strings.ToUpper(string(clusterType)),
-	})
-
-	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+	}, v1.EnvVar{
 		Name:  "YAKS_TEST_NAME",
 		Value: test.Name,
-	})
-
-	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+	}, v1.EnvVar{
 		Name:  "YAKS_TEST_ID",
 		Value: test.Status.TestID,
 	})
+
+	if err := action.bindSecrets(ctx, test, &pod); err != nil {
+		return nil, err
+	}
 
 	if err := action.injectSnap(ctx, &pod); err != nil {
 		return nil, err
@@ -240,8 +255,8 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
 				"app":     "yaks",
-				"yaks.citrusframework.org/test":    test.Name,
-				"yaks.citrusframework.org/test-id": test.Status.TestID,
+				TestLabel:    test.Name,
+				TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -272,6 +287,50 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 		return install.ViewerServiceAccountRoles(ctx, action.client, namespace)
 	}
 	return err
+}
+
+func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, pod *v1.Pod) error {
+	var options = metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", TestLabel, test.Name),
+	}
+	if test.Spec.Secret != "" {
+		options.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
+			TestLabel, test.Name,
+			TestConfigurationLabel, test.Spec.Secret)
+	}
+	secrets, err := action.client.CoreV1().Secrets(test.Namespace).List(options)
+	if err != nil {
+		return err
+	}
+
+	var found bool
+	for _, item := range secrets.Items {
+		if item.Labels != nil && item.Labels[TestConfigurationLabel] != test.Spec.Secret {
+			continue
+		}
+
+		pod.Spec.Volumes = append(pod.Spec.Volumes, v1.Volume{
+				Name: "secrets",
+				VolumeSource: v1.VolumeSource{
+					Secret: &v1.SecretVolumeSource{
+						SecretName: item.Name,
+					},
+				},
+		})
+		found = true
+		break
+	}
+
+	if !found {
+		pod.Spec.Volumes = append(pod.Spec.Volumes, v1.Volume{
+			Name: "secrets",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		})
+	}
+
+	return nil
 }
 
 func (action *startAction) injectSnap(ctx context.Context, pod *v1.Pod) error {
