@@ -98,21 +98,25 @@ public final class KnativeSupport {
         }
     }
 
-    public static CustomResourceDefinitionContext eventingCRDContext(String resourceName) {
-        return knativeCRDContext("eventing", resourceName);
+    public static CustomResourceDefinitionContext eventingCRDContext(String resourceName, String version) {
+        return knativeCRDContext("eventing", resourceName, version);
     }
 
-    public static CustomResourceDefinitionContext messagingCRDContext(String resourceName) {
-        return knativeCRDContext("messaging", resourceName);
+    public static CustomResourceDefinitionContext messagingCRDContext(String resourceName, String version) {
+        return knativeCRDContext("messaging", resourceName, version);
     }
 
-    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String resourceName) {
+    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String resourceName, String version) {
         return new CustomResourceDefinitionContext.Builder()
                 .withName(String.format("%s.%s.knative.dev", resourceName, knativeComponent))
                 .withGroup(String.format("%s.knative.dev", knativeComponent))
-                .withVersion("v1")
+                .withVersion(version)
                 .withPlural(resourceName)
                 .withScope("Namespaced")
                 .build();
+    }
+
+    public static String knativeApiVersion() {
+        return KnativeSettings.getApiVersion();
     }
 }

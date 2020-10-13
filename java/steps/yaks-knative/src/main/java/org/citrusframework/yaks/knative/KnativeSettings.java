@@ -43,9 +43,14 @@ public class KnativeSettings {
     private static final String NAMESPACE_PROPERTY = KNATIVE_PROPERTY_PREFIX + "namespace";
     private static final String NAMESPACE_ENV = KNATIVE_ENV_PREFIX + "NAMESPACE";
 
+    private static final String API_VERSION_PROPERTY = KNATIVE_PROPERTY_PREFIX + "api.version";
+    private static final String API_VERSION_ENV = KNATIVE_ENV_PREFIX + "API_VERSION";
+    private static final String API_VERSION_DEFAULT = "v1beta1";
+
     private static final String BROKER_HOST_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.host";
     private static final String BROKER_HOST_ENV = KNATIVE_ENV_PREFIX + "BROKER_HOST";
-    private static final String BROKER_HOST_DEFAULT = String.format("broker-ingress.knative-eventing.%s", YaksSettings.DEFAULT_DOMAIN_SUFFIX);
+    private static final String BROKER_HOST_KUBERNETES_DEFAULT = String.format("broker-ingress.knative-eventing.%s", YaksSettings.DEFAULT_DOMAIN_SUFFIX);
+    private static final String BROKER_HOST_OPENSHIFT_DEFAULT = String.format("${%s}-broker.%s.%s", KnativeVariableNames.BROKER_NAME.value(), getNamespace(), YaksSettings.DEFAULT_DOMAIN_SUFFIX);
 
     private static final String BROKER_NAME_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.name";
     private static final String BROKER_NAME_ENV = KNATIVE_ENV_PREFIX + "BROKER_NAME";
@@ -105,12 +110,24 @@ public class KnativeSettings {
     }
 
     /**
+     * Api version for current Knative installation.
+     * @return
+     */
+    public static String getApiVersion() {
+        return System.getProperty(API_VERSION_PROPERTY,
+                System.getenv(API_VERSION_ENV) != null ? System.getenv(API_VERSION_ENV) : API_VERSION_DEFAULT);
+    }
+
+    /**
      * Broker host used as Http header when creating cloud events.
      * @return
      */
     public static String getBrokerHost() {
+        String brokerHostDefault = YaksSettings.isOpenshiftCluster() ?
+                BROKER_HOST_OPENSHIFT_DEFAULT :
+                BROKER_HOST_KUBERNETES_DEFAULT;
         return System.getProperty(BROKER_HOST_PROPERTY,
-                System.getenv(BROKER_HOST_ENV) != null ? System.getenv(BROKER_HOST_ENV) : BROKER_HOST_DEFAULT);
+                System.getenv(BROKER_HOST_ENV) != null ? System.getenv(BROKER_HOST_ENV) : brokerHostDefault);
     }
 
     /**
@@ -127,9 +144,11 @@ public class KnativeSettings {
      * @return
      */
     public static String getBrokerUrl() {
+        String brokerUrlDefault = YaksSettings.isOpenshiftCluster() ?
+                String.format("http://%s", getBrokerHost()) :
+                String.format("http://%s/${%s}/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
         return System.getProperty(BROKER_URL_PROPERTY,
-                System.getenv(BROKER_URL_ENV) != null ? System.getenv(BROKER_URL_ENV) : String.format("http://%s/${%s}/${%s}",
-                        getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value()));
+                System.getenv(BROKER_URL_ENV) != null ? System.getenv(BROKER_URL_ENV) : brokerUrlDefault);
     }
 
     /**

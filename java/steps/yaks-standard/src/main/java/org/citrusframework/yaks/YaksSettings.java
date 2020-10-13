@@ -44,6 +44,10 @@ public class YaksSettings {
     private static final String NAMESPACE_ENV = YAKS_ENV_PREFIX + "NAMESPACE";
     private static final String NAMESPACE_DEFAULT = "default";
 
+    private static final String CLUSTER_TYPE_PROPERTY = YAKS_PROPERTY_PREFIX + "cluster.type";
+    private static final String CLUSTER_TYPE_ENV = YAKS_ENV_PREFIX + "CLUSTER_TYPE";
+    private static final String CLUSTER_TYPE_DEFAULT = YaksClusterType.KUBERNETES.name();
+
     /**
      * Namespace to work on when performing Kubernetes/Knative client operations on resources.
      * @return
@@ -74,5 +78,30 @@ public class YaksSettings {
     public static String getClusterWildcardDomain() {
         return System.getProperty(CLUSTER_WILDCARD_DOMAIN_PROPERTY,
                 System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) != null ? System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) : "default." + DEFAULT_DOMAIN_SUFFIX);
+    }
+
+    /**
+     * Cluster type that YAKS is running on.
+     * @return
+     */
+    public static YaksClusterType getClusterType() {
+        return YaksClusterType.valueOf(System.getProperty(CLUSTER_TYPE_PROPERTY,
+                System.getenv(CLUSTER_TYPE_ENV) != null ? System.getenv(CLUSTER_TYPE_ENV) : CLUSTER_TYPE_DEFAULT));
+    }
+
+    /**
+     * True when running on Openshift.
+     * @return
+     */
+    public static boolean isOpenshiftCluster() {
+        return YaksClusterType.OPENSHIFT.equals(getClusterType());
+    }
+
+    /**
+     * True when running on Kubernetes.
+     * @return
+     */
+    public static boolean isKubernetesCluster() {
+        return YaksClusterType.KUBERNETES.equals(getClusterType());
     }
 }

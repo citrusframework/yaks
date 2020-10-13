@@ -40,7 +40,7 @@ public class CreateBrokerAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Broker broker = new BrokerBuilder()
-                .withApiVersion("eventing.knative.dev/v1")
+                .withApiVersion(String.format("eventing.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                 .withNamespace(namespace(context))
                 .withName(context.replaceDynamicContentInString(brokerName))
@@ -49,7 +49,7 @@ public class CreateBrokerAction extends AbstractKnativeAction {
                 .build();
 
         KnativeSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.eventingCRDContext("brokers"), broker);
+                KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()), broker);
     }
 
     /**

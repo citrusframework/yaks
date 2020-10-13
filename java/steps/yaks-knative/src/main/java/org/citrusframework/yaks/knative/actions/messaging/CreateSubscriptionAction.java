@@ -45,7 +45,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Subscription subscription = new SubscriptionBuilder()
-                .withApiVersion("messaging.knative.dev/v1")
+                .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(subscriptionName))
@@ -53,7 +53,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                 .endMetadata()
                 .withNewSpec()
                     .withChannel(new ObjectReferenceBuilder()
-                            .withApiVersion("messaging.knative.dev/v1")
+                            .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
                             .withKind("InMemoryChannel")
                             .withName(context.replaceDynamicContentInString(channelName))
                             .build())
@@ -68,7 +68,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                 .build();
 
         KnativeSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.messagingCRDContext("subscriptions"), subscription);
+                KnativeSupport.messagingCRDContext("subscriptions", KnativeSupport.knativeApiVersion()), subscription);
     }
 
     /**

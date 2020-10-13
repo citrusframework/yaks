@@ -44,7 +44,7 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
     public void doExecute(TestContext context) {
         try {
             Map<String, Object> resources = getKubernetesClient()
-                    .customResource(KnativeSupport.eventingCRDContext("brokers"))
+                    .customResource(KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()))
                     .get(namespace(context), brokerName);
 
             Broker broker = KnativeSupport.json()
