@@ -23,6 +23,7 @@ YAKS is a platform to enable Cloud Native BDD testing on Kubernetes!
 * [Runtime configuration](#runtime-configuration)
   * [Add custom runtime dependencies](#add-custom-runtime-dependencies)
   * [Add custom Maven repositories](#add-custom-maven-repositories)
+  * [Using secrets](#using-secrets)
 * [Pre/Post scripts](#prepos-scripts)
 * [Reporting options](#reporting-options)
 * [For YAKS developers](#for-yaks-developers)
@@ -913,6 +914,67 @@ You can add the configuration file when running the test via `yaks` CLI like fol
 
 ```bash
 $ yaks test --settings yaks.settings.yaml my.feature
+```
+
+### Using secrets
+
+Tests usually need to use credentials and connection URLs in order to connect to infrastructure components and services. 
+This might be sensitive data that should not go into the test configuration directly as hardcoded value. You should rather load the
+credentials from a secret volume source.
+
+To use the implicit configuration via secrets, we first need to create a configuration file holding the properties of a named configuration.
+
+*mysecret.properties*
+```properties
+# Only configuration related to the "mysecret" named config
+database.url=jdbc:postgresql://syndesis-db:5432/sampledb
+database.user=admin
+database.password=special
+```
+
+We can create a secret from that file and label it so that it will be picked up automatically by the YAKS operator:
+
+```bash
+# Create the secret from the property file
+kubectl create secret generic my-secret --from-file=mysecret.properties
+```
+
+Once the secret is created you can bind it to tests by their name. Given the test `my-test.feature` you can bind the secret to the test
+by adding a label as follows:
+
+```bash
+# Bind secret to the "my-test" test case
+kubectl label secret my-secret yaks.citrusframework.org/test=my-test
+``` 
+
+For multiple secrets and variants of secrets on different environments (e.g. dev, test, staging) you can add a secret id and label that one
+explicitly in addition to the test name. 
+
+```bash
+# Bind secret to the named configuration "staging" of the "my-test" test case
+kubectl label secret my-secret yaks.citrusframework.org/test=my-test yaks.citrusframework.org/test.configuration=staging
+```
+
+With that in place you just need to set the secret id in your `yaks-config.yaml` for that test.
+
+*yaks-config.yaml*
+```yaml
+config:
+  runtime:
+    secret: staging
+```
+
+You can now write a test and use the secret properties as normal test variables: 
+
+*my-test.feature*
+```gherkin
+Feature: JDBC API
+
+  Background:
+    Given Database connection
+      | url       | ${database.url} |
+      | username  | ${database.user} |
+      | password  | ${database.password} |
 ```
 
 ## Pre/Post scripts
