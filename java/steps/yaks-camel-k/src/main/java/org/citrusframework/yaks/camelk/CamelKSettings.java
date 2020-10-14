@@ -27,24 +27,26 @@ public final class CamelKSettings {
     private static final String CAMELK_PROPERTY_PREFIX = "yaks.camelk.";
     private static final String CAMELK_ENV_PREFIX = "YAKS_CAMELK_";
 
-    private static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
-    private static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
-    private static final String MAX_ATTEMPTS_DEFAULT = "150";
+    static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
+    static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
+    static final String MAX_ATTEMPTS_DEFAULT = "150";
 
-    private static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "delay.between.attempts";
-    private static final String DELAY_BETWEEN_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
-    private static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
+    static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "delay.between.attempts";
+    static final String DELAY_BETWEEN_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
+    static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
 
-    private static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
-    private static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
+    static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
+    static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
 
-    private static final String API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
-    private static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
-    private static final String API_VERSION_DEFAULT = "v1";
+    static final String API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
+    static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
+    static final String API_VERSION_DEFAULT = "v1";
 
-    private static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";
-    private static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
-    private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
+    static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";
+    static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
+    static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
+
+    public static final String INTEGRATION_LABEL = "camel.apache.org/integration";
 
     private CamelKSettings() {
         // prevent instantiation of utility class

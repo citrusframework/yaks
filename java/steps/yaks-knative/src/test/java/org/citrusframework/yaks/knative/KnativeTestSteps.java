@@ -135,10 +135,10 @@ public class KnativeTestSteps {
         });
     }
 
-    private static abstract class KnativeTestAction extends AbstractTestAction implements KnativeAction {
+    private abstract class KnativeTestAction extends AbstractTestAction implements KnativeAction {
         @Override
         public KubernetesClient getKubernetesClient() {
-            return null;
+            return KnativeSupport.getKubernetesClient(citrus);
         }
     }
 }

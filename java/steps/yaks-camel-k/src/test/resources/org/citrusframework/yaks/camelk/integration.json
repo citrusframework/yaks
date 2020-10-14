@@ -1,4 +1,6 @@
 {
+  "kind": "Integration",
+  "apiVersion": "camel.apache.org/v1",
   "metadata": {
     "name": "bar"
   },
@@ -25,7 +27,5 @@
         }
       }
     }
-  },
-  "kind": "Integration",
-  "apiVersion": "camel.apache.org/v1"
+  }
 }

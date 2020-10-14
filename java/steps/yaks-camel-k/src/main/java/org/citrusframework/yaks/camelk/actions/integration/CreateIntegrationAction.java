@@ -24,10 +24,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.consol.citrus.context.TestContext;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
+import org.citrusframework.yaks.camelk.model.DoneableIntegration;
 import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.IntegrationList;
+import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 
 /**
  * Test action creates new Camel-K integration with given name and source code. Uses given Kubernetes client to
@@ -69,7 +73,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         if (traits != null && !traits.isEmpty()) {
-            final Map<String, Integration.TraitConfig> traitConfigMap = new HashMap<>();
+            final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
             for (String t : context.replaceDynamicContentInString(traits).split(",")){
                 //traitName.key=value
                 if (!validateTraitFormat(t)) {
@@ -80,15 +84,17 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 if (traitConfigMap.containsKey(trait[0])) {
                     traitConfigMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
                 } else {
-                    traitConfigMap.put(trait[0], new Integration.TraitConfig(traitConfig[0], traitConfig[1]));
+                    traitConfigMap.put(trait[0], new IntegrationSpec.TraitConfig(traitConfig[0], traitConfig[1]));
                 }
             }
             integrationBuilder.traits(traitConfigMap);
         }
 
         final Integration i = integrationBuilder.build();
-        CamelKSupport.createResource(getKubernetesClient(), CamelKSettings.getNamespace(),
-                CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion()), i);
+        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
+        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class, DoneableIntegration.class)
+                .inNamespace(CamelKSettings.getNamespace())
+                .createOrReplace(i);
 
         LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
     }

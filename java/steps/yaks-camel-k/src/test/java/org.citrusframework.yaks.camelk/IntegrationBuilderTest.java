@@ -23,7 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.util.FileUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -31,13 +33,16 @@ import org.springframework.util.StringUtils;
 
 public class IntegrationBuilderTest {
 
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
 	@Test
 	public void buildComplexIntegrationTest() throws IOException {
-		Map<String, Integration.TraitConfig> traits = new HashMap<>();
-		Integration.TraitConfig quarkus = new Integration.TraitConfig("enabled", "true");
+		Map<String, IntegrationSpec.TraitConfig> traits = new HashMap<>();
+		IntegrationSpec.TraitConfig quarkus = new IntegrationSpec.TraitConfig("enabled", "true");
 		quarkus.add("native", "true");
 		traits.put("quarkus", quarkus);
-		traits.put("route", new Integration.TraitConfig("enabled", "true"));
+		traits.put("route", new IntegrationSpec.TraitConfig("enabled", "true"));
+
 		Integration i = new Integration.Builder()
 				.name("bar.groovy")
 				.source("from(\"timer:x\").log('${body}')")
@@ -45,7 +50,7 @@ public class IntegrationBuilderTest {
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
 				.build();
 
-		final String json = CamelKSupport.json().writeValueAsString(i);
+		final String json = OBJECT_MAPPER.writeValueAsString(i);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
 	}

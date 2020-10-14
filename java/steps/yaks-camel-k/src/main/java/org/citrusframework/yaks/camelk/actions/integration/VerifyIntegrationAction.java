@@ -144,7 +144,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     private Pod getRunningIntegrationPod(String integration) {
         PodList pods = getKubernetesClient().pods()
                 .inNamespace(CamelKSettings.getNamespace())
-                .withLabel("camel.apache.org/integration", integration)
+                .withLabel(CamelKSettings.INTEGRATION_LABEL, integration)
                 .list();
         if (pods.getItems().size() == 0) {
             return null;

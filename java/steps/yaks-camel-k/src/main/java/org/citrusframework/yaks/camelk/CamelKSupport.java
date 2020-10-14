@@ -17,12 +17,7 @@
 
 package org.citrusframework.yaks.camelk;
 
-import java.io.IOException;
-import java.util.Map;
-
 import com.consol.citrus.Citrus;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -34,8 +29,6 @@ public class CamelKSupport {
 
     public static final String CAMELK_CRD_GROUP = "camel.apache.org";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private CamelKSupport() {
         // prevent instantiation of utility class
     }
@@ -45,35 +38,6 @@ public class CamelKSupport {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
             return new DefaultKubernetesClient();
-        }
-    }
-
-    public static ObjectMapper json() {
-        return OBJECT_MAPPER;
-    }
-
-    public static <T> void createResource(KubernetesClient k8sClient, String namespace,
-                                                         CustomResourceDefinitionContext context, T resource) {
-        try {
-            Map<String, Object> result = k8sClient.customResource(context)
-                    .createOrReplace(namespace, json().writeValueAsString(resource));
-            if (result.get("message") != null) {
-                throw new CitrusRuntimeException("Failed to create Camel-K resource - " + result.get("message").toString());
-            }
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create Camel-K resource", e);
-        }
-    }
-
-    public static void deleteResource(KubernetesClient k8sClient, String namespace,
-                                      CustomResourceDefinitionContext context, String resourceName) {
-        try {
-            Map<String, Object> result = k8sClient.customResource(context).delete(namespace, resourceName);
-            if (result.get("message") != null) {
-                throw new CitrusRuntimeException(result.get("message").toString());
-            }
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to delete Camel-K resource", e);
         }
     }
 

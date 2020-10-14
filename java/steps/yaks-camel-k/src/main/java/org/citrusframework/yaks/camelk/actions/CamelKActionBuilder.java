@@ -20,6 +20,7 @@ package org.citrusframework.yaks.camelk.actions;
 import com.consol.citrus.TestActionBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
+import org.citrusframework.yaks.camelk.actions.integration.DeleteIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.integration.VerifyIntegrationAction;
 import org.springframework.util.Assert;
 
@@ -65,11 +66,10 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
      * Delete integration instance.
      * @param integrationName the name of the Camel-K integration.
      */
-    public DeleteCamelKResourceAction.Builder deleteIntegration(String integrationName) {
-        DeleteCamelKResourceAction.Builder builder = new DeleteCamelKResourceAction.Builder()
+    public DeleteIntegrationAction.Builder deleteIntegration(String integrationName) {
+        DeleteIntegrationAction.Builder builder = new DeleteIntegrationAction.Builder()
                 .client(kubernetesClient)
-                .kind("integrations")
-                .resource(integrationName);
+                .integration(integrationName);
         this.delegate = builder;
         return builder;
     }
