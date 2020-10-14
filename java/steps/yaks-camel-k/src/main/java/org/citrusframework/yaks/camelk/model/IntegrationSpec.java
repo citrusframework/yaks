@@ -21,28 +21,60 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"sources", "dependencies", "traits"})
+@JsonDeserialize(
+        using = JsonDeserializer.None.class
+)
 public class IntegrationSpec implements KubernetesResource {
 
-    List<Source> sources;
-    List<String> dependencies;
-    Map<String, TraitConfig> traits;
+    @JsonProperty("sources")
+    private List<Source> sources;
+    @JsonProperty("dependencies")
+    private List<String> dependencies;
+    @JsonProperty("traits")
+    private Map<String, TraitConfig> traits;
 
     public List<Source> getSources() {
         return sources;
+    }
+
+    public void setSources(List<Source> sources) {
+        this.sources = sources;
     }
 
     public List<String> getDependencies() {
         return dependencies;
     }
 
+    public void setDependencies(List<String> dependencies) {
+        this.dependencies = dependencies;
+    }
+
     public Map<String, TraitConfig> getTraits() {
         return traits;
     }
 
+    public void setTraits(Map<String, TraitConfig> traits) {
+        this.traits = traits;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"configuration"})
     public static class TraitConfig {
-        Map<String,String> configuration;
+        @JsonProperty("configuration")
+        private Map<String, String> configuration;
+
+        public TraitConfig() {
+            super();
+        }
 
         public TraitConfig(String key, String value) {
             this.configuration = new HashMap<>();
@@ -53,14 +85,26 @@ public class IntegrationSpec implements KubernetesResource {
             return configuration;
         }
 
-        public String add(String key, String value) {
-            return configuration.put(key, value);
+        public void setConfiguration(Map<String, String> configuration) {
+            this.configuration = configuration;
+        }
+
+        public void add(String key, String value) {
+            this.configuration.put(key, value);
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"name", "content"})
     public static class Source {
-        String content;
-        String name;
+        @JsonProperty("content")
+        private String content;
+        @JsonProperty("name")
+        private String name;
+
+        public Source() {
+            super();
+        }
 
         public Source(String name, String content) {
             this.content = content;
@@ -71,8 +115,16 @@ public class IntegrationSpec implements KubernetesResource {
             return content;
         }
 
+        public void setContent(String content) {
+            this.content = content;
+        }
+
         public String getName() {
             return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
         }
     }
 }

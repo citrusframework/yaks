@@ -17,8 +17,10 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,7 +45,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
     private final String integrationName;
     private final String source;
-    private final String dependencies;
+    private final List<String> dependencies;
     private final String traits;
 
     /**
@@ -69,7 +71,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 .source(context.replaceDynamicContentInString(source));
 
         if (dependencies != null && !dependencies.isEmpty()) {
-            integrationBuilder.dependencies(Arrays.asList(context.replaceDynamicContentInString(dependencies).split(",")));
+            integrationBuilder.dependencies(context.resolveDynamicValuesInList(dependencies));
         }
 
         if (traits != null && !traits.isEmpty()) {
@@ -115,16 +117,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         private String integrationName;
         private String source;
-        private String dependencies;
+        private List<String> dependencies = new ArrayList<>();
         private String traits;
-
-        /**
-         * Fluent API action building entry method used in Java DSL.
-         * @return
-         */
-        public static Builder createIntegration() {
-            return new Builder();
-        }
 
         public Builder integration(String integrationName) {
             this.integrationName = integrationName;
@@ -137,7 +131,17 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder dependencies(String dependencies) {
-            this.dependencies = dependencies;
+            this.dependencies.addAll(Arrays.asList(dependencies.split(",")));
+            return this;
+        }
+
+        public Builder dependencies(List<String> dependencies) {
+            this.dependencies.addAll(dependencies);
+            return this;
+        }
+
+        public Builder dependency(String dependency) {
+            this.dependencies.add(dependency);
             return this;
         }
 

@@ -170,14 +170,6 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
         private int maxAttempts = CamelKSettings.getMaxAttempts();
         private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
 
-        /**
-         * Fluent API action building entry method used in Java DSL.
-         * @return
-         */
-        public static Builder verifyIntegration() {
-            return new Builder();
-        }
-
         public Builder isRunning() {
             return this;
         }

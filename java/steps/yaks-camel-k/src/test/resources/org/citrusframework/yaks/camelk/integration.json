@@ -1,14 +1,14 @@
 {
-  "kind": "Integration",
   "apiVersion": "camel.apache.org/v1",
+  "kind": "Integration",
   "metadata": {
     "name": "bar"
   },
   "spec": {
     "sources": [
       {
-        "content": "from(\"timer:x\").log('${body}')",
-        "name": "bar.groovy"
+        "name": "bar.groovy",
+        "content": "from(\"timer:x\").log('${body}')"
       }
     ],
     "dependencies": [

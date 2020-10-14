@@ -18,9 +18,15 @@
 package org.citrusframework.yaks.camelk;
 
 import com.consol.citrus.Citrus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 /**
  * @author Christoph Deppisch
@@ -28,6 +34,8 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 public class CamelKSupport {
 
     public static final String CAMELK_CRD_GROUP = "camel.apache.org";
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private CamelKSupport() {
         // prevent instantiation of utility class
@@ -41,8 +49,32 @@ public class CamelKSupport {
         }
     }
 
+    public static Yaml yaml() {
+        Representer representer = new Representer() {
+            @Override
+            protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+                // if value of property is null, ignore it.
+                if (propertyValue == null) {
+                    return null;
+                }
+                else {
+                    return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+                }
+            }
+        };
+        return new Yaml(representer);
+    }
+
+    public static ObjectMapper json() {
+        return OBJECT_MAPPER;
+    }
+
     public static CustomResourceDefinitionContext integrationCRDContext(String version) {
         return camelkCRDContext("integrations", version);
+    }
+
+    public static CustomResourceDefinitionContext kameletCRDContext(String version) {
+        return camelkCRDContext("kamelets", version);
     }
 
     public static CustomResourceDefinitionContext camelkCRDContext(String kind, String version) {

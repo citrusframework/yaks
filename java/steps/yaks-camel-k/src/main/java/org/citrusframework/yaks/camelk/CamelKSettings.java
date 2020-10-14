@@ -42,6 +42,10 @@ public final class CamelKSettings {
     static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
     static final String API_VERSION_DEFAULT = "v1";
 
+    static final String KAMELET_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
+    static final String KAMELET_API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
+    static final String KAMELET_API_VERSION_DEFAULT = "v1alpha1";
+
     static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";
     static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
@@ -53,12 +57,21 @@ public final class CamelKSettings {
     }
 
     /**
-     * Api version for current Knative installation.
+     * Api version for current Camel-K installation.
      * @return
      */
     public static String getApiVersion() {
         return System.getProperty(API_VERSION_PROPERTY,
                 System.getenv(API_VERSION_ENV) != null ? System.getenv(API_VERSION_ENV) : API_VERSION_DEFAULT);
+    }
+
+    /**
+     * Api version for current Kamelet specification.
+     * @return
+     */
+    public static String getKameletApiVersion() {
+        return System.getProperty(KAMELET_API_VERSION_PROPERTY,
+                System.getenv(KAMELET_API_VERSION_ENV) != null ? System.getenv(KAMELET_API_VERSION_ENV) : KAMELET_API_VERSION_DEFAULT);
     }
 
     /**

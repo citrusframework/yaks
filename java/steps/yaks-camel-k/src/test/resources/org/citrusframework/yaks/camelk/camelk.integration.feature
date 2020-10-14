@@ -1,4 +1,4 @@
-Feature: Camel-K
+Feature: Camel-K integration
 
   Scenario: Create integration
     Given create Camel-K integration helloworld.groovy

@@ -22,6 +22,9 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.integration.DeleteIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.integration.VerifyIntegrationAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.CreateKameletAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.DeleteKameletAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.VerifyKameletAction;
 import org.springframework.util.Assert;
 
 /**
@@ -75,6 +78,30 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
+     * Create kamelet CRD in current namespace.
+     * @param kameletName the name of the Kamelet.
+     */
+    public CreateKameletAction.Builder createKamelet(String kameletName) {
+        CreateKameletAction.Builder builder = new CreateKameletAction.Builder()
+                .client(kubernetesClient)
+                .kamelet(kameletName);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Delete kamelet CRD from current namespace.
+     * @param kameletName the name of the Kamelet.
+     */
+    public DeleteKameletAction.Builder deleteKamelet(String kameletName) {
+        DeleteKameletAction.Builder builder = new DeleteKameletAction.Builder()
+                .client(kubernetesClient)
+                .kamelet(kameletName);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
      * Verify that given integration is running.
      * @param integrationName the name of the Camel-K integration.
      */
@@ -82,6 +109,18 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
         VerifyIntegrationAction.Builder builder = new VerifyIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .isRunning(integrationName);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Verify that given Kamelet CRD is available in current namespace.
+     * @param kameletName the name of the Kamelet.
+     */
+    public VerifyKameletAction.Builder verifyKamelet(String kameletName) {
+        VerifyKameletAction.Builder builder = new VerifyKameletAction.Builder()
+                .client(kubernetesClient)
+                .isAvailable(kameletName);
         this.delegate = builder;
         return builder;
     }

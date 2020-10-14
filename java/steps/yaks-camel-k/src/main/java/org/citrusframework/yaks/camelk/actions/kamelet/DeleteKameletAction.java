@@ -15,54 +15,55 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.actions.integration;
+package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
-import org.citrusframework.yaks.camelk.model.DoneableIntegration;
-import org.citrusframework.yaks.camelk.model.Integration;
-import org.citrusframework.yaks.camelk.model.IntegrationList;
+import org.citrusframework.yaks.camelk.model.DoneableKamelet;
+import org.citrusframework.yaks.camelk.model.Kamelet;
+import org.citrusframework.yaks.camelk.model.KameletList;
 
 /**
  * @author Christoph Deppisch
  */
-public class DeleteIntegrationAction extends AbstractCamelKAction {
+public class DeleteKameletAction extends AbstractCamelKAction {
 
-    private final String integrationName;
+    private final String name;
 
-    public DeleteIntegrationAction(Builder builder) {
-        super("delete-integration", builder);
+    public DeleteKameletAction(Builder builder) {
+        super("delete-kamelet", builder);
 
-        this.integrationName = builder.integrationName;
+        this.name = builder.name;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class, DoneableIntegration.class)
+        String kameletName = context.replaceDynamicContentInString(name);
+        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
+        getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class, DoneableKamelet.class)
                 .inNamespace(CamelKSettings.getNamespace())
-                .withName(integrationName)
+                .withName(kameletName)
                 .delete();
     }
 
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractCamelKAction.Builder<DeleteIntegrationAction, Builder> {
+    public static class Builder extends AbstractCamelKAction.Builder<DeleteKameletAction, Builder> {
 
-        private String integrationName;
+        private String name;
 
-        public Builder integration(String integrationName) {
-            this.integrationName = integrationName;
+        public Builder kamelet(String name) {
+            this.name = name;
             return this;
         }
 
         @Override
-        public DeleteIntegrationAction build() {
-            return new DeleteIntegrationAction(this);
+        public DeleteKameletAction build() {
+            return new DeleteKameletAction(this);
         }
     }
 }

@@ -21,13 +21,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
+@JsonDeserialize(
+		using = JsonDeserializer.None.class
+)
 public class Integration extends CustomResource {
 
-	private IntegrationSpec spec;
+	@JsonProperty("spec")
+	private IntegrationSpec spec = new IntegrationSpec();
 
 	@Override
 	public String getApiVersion() {
@@ -36,6 +47,10 @@ public class Integration extends CustomResource {
 
 	public IntegrationSpec getSpec() {
 		return spec;
+	}
+
+	public void setSpec(IntegrationSpec spec) {
+		this.spec = spec;
 	}
 
 	/**
@@ -70,10 +85,9 @@ public class Integration extends CustomResource {
 		public Integration build() {
 			Integration i = new Integration();
 			i.getMetadata().setName(name.substring(0, name.indexOf(".")));
-			i.spec = new IntegrationSpec();
-			i.spec.sources = Collections.singletonList(new IntegrationSpec.Source(name, source));
-			i.spec.dependencies = dependencies;
-			i.spec.traits = traits;
+			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(name, source)));
+			i.getSpec().setDependencies(dependencies);
+			i.getSpec().setTraits(traits);
 			return i;
 		}
 	}
