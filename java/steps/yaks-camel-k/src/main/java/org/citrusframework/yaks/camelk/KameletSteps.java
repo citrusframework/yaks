@@ -50,6 +50,8 @@ public class KameletSteps {
     private Kamelet.Builder builder;
     private KameletSpec.Definition definition;
 
+    private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
+
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
@@ -58,6 +60,16 @@ public class KameletSteps {
 
         builder = new Kamelet.Builder();
         definition = new KameletSpec.Definition();
+    }
+
+    @Given("^Disable auto removal of Kamelet resources$")
+    public void disableAutoRemove() {
+        autoRemoveResources = false;
+    }
+
+    @Given("^Enable auto removal of Kamelet resources$")
+    public void enableAutoRemove() {
+        autoRemoveResources = true;
     }
 
 	@Given("^Kamelet type (in|out|error)(?:=| is )\"(.+)\"$")
@@ -119,7 +131,7 @@ public class KameletSteps {
 
         builder = new Kamelet.Builder();
 
-        if (CamelKSettings.isAutoRemoveResources()) {
+        if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(camelk().client(k8sClient).deleteKamelet(name)));
         }

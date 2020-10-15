@@ -44,11 +44,31 @@ public class CamelKSteps {
 
     private KubernetesClient k8sClient;
 
+    private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
+    private int maxAttempts = CamelKSettings.getMaxAttempts();
+    private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
+
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
             k8sClient = CamelKSupport.getKubernetesClient(citrus);
         }
+    }
+
+    @Given("^Disable auto removal of Camel-K resources$")
+    public void disableAutoRemove() {
+        autoRemoveResources = false;
+    }
+
+	@Given("^Enable auto removal of Camel-K resources$")
+    public void enableAutoRemove() {
+        autoRemoveResources = true;
+    }
+
+	@Given("^Camel-K resource polling configuration$")
+    public void configureResourcePolling(Map<String, Object> configuration) {
+        maxAttempts = Integer.parseInt(configuration.getOrDefault("maxAttempts", maxAttempts).toString());
+        delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
     }
 
 	@Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+) with configuration:$")
@@ -64,7 +84,7 @@ public class CamelKSteps {
                     .dependencies(configuration.get("dependencies"))
                     .traits(configuration.get("traits")));
 
-        if (CamelKSettings.isAutoRemoveResources()) {
+        if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(camelk().client(k8sClient).deleteIntegration(name)));
         }
@@ -77,7 +97,7 @@ public class CamelKSteps {
                     .createIntegration(name + "." + language)
                     .source(source));
 
-        if (CamelKSettings.isAutoRemoveResources()) {
+        if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(camelk().client(k8sClient).deleteIntegration(name)));
         }
@@ -96,6 +116,8 @@ public class CamelKSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .verifyIntegration(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
                 .isRunning());
     }
 
@@ -104,6 +126,8 @@ public class CamelKSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .verifyIntegration(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
     }
 
@@ -114,6 +138,8 @@ public class CamelKSteps {
                 .when(camelk()
                     .client(k8sClient)
                     .verifyIntegration(name)
+                    .maxAttempts(maxAttempts)
+                    .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
     }
 

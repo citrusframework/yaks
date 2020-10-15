@@ -1,5 +1,10 @@
 Feature: Camel-K integration
 
+  Background:
+    Given Camel-K resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweemAttempts | 1000 |
+
   Scenario: Create integration
     Given create Camel-K integration helloworld.groovy
     """
