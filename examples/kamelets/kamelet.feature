@@ -25,7 +25,7 @@ from:
     period: "#property:period"
   steps:
   - set-body:
-      constant: "#property:message"
+      constant: "{{message}}"
   - to: "kamelet:sink"
 """
     Then Kamelet timer-source should be available
