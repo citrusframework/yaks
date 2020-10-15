@@ -1,0 +1,31 @@
+{
+  "apiVersion": "camel.apache.org/v1",
+  "kind": "Integration",
+  "metadata": {
+    "name": "bar"
+  },
+  "spec": {
+    "sources": [
+      {
+        "name": "bar.groovy",
+        "content": "from(\"timer:x\").log('${body}')"
+      }
+    ],
+    "dependencies": [
+      "mvn:fake.dependency:id:version-1"
+    ],
+    "traits": {
+      "route": {
+        "configuration": {
+          "enabled": "true"
+        }
+      },
+      "quarkus": {
+        "configuration": {
+          "native": "true",
+          "enabled": "true"
+        }
+      }
+    }
+  }
+}

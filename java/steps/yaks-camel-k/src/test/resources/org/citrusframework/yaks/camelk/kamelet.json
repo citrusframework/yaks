@@ -1,0 +1,53 @@
+{
+  "apiVersion": "camel.apache.org/v1alpha1",
+  "kind": "Kamelet",
+  "metadata": {
+    "name": "time-source"
+  },
+  "spec": {
+    "definition": {
+      "title": "Timer Source",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "period": {
+          "title": "Period",
+          "type": "integer",
+          "default": 1000
+        },
+        "message": {
+          "title": "Message",
+          "type": "string",
+          "example": "hello world"
+        }
+      }
+    },
+    "dependencies": [
+      "mvn:fake.dependency:id:version-1"
+    ],
+    "types": {
+      "out": {
+        "mediaType": "text/plain"
+      }
+    },
+    "flow": {
+      "from": {
+        "uri": "timer:tick",
+        "parameters": {
+          "period": "#property:period"
+        },
+        "steps": [
+          {
+            "set-body": {
+              "constant": "#property:message"
+            }
+          },
+          {
+            "to": "kamelet:sink"
+          }
+        ]
+      }
+    }
+  }
+}

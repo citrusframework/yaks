@@ -27,19 +27,51 @@ public final class CamelKSettings {
     private static final String CAMELK_PROPERTY_PREFIX = "yaks.camelk.";
     private static final String CAMELK_ENV_PREFIX = "YAKS_CAMELK_";
 
-    private static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
-    private static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
-    private static final String MAX_ATTEMPTS_DEFAULT = "150";
+    static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
+    static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
+    static final String MAX_ATTEMPTS_DEFAULT = "150";
 
-    private static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "delay.between.attempts";
-    private static final String DELAY_BETWEEN_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
-    private static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
+    static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "delay.between.attempts";
+    static final String DELAY_BETWEEN_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
+    static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
 
-    private static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
-    private static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
+    static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
+    static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
+
+    static final String API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
+    static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
+    static final String API_VERSION_DEFAULT = "v1";
+
+    static final String KAMELET_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
+    static final String KAMELET_API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
+    static final String KAMELET_API_VERSION_DEFAULT = "v1alpha1";
+
+    static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";
+    static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
+    static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
+
+    public static final String INTEGRATION_LABEL = "camel.apache.org/integration";
 
     private CamelKSettings() {
         // prevent instantiation of utility class
+    }
+
+    /**
+     * Api version for current Camel-K installation.
+     * @return
+     */
+    public static String getApiVersion() {
+        return System.getProperty(API_VERSION_PROPERTY,
+                System.getenv(API_VERSION_ENV) != null ? System.getenv(API_VERSION_ENV) : API_VERSION_DEFAULT);
+    }
+
+    /**
+     * Api version for current Kamelet specification.
+     * @return
+     */
+    public static String getKameletApiVersion() {
+        return System.getProperty(KAMELET_API_VERSION_PROPERTY,
+                System.getenv(KAMELET_API_VERSION_ENV) != null ? System.getenv(KAMELET_API_VERSION_ENV) : KAMELET_API_VERSION_DEFAULT);
     }
 
     /**
@@ -47,7 +79,8 @@ public final class CamelKSettings {
      * @return
      */
     public static int getMaxAttempts() {
-        return Integer.parseInt(System.getProperty(MAX_ATTEMPTS_PROPERTY, System.getenv(MAX_ATTEMPTS_ENV) != null ? System.getenv(MAX_ATTEMPTS_ENV) : MAX_ATTEMPTS_DEFAULT));
+        return Integer.parseInt(System.getProperty(MAX_ATTEMPTS_PROPERTY,
+                System.getenv(MAX_ATTEMPTS_ENV) != null ? System.getenv(MAX_ATTEMPTS_ENV) : MAX_ATTEMPTS_DEFAULT));
     }
 
     /**
@@ -55,7 +88,8 @@ public final class CamelKSettings {
      * @return
      */
     public static long getDelayBetweenAttempts() {
-        return Long.parseLong(System.getProperty(DELAY_BETWEEN_ATTEMPTS_PROPERTY, System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) != null ? System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) : DELAY_BETWEEN_ATTEMPTS_DEFAULT));
+        return Long.parseLong(System.getProperty(DELAY_BETWEEN_ATTEMPTS_PROPERTY,
+                System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) != null ? System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) : DELAY_BETWEEN_ATTEMPTS_DEFAULT));
     }
 
     /**
@@ -63,6 +97,17 @@ public final class CamelKSettings {
      * @return
      */
     public static String getNamespace() {
-        return System.getProperty(NAMESPACE_PROPERTY, System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : YaksSettings.getDefaultNamespace());
+        return System.getProperty(NAMESPACE_PROPERTY,
+                System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : YaksSettings.getDefaultNamespace());
+    }
+
+    /**
+     * When set to true Camel-K resources (integrations, Kamelets etc.) created during the test are
+     * automatically removed after the test.
+     * @return
+     */
+    public static boolean isAutoRemoveResources() {
+        return Boolean.parseBoolean(System.getProperty(AUTO_REMOVE_RESOURCES_PROPERTY,
+                System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
     }
 }

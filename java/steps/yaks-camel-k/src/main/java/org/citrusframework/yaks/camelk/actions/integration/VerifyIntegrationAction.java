@@ -15,21 +15,17 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.actions;
+package org.citrusframework.yaks.camelk.actions.integration;
 
-import com.consol.citrus.AbstractTestActionBuilder;
-import com.consol.citrus.actions.AbstractTestAction;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 
 /**
  * Test action verifies integration Pod running state and optionally waits for a log message to be present. Raises errors
@@ -38,12 +34,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christoph Deppisch
  */
-public class VerifyIntegrationTestAction extends AbstractTestAction {
+public class VerifyIntegrationAction extends AbstractCamelKAction {
 
-    /** Logger */
-    private static Logger LOG = LoggerFactory.getLogger(VerifyIntegrationTestAction.class);
-
-    private final KubernetesClient client;
     private final String integrationName;
     private final String logMessage;
     private final int maxAttempts;
@@ -53,9 +45,8 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
      * Constructor using given builder.
      * @param builder
      */
-    public VerifyIntegrationTestAction(Builder builder) {
+    public VerifyIntegrationAction(Builder builder) {
         super("verify-integration", builder);
-        this.client = builder.client;
         this.integrationName = builder.integrationName;
         this.logMessage = builder.logMessage;
         this.maxAttempts = builder.maxAttempts;
@@ -103,7 +94,7 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
      * @return
      */
     private String getIntegrationPodLogs(Pod pod) {
-        PodResource<Pod, DoneablePod> podRes = client.pods()
+        PodResource<Pod, DoneablePod> podRes = getKubernetesClient().pods()
                 .inNamespace(CamelKSettings.getNamespace())
                 .withName(pod.getMetadata().getName());
 
@@ -151,14 +142,17 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
      * @return
      */
     private Pod getRunningIntegrationPod(String integration) {
-        PodList pods = client.pods().inNamespace(CamelKSettings.getNamespace()).withLabel("camel.apache.org/integration", integration).list();
+        PodList pods = getKubernetesClient().pods()
+                .inNamespace(CamelKSettings.getNamespace())
+                .withLabel(CamelKSettings.INTEGRATION_LABEL, integration)
+                .list();
         if (pods.getItems().size() == 0) {
             return null;
         }
         for (Pod p : pods.getItems()) {
             if (p.getStatus() != null
                     && "Running".equals(p.getStatus().getPhase())
-                    && p.getStatus().getContainerStatuses().stream().allMatch(status -> status.getReady())) {
+                    && p.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)) {
                 return p;
             }
         }
@@ -168,25 +162,15 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractTestActionBuilder<VerifyIntegrationTestAction, Builder> {
+    public static final class Builder extends AbstractCamelKAction.Builder<VerifyIntegrationAction, Builder> {
 
-        private KubernetesClient client = new DefaultKubernetesClient();
         private String integrationName;
         private String logMessage;
 
         private int maxAttempts = CamelKSettings.getMaxAttempts();
         private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
 
-        /**
-         * Fluent API action building entry method used in Java DSL.
-         * @return
-         */
-        public static Builder verifyIntegration() {
-            return new Builder();
-        }
-
-        public Builder client(KubernetesClient client) {
-            this.client = client;
+        public Builder isRunning() {
             return this;
         }
 
@@ -211,8 +195,8 @@ public class VerifyIntegrationTestAction extends AbstractTestAction {
         }
 
         @Override
-        public VerifyIntegrationTestAction build() {
-            return new VerifyIntegrationTestAction(this);
+        public VerifyIntegrationAction build() {
+            return new VerifyIntegrationAction(this);
         }
     }
 }

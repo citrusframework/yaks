@@ -17,85 +17,130 @@
 
 package org.citrusframework.yaks.camelk;
 
-import java.io.IOException;
 import java.util.Map;
 
+import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.exceptions.ActionTimeoutException;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import static com.consol.citrus.container.Assert.Builder.assertException;
-import static org.citrusframework.yaks.camelk.actions.CreateIntegrationTestAction.Builder.createIntegration;
-import static org.citrusframework.yaks.camelk.actions.VerifyIntegrationTestAction.Builder.verifyIntegration;
-
+import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static org.citrusframework.yaks.camelk.actions.CamelKActionBuilder.camelk;
 
 public class CamelKSteps {
-
-    private KubernetesClient client;
 
     @CitrusResource
     private TestCaseRunner runner;
 
-	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+) with configuration:$")
-	public void createNewIntegration(String name, Map<String, String> configuration) throws IOException {
-		if(configuration.get("source") == null) {
+    @CitrusFramework
+    private Citrus citrus;
+
+    private KubernetesClient k8sClient;
+
+    private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
+    private int maxAttempts = CamelKSettings.getMaxAttempts();
+    private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
+
+    @Before
+    public void before(Scenario scenario) {
+        if (k8sClient == null) {
+            k8sClient = CamelKSupport.getKubernetesClient(citrus);
+        }
+    }
+
+    @Given("^Disable auto removal of Camel-K resources$")
+    public void disableAutoRemove() {
+        autoRemoveResources = false;
+    }
+
+	@Given("^Enable auto removal of Camel-K resources$")
+    public void enableAutoRemove() {
+        autoRemoveResources = true;
+    }
+
+	@Given("^Camel-K resource polling configuration$")
+    public void configureResourcePolling(Map<String, Object> configuration) {
+        maxAttempts = Integer.parseInt(configuration.getOrDefault("maxAttempts", maxAttempts).toString());
+        delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
+    }
+
+	@Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+) with configuration:$")
+	public void createNewIntegration(String name, String language, Map<String, String> configuration) {
+		if (configuration.get("source") == null) {
 			throw new IllegalStateException("Specify 'source' parameter");
 		}
 
-		runner.run(createIntegration()
-                    .client(client())
-                    .integrationName(name)
+		runner.run(camelk()
+                    .client(k8sClient)
+                    .createIntegration(name + "." + language)
                     .source(configuration.get("source"))
                     .dependencies(configuration.get("dependencies"))
                     .traits(configuration.get("traits")));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(camelk().client(k8sClient).deleteIntegration(name)));
+        }
 	}
 
-	@Given("^new integration with name ([a-z0-9_]+\\.[a-z0-9_]+)$")
-	public void createNewIntegration(String name, String source) throws IOException {
-        runner.run(createIntegration()
-                    .client(client())
-                    .integrationName(name)
+	@Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+)$")
+	public void createNewIntegration(String name, String language, String source) {
+        runner.run(camelk()
+                    .client(k8sClient)
+                    .createIntegration(name + "." + language)
                     .source(source));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(camelk().client(k8sClient).deleteIntegration(name)));
+        }
 	}
 
-    @Given("^integration ([a-z0-9-.]+) is running$")
-    @Then("^integration ([a-z0-9-.]+) should be running$")
-    public void shouldBeRunning(String name) throws InterruptedException {
-        runner.run(verifyIntegration()
-                .isRunning(name));
+    @Given("^delete Camel-K integration ([a-z0-9-]+)$")
+	public void deleteIntegration(String name) {
+        runner.run(camelk()
+                    .client(k8sClient)
+                    .deleteIntegration(name));
+	}
+
+    @Given("^Camel-K integration ([a-z0-9-]+) is running$")
+    @Then("^Camel-K integration ([a-z0-9-]+) should be running$")
+    public void integrationShouldBeRunning(String name) {
+        runner.run(camelk()
+                .client(k8sClient)
+                .verifyIntegration(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isRunning());
     }
 
-    @Then("^integration ([a-z0-9-.]+) should print (.*)$")
-    public void shouldPrint(String name, String message) throws InterruptedException {
-        runner.run(verifyIntegration()
-                .client(client())
-                .isRunning(name)
+    @Then("^Camel-K integration ([a-z0-9-]+) should print (.*)$")
+    public void integrationShouldPrint(String name, String message) {
+        runner.run(camelk()
+                .client(k8sClient)
+                .verifyIntegration(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
     }
 
-    @Then("^integration ([a-z0-9-.]+) should not print (.*)$")
-    public void shouldNotPrint(String name, String message) throws InterruptedException {
+    @Then("^Camel-K integration ([a-z0-9-]+) should not print (.*)$")
+    public void integrationShouldNotPrint(String name, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)
-                .when(verifyIntegration()
-                    .client(client())
-                    .isRunning(name)
+                .when(camelk()
+                    .client(k8sClient)
+                    .verifyIntegration(name)
+                    .maxAttempts(maxAttempts)
+                    .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
-    }
-
-    /**
-     * Lazy initialize a default Kubernetes client.
-     * @return
-     */
-    private KubernetesClient client() {
-        if (this.client == null) {
-            this.client = new DefaultKubernetesClient();
-        }
-        return this.client;
     }
 
 }

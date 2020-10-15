@@ -23,32 +23,44 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.util.FileUtils;
-import org.citrusframework.yaks.camelk.model.Integration;
-import org.citrusframework.yaks.camelk.model.IntegrationSpec;
+import org.citrusframework.yaks.camelk.model.Kamelet;
+import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
-public class IntegrationBuilderTest {
+public class KameletBuilderTest {
 
 	@Test
-	public void buildComplexIntegrationTest() throws IOException {
-		Map<String, IntegrationSpec.TraitConfig> traits = new HashMap<>();
-		IntegrationSpec.TraitConfig quarkus = new IntegrationSpec.TraitConfig("enabled", "true");
-		quarkus.add("native", "true");
-		traits.put("quarkus", quarkus);
-		traits.put("route", new IntegrationSpec.TraitConfig("enabled", "true"));
+	public void buildComplexKamelet() throws IOException {
+		Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+		types.put("out", new KameletSpec.TypeSpec("text/plain"));
 
-		Integration i = new Integration.Builder()
-				.name("bar.groovy")
-				.source("from(\"timer:x\").log('${body}')")
-				.traits(traits)
+		KameletSpec.Definition definition = new KameletSpec.Definition();
+		definition.setTitle("Timer Source");
+		definition.getProperties().put("period", new KameletSpec.Definition.PropertyConfig("Period", "integer", 1000, null));
+		definition.getProperties().put("message", new KameletSpec.Definition.PropertyConfig("Message", "string", null, "hello world"));
+		definition.getRequired().add("message");
+
+		Kamelet kamelet = new Kamelet.Builder()
+				.name("time-source")
+				.definition(definition)
+				.types(types)
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
+				.flow("from:\n" +
+						"  uri: timer:tick\n" +
+						"  parameters:\n" +
+						"    period: \"#property:period\"\n" +
+						"  steps:\n" +
+						"  - set-body:\n" +
+						"      constant: \"#property:message\"\n" +
+						"  - to: \"kamelet:sink\"")
 				.build();
 
-		final String json = CamelKSupport.json().writeValueAsString(i);
+		final String json = CamelKSupport.json().writeValueAsString(kamelet);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
+				FileUtils.readToString(new ClassPathResource("kamelet.json", KameletBuilderTest.class))),
+				StringUtils.trimAllWhitespace(json));
 	}
 }

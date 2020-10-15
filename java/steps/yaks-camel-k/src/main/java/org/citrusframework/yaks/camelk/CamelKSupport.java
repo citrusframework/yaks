@@ -15,15 +15,10 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative;
-
-import java.io.IOException;
+package org.citrusframework.yaks.camelk;
 
 import com.consol.citrus.Citrus;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.knative.client.DefaultKnativeClient;
-import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -36,11 +31,13 @@ import org.yaml.snakeyaml.representer.Representer;
 /**
  * @author Christoph Deppisch
  */
-public final class KnativeSupport {
+public class CamelKSupport {
+
+    public static final String CAMELK_CRD_GROUP = "camel.apache.org";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private KnativeSupport() {
+    private CamelKSupport() {
         // prevent instantiation of utility class
     }
 
@@ -49,14 +46,6 @@ public final class KnativeSupport {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
             return new DefaultKubernetesClient();
-        }
-    }
-
-    public static KnativeClient getKnativeClient(Citrus citrus) {
-        if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KnativeClient.class).size() == 1L) {
-            return citrus.getCitrusContext().getReferenceResolver().resolve(KnativeClient.class);
-        } else {
-            return new DefaultKnativeClient();
         }
     }
 
@@ -80,43 +69,21 @@ public final class KnativeSupport {
         return OBJECT_MAPPER;
     }
 
-    public static <T> void createResource(KubernetesClient k8sClient, String namespace,
-                                   CustomResourceDefinitionContext context, T resource) {
-        try {
-            k8sClient.customResource(context).createOrReplace(namespace, yaml().dump(resource));
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create Knative resource", e);
-        }
+    public static CustomResourceDefinitionContext integrationCRDContext(String version) {
+        return camelkCRDContext("integrations", version);
     }
 
-    public static void deleteResource(KubernetesClient k8sClient, String namespace,
-                                      CustomResourceDefinitionContext context, String resourceName) {
-        try {
-            k8sClient.customResource(context).delete(namespace, resourceName);
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to delete Knative resource", e);
-        }
+    public static CustomResourceDefinitionContext kameletCRDContext(String version) {
+        return camelkCRDContext("kamelets", version);
     }
 
-    public static CustomResourceDefinitionContext eventingCRDContext(String kind, String version) {
-        return knativeCRDContext("eventing", kind, version);
-    }
-
-    public static CustomResourceDefinitionContext messagingCRDContext(String kind, String version) {
-        return knativeCRDContext("messaging", kind, version);
-    }
-
-    public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String kind, String version) {
+    public static CustomResourceDefinitionContext camelkCRDContext(String kind, String version) {
         return new CustomResourceDefinitionContext.Builder()
-                .withName(String.format("%s.%s.knative.dev", kind, knativeComponent))
-                .withGroup(String.format("%s.knative.dev", knativeComponent))
+                .withName(kind + "." + CAMELK_CRD_GROUP)
+                .withGroup(CAMELK_CRD_GROUP)
                 .withVersion(version)
                 .withPlural(kind)
                 .withScope("Namespaced")
                 .build();
-    }
-
-    public static String knativeApiVersion() {
-        return KnativeSettings.getApiVersion();
     }
 }
