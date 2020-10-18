@@ -31,6 +31,8 @@ import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
@@ -113,6 +115,20 @@ public class KameletSteps {
         definition.getProperties().put(propertyName,
                 new KameletSpec.Definition.PropertyConfig(title, type, defaultValue, example));
 	}
+
+    @Given("^load Kamelet ([a-z0-9-]+).kamelet.yaml$")
+    public void loadKameletFromFile(String fileName) {
+        Resource resource = new ClassPathResource(fileName + ".kamelet.yaml");
+        runner.run(camelk()
+                .client(k8sClient)
+                .createKamelet(fileName)
+                .resource(resource));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(camelk().client(k8sClient).deleteKamelet(fileName)));
+        }
+    }
 
     @Given("^create Kamelet ([a-z0-9-]+)$")
 	public void createNewKamelet(String name) {

@@ -245,6 +245,10 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 		sources[test.Spec.Settings.Name] = test.Spec.Settings.Content
 	}
 
+	for _, resource := range test.Spec.Resources {
+		sources[resource.Name] = resource.Content
+	}
+
 	cm := v1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
@@ -254,8 +258,8 @@ func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alph
 			Namespace: test.Namespace,
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
-				"app":     "yaks",
-				TestLabel:    test.Name,
+				"app":       "yaks",
+				TestLabel:   test.Name,
 				TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{

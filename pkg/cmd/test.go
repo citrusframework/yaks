@@ -95,6 +95,8 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions
 	cmd.Flags().StringArrayP("env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
 	cmd.Flags().StringArrayP("tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
 	cmd.Flags().StringArrayP("feature", "f", nil, "Feature file to include in the test run")
+	cmd.Flags().StringArray("resource", nil, "Add a resource")
+	cmd.Flags().StringArray("property-file", nil, "Bind a property file to the test. E.g. \"--property-file test.properties\"")
 	cmd.Flags().StringArrayP("glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
 	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
 	cmd.Flags().String("dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
@@ -105,17 +107,19 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions
 
 type testCmdOptions struct {
 	*RootCmdOptions
-	Repositories []string `mapstructure:"maven-repository"`
-	Dependencies []string `mapstructure:"dependency"`
-	Logger       []string `mapstructure:"logger"`
-	Uploads      []string `mapstructure:"upload"`
-	Settings     string `mapstructure:"settings"`
-	Env          []string `mapstructure:"env"`
-	Tags         []string `mapstructure:"tag"`
-	Features     []string `mapstructure:"feature"`
-	Glue         []string `mapstructure:"glue"`
-	Options      string `mapstructure:"options"`
-	DumpFormat   string `mapstructure:"dump"`
+	Repositories  []string `mapstructure:"maven-repository"`
+	Dependencies  []string `mapstructure:"dependency"`
+	Logger        []string `mapstructure:"logger"`
+	Uploads       []string `mapstructure:"upload"`
+	Settings      string `mapstructure:"settings"`
+	Env           []string `mapstructure:"env"`
+	Tags          []string `mapstructure:"tag"`
+	Features      []string `mapstructure:"feature"`
+	Resources     []string `mapstructure:"resources"`
+	PropertyFiles []string `mapstructure:"property-files"`
+	Glue          []string `mapstructure:"glue"`
+	Options       string `mapstructure:"options"`
+	DumpFormat    string `mapstructure:"dump"`
 	ReportFormat report.OutputFormat `mapstructure:"report"`
 }
 
@@ -375,6 +379,42 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 				Language: v1alpha1.LanguageGherkin,
 			},
 		},
+	}
+
+	for _, resource := range runConfig.Config.Runtime.Resources {
+		data, err := o.loadData(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(resource),
+			Content: data,
+		})
+	}
+
+	for _, resource := range o.Resources {
+		data, err := o.loadData(resource)
+		if err != nil {
+			return nil, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(resource),
+			Content: data,
+		})
+	}
+
+	for _, propertyFile := range o.PropertyFiles {
+		data, err := o.loadData(propertyFile)
+		if err != nil {
+			return nil, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(propertyFile),
+			Content: data,
+		})
 	}
 
 	if settings, err := o.newSettings(runConfig); err != nil {

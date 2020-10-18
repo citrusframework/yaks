@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.consol.citrus.context.TestContext;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
@@ -33,6 +36,7 @@ import org.citrusframework.yaks.camelk.model.DoneableKamelet;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
 /**
@@ -49,6 +53,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
     private final KameletSpec.Definition definition;
     private final List<String> dependencies;
     private final Map<String, KameletSpec.TypeSpec> types;
+    private final Resource resource;
 
     /**
      * Constructor using given builder.
@@ -62,6 +67,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
         this.definition = builder.definition;
         this.dependencies = builder.dependencies;
         this.types = builder.types;
+        this.resource = builder.resource;
     }
 
     @Override
@@ -70,27 +76,37 @@ public class CreateKameletAction extends AbstractCamelKAction {
     }
 
     private void createKamelet(TestContext context) {
-        final Kamelet.Builder builder = new Kamelet.Builder()
-                .name(context.replaceDynamicContentInString(name))
-                .definition(definition);
+        final Kamelet kamelet;
 
-        if (flow != null) {
-            builder.flow(context.replaceDynamicContentInString(flow));
+        if (resource != null) {
+            try {
+                kamelet = CamelKSupport.yaml().loadAs(FileUtils.readToString(resource), Kamelet.class);
+            } catch (IOException e) {
+                throw new CitrusRuntimeException(String.format("Failed to load Kamelet from resource %s", name + ".kamelet.yaml"));
+            }
+        } else {
+            final Kamelet.Builder builder = new Kamelet.Builder()
+                    .name(context.replaceDynamicContentInString(name))
+                    .definition(definition);
+
+            if (flow != null) {
+                builder.flow(context.replaceDynamicContentInString(flow));
+            }
+
+            if (source != null) {
+                builder.source(source.getName(), context.replaceDynamicContentInString(source.getContent()));
+            }
+
+            if (dependencies != null && !dependencies.isEmpty()) {
+                builder.dependencies(context.resolveDynamicValuesInList(dependencies));
+            }
+
+            if (types != null && !types.isEmpty()) {
+                builder.types(context.resolveDynamicValuesInMap(types));
+            }
+
+            kamelet = builder.build();
         }
-
-        if (source != null) {
-            builder.source(source.getName(), context.replaceDynamicContentInString(source.getContent()));
-        }
-
-        if (dependencies != null && !dependencies.isEmpty()) {
-            builder.dependencies(context.resolveDynamicValuesInList(dependencies));
-        }
-
-        if (types != null && !types.isEmpty()) {
-            builder.types(context.resolveDynamicValuesInMap(types));
-        }
-
-        final Kamelet kamelet = builder.build();
 
         if (LOG.isDebugEnabled()) {
             try {
@@ -119,6 +135,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
         private List<String> dependencies = new ArrayList<>();
         private KameletSpec.Definition definition = new KameletSpec.Definition();
         private Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+        private Resource resource;
 
         public Builder kamelet(String kameletName) {
             this.name = kameletName;
@@ -204,6 +221,11 @@ public class CreateKameletAction extends AbstractCamelKAction {
                 flow = CamelKSupport.yaml().dump(kamelet.getSpec().getFlow());
             }
 
+            return this;
+        }
+
+        public Builder resource(Resource resource) {
+            this.resource = resource;
             return this;
         }
 

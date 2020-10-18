@@ -18,116 +18,117 @@ limitations under the License.
 package config
 
 import (
-	"github.com/citrusframework/yaks/pkg/util/olm"
-	"io/ioutil"
-	"os"
+    "github.com/citrusframework/yaks/pkg/util/olm"
+    "io/ioutil"
+    "os"
 
-	"gopkg.in/yaml.v2"
+    "gopkg.in/yaml.v2"
 )
 
 type RunConfig struct {
-	Config Config       `yaml:"config"`
-	Pre    []StepConfig `yaml:"pre"`
-	Post   []StepConfig `yaml:"post"`
+    Config Config       `yaml:"config"`
+    Pre    []StepConfig `yaml:"pre"`
+    Post   []StepConfig `yaml:"post"`
 }
 
 type Config struct {
-	Recursive bool `yaml:"recursive"`
-	Namespace NamespaceConfig
-	Operator  OperatorConfig
-	Runtime   RuntimeConfig
+    Recursive bool            `yaml:"recursive"`
+    Namespace NamespaceConfig `yaml:"namespace"`
+    Operator  OperatorConfig  `yaml:"operator"`
+    Runtime   RuntimeConfig   `yaml:"runtime"`
 }
 
 type StepConfig struct {
-	Run     string `yaml:"run"`
-	Script  string `yaml:"script"`
-	Name    string `yaml:"name"`
-	Timeout string `yaml:"timeout"`
+    Run     string `yaml:"run"`
+    Script  string `yaml:"script"`
+    Name    string `yaml:"name"`
+    Timeout string `yaml:"timeout"`
 }
 
 type RuntimeConfig struct {
-	Cucumber CucumberConfig
-	Settings SettingsConfig
-	Env 	 []EnvConfig
-	Secret   string
+    Cucumber  CucumberConfig `yaml:"cucumber"`
+    Resources []string 	     `yaml:"resources"`
+    Settings  SettingsConfig `yaml:"settings"`
+    Env 	  []EnvConfig 	 `yaml:"env"`
+    Secret    string 		 `yaml:"secret"`
 }
 
 type CucumberConfig struct {
-	Tags    []string `yaml:"tags"`
-	Glue    []string `yaml:"glue"`
-	Options string   `yaml:"options"`
+    Tags    []string `yaml:"tags"`
+    Glue    []string `yaml:"glue"`
+    Options string   `yaml:"options"`
 }
 
 type EnvConfig struct {
-	Name  string `yaml:"name"`
-	Value string `yaml:"value"`
+    Name  string `yaml:"name"`
+    Value string `yaml:"value"`
 }
 
 type SettingsConfig struct {
-	Repositories []RepositoryConfig
-	Dependencies []DependencyConfig
-	Loggers 	 []LoggerConfig
+    Repositories []RepositoryConfig `yaml:"repositories"`
+    Dependencies []DependencyConfig `yaml:"dependencies"`
+    Loggers 	 []LoggerConfig     `yaml:"loggers"`
 }
 
 type RepositoryConfig struct {
-	Id        string `yaml:"id"`
-	Name      string `yaml:"name,omitempty"`
-	Url       string `yaml:"url"`
-	Layout    string `yaml:"layout,omitempty"`
-	Releases  PolicyConfig `yaml:"releases,omitempty"`
-	Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
+    Id        string `yaml:"id"`
+    Name      string `yaml:"name,omitempty"`
+    Url       string `yaml:"url"`
+    Layout    string `yaml:"layout,omitempty"`
+    Releases  PolicyConfig `yaml:"releases,omitempty"`
+    Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
 }
 
 type PolicyConfig struct {
-	Enabled      string `yaml:"enabled,omitempty"`
-	UpdatePolicy string `yaml:"updatePolicy,omitempty"`
+    Enabled      string `yaml:"enabled,omitempty"`
+    UpdatePolicy string `yaml:"updatePolicy,omitempty"`
 }
 
 type DependencyConfig struct {
-	GroupId    string `yaml:"groupId"`
-	ArtifactId string `yaml:"artifactId"`
-	Version    string `yaml:"version"`
+    GroupId    string `yaml:"groupId"`
+    ArtifactId string `yaml:"artifactId"`
+    Version    string `yaml:"version"`
 }
 
 type LoggerConfig struct {
-	Name  string `yaml:"name"`
-	Level string `yaml:"level"`
+    Name  string `yaml:"name"`
+    Level string `yaml:"level"`
 }
 
 type NamespaceConfig struct {
-	Name       string `yaml:"name"`
-	Temporary  bool   `yaml:"temporary"`
-	AutoRemove bool   `yaml:"autoRemove"`
+    Name       string `yaml:"name"`
+    Temporary  bool   `yaml:"temporary"`
+    AutoRemove bool   `yaml:"autoRemove"`
 }
 
 type OperatorConfig struct {
-	Global    bool `yaml:"global"`
-	Namespace string `yaml:"namespace"`
+    Global    bool   `yaml:"global"`
+    Namespace string `yaml:"namespace"`
 }
 
 func NewWithDefaults() *RunConfig {
-	ns := NamespaceConfig {
-		AutoRemove: true,
-		Temporary:  false,
-	}
+    ns := NamespaceConfig {
+        AutoRemove: true,
+        Temporary:  false,
+    }
 
-	operator := OperatorConfig {
-		Global: true,
-		Namespace: olm.DefaultGlobalNamespace,
-	}
+    operator := OperatorConfig {
+        Global: true,
+        Namespace: olm.DefaultGlobalNamespace,
+    }
 
-	var config = Config {Recursive: true, Namespace: ns, Operator: operator}
-	return &RunConfig {Config: config}
+    var config = Config {Recursive: true, Namespace: ns, Operator: operator}
+    return &RunConfig {Config: config}
 }
 
 func LoadConfig(file string) (*RunConfig, error) {
-	config := NewWithDefaults()
-	data, err := ioutil.ReadFile(file)
-	if err != nil && os.IsNotExist(err) {
-		return config, nil
-	}
-	if err = yaml.Unmarshal(data, config); err != nil {
-		return nil, err
-	}
-	return config, nil
+    config := NewWithDefaults()
+    data, err := ioutil.ReadFile(file)
+    if err != nil && os.IsNotExist(err) {
+        return config, nil
+    }
+    if err = yaml.Unmarshal(data, config); err != nil {
+        return nil, err
+    }
+    return config, nil
 }

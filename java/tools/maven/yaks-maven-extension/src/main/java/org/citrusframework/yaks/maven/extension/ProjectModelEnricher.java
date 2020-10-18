@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.Level;
@@ -78,7 +79,15 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
             mountedTests.setDirectory(ExtensionSettings.getMountedTestsPath() + "/..data");
             mountedTests.setTargetPath(projectModel.getBuild().getTestOutputDirectory() + "/org/citrusframework/yaks");
             mountedTests.setFiltering(false);
+            mountedTests.setIncludes(Collections.singletonList("*.feature"));
             projectModel.getBuild().getTestResources().add(mountedTests);
+
+            Resource mountedResources = new Resource();
+            mountedResources.setDirectory(ExtensionSettings.getMountedTestsPath() + "/..data");
+            mountedResources.setTargetPath(projectModel.getBuild().getTestOutputDirectory());
+            mountedResources.setFiltering(false);
+            mountedResources.setExcludes(Collections.singletonList("*.feature"));
+            projectModel.getBuild().getTestResources().add(mountedResources);
 
             logger.info("Add mounted test resources in directory: " + ExtensionSettings.getMountedTestsPath());
         }
