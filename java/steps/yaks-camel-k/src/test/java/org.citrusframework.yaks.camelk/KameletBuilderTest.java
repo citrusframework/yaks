@@ -54,7 +54,7 @@ public class KameletBuilderTest {
 						"    period: \"#property:period\"\n" +
 						"  steps:\n" +
 						"  - set-body:\n" +
-						"      constant: \"#property:message\"\n" +
+						"      constant: \"{{message}}\"\n" +
 						"  - to: \"kamelet:sink\"")
 				.build();
 

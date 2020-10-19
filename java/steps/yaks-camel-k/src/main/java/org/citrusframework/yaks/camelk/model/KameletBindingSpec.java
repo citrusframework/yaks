@@ -1,0 +1,208 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.citrusframework.yaks.camelk.model;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.fabric8.kubernetes.api.model.KubernetesResource;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({"integration", "source", "sink"})
+@JsonDeserialize(
+        using = JsonDeserializer.None.class
+)
+public class KameletBindingSpec implements KubernetesResource {
+
+    @JsonProperty("integration")
+    private Integration integration;
+
+    @JsonProperty("source")
+    private Endpoint source;
+
+    @JsonProperty("sink")
+    private Endpoint sink;
+
+    public void setSource(Endpoint source) {
+        this.source = source;
+    }
+
+    public Endpoint getSource() {
+        return source;
+    }
+
+    public void setSink(Endpoint sink) {
+        this.sink = sink;
+    }
+
+    public Endpoint getSink() {
+        return sink;
+    }
+
+    public void setIntegration(Integration integration) {
+        this.integration = integration;
+    }
+
+    public Integration getIntegration() {
+        return integration;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonPropertyOrder({"ref", "uri", "properties"})
+    public static class Endpoint {
+        @JsonProperty("ref")
+        private ObjectReference ref;
+
+        @JsonProperty("uri")
+        private String uri;
+
+        @JsonProperty("properties")
+        private Map<String, Object> properties = new HashMap<>();
+
+        public Endpoint() {
+        }
+
+        public Endpoint(ObjectReference ref) {
+            this.ref = ref;
+        }
+
+        public Endpoint(ObjectReference ref, Map<String, Object> properties) {
+            this.ref = ref;
+            this.properties = properties;
+        }
+
+        public Endpoint(String uri) {
+            this.uri = uri;
+        }
+
+        public ObjectReference getRef() {
+            return ref;
+        }
+
+        public void setRef(ObjectReference ref) {
+            this.ref = ref;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
+
+        public Map<String, Object> getProperties() {
+            return properties;
+        }
+
+        public void setProperties(Map<String, Object> properties) {
+            this.properties = properties;
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({"name", "kind", "namespace", "uid", "apiVersion", "resourceVersion", "fieldPath"})
+        public static class ObjectReference {
+            @JsonProperty("name")
+            private String name;
+            @JsonProperty("kind")
+            private String kind;
+            @JsonProperty("namespace")
+            private String namespace;
+            @JsonProperty("uid")
+            private String uid;
+            @JsonProperty("apiVersion")
+            private String apiVersion;
+            @JsonProperty("resourceVersion")
+            private String resourceVersion;
+            @JsonProperty("fieldPath")
+            private String fieldPath;
+
+            public ObjectReference() {
+                super();
+            }
+
+            public ObjectReference(String name, String kind, String namespace) {
+                this.name = name;
+                this.kind = kind;
+                this.namespace = namespace;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getKind() {
+                return kind;
+            }
+
+            public void setKind(String kind) {
+                this.kind = kind;
+            }
+
+            public String getNamespace() {
+                return namespace;
+            }
+
+            public void setNamespace(String namespace) {
+                this.namespace = namespace;
+            }
+
+            public String getUid() {
+                return uid;
+            }
+
+            public void setUid(String uid) {
+                this.uid = uid;
+            }
+
+            public String getApiVersion() {
+                return apiVersion;
+            }
+
+            public void setApiVersion(String apiVersion) {
+                this.apiVersion = apiVersion;
+            }
+
+            public String getResourceVersion() {
+                return resourceVersion;
+            }
+
+            public void setResourceVersion(String resourceVersion) {
+                this.resourceVersion = resourceVersion;
+            }
+
+            public String getFieldPath() {
+                return fieldPath;
+            }
+
+            public void setFieldPath(String fieldPath) {
+                this.fieldPath = fieldPath;
+            }
+        }
+    }
+
+}
