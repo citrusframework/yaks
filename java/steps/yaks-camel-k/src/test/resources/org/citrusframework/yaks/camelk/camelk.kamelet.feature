@@ -13,7 +13,7 @@ Feature: Kamelet
     And Kamelet source helloworld.groovy
     """
     from('timer:tick?period=#property:period')
-      .setBody().constant('#property:message')
+      .setBody().constant('{{message}}')
       .to('kamelet:sink')
     """
     And Kamelet type out="test/plain"
@@ -39,7 +39,13 @@ from:
     period: "#property:period"
   steps:
   - set-body:
-      constant: "#property:message"
+      constant: "{{message}}"
   - to: "kamelet:sink"
 """
     Then Kamelet timer-source should be available
+
+  Scenario: Create Kamelet from file
+    Given load Kamelet timer-source.kamelet.yaml
+    And load Camel-K integration timer-to-log.groovy
+    Then Kamelet timer-source should be available
+

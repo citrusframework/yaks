@@ -43,10 +43,11 @@ type TestSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	Source   SourceSpec   `json:"source,omitempty"`
-	Settings SettingsSpec `json:"config,omitempty"`
-	Env      []string     `json:"env,omitempty"`
-	Secret   string       `json:"secret,omitempty"`
+	Source    SourceSpec     `json:"source,omitempty"`
+	Resources []ResourceSpec `json:"resources,omitempty"`
+	Settings  SettingsSpec   `json:"config,omitempty"`
+	Env       []string       `json:"env,omitempty"`
+	Secret    string         `json:"secret,omitempty"`
 }
 
 // SourceSpec--
@@ -54,6 +55,12 @@ type SourceSpec struct {
 	Name     string   `json:"name,omitempty"`
 	Content  string   `json:"content,omitempty"`
 	Language Language `json:"language,omitempty"`
+}
+
+// ResourceSpec--
+type ResourceSpec struct {
+	Name     string   `json:"name,omitempty"`
+	Content  string   `json:"content,omitempty"`
 }
 
 // SettingsSpec--

@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.camelk;
 
+import java.io.IOException;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
@@ -24,11 +25,15 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.exceptions.ActionTimeoutException;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import static com.consol.citrus.container.Assert.Builder.assertException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
@@ -90,7 +95,17 @@ public class CamelKSteps {
         }
 	}
 
-	@Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+)$")
+	@Given("^load Camel-K integration ([a-z0-9-]+).([a-z0-9-]+)$")
+	public void loadIntegrationFromFile(String name, String language) {
+        Resource resource = new ClassPathResource(name + "." + language);
+        try {
+            createNewIntegration(name, language, FileUtils.readToString(resource));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language));
+        }
+    }
+
+    @Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+)$")
 	public void createNewIntegration(String name, String language, String source) {
         runner.run(camelk()
                     .client(k8sClient)

@@ -162,10 +162,12 @@ public class KameletSpec implements KubernetesResource {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"title", "required", "properties"})
+    @JsonPropertyOrder({"title", "description", "required", "properties"})
     public static class Definition {
         @JsonProperty("title")
         private String title;
+        @JsonProperty("description")
+        private String description;
         @JsonProperty("required")
         private List<String> required = new ArrayList<>();
         @JsonProperty("properties")
@@ -177,6 +179,14 @@ public class KameletSpec implements KubernetesResource {
 
         public String getTitle() {
             return title;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
         }
 
         public List<String> getRequired() {
@@ -196,10 +206,12 @@ public class KameletSpec implements KubernetesResource {
         }
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        @JsonPropertyOrder({"title", "type", "default", "example"})
+        @JsonPropertyOrder({"title", "description", "type", "default", "example"})
         public static class PropertyConfig {
             @JsonProperty("title")
             private String title;
+            @JsonProperty("description")
+            private String description;
             @JsonProperty("type")
             private String type;
             @JsonProperty("default")
@@ -226,6 +238,14 @@ public class KameletSpec implements KubernetesResource {
                 this.title = title;
             }
 
+            public String getDescription() {
+                return description;
+            }
+
+            public void setDescription(String description) {
+                this.description = description;
+            }
+
             public String getType() {
                 return type;
             }
@@ -234,11 +254,11 @@ public class KameletSpec implements KubernetesResource {
                 this.type = type;
             }
 
-            public Object getDefaultValue() {
+            public Object getDefault() {
                 return defaultValue;
             }
 
-            public void setDefaultValue(Object defaultValue) {
+            public void setDefault(Object defaultValue) {
                 this.defaultValue = defaultValue;
             }
 
