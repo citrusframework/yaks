@@ -56,11 +56,10 @@ public class ReceiveEventSteps {
     public void before(Scenario scenario) {
         kubernetesSteps = new KubernetesSteps();
         CitrusAnnotations.injectAll(kubernetesSteps, citrus, context);
+        kubernetesSteps.before(scenario);
         kubernetesSteps.configureTimeout(KnativeSettings.getEventConsumerTimeout());
         kubernetesSteps.setServiceName(KnativeSettings.getServiceName());
         kubernetesSteps.setServicePort(KnativeSettings.getServicePort());
-
-        kubernetesSteps.before(scenario);
     }
 
     @Given("^Knative service \"([^\"\\s]+)\"$")

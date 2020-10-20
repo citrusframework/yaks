@@ -124,6 +124,7 @@ public class KubernetesSteps {
 
     @Given("^create Kubernetes service ([^\\s]+) with target port (\\d+)$")
     public void createService(String serviceName, int targetPort) {
+        setServiceName(serviceName);
         setServicePort(targetPort);
         if (!httpServer.isRunning()) {
             httpServer.start();

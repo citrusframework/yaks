@@ -32,7 +32,7 @@ public class KubernetesSettings {
     private static final String KUBERNETES_PROPERTY_PREFIX = "yaks.kubernetes.";
     private static final String KUBERNETES_ENV_PREFIX = "YAKS_KUBERNETES_";
 
-    private static final String SERVICE_TIMEOUT_PROPERTY = KUBERNETES_PROPERTY_PREFIX + "event.consumer.timeout";
+    private static final String SERVICE_TIMEOUT_PROPERTY = KUBERNETES_PROPERTY_PREFIX + "service.timeout";
     private static final String SERVICE_TIMEOUT_ENV = KUBERNETES_ENV_PREFIX + "SERVICE_TIMEOUT";
     private static final String SERVICE_TIMEOUT_DEFAULT = "2000";
 
