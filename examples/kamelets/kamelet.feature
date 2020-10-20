@@ -4,7 +4,7 @@ Feature: Kamelet
     Given Disable auto removal of Kamelet resources
     Given Camel-K resource polling configuration
       | maxAttempts          | 20   |
-      | delayBetweemAttempts | 1000 |
+      | delayBetweenAttempts | 1000 |
 
   Scenario: Create Kamelet
     Given Kamelet property definition

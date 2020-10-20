@@ -40,7 +40,7 @@
         "steps": [
           {
             "set-body": {
-              "constant": "#property:message"
+              "constant": "{{message}}"
             }
           },
           {
