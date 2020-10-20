@@ -17,14 +17,19 @@
 
 package org.citrusframework.yaks.kubernetes;
 
+import java.io.IOException;
+import java.util.Map;
+
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
 import com.consol.citrus.http.server.HttpServerBuilder;
 import com.consol.citrus.message.MessageType;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
@@ -114,6 +119,64 @@ public class KubernetesSteps {
         this.servicePort = port;
         if (httpServer != null) {
             httpServer.setPort(port);
+        }
+    }
+
+    @Given("^create Kubernetes custom resource in ([^\\s]+)$")
+    public void createCustomResource(String resourceType, String content) {
+        Map<String, Object> yamlContent = KubernetesSupport.yaml().load(content);
+        Object metadata = yamlContent.get("metadata");
+
+        if (!(metadata instanceof Map)) {
+            throw new CitrusRuntimeException("Missing metadat on Kubernetes custom resource");
+        }
+
+        String name = ((Map<String, Object>) metadata).getOrDefault("name", "").toString();
+        String kind = yamlContent.getOrDefault("kind", "").toString();
+        String apiVersion = yamlContent.getOrDefault("apiVersion", KubernetesSupport.kubernetesApiVersion()).toString();
+
+        runner.run(kubernetes().client(k8sClient).createCustomResource()
+                .type(resourceType)
+                .kind(kind)
+                .apiVersion(apiVersion)
+                .content(content));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .deleteCustomResource(name)
+                            .type(resourceType)
+                            .kind(kind)
+                            .apiVersion(apiVersion)));
+        }
+    }
+
+    @Given("^load Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
+    public void createCustomResourceFromFile(String fileName, String resourceType) {
+        try {
+            createCustomResource(resourceType, FileUtils.readToString(FileUtils.getFileResource(fileName)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to read properties file", e);
+        }
+    }
+
+    @Given("^create Kubernetes secret ([^\\s]+)$")
+    public void createSecret(String name, Map<String, String> properties) {
+        runner.run(kubernetes().client(k8sClient).createSecret(name).properties(properties));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient).deleteSecret(name)));
+        }
+    }
+
+    @Given("^load Kubernetes secret from file ([^\\s]+).properties$")
+    public void createSecret(String fileName) {
+        runner.run(kubernetes().client(k8sClient).createSecret(fileName).fromFile(fileName + ".properties"));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient).deleteSecret(fileName)));
         }
     }
 

@@ -80,6 +80,52 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         return builder;
     }
 
+    /**
+     * Create custom resource instance.
+     */
+    public CreateCustomResourceAction.Builder createCustomResource() {
+        CreateCustomResourceAction.Builder builder = new CreateCustomResourceAction.Builder()
+                .client(kubernetesClient);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Delete custom resource instance.
+     * @param name the name of the Kubernetes custom resource.
+     */
+    public DeleteCustomResourceAction.Builder deleteCustomResource(String name) {
+        DeleteCustomResourceAction.Builder builder = new DeleteCustomResourceAction.Builder()
+                .client(kubernetesClient)
+                .name(name);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Create secret instance.
+     * @param secretName the name of the Kubernetes secret.
+     */
+    public CreateSecretAction.Builder createSecret(String secretName) {
+        CreateSecretAction.Builder builder = new CreateSecretAction.Builder()
+                .client(kubernetesClient)
+                .name(secretName);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Delete secret instance.
+     * @param secretName the name of the Kubernetes secret.
+     */
+    public DeleteSecretAction.Builder deleteSecret(String secretName) {
+        DeleteSecretAction.Builder builder = new DeleteSecretAction.Builder()
+                .client(kubernetesClient)
+                .name(secretName);
+        this.delegate = builder;
+        return builder;
+    }
+
     @Override
     public KubernetesAction build() {
         Assert.notNull(delegate, "Missing delegate action to build");

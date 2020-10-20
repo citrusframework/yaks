@@ -39,12 +39,38 @@ public class KubernetesTestSteps {
     @CitrusFramework
     private Citrus citrus;
 
+    @Then("^verify broker ([^\\s]+) exists$")
+    public void verifyBroker(String brokerName) {
+        runner.run(new KubernetesTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Assertions.assertThat(getKubernetesClient()
+                        .customResource(KubernetesSupport.crdContext("brokers", "eventing.knative.dev", "Broker", "v1"))
+                        .get(namespace(context), brokerName)).isNotNull();
+            }
+        });
+    }
+
+    @Then("^verify secret ([^\\s]+) exists$")
+    public void verifySecret(String name) {
+        runner.run(new KubernetesTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Assertions.assertThat(getKubernetesClient()
+                        .secrets()
+                        .inNamespace(namespace(context))
+                        .withName(name)
+                        .get()).isNotNull();
+            }
+        });
+    }
+
     @Then("^verify Kubernetes service ([^\\s]+) exists$")
     public void verifyService(String serviceName) {
         runner.run(new KubernetesTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Assertions.assertThat(KubernetesSupport.getKubernetesClient(citrus)
+                Assertions.assertThat(getKubernetesClient()
                         .services()
                         .inNamespace(namespace(context))
                         .withName(serviceName)

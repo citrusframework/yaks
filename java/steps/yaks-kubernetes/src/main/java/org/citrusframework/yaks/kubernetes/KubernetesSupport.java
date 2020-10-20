@@ -72,8 +72,13 @@ public final class KubernetesSupport {
 
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, T resource) {
+        createResource(k8sClient, namespace, context, yaml().dump(resource));
+    }
+
+    public static void createResource(KubernetesClient k8sClient, String namespace,
+                                   CustomResourceDefinitionContext context, String yaml) {
         try {
-            k8sClient.customResource(context).createOrReplace(namespace, yaml().dump(resource));
+            k8sClient.customResource(context).createOrReplace(namespace, yaml);
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to create Knative resource", e);
         }
@@ -86,6 +91,16 @@ public final class KubernetesSupport {
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to delete Knative resource", e);
         }
+    }
+
+    public static CustomResourceDefinitionContext crdContext(String resourceType, String group, String kind, String version) {
+        return new CustomResourceDefinitionContext.Builder()
+                .withName(resourceType.contains(".") ? resourceType : String.format("%s.%s", resourceType, group))
+                .withGroup(group)
+                .withVersion(version)
+                .withPlural(kind)
+                .withScope("Namespaced")
+                .build();
     }
 
     public static String kubernetesApiVersion() {
