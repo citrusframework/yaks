@@ -19,6 +19,7 @@ package org.citrusframework.yaks.knative.actions;
 
 import com.consol.citrus.context.TestContext;
 import org.citrusframework.yaks.knative.KnativeSupport;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -39,7 +40,7 @@ public class DeleteKnativeResourceAction extends AbstractKnativeAction {
 
     @Override
     public void doExecute(TestContext context) {
-        KnativeSupport.deleteResource(getKubernetesClient(), namespace(context),
+        KubernetesSupport.deleteResource(getKubernetesClient(), namespace(context),
                 KnativeSupport.knativeCRDContext(component, kind, KnativeSupport.knativeApiVersion()), resourceName);
     }
 

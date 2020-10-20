@@ -25,7 +25,6 @@ import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpServerActionBuilder;
 import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
 import com.consol.citrus.http.message.HttpMessage;
@@ -67,22 +66,30 @@ public class HttpServerSteps implements HttpSteps {
     private String requestBody;
     private String responseBody;
 
-    public static final String HTTP_SERVER_NAME = "yaksHttpServer";
+    private int serverPort = HttpSettings.getServerPort();
+    private String serverName = HttpSettings.getServerName();
+
+    private long timeout = HttpSettings.getTimeout();
 
     @Before
     public void before(Scenario scenario) {
         if (httpServer == null) {
             if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
                 httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
-            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(HTTP_SERVER_NAME)) {
-                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HTTP_SERVER_NAME, HttpServer.class);
+                serverPort = httpServer.getPort();
+                timeout = httpServer.getDefaultTimeout();
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
+                serverPort = httpServer.getPort();
+                timeout = httpServer.getDefaultTimeout();
             } else {
                 httpServer = new HttpServerBuilder()
-                        .name(HTTP_SERVER_NAME)
+                        .timeout(timeout)
+                        .port(serverPort)
+                        .name(serverName)
                         .build();
 
-                citrus.getCitrusContext().getReferenceResolver().bind(HTTP_SERVER_NAME, httpServer);
-
+                citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
                 try {
                     httpServer.afterPropertiesSet();
                 } catch (Exception e) {
@@ -102,27 +109,31 @@ public class HttpServerSteps implements HttpSteps {
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\"$")
-    public void setServer(String id) {
-        if (!citrus.getCitrusContext().getReferenceResolver().isResolvable(id)) {
-            throw new CitrusRuntimeException("Unable to find http server for id: " + id);
+    public void setServer(String name) {
+        this.serverName = name;
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
+            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(name, HttpServer.class);
+        } else if (httpServer != null) {
+            citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
+            httpServer.setName(serverName);
         }
-
-        httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(id, HttpServer.class);
     }
 
     @Given("^HTTP server listening on port (\\d+)$")
     public void createServer(int port) {
-        httpServer = new HttpServerBuilder()
-                .port(port)
-                .build();
+        this.serverPort = port;
+        if (httpServer != null) {
+            httpServer.setPort(port);
 
-        try {
-            httpServer.afterPropertiesSet();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to initialize Http server", e);
+            if (!httpServer.isRunning()) {
+                httpServer.start();
+            }
         }
+    }
 
-        httpServer.start();
+    @Given("^HTTP server timeout is (\\d+)(?: ms| milliseconds)$")
+    public void configureTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
     @Then("^(?:expect|verify) HTTP request header: ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -258,7 +269,9 @@ public class HttpServerSteps implements HttpSteps {
         }
         bodyValidationExpressions.clear();
 
-        requestBuilder.messageType(requestMessageType);
+        requestBuilder
+                .timeout(timeout)
+                .messageType(requestMessageType);
 
         runner.run(requestBuilder);
     }

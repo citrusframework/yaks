@@ -23,6 +23,7 @@ import io.fabric8.knative.eventing.v1alpha1.BrokerBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -48,7 +49,7 @@ public class CreateBrokerAction extends AbstractKnativeAction {
                 .endMetadata()
                 .build();
 
-        KnativeSupport.createResource(getKubernetesClient(), namespace(context),
+        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
                 KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()), broker);
     }
 

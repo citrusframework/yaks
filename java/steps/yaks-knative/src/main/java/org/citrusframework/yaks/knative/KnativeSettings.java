@@ -18,10 +18,12 @@
 package org.citrusframework.yaks.knative;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.springframework.util.StringUtils;
 
 /**
@@ -73,10 +75,6 @@ public class KnativeSettings {
 
     private static final String DEFAULT_LABELS_PROPERTY = KNATIVE_PROPERTY_PREFIX + "default.labels";
     private static final String DEFAULT_LABELS_ENV = KNATIVE_ENV_PREFIX + "DEFAULT_LABELS";
-    private static final String DEFAULT_LABELS_DEFAULT = "app=yaks";
-
-    private static final String TEST_ID_PROPERTY = "yaks.test.id";
-    private static final String TEST_ID_ENV = "YAKS_TEST_ID";
 
     private KnativeSettings() {
         // prevent instantiation of utility class
@@ -165,16 +163,9 @@ public class KnativeSettings {
      * @return
      */
     public static int getServicePort() {
-        return Integer.parseInt(System.getProperty(SERVICE_PORT_PROPERTY,
-                System.getenv(SERVICE_PORT_ENV) != null ? System.getenv(SERVICE_PORT_ENV) : SERVICE_PORT_DEFAULT));
-    }
-
-    /**
-     * Current test id that is also set as label on the Pod running the test.
-     * @return
-     */
-    public static String getTestId() {
-        return System.getProperty(TEST_ID_PROPERTY, System.getenv(TEST_ID_ENV));
+        return Optional.ofNullable(System.getProperty(SERVICE_PORT_PROPERTY, System.getenv(SERVICE_PORT_ENV)))
+                .map(Integer::parseInt)
+                .orElseGet(KubernetesSettings::getServicePort);
     }
 
     /**
@@ -183,8 +174,11 @@ public class KnativeSettings {
      * @return
      */
     public static Map<String, String> getDefaultLabels() {
-        String labelsConfig = System.getProperty(DEFAULT_LABELS_PROPERTY,
-                System.getenv(DEFAULT_LABELS_ENV) != null ? System.getenv(DEFAULT_LABELS_ENV) : DEFAULT_LABELS_DEFAULT);
+        String labelsConfig = System.getProperty(DEFAULT_LABELS_PROPERTY, System.getenv(DEFAULT_LABELS_ENV));
+
+        if (labelsConfig == null) {
+            return KubernetesSettings.getDefaultLabels();
+        }
 
         return Stream.of(StringUtils.commaDelimitedListToStringArray(labelsConfig))
                     .map(item -> StringUtils.delimitedListToStringArray(item, "="))

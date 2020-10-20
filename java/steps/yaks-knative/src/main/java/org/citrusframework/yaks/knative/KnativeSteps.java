@@ -25,6 +25,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
 
@@ -50,7 +51,7 @@ public class KnativeSteps {
         runner.variable(KnativeVariableNames.NAMESPACE.value(), namespace);
 
         if (k8sClient == null) {
-            k8sClient = KnativeSupport.getKubernetesClient(citrus);
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 

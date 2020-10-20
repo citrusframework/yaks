@@ -27,6 +27,7 @@ rules:
   resources:
     - integrations
     - kamelets
+    - kameletbindings
   verbs:
     - create
     - delete

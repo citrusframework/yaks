@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.knative.actions.KnativeAction;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.http.HttpStatus;
 
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
@@ -138,7 +139,7 @@ public class KnativeTestSteps {
     private abstract class KnativeTestAction extends AbstractTestAction implements KnativeAction {
         @Override
         public KubernetesClient getKubernetesClient() {
-            return KnativeSupport.getKubernetesClient(citrus);
+            return KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 }

@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative.actions.serving;
+package org.citrusframework.yaks.kubernetes.actions;
 
 import java.util.Collections;
 
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
-import org.citrusframework.yaks.knative.KnativeSettings;
-import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 
 /**
  * @author Christoph Deppisch
  */
-public class CreateServiceAction extends AbstractKnativeAction {
+public class CreateServiceAction extends AbstractKubernetesAction {
 
     private final String serviceName;
     private final String port;
@@ -46,20 +46,20 @@ public class CreateServiceAction extends AbstractKnativeAction {
 
     @Override
     public void doExecute(TestContext context) {
-        getKubernetesClient().services().inNamespace(namespace(context)).createNew()
+        getKubernetesClient().services().inNamespace(namespace(context)).createOrReplaceWithNew()
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(serviceName)
-                    .withLabels(KnativeSettings.getDefaultLabels())
+                    .withLabels(KubernetesSettings.getDefaultLabels())
                 .endMetadata()
                 .withNewSpec()
                     // add selector to the very specific Pod that is running the test right now. This way the service will route all traffic to the test
-                    .withSelector(Collections.singletonMap("yaks.citrusframework.org/test-id", KnativeSettings.getTestId()))
+                    .withSelector(Collections.singletonMap("yaks.citrusframework.org/test-id", YaksSettings.getTestId()))
                     .withPorts(new ServicePortBuilder()
                             .withProtocol(context.replaceDynamicContentInString(protocol))
                             .withPort(Integer.parseInt(context.replaceDynamicContentInString(port)))
                             .withTargetPort(new IntOrString(Integer.parseInt(context.replaceDynamicContentInString(targetPort))))
-                        .build())
+                            .build())
                 .endSpec()
                 .done();
     }
@@ -67,7 +67,7 @@ public class CreateServiceAction extends AbstractKnativeAction {
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractKnativeAction.Builder<CreateServiceAction, Builder> {
+    public static class Builder extends AbstractKubernetesAction.Builder<CreateServiceAction, Builder> {
 
         private String serviceName;
         private String port = "80";

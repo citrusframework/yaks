@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -59,7 +60,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                             .build())
                     .withNewSubscriber()
                         .withNewRef()
-                            .withApiVersion("v1")
+                            .withApiVersion(KubernetesSupport.kubernetesApiVersion())
                             .withKind("Service")
                             .withName(context.replaceDynamicContentInString(serviceName))
                         .endRef()
@@ -67,7 +68,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                 .endSpec()
                 .build();
 
-        KnativeSupport.createResource(getKubernetesClient(), namespace(context),
+        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
                 KnativeSupport.messagingCRDContext("subscriptions", KnativeSupport.knativeApiVersion()), subscription);
     }
 

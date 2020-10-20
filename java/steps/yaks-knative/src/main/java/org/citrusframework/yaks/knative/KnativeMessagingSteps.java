@@ -25,6 +25,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.knative.actions.KnativeActionBuilder.knative;
@@ -45,7 +46,7 @@ public class KnativeMessagingSteps {
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
-            k8sClient = KnativeSupport.getKubernetesClient(citrus);
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 

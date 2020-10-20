@@ -48,6 +48,9 @@ public class YaksSettings {
     private static final String CLUSTER_TYPE_ENV = YAKS_ENV_PREFIX + "CLUSTER_TYPE";
     private static final String CLUSTER_TYPE_DEFAULT = YaksClusterType.KUBERNETES.name();
 
+    private static final String TEST_ID_PROPERTY = YAKS_PROPERTY_PREFIX + "test.id";
+    private static final String TEST_ID_ENV = YAKS_ENV_PREFIX + "TEST_ID";
+
     /**
      * Namespace to work on when performing Kubernetes/Knative client operations on resources.
      * @return
@@ -87,6 +90,14 @@ public class YaksSettings {
     public static YaksClusterType getClusterType() {
         return YaksClusterType.valueOf(System.getProperty(CLUSTER_TYPE_PROPERTY,
                 System.getenv(CLUSTER_TYPE_ENV) != null ? System.getenv(CLUSTER_TYPE_ENV) : CLUSTER_TYPE_DEFAULT));
+    }
+
+    /**
+     * Current test id that is also set as label on the Pod running the test.
+     * @return
+     */
+    public static String getTestId() {
+        return System.getProperty(TEST_ID_PROPERTY, System.getenv(TEST_ID_ENV));
     }
 
     /**

@@ -27,6 +27,7 @@ import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.DoneableKamelet;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * Test action verifies Kamelet CRD is present on given namespace.
@@ -62,7 +63,7 @@ public class VerifyKameletAction extends AbstractCamelKAction {
         LOG.info("Kamlet validation successful - All values OK!");
         if (LOG.isDebugEnabled()) {
             try {
-                LOG.debug(CamelKSupport.json().writeValueAsString(kamelet));
+                LOG.debug(KubernetesSupport.json().writeValueAsString(kamelet));
             } catch (JsonProcessingException e) {
                 LOG.warn("Unable to dump Kamelet data", e);
             }

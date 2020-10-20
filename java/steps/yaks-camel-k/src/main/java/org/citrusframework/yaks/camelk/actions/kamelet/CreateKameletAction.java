@@ -36,6 +36,7 @@ import org.citrusframework.yaks.camelk.model.DoneableKamelet;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
@@ -80,7 +81,8 @@ public class CreateKameletAction extends AbstractCamelKAction {
 
         if (resource != null) {
             try {
-                kamelet = CamelKSupport.yaml().loadAs(FileUtils.readToString(resource), Kamelet.class);
+                kamelet = KubernetesSupport.yaml().loadAs(
+                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), Kamelet.class);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load Kamelet from resource %s", name + ".kamelet.yaml"));
             }
@@ -110,7 +112,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
 
         if (LOG.isDebugEnabled()) {
             try {
-                LOG.debug(CamelKSupport.json().writeValueAsString(kamelet));
+                LOG.debug(KubernetesSupport.json().writeValueAsString(kamelet));
             } catch (JsonProcessingException e) {
                 LOG.warn("Unable to dump Kamelet data", e);
             }
@@ -218,7 +220,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
             }
 
             if (kamelet.getSpec().getFlow() != null) {
-                flow = CamelKSupport.yaml().dump(kamelet.getSpec().getFlow());
+                flow = KubernetesSupport.yaml().dump(kamelet.getSpec().getFlow());
             }
 
             return this;

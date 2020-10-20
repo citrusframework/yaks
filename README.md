@@ -17,6 +17,8 @@ YAKS is a platform to enable Cloud Native BDD testing on Kubernetes!
   * [Http Steps](#http-steps)
   * [Open API Steps](#openapi-steps)
   * Kafka Steps
+  * Kubernetes Steps
+  * Knative Steps
   * Jms Steps
   * [Groovy Steps](#groovy-steps)
   * [Custom Steps](#custom-steps)

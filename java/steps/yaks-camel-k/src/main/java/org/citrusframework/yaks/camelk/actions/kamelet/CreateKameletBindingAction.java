@@ -33,6 +33,7 @@ import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.Resource;
 
 /**
@@ -72,7 +73,8 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
 
         if (resource != null) {
             try {
-                binding = CamelKSupport.yaml().loadAs(FileUtils.readToString(resource), KameletBinding.class);
+                binding = KubernetesSupport.yaml().loadAs(
+                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", name + ".kamelet.yaml"));
             }
@@ -89,6 +91,10 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
             }
 
             if (sink != null) {
+                if (sink.getUri() != null) {
+                    sink.setUri(context.replaceDynamicContentInString(sink.getUri()));
+                }
+
                 builder.sink(sink);
             }
 
@@ -97,13 +103,13 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
 
         if (LOG.isDebugEnabled()) {
             try {
-                LOG.debug(CamelKSupport.json().writeValueAsString(binding));
+                LOG.debug(KubernetesSupport.json().writeValueAsString(binding));
             } catch (JsonProcessingException e) {
                 LOG.warn("Unable to dump KameletBinding data", e);
             }
         }
 
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
+        CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class, DoneableKameletBinding.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .createOrReplace(binding);
@@ -144,7 +150,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
         public Builder source(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
-                props = CamelKSupport.yaml().load(properties);
+                props = KubernetesSupport.yaml().load(properties);
             }
 
             return source(new KameletBindingSpec.Endpoint(ref, props));
@@ -162,7 +168,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
         public Builder sink(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
-                props = CamelKSupport.yaml().load(properties);
+                props = KubernetesSupport.yaml().load(properties);
             }
 
             return sink(new KameletBindingSpec.Endpoint(ref, props));

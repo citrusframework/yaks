@@ -15,46 +15,45 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative.actions.serving;
+package org.citrusframework.yaks.kubernetes.actions;
 
 import com.consol.citrus.context.TestContext;
-import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
 
 /**
  * @author Christoph Deppisch
  */
-public class DeleteServiceAction extends AbstractKnativeAction {
+public class DeleteSecretAction extends AbstractKubernetesAction {
 
-    private final String serviceName;
+    private final String secretName;
 
-    public DeleteServiceAction(Builder builder) {
-        super("delete-service", builder);
+    public DeleteSecretAction(Builder builder) {
+        super("delete-secret", builder);
 
-        this.serviceName = builder.serviceName;
+        this.secretName = builder.secretName;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        getKubernetesClient().services().inNamespace(namespace(context))
-                .withName(serviceName)
+        getKubernetesClient().secrets().inNamespace(namespace(context))
+                .withName(secretName)
                 .delete();
     }
 
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractKnativeAction.Builder<DeleteServiceAction, Builder> {
+    public static class Builder extends AbstractKubernetesAction.Builder<DeleteSecretAction, Builder> {
 
-        private String serviceName;
+        private String secretName;
 
-        public Builder name(String serviceName) {
-            this.serviceName = serviceName;
+        public Builder name(String secretName) {
+            this.secretName = secretName;
             return this;
         }
 
         @Override
-        public DeleteServiceAction build() {
-            return new DeleteServiceAction(this);
+        public DeleteSecretAction build() {
+            return new DeleteSecretAction(this);
         }
     }
 }

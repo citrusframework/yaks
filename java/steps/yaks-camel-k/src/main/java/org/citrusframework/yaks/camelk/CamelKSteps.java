@@ -32,6 +32,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -56,7 +57,7 @@ public class CamelKSteps {
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
-            k8sClient = CamelKSupport.getKubernetesClient(citrus);
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 

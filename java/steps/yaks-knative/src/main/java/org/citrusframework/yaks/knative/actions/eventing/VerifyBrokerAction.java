@@ -26,6 +26,7 @@ import io.fabric8.knative.eventing.v1alpha1.Broker;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -47,10 +48,10 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
                     .customResource(KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()))
                     .get(namespace(context), brokerName);
 
-            Broker broker = KnativeSupport.json()
+            Broker broker = KubernetesSupport.json()
                     .reader()
                     .forType(Broker.class)
-                    .readValue(KnativeSupport.json().writeValueAsString(resources));
+                    .readValue(KubernetesSupport.json().writeValueAsString(resources));
 
             if (broker.getStatus() != null &&
                     broker.getStatus().getConditions() != null &&

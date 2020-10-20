@@ -23,6 +23,7 @@ import com.consol.citrus.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -53,7 +54,7 @@ public class KameletBindingBuilderTest {
 				.sink(sink)
 				.build();
 
-		final String json = CamelKSupport.json().writeValueAsString(binding);
+		final String json = KubernetesSupport.json().writeValueAsString(binding);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("kamelet-binding.json", KameletBindingBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
