@@ -42,7 +42,7 @@ public class DeleteKameletBindingAction extends AbstractCamelKAction {
     @Override
     public void doExecute(TestContext context) {
         String bindingName = context.replaceDynamicContentInString(name);
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
+        CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class, DoneableKameletBinding.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .withName(bindingName)

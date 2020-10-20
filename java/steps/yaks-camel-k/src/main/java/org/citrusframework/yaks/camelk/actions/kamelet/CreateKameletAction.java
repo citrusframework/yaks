@@ -81,7 +81,8 @@ public class CreateKameletAction extends AbstractCamelKAction {
 
         if (resource != null) {
             try {
-                kamelet = KubernetesSupport.yaml().loadAs(FileUtils.readToString(resource), Kamelet.class);
+                kamelet = KubernetesSupport.yaml().loadAs(
+                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), Kamelet.class);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load Kamelet from resource %s", name + ".kamelet.yaml"));
             }

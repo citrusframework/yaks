@@ -73,7 +73,8 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
 
         if (resource != null) {
             try {
-                binding = KubernetesSupport.yaml().loadAs(FileUtils.readToString(resource), KameletBinding.class);
+                binding = KubernetesSupport.yaml().loadAs(
+                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", name + ".kamelet.yaml"));
             }
@@ -90,6 +91,10 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
             }
 
             if (sink != null) {
+                if (sink.getUri() != null) {
+                    sink.setUri(context.replaceDynamicContentInString(sink.getUri()));
+                }
+
                 builder.sink(sink);
             }
 
@@ -104,7 +109,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
             }
         }
 
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
+        CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class, DoneableKameletBinding.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .createOrReplace(binding);

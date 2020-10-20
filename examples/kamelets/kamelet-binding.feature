@@ -15,7 +15,7 @@ Feature: Kamelet resource
     Given create Kubernetes service greeting-service with target port 8080
     And KameletBinding source properties
       | message  | Hello World |
-    And bind Kamelet timer-source to uri https://greeting-service.svc.cluster.local/greeting
+    And bind Kamelet timer-source to uri http://greeting-service.${YAKS_NAMESPACE}/greeting
     When create KameletBinding timer-source-uri
     Then KameletBinding timer-source-uri should be available
 
