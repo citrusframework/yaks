@@ -242,7 +242,7 @@ public class KameletSteps {
         sink.getProperties().putAll(sinkProperties);
 
         binding.source(source);
-        binding.source(sink);
+        binding.sink(sink);
 
         runner.run(camelk()
                 .client(k8sClient)
