@@ -26,6 +26,7 @@ import io.fabric8.knative.eventing.v1alpha1.TriggerSpecBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -65,7 +66,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
                 .endMetadata()
                 .withSpec(triggerSpec.build());
 
-        KnativeSupport.createResource(getKubernetesClient(), namespace(context),
+        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
                 KnativeSupport.eventingCRDContext("triggers", KnativeSupport.knativeApiVersion()), triggerBuilder.build());
     }
 
@@ -93,7 +94,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         if (serviceName != null) {
             triggerSpec.withNewSubscriber()
                     .withNewRef()
-                        .withApiVersion("v1")
+                        .withApiVersion(KubernetesSupport.kubernetesApiVersion())
                         .withKind("Service")
                         .withName(context.replaceDynamicContentInString(serviceName))
                     .endRef()

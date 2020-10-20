@@ -25,6 +25,7 @@ import java.util.Map;
 import com.consol.citrus.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationSpec;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -47,7 +48,7 @@ public class IntegrationBuilderTest {
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
 				.build();
 
-		final String json = CamelKSupport.json().writeValueAsString(i);
+		final String json = KubernetesSupport.json().writeValueAsString(i);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
 	}

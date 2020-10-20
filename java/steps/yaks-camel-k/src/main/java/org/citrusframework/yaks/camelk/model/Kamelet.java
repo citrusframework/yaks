@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.util.StringUtils;
 
 /**
@@ -120,7 +121,7 @@ public class Kamelet extends CustomResource {
             kamelet.getSpec().setDefinition(definition);
 
             if (flow != null && !flow.isEmpty()) {
-                kamelet.getSpec().setFlow(CamelKSupport.yaml().load(flow));
+                kamelet.getSpec().setFlow(KubernetesSupport.yaml().load(flow));
             }
 
             if (source != null) {

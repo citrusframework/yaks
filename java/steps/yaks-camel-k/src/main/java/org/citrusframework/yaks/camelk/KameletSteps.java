@@ -36,6 +36,7 @@ import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
@@ -71,7 +72,7 @@ public class KameletSteps {
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
-            k8sClient = CamelKSupport.getKubernetesClient(citrus);
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
 
         initializeKameletBuilder();

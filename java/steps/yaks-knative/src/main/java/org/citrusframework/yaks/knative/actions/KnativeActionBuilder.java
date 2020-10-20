@@ -24,8 +24,6 @@ import org.citrusframework.yaks.knative.actions.eventing.CreateTriggerAction;
 import org.citrusframework.yaks.knative.actions.eventing.VerifyBrokerAction;
 import org.citrusframework.yaks.knative.actions.messaging.CreateChannelAction;
 import org.citrusframework.yaks.knative.actions.messaging.CreateSubscriptionAction;
-import org.citrusframework.yaks.knative.actions.serving.CreateServiceAction;
-import org.citrusframework.yaks.knative.actions.serving.DeleteServiceAction;
 import org.springframework.util.Assert;
 
 /**
@@ -53,30 +51,6 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
     public KnativeActionBuilder client(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
         return this;
-    }
-
-    /**
-     * Create service instance.
-     * @param serviceName the name of the Knative service.
-     */
-    public CreateServiceAction.Builder createService(String serviceName) {
-        CreateServiceAction.Builder builder = new CreateServiceAction.Builder()
-                .client(kubernetesClient)
-                .name(serviceName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Delete service instance.
-     * @param serviceName the name of the Knative service.
-     */
-    public DeleteServiceAction.Builder deleteService(String serviceName) {
-        DeleteServiceAction.Builder builder = new DeleteServiceAction.Builder()
-                .client(kubernetesClient)
-                .name(serviceName);
-        this.delegate = builder;
-        return builder;
     }
 
     /**

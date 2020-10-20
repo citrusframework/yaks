@@ -27,6 +27,7 @@ import io.cucumber.java.en.Given;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -41,7 +42,7 @@ public class CamelKTestSteps {
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
-            k8sClient = CamelKSupport.getKubernetesClient(citrus);
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 

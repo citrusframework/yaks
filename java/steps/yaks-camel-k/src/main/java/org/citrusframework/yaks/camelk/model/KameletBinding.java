@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -85,7 +86,7 @@ public class KameletBinding extends CustomResource {
         public Builder source(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
-                props = CamelKSupport.yaml().load(properties);
+                props = KubernetesSupport.yaml().load(properties);
             }
 
             return source(new KameletBindingSpec.Endpoint(ref, props));
@@ -103,7 +104,7 @@ public class KameletBinding extends CustomResource {
         public Builder sink(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
-                props = CamelKSupport.yaml().load(properties);
+                props = KubernetesSupport.yaml().load(properties);
             }
 
             return sink(new KameletBindingSpec.Endpoint(ref, props));

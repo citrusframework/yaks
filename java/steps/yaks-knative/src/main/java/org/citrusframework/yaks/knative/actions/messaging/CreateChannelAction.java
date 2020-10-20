@@ -23,6 +23,7 @@ import io.fabric8.knative.messaging.v1alpha1.ChannelBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -48,7 +49,7 @@ public class CreateChannelAction extends AbstractKnativeAction {
                 .endMetadata()
             .build();
 
-        KnativeSupport.createResource(getKubernetesClient(), namespace(context),
+        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
                 KnativeSupport.messagingCRDContext("channels", KnativeSupport.knativeApiVersion()), channel);
     }
 

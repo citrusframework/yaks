@@ -25,6 +25,7 @@ import java.util.Map;
 import com.consol.citrus.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -58,7 +59,7 @@ public class KameletBuilderTest {
 						"  - to: \"kamelet:sink\"")
 				.build();
 
-		final String json = CamelKSupport.json().writeValueAsString(kamelet);
+		final String json = KubernetesSupport.json().writeValueAsString(kamelet);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("kamelet.json", KameletBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));

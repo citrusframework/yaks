@@ -15,15 +15,14 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative.actions.serving;
+package org.citrusframework.yaks.kubernetes.actions;
 
 import com.consol.citrus.context.TestContext;
-import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
 
 /**
  * @author Christoph Deppisch
  */
-public class DeleteServiceAction extends AbstractKnativeAction {
+public class DeleteServiceAction extends AbstractKubernetesAction {
 
     private final String serviceName;
 
@@ -43,7 +42,7 @@ public class DeleteServiceAction extends AbstractKnativeAction {
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractKnativeAction.Builder<DeleteServiceAction, Builder> {
+    public static class Builder extends AbstractKubernetesAction.Builder<DeleteServiceAction, Builder> {
 
         private String serviceName;
 
