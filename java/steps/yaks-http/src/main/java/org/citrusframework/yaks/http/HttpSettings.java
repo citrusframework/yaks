@@ -31,7 +31,7 @@ public class HttpSettings {
 
     private static final String SERVER_NAME_PROPERTY = HTTP_PROPERTY_PREFIX + "server.name";
     private static final String SERVER_NAME_ENV = HTTP_ENV_PREFIX + "SERVER_NAME";
-    private static final String SERVER_NAME_DEFAULT = "yaks-k8s-service";
+    private static final String SERVER_NAME_DEFAULT = "yaks-http-server";
 
     private static final String SERVER_PORT_PROPERTY = HTTP_PROPERTY_PREFIX + "server.port";
     private static final String SERVER_PORT_ENV = HTTP_ENV_PREFIX + "SERVER_PORT";

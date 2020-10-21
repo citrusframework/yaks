@@ -31,6 +31,10 @@ public class KafkaSettings {
     private static final String CONSUMER_TIMEOUT_ENV = KAFKA_ENV_PREFIX + "TIMEOUT";
     private static final String CONSUMER_TIMEOUT_DEFAULT = "60000";
 
+    private static final String ENDPOINT_NAME_PROPERTY = KAFKA_PROPERTY_PREFIX + "endpoint.name";
+    private static final String ENDPOINT_NAME_ENV = KAFKA_ENV_PREFIX + "ENDPOINT_NAME";
+    private static final String ENDPOINT_NAME_DEFAULT = "yaks-kafka-endpoint";
+
     static final String NAMESPACE_PROPERTY = KAFKA_PROPERTY_PREFIX + "namespace";
     static final String NAMESPACE_ENV = KAFKA_ENV_PREFIX + "NAMESPACE";
 
@@ -45,6 +49,15 @@ public class KafkaSettings {
     public static long getConsumerTimeout() {
         return Long.parseLong(System.getProperty(CONSUMER_TIMEOUT_PROPERTY,
                 System.getenv(CONSUMER_TIMEOUT_ENV) != null ? System.getenv(CONSUMER_TIMEOUT_ENV) : CONSUMER_TIMEOUT_DEFAULT));
+    }
+
+    /**
+     * Default endpoint name to use when creating a Kafka endpoint.
+     * @return
+     */
+    public static String getEndpointName() {
+        return System.getProperty(ENDPOINT_NAME_PROPERTY,
+                System.getenv(ENDPOINT_NAME_ENV) != null ? System.getenv(ENDPOINT_NAME_ENV) : ENDPOINT_NAME_DEFAULT);
     }
 
     /**
