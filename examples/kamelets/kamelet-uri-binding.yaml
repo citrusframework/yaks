@@ -28,4 +28,4 @@ spec:
     properties:
       message: "Hello world!"
   sink:
-    uri: http://${host}:${port}
+    uri: http://greeting-service.${YAKS_NAMESPACE}/greeting
