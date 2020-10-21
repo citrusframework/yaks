@@ -56,20 +56,20 @@ public class KafkaSteps {
     private Integer partition;
     private String topic = "test";
 
-    private long timeout = KafkaSettings.getConsumerTimeout();
+    private String endpointName = KafkaSettings.getEndpointName();
 
-    private static final String KAFKA_ENDPOINT_NAME = "kafkaEndpoint";
+    private long timeout = KafkaSettings.getConsumerTimeout();
 
     @Before
     public void before(Scenario scenario) {
         if (kafkaEndpoint == null) {
             if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KafkaEndpoint.class).size() == 1L) {
                 kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(KafkaEndpoint.class);
-            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(KAFKA_ENDPOINT_NAME)) {
-                kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(KAFKA_ENDPOINT_NAME, KafkaEndpoint.class);
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(endpointName)) {
+                kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(endpointName, KafkaEndpoint.class);
             } else {
                 kafkaEndpoint = new KafkaEndpointBuilder().build();
-                citrus.getCitrusContext().getReferenceResolver().bind(KAFKA_ENDPOINT_NAME, kafkaEndpoint);
+                citrus.getCitrusContext().getReferenceResolver().bind(endpointName, kafkaEndpoint);
             }
         }
 
@@ -105,6 +105,17 @@ public class KafkaSteps {
     public void setConsumerConfig(DataTable properties) {
         Map<String, Object> consumerProperties = properties.asMap(String.class, Object.class);
         kafkaEndpoint.getEndpointConfiguration().setConsumerProperties(consumerProperties);
+    }
+
+    @Given("^(?:K|k)afka endpoint \"([^\"\\s]+)\"$")
+    public void setServer(String name) {
+        this.endpointName = name;
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
+            kafkaEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(name, KafkaEndpoint.class);
+        } else if (kafkaEndpoint != null) {
+            citrus.getCitrusContext().getReferenceResolver().bind(endpointName, kafkaEndpoint);
+            kafkaEndpoint.setName(endpointName);
+        }
     }
 
     @Given("^(?:K|k)afka message key: (.+)$")
@@ -204,20 +215,20 @@ public class KafkaSteps {
         sendMessageBody(body);
     }
 
-    @Then("^(?:expect|verify) (?:K|k)afka message with body and headers: (.+)$")
+    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body and headers: (.+)$")
     public void receiveFromKafka(String body, DataTable headers) {
         setMessageBody(body);
         addMessageHeaders(headers);
         receiveMessage();
     }
 
-    @Then("^(?:expect|verify) (?:K|k)afka message with body: (.+)$")
+    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body: (.+)$")
     public void receiveMessageBody(String body) {
         setMessageBody(body);
         receiveMessage();
     }
 
-    @Then("^(?:expect|verify) (?:K|k)afka message with body$")
+    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body$")
     public void receiveMessageBodyMultiline(String body) {
         receiveMessageBody(body);
     }

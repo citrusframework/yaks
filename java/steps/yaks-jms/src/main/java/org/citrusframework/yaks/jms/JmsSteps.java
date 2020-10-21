@@ -18,21 +18,21 @@
 package org.citrusframework.yaks.jms;
 
 import javax.jms.ConnectionFactory;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.actions.ReceiveMessageAction;
-import com.consol.citrus.actions.SendMessageAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
 import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
 import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -43,19 +43,62 @@ import static com.consol.citrus.actions.SendMessageAction.Builder.send;
 
 public class JmsSteps {
 
-    private static final long TIMEOUT = System.getenv("YAKS_JMS_TIMEOUT") != null ? Integer.parseInt(System.getenv("YAKS_JMS_TIMEOUT")) : TimeUnit.SECONDS.toMillis(60);
-
     @CitrusResource
     private TestCaseRunner runner;
 
     @CitrusFramework
     private Citrus citrus;
 
+    private Map<String, Object> headers = new HashMap<>();
+    private String body;
+
     private JmsEndpoint jmsEndpoint;
 
     private ConnectionFactory connectionFactory;
 
     private String selector = "";
+
+    private String endpointName = JmsSettings.getEndpointName();
+
+    private long timeout = JmsSettings.getTimeout();
+
+    @Before
+    public void before(Scenario scenario) {
+        if (jmsEndpoint == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(JmsEndpoint.class).size() == 1L) {
+                jmsEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(JmsEndpoint.class);
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(endpointName)) {
+                jmsEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(endpointName, JmsEndpoint.class);
+            } else {
+                jmsEndpoint = new JmsEndpointBuilder()
+                        .timeout(timeout)
+                        .build();
+                citrus.getCitrusContext().getReferenceResolver().bind(endpointName, jmsEndpoint);
+            }
+        }
+
+        if (connectionFactory == null
+                && citrus.getCitrusContext().getReferenceResolver().resolveAll(ConnectionFactory.class).size() == 1L) {
+            connectionFactory = citrus.getCitrusContext().getReferenceResolver().resolve(ConnectionFactory.class);
+
+            if (jmsEndpoint.getEndpointConfiguration().getConnectionFactory() == null) {
+                jmsEndpoint.getEndpointConfiguration().setConnectionFactory(connectionFactory);
+            }
+        }
+
+        headers = new HashMap<>();
+        body = null;
+    }
+
+    @Given("^(?:JMS|jms) connection factory ([^\\s]+)$")
+    public void setConnectionFactory(String name) {
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
+            connectionFactory = citrus.getCitrusContext().getReferenceResolver().resolve(name, ConnectionFactory.class);
+            jmsEndpoint.getEndpointConfiguration().setConnectionFactory(connectionFactory);
+        } else {
+            throw new CitrusRuntimeException(String.format("Unable to find connection factory '%s'", name));
+        }
+    }
 
     @Given("^(?:JMS|jms) connection factory$")
     public void setConnection(DataTable properties) throws ClassNotFoundException {
@@ -67,14 +110,23 @@ public class JmsSteps {
                                                     .create(connectionSettings);
 
         citrus.getCitrusContext().getReferenceResolver().bind("connectionFactory", connectionFactory);
+        jmsEndpoint.getEndpointConfiguration().setConnectionFactory(connectionFactory);
     }
 
-    @Given("^(?:JMS|jms) destination: (.+)$")
-    public void jmsEndpoint(String destination) {
-        jmsEndpoint = new JmsEndpointBuilder()
-                .connectionFactory(connectionFactory)
-                .destination(destination)
-                .build();
+    @Given("^(?:JMS|jms) destination: ([^\\s]+)$")
+    public void setDestination(String destination) {
+        jmsEndpoint.getEndpointConfiguration().setDestinationName(destination);
+    }
+
+    @Given("^(?:JMS|jms) endpoint \"([^\"\\s]+)\"$")
+    public void setEndpoint(String name) {
+        this.endpointName = name;
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
+            jmsEndpoint = citrus.getCitrusContext().getReferenceResolver().resolve(name, JmsEndpoint.class);
+        } else if (jmsEndpoint != null) {
+            citrus.getCitrusContext().getReferenceResolver().bind(endpointName, jmsEndpoint);
+            jmsEndpoint.setName(endpointName);
+        }
     }
 
     @Given("^(?:JMS|jms) selector: (.+)$")
@@ -82,45 +134,105 @@ public class JmsSteps {
         this.selector = selector;
     }
 
-    @When("^send message to JMS broker with body: (.+)")
-    @Given("^message in JMS broker with body: (.+)$")
+    @Given("^(?:JMS|jms) consumer timeout is (\\d+)(?: ms| milliseconds)$")
+    public void configureTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    @Given("^(?:JMS|jms) message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    @Then("^(?:expect|verify) (?:JMS|jms) message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    public void addMessageHeader(String name, Object value) {
+        headers.put(name, value);
+    }
+
+    @Given("^(?:JMS|jms) message headers$")
+    public void addMessageHeaders(DataTable headers) {
+        Map<String, Object> headerPairs = headers.asMap(String.class, Object.class);
+        headerPairs.forEach(this::addMessageHeader);
+    }
+
+    @Given("^(?:JMS|jms) message body$")
+    @Then("^(?:expect|verify) (?:JMS|jms) message body$")
+    public void setMessageBodyMultiline(String body) {
+        setMessageBody(body);
+    }
+
+    @Given("^(?:JMS|jms) message body: (.+)$")
+    @Then("^(?:expect|verify) (?:JMS|jms) message body: (.+)$")
+    public void setMessageBody(String body) {
+        this.body = body;
+    }
+
+    @When("^send (?:JMS|jms) message with body: (.+)$")
+    @Given("^(?:JMS|jms) message with body: (.+)$")
     public void sendMessageBody(String body) {
-        sendToBroker(body, Collections.emptyMap());
+        setMessageBody(body);
+        sendMessage();
     }
 
-    @When("^send message to JMS broker with body")
-    @Given("^message in JMS broker$")
-    public void sendMessageBodyFull(String body) {
-        sendToBroker(body, Collections.emptyMap());
+    @When("^send (?:JMS|jms) message with body$")
+    @Given("^(?:JMS|jms) message with body$")
+    public void sendMessageBodyMultiline(String body) {
+        sendMessageBody(body);
     }
 
-    @When("^send message to JMS broker with body and headers: (.+)")
-    @Given("^message in JMS broker with body and headers: (.+)$")
-    public void sendMessageBodyHeaders(String body, DataTable headers) {
-        sendToBroker(body, headers.asMap(String.class, Object.class));
+    @When("^send (?:JMS|jms) message with body and headers: (.+)$")
+    @Given("^(?:JMS|jms) message with body and headers: (.+)$")
+    public void sendMessageBodyAndHeaders(String body, DataTable headers) {
+        setMessageBody(body);
+        addMessageHeaders(headers);
+        sendMessage();
     }
 
-    @Then("^(?:expect|verify) message in JMS broker with body: (.+)$")
+    @Then("^(?:receive|expect|verify) (?:JMS|jms) message with body: (.+)$")
     public void receiveMessageBody(String body) {
-        receiveFromBroker(body, Collections.emptyMap());
+        setMessageBody(body);
+        receiveMessage();
     }
 
-    @Then("^(?:expect|verify) message in JMS broker with body$")
-    public void receiveMessageBodyFull(String body) {
-        receiveFromBroker(body, Collections.emptyMap());
+    @Then("^(?:receive|expect|verify) (?:JMS|jms) message with body$")
+    public void receiveMessageBodyMultiline(String body) {
+        receiveMessageBody(body);
     }
 
-    @Then("^(?:expect|verify) message in JMS broker with body and headers: (.+)$")
-    public void receiveMessageBody(String body, DataTable headers) {
-        receiveFromBroker(body, headers.asMap(String.class, Object.class));
+    @Then("^(?:receive|expect|verify) (?:JMS|jms) message with body and headers: (.+)$")
+    public void receiveFromJms(String body, DataTable headers) {
+        setMessageBody(body);
+        addMessageHeaders(headers);
+        receiveMessage();
     }
 
-    private SendMessageAction sendToBroker(String body,  Map<String, Object> headers) {
-        return runner.run(send().endpoint(jmsEndpoint).payload(body).headers(headers));
+    @When("^send (?:JMS|jms) message$")
+    public void sendMessage() {
+        runner.run(send().endpoint(jmsEndpoint)
+                .payload(body)
+                .headers(headers));
+
+        body = null;
+        headers.clear();
     }
 
-    private ReceiveMessageAction receiveFromBroker(String body, Map<String,Object> headers) {
-        return runner.run(receive().endpoint(jmsEndpoint).payload(body).headers(headers).selector(selector).timeout(TIMEOUT));
+    @Then("^receive (?:JMS|jms) message$")
+    public void receiveMessage() {
+        runner.run(receive().endpoint(jmsEndpoint)
+                .selector(selector)
+                .timeout(timeout)
+                .payload(body)
+                .headers(headers));
+
+        body = null;
+        headers.clear();
     }
 
+    @When("^send (?:JMS|jms) message to destination (.+)$")
+    public void sendMessage(String destination) {
+        setDestination(destination);
+        sendMessage();
+    }
+
+    @Then("^receive (?:JMS|jms) message on destination (.+)")
+    public void receiveMessage(String destination) {
+        setDestination(destination);
+        receiveMessage();
+    }
 }

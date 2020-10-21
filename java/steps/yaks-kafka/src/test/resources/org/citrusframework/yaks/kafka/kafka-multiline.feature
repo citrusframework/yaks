@@ -32,4 +32,3 @@ Feature: Kafka multiline steps
       """
       { "message": "Hello from YAKS!" }
       """
-

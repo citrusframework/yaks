@@ -28,47 +28,6 @@
   <artifactId>yaks-jms</artifactId>
   <name>YAKS :: Steps :: JMS</name>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.activemq.tooling</groupId>
-        <artifactId>activemq-maven-plugin</artifactId>
-        <version>${activemq.version}</version>
-        <configuration>
-          <fork>true</fork>
-          <systemProperties>
-            <property>
-              <name>log4j.configuration</name>
-              <value>log4j.properties</value>
-            </property>
-          </systemProperties>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>process-test-resources</phase>
-            <id>start-broker</id>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <skip>${skipTests}</skip>
-            </configuration>
-          </execution>
-          <execution>
-            <id>stop-broker</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>stop</goal>
-            </goals>
-            <configuration>
-              <skip>${skipTests}</skip>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
     <dependency>
       <groupId>io.cucumber</groupId>
@@ -128,6 +87,12 @@
       <groupId>org.citrusframework.yaks</groupId>
       <artifactId>yaks-standard</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-broker</artifactId>
+      <version>${activemq.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
