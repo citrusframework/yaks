@@ -43,7 +43,7 @@
     <cucumber.version>5.4.2</cucumber.version>
     <camel.version>3.1.0</camel.version>
     <jackson.version>2.10.3</jackson.version>
-    <junit.version>4.13</junit.version>
+    <junit.version>4.13.1</junit.version>
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <knative-client.version>4.10.3</knative-client.version>
     <postgresql.version>9.4.1212</postgresql.version>
