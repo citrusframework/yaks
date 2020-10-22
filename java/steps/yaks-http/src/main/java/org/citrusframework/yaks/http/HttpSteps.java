@@ -80,7 +80,6 @@ public interface HttpSteps {
 
         if (StringUtils.hasText(path)) {
             request.path(path);
-            request.contextPath(path);
         }
 
         if (StringUtils.hasText(body)) {
