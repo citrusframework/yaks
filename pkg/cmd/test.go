@@ -176,9 +176,8 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 		return err
 	}
 
-	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, baseDir)
-	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, baseDir); err != nil {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
+	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
 		return err
 	}
 
@@ -222,9 +221,8 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 		return err
 	}
 
-	baseDir := getBaseDir(source)
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, baseDir)
-	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, baseDir); err != nil {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
+	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
 		return err
 	}
 
@@ -294,6 +292,10 @@ func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) 
 	runConfig, err := config.LoadConfig(configFile)
 	if err != nil {
 		return nil, err
+	}
+
+	if runConfig.BaseDir == "" {
+		runConfig.BaseDir = getBaseDir(source)
 	}
 
 	if runConfig.Config.Namespace.Name == "" && !runConfig.Config.Namespace.Temporary {
@@ -382,7 +384,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	}
 
 	for _, resource := range runConfig.Config.Runtime.Resources {
-		data, err := o.loadData(resource)
+		data, err := o.loadData(path.Join(runConfig.BaseDir, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -394,7 +396,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	}
 
 	for _, resource := range o.Resources {
-		data, err := o.loadData(resource)
+		data, err := o.loadData(path.Join(runConfig.BaseDir, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -406,7 +408,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	}
 
 	for _, propertyFile := range o.PropertyFiles {
-		data, err := o.loadData(propertyFile)
+		data, err := o.loadData(path.Join(runConfig.BaseDir, propertyFile))
 		if err != nil {
 			return nil, err
 		}
@@ -583,15 +585,14 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
 	if o.Settings != "" {
 		rawName := o.Settings
-		settingsFileName := kubernetes.SanitizeFileName(rawName)
-		configData, err := o.loadData(rawName)
+		configData, err := o.loadData(path.Join(runConfig.BaseDir, rawName))
 
 		if err != nil {
 			return nil, err
 		}
 
-		settings := v1alpha1.SettingsSpec{
-			Name:    settingsFileName,
+		settings := v1alpha1.SettingsSpec {
+			Name:    kubernetes.SanitizeFileName(rawName),
 			Content: configData,
 		}
 
@@ -607,7 +608,7 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 			return nil, err
 		}
 
-		settings := v1alpha1.SettingsSpec{
+		settings := v1alpha1.SettingsSpec {
 			Name:    "yaks.settings.yaml",
 			Content: string(configData),
 		}
@@ -759,7 +760,9 @@ func initializeTempNamespace(name string, c client.Client, context context.Conte
 		panic(err)
 	} else if oc {
 		scheme := c.GetScheme()
-		projectv1.AddToScheme(scheme)
+		if err := projectv1.Install(scheme); err != nil {
+			return nil, err;
+		}
 
 		obj = &projectv1.ProjectRequest{
 			TypeMeta: metav1.TypeMeta{

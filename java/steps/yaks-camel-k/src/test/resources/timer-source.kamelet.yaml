@@ -40,6 +40,8 @@ spec:
         description: The message to generate
         type: string
         example: "hello world"
+        x-descriptors:
+          - urn:alm:descriptor:com.tectonic.ui:label
   types:
     out:
       mediaType: text/plain

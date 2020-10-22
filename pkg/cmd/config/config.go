@@ -26,9 +26,10 @@ import (
 )
 
 type RunConfig struct {
-    Config Config       `yaml:"config"`
-    Pre    []StepConfig `yaml:"pre"`
-    Post   []StepConfig `yaml:"post"`
+    BaseDir string       `yaml:"baseDir"`
+    Config  Config       `yaml:"config"`
+    Pre     []StepConfig `yaml:"pre"`
+    Post    []StepConfig `yaml:"post"`
 }
 
 type Config struct {
@@ -118,7 +119,7 @@ func NewWithDefaults() *RunConfig {
     }
 
     var config = Config {Recursive: true, Namespace: ns, Operator: operator}
-    return &RunConfig {Config: config}
+    return &RunConfig {Config: config, BaseDir: ""}
 }
 
 func LoadConfig(file string) (*RunConfig, error) {
