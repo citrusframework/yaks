@@ -19,6 +19,8 @@ package org.citrusframework.yaks.camel;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
@@ -30,6 +32,10 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -63,13 +69,59 @@ public class CamelSteps {
 
     private CamelContext camelContext;
 
-    private String requestBody;
-    private String responseBody;
+    private String contextName = CamelSettings.getContextName();
+
+    private Map<String, CamelEndpoint> endpoints = new HashMap<>();
+
+    private Map<String, Object> headers = new HashMap<>();
+    private String body;
+
+    private long timeout = CamelSettings.getTimeout();
+
+    private boolean globalCamelContext = false;
+    private boolean autoRemoveResources = CamelSettings.isAutoRemoveResources();
+
+    @Before
+    public void before(Scenario scenario) {
+        if (camelContext == null) {
+            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(CamelContext.class).size() == 1L) {
+                camelContext = citrus.getCitrusContext().getReferenceResolver().resolve(CamelContext.class);
+                globalCamelContext = true;
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(contextName)) {
+                camelContext = citrus.getCitrusContext().getReferenceResolver().resolve(contextName, CamelContext.class);
+                globalCamelContext = true;
+            } else {
+                camelContext();
+            }
+        }
+
+        headers = new HashMap<>();
+        body = null;
+    }
+
+    @After
+    public void after(Scenario scenario) {
+        if (autoRemoveResources) {
+            endpoints.clear();
+            destroyCamelContext();
+        }
+    }
+
+    @Given("^Disable auto removal of Camel resources$")
+    public void disableAutoRemove() {
+        autoRemoveResources = false;
+    }
+
+    @Given("^Enable auto removal of Camel resources$")
+    public void enableAutoRemove() {
+        autoRemoveResources = true;
+    }
 
     @Given("^(?:Default|New) Camel context$")
     public void defaultContext() {
         destroyCamelContext();
         camelContext();
+        globalCamelContext = false;
     }
 
     @Given("^New Spring Camel context$")
@@ -83,9 +135,15 @@ public class CamelSteps {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to start Spring Camel context", e);
         }
+        globalCamelContext = false;
     }
 
-    @Given("^Camel route ([^\"\\s]+)\\.xml")
+    @Given("^Camel consumer timeout is (\\d+)(?: ms| milliseconds)$")
+    public void configureTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    @Given("^Camel route ([^\\s]+)\\.xml")
     public void camelRouteXml(String id, String routeSpec) throws Exception {
         String routeXml;
 
@@ -122,7 +180,7 @@ public class CamelSteps {
         }
     }
 
-    @Given("^Camel route ([^\"\\s]+)\\.groovy")
+    @Given("^Camel route ([^\\s]+)\\.groovy")
     public void camelRouteGroovy(String id, String route) throws Exception {
         RouteBuilder routeBuilder = new RouteBuilder(camelContext()) {
             @Override
@@ -153,75 +211,104 @@ public class CamelSteps {
         camelContext().addRoutes(routeBuilder);
     }
 
-    @Given("^start route (.+)$")
+    @Given("^start Camel route ([^\\s]+)$")
     public void startRoute(String routeId) {
         runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .start(routeId));
     }
 
-    @Given("^stop route (.+)$")
+    @Given("^stop Camel route ([^\\s]+)$")
     public void stopRoute(String routeId) {
         runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .stop(routeId));
     }
 
-    @Given("^remove route (.+)$")
+    @Given("^remove Camel route ([^\\s]+)$")
     public void removeRoute(String routeId) {
         runner.run(camel().context(camelContext().adapt(ModelCamelContext.class))
                                      .remove(routeId));
     }
 
-    @Given("^request body$")
-    public void setRequestBodyMultiline(String body) {
-        setRequestBody(body);
+    @Given("^Camel exchange message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    @Then("^(?:expect|verify) Camel exchange message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    public void addMessageHeader(String name, Object value) {
+        headers.put(name, value);
     }
 
-    @Given("^request body: (.+)$")
-    public void setRequestBody(String body) {
-        this.requestBody = body;
+    @Given("^Camel exchange message headers$")
+    public void addMessageHeaders(DataTable headers) {
+        Map<String, Object> headerPairs = headers.asMap(String.class, Object.class);
+        headerPairs.forEach(this::addMessageHeader);
     }
 
-    @When("^send to route ([^\"\\s]+)$")
+    @Given("^Camel exchange body$")
+    @Then("^(?:expect|verify) Camel exchange body$")
+    public void setExchangeBodyMultiline(String body) {
+        setExchangeBody(body);
+    }
+
+    @Given("^Camel exchange body: (.+)$")
+    @Then("^(?:expect|verify) Camel exchange body: (.+)$")
+    public void setExchangeBody(String body) {
+        this.body = body;
+    }
+
+    @When("^send Camel exchange to\\(\"(.+)\"\\)$")
     public void sendExchange(String endpointUri) {
         runner.run(send().endpoint(camelEndpoint(endpointUri))
-                                    .payload(requestBody));
+                .payload(body)
+                .headers(headers));
+
+        body = null;
+        headers.clear();
     }
 
-    @When("^send to route ([^\"\\s]+) body$")
-    public void sendExchangeMultilineBody(String endpointUri, String body) {
-        sendExchangeBody(endpointUri, body);
-    }
-
-    @When("^send to route ([^\"\\s]+) body: (.+)$")
-    public void sendExchangeBody(String endpointUri, String body) {
-        runner.run(send().endpoint(camelEndpoint(endpointUri))
-                                    .payload(body));
-    }
-
-    @Then("^(?:expect|verify) body received$")
-    public void setResponseBodyMultiline(String body) {
-        setResponseBody(body);
-    }
-
-    @Then("^(?:expect|verify) body received: (.+)$")
-    public void setResponseBody(String body) {
-        this.responseBody = body;
-    }
-
-    @Then("^receive from route ([^\"\\s]+)$")
+    @Then("^receive Camel exchange from\\(\"(.+)\"\\)$")
     public void receiveExchange(String endpointUri) {
         runner.run(receive().endpoint(camelEndpoint(endpointUri))
-                                       .payload(responseBody));
+                .timeout(timeout)
+                .payload(body)
+                .headers(headers));
+
+        body = null;
+        headers.clear();
     }
 
-    @Then("^receive from route ([^\"\\s]+) body$")
-    public void receiveExchangeBodyMultiline(String endpointUri, String body) {
-        receiveExchangeBody(endpointUri, body);
+    @When("^send Camel exchange to\\(\"(.+)\"\\) with body$")
+    public void sendExchangeMultilineBody(String endpointUri, String body) {
+        setExchangeBody(body);
+        sendExchange(endpointUri);
     }
-    @Then("^receive from route ([^\"\\s]+) body: (.+)$")
+
+    @When("^send Camel exchange to\\(\"(.+)\"\\) with body: (.+)$")
+    public void sendExchangeBody(String endpointUri, String body) {
+        setExchangeBody(body);
+        sendExchange(endpointUri);
+    }
+
+    @When("^send Camel exchange to\\(\"(.+)\"\\) with body and headers: (.+)$")
+    public void sendMessageBodyAndHeaders(String endpointUri, String body, DataTable headers) {
+        setExchangeBody(body);
+        addMessageHeaders(headers);
+        sendExchange(endpointUri);
+    }
+
+    @Then("^(?:receive|expect|verify) Camel exchange from\\(\"(.+)\"\\) with body$")
+    public void receiveExchangeBodyMultiline(String endpointUri, String body) {
+        setExchangeBody(body);
+        receiveExchange(endpointUri);
+    }
+    @Then("^(?:receive|expect|verify) Camel exchange from\\(\"(.+)\"\\) with body: (.+)$")
     public void receiveExchangeBody(String endpointUri, String body) {
-        runner.run(receive().endpoint(camelEndpoint(endpointUri))
-                                       .payload(body));
+        setExchangeBody(body);
+        receiveExchange(endpointUri);
+    }
+
+    @Then("^(?:receive|expect|verify) Camel exchange from\\(\"(.+)\"\\) message with body and headers: (.+)$")
+    public void receiveFromJms(String endpointUri, String body, DataTable headers) {
+        setExchangeBody(body);
+        addMessageHeaders(headers);
+        receiveExchange(endpointUri);
     }
 
     // **************************
@@ -229,10 +316,19 @@ public class CamelSteps {
     // **************************
 
     private CamelEndpoint camelEndpoint(String endpointUri) {
+        if (endpoints.containsKey(endpointUri)) {
+            return endpoints.get(endpointUri);
+        }
+
         CamelEndpointConfiguration endpointConfiguration = new CamelEndpointConfiguration();
         endpointConfiguration.setCamelContext(camelContext());
         endpointConfiguration.setEndpointUri(endpointUri);
-        return new CamelEndpoint(endpointConfiguration);
+        endpointConfiguration.setTimeout(timeout);
+        CamelEndpoint endpoint = new CamelEndpoint(endpointConfiguration);
+
+        endpoints.put(endpointUri, endpoint);
+
+        return endpoint;
     }
 
     private CamelContext camelContext() {
@@ -249,6 +345,11 @@ public class CamelSteps {
     }
 
     private void destroyCamelContext() {
+        if (globalCamelContext) {
+            // do not destroy global Camel context
+            return;
+        }
+
         try {
             if (camelContext != null) {
                 camelContext.stop();

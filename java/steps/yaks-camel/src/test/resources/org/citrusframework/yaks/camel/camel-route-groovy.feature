@@ -11,33 +11,33 @@ Feature: Camel groovy route
     """
 
   Scenario: Send body
-    When send to route direct:hello body: Hello Camel from Groovy!
-    And receive from route seda:tokens body: Hello
-    And receive from route seda:tokens body: Camel
-    And receive from route seda:tokens body: from
-    And receive from route seda:tokens body: Groovy!
+    When send Camel exchange to("direct:hello") with body: Hello Camel from Groovy!
+    And receive Camel exchange from("seda:tokens") with body: Hello
+    And receive Camel exchange from("seda:tokens") with body: Camel
+    And receive Camel exchange from("seda:tokens") with body: from
+    And receive Camel exchange from("seda:tokens") with body: Groovy!
 
   Scenario: Expect body received
-    Given request body: Hi Camel!
-    When send to route direct:hello
-    Then expect body received: Hi
-    And receive from route seda:tokens
-    Then expect body received: Camel!
-    And receive from route seda:tokens
+    Given Camel exchange body: Hi Camel!
+    When send Camel exchange to("direct:hello")
+    Then expect Camel exchange body: Hi
+    And receive Camel exchange from("seda:tokens")
+    Then expect Camel exchange body: Camel!
+    And receive Camel exchange from("seda:tokens")
 
   Scenario: Body multiline
-    Given request body
+    Given Camel exchange body
     """
     Howdy Camel!
     """
-    When send to route direct:hello
-    Then expect body received
+    When send Camel exchange to("direct:hello")
+    Then expect Camel exchange body
     """
     Howdy
     """
-    And receive from route seda:tokens
-    Then expect body received
+    And receive Camel exchange from("seda:tokens")
+    Then expect Camel exchange body
     """
     Camel!
     """
-    And receive from route seda:tokens
+    And receive Camel exchange from("seda:tokens")
