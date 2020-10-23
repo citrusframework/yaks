@@ -157,6 +157,8 @@ const (
 	TestPhaseError TestPhase = "Error"
 	// TestPhaseDeleting
 	TestPhaseDeleting TestPhase = "Deleting"
+	// TestPhaseUpdating is a phase where the operator is not supposed to interact with the resource
+	TestPhaseUpdating TestPhase = "Updating"
 )
 
 func (phase TestPhase) AsError() error {
