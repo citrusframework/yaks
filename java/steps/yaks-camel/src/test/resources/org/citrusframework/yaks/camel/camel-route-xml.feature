@@ -14,6 +14,6 @@ Feature: Camel xml route
     """
 
   Scenario: Hello route
-    When send to route direct:hello body: Hello Camel!
-    And receive from route seda:tokens body: Hello
-    And receive from route seda:tokens body: Camel!
+    When send Camel exchange to("direct:hello") with body: Hello Camel!
+    And receive Camel exchange from("seda:tokens") with body: Hello
+    And receive Camel exchange from("seda:tokens") with body: Camel!

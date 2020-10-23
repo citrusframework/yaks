@@ -21,9 +21,9 @@ Feature: Camel context
     """
 
   Scenario: Hello Context
-    Given request body: Hello Camel!
-    When send to route direct:hello
-    Then expect body received: Hello
-    And receive from route seda:tokens
-    Then expect body received: Camel!
-    And receive from route seda:tokens
+    Given Camel exchange body: Hello Camel!
+    When send Camel exchange to("direct:hello")
+    Then expect Camel exchange body: Hello
+    And receive Camel exchange from("seda:tokens")
+    Then expect Camel exchange body: Camel!
+    And receive Camel exchange from("seda:tokens")
