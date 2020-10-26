@@ -44,7 +44,7 @@ import (
 * business logic.  Delete these comments after modifying this file.*
  */
 
-// Add creates a new Integration Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new Test Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	c, err := client.FromManager(mgr)
@@ -71,13 +71,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource Integration
+	// Watch for changes to primary resource Test
 	err = c.Watch(&source.Kind{Type: &v1alpha1.Test{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			oldTest := e.ObjectOld.(*v1alpha1.Test)
 			newTest := e.ObjectNew.(*v1alpha1.Test)
-			// Ignore updates to the integration status in which case metadata.Generation does not change,
-			// or except when the integration phase changes as it's used to transition from one phase
+			// Ignore updates to the test status in which case metadata.Generation does not change,
+			// or except when the test phase changes as it's used to transition from one phase
 			// to another
 			return oldTest.Generation != newTest.Generation ||
 				oldTest.Status.Phase != newTest.Status.Phase
@@ -128,8 +128,8 @@ type ReconcileIntegrationTest struct {
 	config *rest.Config
 }
 
-// Reconcile reads that state of the cluster for a Integration object and makes changes based on the state read
-// and what is in the Integration.Spec
+// Reconcile reads that state of the cluster for a Test object and makes changes based on the state read
+// and what is in the Test.Spec
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -166,6 +166,7 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 		NewStartAction(),
 		NewEvaluateAction(),
 		NewMonitorAction(),
+		NewNoopAction(),
 	}
 
 	for _, a := range actions {

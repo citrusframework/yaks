@@ -470,12 +470,19 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		if err != nil {
 			return nil, err
 		}
+		// Hold the resource from the operator controller
+		clone.Status.Phase = v1alpha1.TestPhaseUpdating
+		err = c.Status().Update(o.Context, clone)
+		if err != nil {
+			return nil, err
+		}
+		// Update the spec
 		test.ResourceVersion = clone.ResourceVersion
 		err = c.Update(o.Context, &test)
 		if err != nil {
 			return nil, err
 		}
-		// Reset status as well
+		// Reset status
 		test.Status = v1alpha1.TestStatus{}
 		err = c.Status().Update(o.Context, &test)
 	}
@@ -759,11 +766,6 @@ func initializeTempNamespace(name string, c client.Client, context context.Conte
 	if oc, err := openshift.IsOpenShift(c); err != nil {
 		panic(err)
 	} else if oc {
-		scheme := c.GetScheme()
-		if err := projectv1.Install(scheme); err != nil {
-			return nil, err;
-		}
-
 		obj = &projectv1.ProjectRequest{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: projectv1.GroupVersion.String(),
