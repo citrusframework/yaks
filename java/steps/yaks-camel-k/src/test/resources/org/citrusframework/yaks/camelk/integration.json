@@ -5,6 +5,7 @@
     "name": "bar"
   },
   "spec": {
+    "replicas": 0,
     "sources": [
       {
         "name": "bar.groovy",

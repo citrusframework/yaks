@@ -17,9 +17,7 @@
 
 package org.citrusframework.yaks.camelk.model;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,74 +27,72 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"replicas", "flows", "sources", "resources", "kit", "dependencies", "profile", "traits",
-        "configuration", "repositories", "serviceAccountName"})
+@JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "kit", "platform", "generatedSources", "generatedResources",
+        "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
-public class IntegrationSpec implements KubernetesResource {
+public class IntegrationStatus implements KubernetesResource {
 
-    @JsonProperty("replicas")
-    private int replicas;
-    @JsonProperty("flows")
-    private List<Map<String, Object>> flows;
-    @JsonProperty("sources")
-    private List<Source> sources;
-    @JsonProperty("resources")
-    private List<Resource> resources;
-    @JsonProperty("kit")
-    private String kit;
+    @JsonProperty("phase")
+    private String phase;
+    @JsonProperty("digest")
+    private String digest;
+    @JsonProperty("image")
+    private String image;
     @JsonProperty("dependencies")
     private List<String> dependencies;
     @JsonProperty("profile")
     private String profile;
-    @JsonProperty("traits")
-    private Map<String, TraitConfig> traits;
+    @JsonProperty("kit")
+    private String kit;
+    @JsonProperty("platform")
+    private String platform;
+    @JsonProperty("generatedSources")
+    private List<Source> generatedSources;
+    @JsonProperty("generatedResources")
+    private List<Resource> generatedResources;
+    @JsonProperty("failure")
+    private String failure;
+    @JsonProperty("runtimeVersion")
+    private String runtimeVersion;
+    @JsonProperty("runtimeProvider")
+    private String runtimeProvider;
     @JsonProperty("configuration")
     private List<Configuration> configuration;
-    @JsonProperty("repositories")
-    private List<String> repositories;
-    @JsonProperty("serviceAccountName")
-    private String serviceAccountName;
+    @JsonProperty("conditions")
+    private List<Condition> conditions;
+    @JsonProperty("version")
+    private String version;
+    @JsonProperty("replicas")
+    private int replicas;
+    @JsonProperty("selector")
+    private String selector;
+    @JsonProperty("capabilities")
+    private List<String> capabilities;
 
-    public int getReplicas() {
-        return replicas;
+    public String getPhase() {
+        return phase;
     }
 
-    public void setReplicas(int replicas) {
-        this.replicas = replicas;
+    public void setPhase(String phase) {
+        this.phase = phase;
     }
 
-    public List<Map<String, Object>> getFlows() {
-        return flows;
+    public String getDigest() {
+        return digest;
     }
 
-    public void setFlows(List<Map<String, Object>> flows) {
-        this.flows = flows;
+    public void setDigest(String digest) {
+        this.digest = digest;
     }
 
-    public List<Source> getSources() {
-        return sources;
+    public String getImage() {
+        return image;
     }
 
-    public void setSources(List<Source> sources) {
-        this.sources = sources;
-    }
-
-    public List<Resource> getResources() {
-        return resources;
-    }
-
-    public void setResources(List<Resource> resources) {
-        this.resources = resources;
-    }
-
-    public String getKit() {
-        return kit;
-    }
-
-    public void setKit(String kit) {
-        this.kit = kit;
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public List<String> getDependencies() {
@@ -115,12 +111,60 @@ public class IntegrationSpec implements KubernetesResource {
         this.profile = profile;
     }
 
-    public Map<String, TraitConfig> getTraits() {
-        return traits;
+    public String getKit() {
+        return kit;
     }
 
-    public void setTraits(Map<String, TraitConfig> traits) {
-        this.traits = traits;
+    public void setKit(String kit) {
+        this.kit = kit;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    public List<Source> getGeneratedSources() {
+        return generatedSources;
+    }
+
+    public void setGeneratedSources(List<Source> generatedSources) {
+        this.generatedSources = generatedSources;
+    }
+
+    public List<Resource> getGeneratedResources() {
+        return generatedResources;
+    }
+
+    public void setGeneratedResources(List<Resource> generatedResources) {
+        this.generatedResources = generatedResources;
+    }
+
+    public String getFailure() {
+        return failure;
+    }
+
+    public void setFailure(String failure) {
+        this.failure = failure;
+    }
+
+    public String getRuntimeVersion() {
+        return runtimeVersion;
+    }
+
+    public void setRuntimeVersion(String runtimeVersion) {
+        this.runtimeVersion = runtimeVersion;
+    }
+
+    public String getRuntimeProvider() {
+        return runtimeProvider;
+    }
+
+    public void setRuntimeProvider(String runtimeProvider) {
+        this.runtimeProvider = runtimeProvider;
     }
 
     public List<Configuration> getConfiguration() {
@@ -131,20 +175,120 @@ public class IntegrationSpec implements KubernetesResource {
         this.configuration = configuration;
     }
 
-    public List<String> getRepositories() {
-        return repositories;
+    public List<Condition> getConditions() {
+        return conditions;
     }
 
-    public void setRepositories(List<String> repositories) {
-        this.repositories = repositories;
+    public void setConditions(List<Condition> conditions) {
+        this.conditions = conditions;
     }
 
-    public String getServiceAccountName() {
-        return serviceAccountName;
+    public String getVersion() {
+        return version;
     }
 
-    public void setServiceAccountName(String serviceAccountName) {
-        this.serviceAccountName = serviceAccountName;
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public int getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(int replicas) {
+        this.replicas = replicas;
+    }
+
+    public String getSelector() {
+        return selector;
+    }
+
+    public void setSelector(String selector) {
+        this.selector = selector;
+    }
+
+    public List<String> getCapabilities() {
+        return capabilities;
+    }
+
+    public void setCapabilities(List<String> capabilities) {
+        this.capabilities = capabilities;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"type", "status", "lastUpdateTime", "lastTransitionTime", "reason", "message"})
+    public static class Condition {
+        @JsonProperty("type")
+        private String type;
+        @JsonProperty("status")
+        private String status;
+        @JsonProperty("lastUpdateTime")
+        private String lastUpdateTime;
+        @JsonProperty("lastTransitionTime")
+        private String lastTransitionTime;
+        @JsonProperty("reason")
+        private String reason;
+        @JsonProperty("message")
+        private String message;
+
+        public Condition() {
+            super();
+        }
+
+        public Condition(String type, String status, String reason, String message) {
+            this.type = type;
+            this.status = status;
+            this.reason = reason;
+            this.message = message;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public String getLastUpdateTime() {
+            return lastUpdateTime;
+        }
+
+        public void setLastUpdateTime(String lastUpdateTime) {
+            this.lastUpdateTime = lastUpdateTime;
+        }
+
+        public String getLastTransitionTime() {
+            return lastTransitionTime;
+        }
+
+        public void setLastTransitionTime(String lastTransitionTime) {
+            this.lastTransitionTime = lastTransitionTime;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -178,34 +322,6 @@ public class IntegrationSpec implements KubernetesResource {
 
         public void setValue(String defaultValue) {
             this.value = value;
-        }
-    }
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"configuration"})
-    public static class TraitConfig {
-        @JsonProperty("configuration")
-        private Map<String, String> configuration;
-
-        public TraitConfig() {
-            super();
-        }
-
-        public TraitConfig(String key, String value) {
-            this.configuration = new HashMap<>();
-            add(key, value);
-        }
-
-        public Map<String, String> getConfiguration() {
-            return configuration;
-        }
-
-        public void setConfiguration(Map<String, String> configuration) {
-            this.configuration = configuration;
-        }
-
-        public void add(String key, String value) {
-            this.configuration.put(key, value);
         }
     }
 

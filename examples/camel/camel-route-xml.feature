@@ -1,6 +1,7 @@
 Feature: Camel xml route
 
   Background:
+    Given Disable auto removal of Camel resources
     Given Camel route hello.xml
     """
     <route>

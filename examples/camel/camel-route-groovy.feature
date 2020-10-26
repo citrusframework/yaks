@@ -1,6 +1,7 @@
 Feature: Camel groovy route
 
   Background:
+    Given Disable auto removal of Camel resources
     Given Camel route hello.groovy
     """
     from("direct:hello")

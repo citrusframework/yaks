@@ -1,6 +1,7 @@
 Feature: Kamelet resource
 
   Background:
+    Given Disable auto removal of Camel-K resources
     Given Disable auto removal of Kamelet resources
     Given Camel-K resource polling configuration
       | maxAttempts          | 20   |

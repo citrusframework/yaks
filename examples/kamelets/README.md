@@ -20,8 +20,8 @@ File resources are added to the test with the `--resource` CLI option.
 [kamelet-resource.feature](kamelet-resource.feature)
 ```shell script
 $ yaks test examples/kamelets/kamelet-resource.feature \
-            --resource examples/kamelets/timer-to-log.groovy \
-            --resource examples/kamelets/timer-source.kamelet.yaml
+            --resource timer-to-log.groovy \
+            --resource timer-source.kamelet.yaml
 ```             
 
 The test is able to load the Kamelet using the external file resource. Also the Camel-K integration code
@@ -34,6 +34,6 @@ You can also add resources to the `yaks-config.xml`
 config:
   runtime:
     resources:
-    - examples/kamelets/timer-to-log.groovy 
-    - examples/kamelets/timer-source.kamelet.yaml 
+    - timer-to-log.groovy 
+    - timer-source.kamelet.yaml 
 ```
