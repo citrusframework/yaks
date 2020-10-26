@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+// camel-k: language=groovy
+
 from('timer:tick?period=1000')
     .setBody().constant('Hello world from Camel K')
     .to('log:info')

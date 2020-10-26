@@ -31,7 +31,7 @@ import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
+@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec", "status"})
 @JsonDeserialize(
 		using = JsonDeserializer.None.class
 )
@@ -39,6 +39,9 @@ public class Integration extends CustomResource {
 
 	@JsonProperty("spec")
 	private IntegrationSpec spec = new IntegrationSpec();
+
+	@JsonProperty("status")
+	private IntegrationStatus status;
 
 	@Override
 	public String getApiVersion() {
@@ -51,6 +54,14 @@ public class Integration extends CustomResource {
 
 	public void setSpec(IntegrationSpec spec) {
 		this.spec = spec;
+	}
+
+	public IntegrationStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(IntegrationStatus status) {
+		this.status = status;
 	}
 
 	/**

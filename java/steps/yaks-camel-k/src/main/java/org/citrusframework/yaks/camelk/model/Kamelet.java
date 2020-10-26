@@ -38,7 +38,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Deppisch
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec"})
+@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec", "status"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
