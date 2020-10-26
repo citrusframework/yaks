@@ -38,6 +38,7 @@ var FastMapperAllowedAPIGroups = map[string]bool{
 	"yaks.citrusframework.org":  true,
 	"rbac.authorization.k8s.io": true,
 	"console.openshift.io":      true, // OpenShift console resources
+	"project.openshift.io":      true, // OpenShift project resources
 	"operators.coreos.com":      true, // Operator SDK OLM
 }
 

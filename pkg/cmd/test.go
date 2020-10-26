@@ -766,11 +766,6 @@ func initializeTempNamespace(name string, c client.Client, context context.Conte
 	if oc, err := openshift.IsOpenShift(c); err != nil {
 		panic(err)
 	} else if oc {
-		scheme := c.GetScheme()
-		if err := projectv1.Install(scheme); err != nil {
-			return nil, err;
-		}
-
 		obj = &projectv1.ProjectRequest{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: projectv1.GroupVersion.String(),
