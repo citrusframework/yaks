@@ -20,8 +20,9 @@ name: nightly
 on:
   schedule:
     - cron: "0 0 * * *"
-  tags:
-    - '*pinned*'
+  push:
+    tags:
+      - '*pinned*'
 
 jobs:
   release:
