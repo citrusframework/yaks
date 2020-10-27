@@ -53,6 +53,8 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 	status, err := action.getTestPodStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
 		test.Status.Phase = v1alpha1.TestPhaseError
+		test.Status.Errors = "Missing pod status for test " + test.Name
+		return test, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -82,8 +84,8 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 	for _, result := range test.Status.Results.Tests {
 		if result.ErrorType != "" {
 			_, className := path.Split(result.ClassName)
-			errors = append(errors, fmt.Sprintf("Test %s (%s) failed with %s; %s",
-				result.Name, className, result.ErrorType, result.ErrorMessage))
+			errors = append(errors, fmt.Sprintf("'%s' (%s) failed with '%s'",
+				result.Name, className, result.ErrorMessage))
 		}
 	}
 

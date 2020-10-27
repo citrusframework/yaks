@@ -71,10 +71,14 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	configMap := action.newTestingConfigMap(ctx, test)
 	pod, err := action.newTestingPod(ctx, test, configMap)
 	if err != nil {
+		test.Status.Phase = v1alpha1.TestPhaseError
+		test.Status.Errors = err.Error()
 		return nil, err
 	}
 	resources := []runtime.Object{configMap, pod}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
+		test.Status.Phase = v1alpha1.TestPhaseError
+		test.Status.Errors = err.Error()
 		return nil, err
 	}
 

@@ -27,6 +27,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.YaksVariableNames;
+import org.citrusframework.yaks.util.CucumberUtils;
 
 /**
  * Cucumber hook injects environment variables as test variables before the scenario is executed.
@@ -43,6 +44,7 @@ public class InjectEnvVarsHook {
             @Override
             public void doExecute(TestContext context) {
                 if (scenario != null) {
+                    context.setVariable(YaksVariableNames.FEATURE_FILE.value(), CucumberUtils.extractFeatureFileName(scenario));
                     context.setVariable(YaksVariableNames.SCENARIO_ID.value(), scenario.getId());
                     context.setVariable(YaksVariableNames.SCENARIO_NAME.value(), scenario.getName());
                 }

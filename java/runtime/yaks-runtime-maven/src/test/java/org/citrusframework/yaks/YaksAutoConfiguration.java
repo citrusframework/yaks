@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import com.consol.citrus.variable.GlobalVariables;
 import com.consol.citrus.variable.GlobalVariablesPropertyLoader;
+import org.citrusframework.yaks.report.SystemOutTestReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,5 +57,10 @@ public class YaksAutoConfiguration {
         }
 
         return propertyLoader;
+    }
+
+    @Bean(destroyMethod = "destroy")
+    public SystemOutTestReporter systemOutReporter() {
+        return new SystemOutTestReporter();
     }
 }
