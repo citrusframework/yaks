@@ -82,8 +82,8 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 	for _, result := range test.Status.Results.Tests {
 		if result.ErrorType != "" {
 			_, className := path.Split(result.ClassName)
-			errors = append(errors, fmt.Sprintf("Test %s (%s) failed with %s; %s",
-				result.Name, className, result.ErrorType, result.ErrorMessage))
+			errors = append(errors, fmt.Sprintf("'%s' (%s) failed with '%s'",
+				result.Name, className, result.ErrorMessage))
 		}
 	}
 

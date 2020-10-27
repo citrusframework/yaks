@@ -24,6 +24,7 @@ import com.consol.citrus.endpoint.direct.DirectEndpoints;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.SpringCamelContext;
+import org.citrusframework.yaks.report.SystemOutTestReporter;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,5 +73,10 @@ public class EndpointConfiguration {
             throw new BeanCreationException("Failed to create Camel context", e);
         }
         return camelContext;
+    }
+
+    @Bean(destroyMethod = "destroy")
+    public SystemOutTestReporter systemOutReporter() {
+        return new SystemOutTestReporter();
     }
 }

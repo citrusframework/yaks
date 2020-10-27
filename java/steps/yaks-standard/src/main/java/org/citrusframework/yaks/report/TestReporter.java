@@ -17,9 +17,7 @@
 
 package org.citrusframework.yaks.report;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,15 +26,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
 import com.consol.citrus.cucumber.CitrusReporter;
-import com.consol.citrus.report.LoggingReporter;
-import com.consol.citrus.report.OutputStreamReporter;
+import io.cucumber.java.PendingException;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.HookTestStep;
+import io.cucumber.plugin.event.Status;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
-import io.cucumber.plugin.event.TestRunStarted;
 import io.cucumber.plugin.event.TestStepFinished;
+import org.citrusframework.yaks.util.CucumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +57,6 @@ public class TestReporter extends CitrusReporter {
 
     @Override
     public void setEventPublisher(EventPublisher publisher) {
-        publisher.registerHandlerFor(TestRunStarted.class, this::initializeReports);
         publisher.registerHandlerFor(TestCaseFinished.class, this::saveTestResult);
         publisher.registerHandlerFor(TestCaseStarted.class, this::addTestDetail);
         publisher.registerHandlerFor(TestStepFinished.class, this::checkStepErrors);
@@ -69,7 +66,7 @@ public class TestReporter extends CitrusReporter {
 
     private void addTestDetail(TestCaseStarted event) {
         testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
-                event.getTestCase().getUri() + ":" + event.getTestCase().getLine()));
+                CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine()));
     }
 
     /**
@@ -77,28 +74,30 @@ public class TestReporter extends CitrusReporter {
      * @param event
      */
     private void checkStepErrors(TestStepFinished event) {
-        if (event.getResult().getError() != null
-                && !(event.getTestStep() instanceof HookTestStep)) {
-            Optional<TestResult> testDetail = testResults.getTests().stream()
-                    .filter(detail -> detail.getId().equals(event.getTestCase().getId()))
-                    .findFirst();
+        if (event.getTestStep() instanceof HookTestStep) {
+            return;
+        }
 
+        Optional<TestResult> testDetail = testResults.getTests().stream()
+                .filter(detail -> detail.getId().equals(event.getTestCase().getId()))
+                .findFirst();
+
+        if (event.getResult().getError() != null) {
             if (testDetail.isPresent()) {
                 testDetail.get().setCause(event.getResult().getError());
             } else {
                 testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
-                                            event.getTestCase().getUri() + ":" + event.getTestCase().getLine(), event.getResult().getError()));
+                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine(), event.getResult().getError()));
             }
         }
-    }
 
-    private void initializeReports(TestRunStarted event) {
-        if (!LoggerFactory.getLogger(LoggingReporter.class).isInfoEnabled()) {
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
-                new OutputStreamReporter(writer).onStart();
-                writer.flush();
-            } catch (IOException e) {
-                LOG.warn("Failed to initialize test report", e);
+        if (event.getResult().getStatus().is(Status.PENDING) || event.getResult().getStatus().is(Status.UNDEFINED)) {
+            Exception cause = new PendingException("The scenario has pending or undefined step(s)");
+            if (testDetail.isPresent()) {
+                testDetail.get().setCause(cause);
+            } else {
+                testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
+                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine(), cause));
             }
         }
     }
@@ -108,24 +107,6 @@ public class TestReporter extends CitrusReporter {
      * @param event
      */
     private void printReports(TestRunFinished event) {
-        if (!LoggerFactory.getLogger(LoggingReporter.class).isInfoEnabled()) {
-            com.consol.citrus.report.TestResults results = new com.consol.citrus.report.TestResults();
-            testResults.getTests().forEach(r -> {
-                if (r.getCause() != null) {
-                    results.addResult(com.consol.citrus.TestResult.failed(r.getName(), r.getClassname(), r.getCause()));
-                } else {
-                    results.addResult(com.consol.citrus.TestResult.success(r.getName(), r.getClassname()));
-                }
-            });
-
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(System.out))) {
-                new OutputStreamReporter(writer).generateReport(results);
-                writer.flush();
-            } catch (IOException e) {
-                LOG.warn("Failed to write test summary report", e);
-            }
-        }
-
         try (Writer terminationLogWriter = Files.newBufferedWriter(getTerminationLog(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             terminationLogWriter.write(testResults.toJson());
             terminationLogWriter.flush();

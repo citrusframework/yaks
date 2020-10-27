@@ -15,31 +15,24 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks;
+package org.citrusframework.yaks.util;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Christoph Deppisch
  */
-public enum YaksVariableNames {
+public class CucumberUtilsTest {
 
-    FEATURE_FILE("FEATURE_FILE"),
-    SCENARIO_ID("SCENARIO_ID"),
-    SCENARIO_NAME("SCENARIO_NAME"),
-    CLUSTER_WILDCARD_DOMAIN("CLUSTER_WILDCARD_DOMAIN"),
-    NAMESPACE("YAKS_NAMESPACE");
-
-    private final String variableName;
-
-    YaksVariableNames(String variableName) {
-        this.variableName = variableName;
-    }
-
-    public String value() {
-        return variableName;
-    }
-
-    @Override
-    public String toString() {
-        return variableName;
+    @Test
+    public void extractFeatureFileName() {
+        Assert.assertEquals("", CucumberUtils.extractFeatureFileName((String) null));
+        Assert.assertEquals("", CucumberUtils.extractFeatureFileName(""));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("foo.feature"));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("/foo.feature"));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("classpath:org/citrusframework/yaks/foo/foo.feature"));
     }
 }

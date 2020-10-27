@@ -24,6 +24,8 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.cucumber.java.After;
 import io.cucumber.java.Scenario;
+import io.cucumber.java.Status;
+import org.citrusframework.yaks.util.CucumberUtils;
 
 /**
  * Failure hook makes sure that the Citrus test state is set to FAILED when the Cucumber scenario is failed. This is because
@@ -42,13 +44,27 @@ public class TestFailureHook {
     @After(order = Integer.MAX_VALUE)
     public void checkTestFailure(Scenario scenario) {
         if (scenario.isFailed()) {
-            runner.run(new AbstractTestAction() {
-                @Override
-                public void doExecute(TestContext context) {
-                    context.getExceptions().add(new CitrusRuntimeException(
-                            String.format("Scenario %s:%s status %s", scenario.getId(), scenario.getLine(), scenario.getStatus().toString())));
-                }
-            });
+            runner.run(new AddErrorAction(String.format("Scenario '%s' in %s status %s",
+                    scenario.getName(), CucumberUtils.extractFeatureFileName(scenario), scenario.getStatus().toString())));
+        } else if (Status.PENDING == scenario.getStatus() || Status.UNDEFINED == scenario.getStatus()) {
+            runner.run(new AddErrorAction(String.format("Scenario '%s' in %s has pending or undefined step(s)",
+                    scenario.getName(), CucumberUtils.extractFeatureFileName(scenario))));
+        }
+    }
+
+    /**
+     * Test action adds new error to the test context.
+     */
+    private static class AddErrorAction extends AbstractTestAction {
+        private final String errorMessage;
+
+        public AddErrorAction(String msg) {
+            this.errorMessage = msg;
+        }
+
+        @Override
+        public void doExecute(TestContext context) {
+            context.getExceptions().add(new CitrusRuntimeException(errorMessage));
         }
     }
 }
