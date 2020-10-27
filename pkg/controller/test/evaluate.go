@@ -53,6 +53,8 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 	status, err := action.getTestPodStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
 		test.Status.Phase = v1alpha1.TestPhaseError
+		test.Status.Errors = "Missing pod status for test " + test.Name
+		return test, nil
 	} else if err != nil {
 		return nil, err
 	}

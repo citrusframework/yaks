@@ -210,7 +210,7 @@ func (r *ReconcileIntegrationTest) update(ctx context.Context, log log.Logger, t
 	err := r.client.Status().Update(ctx, target)
 	if err != nil {
 		if k8serrors.IsConflict(err) {
-			log.Error(err, "conflict")
+			log.Error(err, "conflict in updating test to status " + string(target.Status.Phase))
 
 			return reconcile.Result{
 				Requeue: true,
