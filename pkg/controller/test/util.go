@@ -22,8 +22,8 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
-// TestPodNameFor returns the name to use for the testing pod
-func TestPodNameFor(test *v1alpha1.Test) string {
+// TestJobNameFor returns the name to use for the testing pod
+func TestJobNameFor(test *v1alpha1.Test) string {
 	return fmt.Sprintf("test-%s-%s", test.Name, test.Status.TestID)
 }
 
