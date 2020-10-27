@@ -48,6 +48,15 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - pods/log
+  - pods/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - rbac.authorization.k8s.io
   resources:
   - roles
@@ -94,19 +103,6 @@ rules:
   verbs:
   - get
   - list
-  - watch
-- apiGroups:
-  - extensions
-  resources:
-  - ingresses
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - rbac.authorization.k8s.io
