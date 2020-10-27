@@ -15,60 +15,17 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-name: build
+name: nightly
 
 on:
-  pull_request:
-    branches:
-      - master
-    paths-ignore:
-      - '**.adoc'
-      - 'KEYS'
-      - 'LICENSE'
-      - 'NOTICE'
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**.adoc'
-      - 'KEYS'
-      - 'LICENSE'
-      - 'NOTICE'
+  schedule:
+    - cron: "0 0 * * *"
+
+  tags:
+    - '*nightly*'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-    - name: Install Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.13.x
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Cache Go modules
-      uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Cache Maven modules
-      uses: actions/cache@v1
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-m2-
-    - name: Test
-      run: |
-        make check-licenses test package-artifacts
-
-  snapshot:
+  release:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
@@ -110,9 +67,9 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
       run: |
-        SNAPSHOT_VERSION=$(make snapshot-version)
-        echo "Using SNAPSHOT_VERSION=$SNAPSHOT_VERSION"
-        echo "::set-env name=SNAPSHOT_VERSION::$SNAPSHOT_VERSION"
+        VERSION=$(make version | sed s/-SNAPSHOT/-$(date +%Y%m%d%H%M)/)
+        echo "Using VERSION=$VERSION"
+        echo "::set-env name=VERSION::$VERSION"
 
         IMAGE_NAME=docker.io/yaks/yaks
         echo "Using IMAGE_NAME=$IMAGE_NAME"
@@ -122,4 +79,51 @@ jobs:
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Build
       run: |
-        make IMAGE_NAME=$IMAGE_NAME clean release-snapshot
+        make VERSION=$VERSION IMAGE_NAME=$IMAGE_NAME clean release-snapshot
+    - name: Check
+      run: ls -l
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.VERSION }}
+        release_name: Release ${{ env.VERSION }}
+        body: |
+          YAKS snapshot build for testing (unstable).
+
+          To test it, download the client for your OS and run:
+
+          ```
+          yaks install
+          ```
+        draft: false
+        prerelease: true
+    - name: Upload Client Linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-linux-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-linux-64bit.tar.gz
+        asset_content_type: application/tar+gzip
+    - name: Upload Client Mac
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-mac-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-mac-64bit.tar.gz
+        asset_content_type: application/tar+gzip
+    - name: Upload Client Windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./yaks-${{ env.VERSION }}-windows-64bit.tar.gz
+        asset_name: yaks-${{ env.VERSION }}-windows-64bit.tar.gz
+        asset_content_type: application/tar+gzip
