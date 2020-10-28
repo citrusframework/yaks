@@ -128,7 +128,7 @@ public class KubernetesSteps {
         Object metadata = yamlContent.get("metadata");
 
         if (!(metadata instanceof Map)) {
-            throw new CitrusRuntimeException("Missing metadat on Kubernetes custom resource");
+            throw new CitrusRuntimeException("Missing metadata on Kubernetes custom resource");
         }
 
         String name = ((Map<String, Object>) metadata).getOrDefault("name", "").toString();
@@ -199,6 +199,20 @@ public class KubernetesSteps {
             runner.then(doFinally()
                     .actions(kubernetes().client(k8sClient).deleteService(serviceName)));
         }
+    }
+
+    @Given("^delete Kubernetes service ([^\\s]+)$")
+    public void deleteService(String serviceName) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .deleteService(serviceName));
+    }
+
+    @Given("^delete Kubernetes secret ([^\\s]+)$")
+    public void deleteSecret(String secretName) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .deleteSecret(secretName));
     }
 
     public void receiveServiceRequest(HttpMessage request, MessageType messageType) {
