@@ -257,14 +257,14 @@ public class KameletSteps {
         }
     }
 
-    @Given("^remove Kamelet$")
+    @Given("^delete Kamelet ([a-z0-9-]+)$")
 	public void deleteKamelet(String name) {
         runner.run(camelk()
                     .client(k8sClient)
                     .deleteKamelet(name));
 	}
 
-    @Given("^remove KameletBinding$")
+    @Given("^delete KameletBinding ([a-z0-9-]+)$")
 	public void deleteKameletBinding(String name) {
         runner.run(camelk()
                     .client(k8sClient)
