@@ -28,10 +28,10 @@ import (
 	"os/exec"
 	"path"
 	"regexp"
+	r "runtime"
 	"strings"
 	"text/template"
 	"time"
-	r "runtime"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -165,10 +165,16 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 	}
 
 	if runConfig.Config.Namespace.Temporary {
-		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
+		if namespace, err := o.createTempNamespace(runConfig, c); namespace != nil {
+			if runConfig.Config.Namespace.AutoRemove {
+				defer deleteTempNamespace(namespace, c, o.Context)
+			}
+
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
 			return err
-		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
-			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
 
@@ -313,17 +319,33 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	if !runConfig.Config.Operator.Global {
-		// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
-		clientProvider := client.Provider{Get: o.NewCmdClient}
-
-		if err := setupCluster(o.Context, clientProvider, nil); err != nil {
-			return namespace, err
+	operator, err := o.findOperator(c, o.Namespace)
+	if err != nil && k8serrors.IsNotFound(err) {
+		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
+			operator, err = o.findOperator(c, operatorNamespace)
+		} else {
+			return namespace, namespaceErr
 		}
+	}
 
-		if err := o.setupOperator(c, namespaceName); err != nil {
-			return namespace, err
-		}
+	if err != nil {
+		return namespace, err
+	}
+
+	if isOperatorGlobal(operator) {
+		// Using global operator to manage temporary namespaces, no action required
+		return namespace, nil
+	}
+
+	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
+	clientProvider := client.Provider{Get: o.NewCmdClient}
+
+	if err := setupCluster(o.Context, clientProvider, nil); err != nil {
+		return namespace, err
+	}
+
+	if err := o.setupOperator(c, namespaceName); err != nil {
+		return namespace, err
 	}
 
 	return namespace, nil
