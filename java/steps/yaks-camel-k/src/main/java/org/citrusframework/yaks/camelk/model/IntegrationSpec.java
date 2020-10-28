@@ -37,7 +37,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 public class IntegrationSpec implements KubernetesResource {
 
     @JsonProperty("replicas")
-    private int replicas;
+    private Integer replicas;
     @JsonProperty("flows")
     private List<Map<String, Object>> flows;
     @JsonProperty("sources")
@@ -59,11 +59,11 @@ public class IntegrationSpec implements KubernetesResource {
     @JsonProperty("serviceAccountName")
     private String serviceAccountName;
 
-    public int getReplicas() {
+    public Integer getReplicas() {
         return replicas;
     }
 
-    public void setReplicas(int replicas) {
+    public void setReplicas(Integer replicas) {
         this.replicas = replicas;
     }
 
