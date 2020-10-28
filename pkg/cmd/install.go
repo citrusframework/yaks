@@ -57,7 +57,7 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdO
 	cmd.Flags().String("cluster-type", "", "Set explicitly the cluster type to Kubernetes or OpenShift")
 	cmd.Flags().Bool("skip-operator-setup", false, "Do not install the operator in the namespace (in case there's a global one)")
 	cmd.Flags().Bool("skip-cluster-setup", false, "Skip the cluster-setup phase")
-	cmd.Flags().Bool("global", false, "Configure the operator to watch all namespaces. No integration platform is created.")
+	cmd.Flags().Bool("global", true, "Configure the operator to watch all namespaces")
 	cmd.Flags().Bool("force", false, "Force replacement of configuration resources when already present.")
 	cmd.Flags().String("operator-image", "", "Set the operator Image used for the operator deployment")
 	cmd.Flags().String("operator-image-pull-policy", "", "Set the operator ImagePullPolicy used for the operator deployment")

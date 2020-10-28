@@ -20,11 +20,17 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	v1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"reflect"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -33,6 +39,7 @@ import (
 )
 
 const (
+	OperatorWatchNamespaceEnv = "WATCH_NAMESPACE"
 	offlineCommandLabel = "yaks.citrusframework.org/cmd.offline"
 )
 
@@ -174,5 +181,54 @@ func cmdOnly(cmd *cobra.Command, options interface{}) *cobra.Command {
 
 func isOfflineCommand(cmd *cobra.Command) bool {
 	return cmd.Annotations[offlineCommandLabel] == "true"
+}
+
+func (o *testCmdOptions) findOperator(c client.Client, namespace string) (*v1.Deployment, error) {
+	operator := v1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: v1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      "yaks-operator",
+		},
+	}
+	key := k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      "yaks-operator",
+	}
+
+	err := c.Get(o.Context, key, &operator)
+	return &operator, err
+}
+
+// IsOperatorGlobal returns true if the operator is configured to watch all namespaces
+func isOperatorGlobal(operator *v1.Deployment) bool {
+	envSet := operator.Spec.Template.Spec.Containers[0].Env
+	for _, env := range envSet {
+		if env.Name == OperatorWatchNamespaceEnv && strings.TrimSpace(env.Value) == "" && env.ValueFrom == nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getDefaultOperatorNamespace(c client.Client, runConfig *config.RunConfig) (string, error) {
+	if runConfig.Config.Operator.Namespace != "" {
+		return runConfig.Config.Operator.Namespace, nil
+	}
+
+	isOpenShift, err := openshift.IsOpenShift(c)
+	if err != nil {
+		return "", err
+	}
+
+	if isOpenShift {
+		return config.OperatorNamespaceOpenShift, nil
+	} else {
+		return config.OperatorNamespaceKubernetes, nil
+	}
 }
 

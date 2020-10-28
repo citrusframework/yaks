@@ -18,11 +18,15 @@ limitations under the License.
 package config
 
 import (
-    "github.com/citrusframework/yaks/pkg/util/olm"
     "io/ioutil"
     "os"
 
     "gopkg.in/yaml.v2"
+)
+
+const (
+    OperatorNamespaceOpenShift  = "openshift-operators"
+    OperatorNamespaceKubernetes = "kube-operators"
 )
 
 type RunConfig struct {
@@ -103,7 +107,6 @@ type NamespaceConfig struct {
 }
 
 type OperatorConfig struct {
-    Global    bool   `yaml:"global"`
     Namespace string `yaml:"namespace"`
 }
 
@@ -113,12 +116,7 @@ func NewWithDefaults() *RunConfig {
         Temporary:  false,
     }
 
-    operator := OperatorConfig {
-        Global: true,
-        Namespace: olm.DefaultGlobalNamespace,
-    }
-
-    var config = Config {Recursive: true, Namespace: ns, Operator: operator}
+    var config = Config {Recursive: true, Namespace: ns}
     return &RunConfig {Config: config, BaseDir: ""}
 }
 
