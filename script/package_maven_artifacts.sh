@@ -47,31 +47,48 @@ echo Install YAKS Maven extension
 mkdir -p $PWD/../build/_maven_project/yaks-runtime-maven/.mvn
 mv $PWD/../build/_maven_project/yaks-runtime-maven/extensions.xml $PWD/../build/_maven_project/yaks-runtime-maven/.mvn/
 
-# copy all dependencies to image m2 repository
+# copy all dependencies to image
 echo Copy project dependencies ...
 
 ./mvnw \
     --quiet \
     -f runtime/yaks-runtime-maven/pom.xml \
     -DskipTests \
-    -DoutputDirectory=$PWD/../build/_maven_repository \
-    dependency:copy-dependencies
-
-# install YAKS artifacts to image m2 repository
-echo Install YAKS artifacts ...
-
-./mvnw \
-    --quiet \
-    -DskipTests \
-    -Dmaven.repo.local=$PWD/../build/_maven_repository \
-    jar:jar \
-    install:install
-
-# preload Maven plugins so they are part of the image
-echo Load project plugins ...
+    -Plocal-settings \
+    resources:copy-resources
 
 ./mvnw \
     --quiet \
     -f runtime/yaks-runtime-maven/pom.xml \
+    -s runtime/yaks-runtime-maven/target/settings_local.xml \
+    -DskipTests \
     -Dmaven.repo.local=$PWD/../build/_maven_repository \
-    test
+    de.qaware.maven:go-offline-maven-plugin:1.2.7:resolve-dependencies
+
+# remove some of the tracking files Maven puts in the repository we created above
+echo Clean tracking files ...
+
+./mvnw \
+    --quiet \
+    -Dimage.repository.directory=$PWD/../build/_maven_repository \
+    -Plocal-settings \
+    clean:clean
+
+# install YAKS Maven extension to image
+echo Install YAKS Maven extension ...
+
+./mvnw \
+    --quiet \
+    -f tools/pom.xml \
+    -DskipTests \
+    -Dmaven.repo.local=$PWD/../build/_maven_repository \
+    install
+
+# install YAKS runtime to image
+echo Install YAKS runtime ...
+
+./mvnw \
+    --quiet \
+    -f runtime/pom.xml \
+    -Dmaven.repo.local=$PWD/../build/_maven_repository \
+    install
