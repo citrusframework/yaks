@@ -28,19 +28,6 @@
   <artifactId>yaks-runtime-maven</artifactId>
   <name>YAKS :: Runtime :: Maven</name>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <copyPom>true</copyPom>
-          <useRepositoryLayout>true</useRepositoryLayout>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
 
     <!-- ****************************** -->
@@ -138,4 +125,60 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>local-settings</id>
+      <properties>
+        <image.repository.directory/>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <!-- Provides a settings.xml for Maven that will exclusively use the local Maven repository
+            of this machine. This way we can copy all dependencies to the Maven repository that lives in
+            the S2I image by using the go-offline Maven plugin -->
+            <plugin>
+              <artifactId>maven-resources-plugin</artifactId>
+              <configuration>
+                <outputDirectory>${project.build.directory}</outputDirectory>
+                <resources>
+                  <resource>
+                    <directory>settings</directory>
+                    <includes>
+                      <include>settings_local.xml</include>
+                    </includes>
+                    <filtering>true</filtering>
+                  </resource>
+                </resources>
+              </configuration>
+            </plugin>
+
+            <!--
+              This removes some of the tracking files Maven puts in the repository we created for the S2I image.
+              Otherwise Maven will try to resolve using the repositories we used to download these (namely the
+              local repository used in the `settings_local.xml`), that will not resolve to anything meaningful
+              when we do a build in the S2I image.
+            -->
+            <plugin>
+              <artifactId>maven-clean-plugin</artifactId>
+              <configuration>
+                <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                <filesets>
+                  <fileset>
+                    <directory>${image.repository.directory}</directory>
+                    <followSymlinks>false</followSymlinks>
+                    <includes>
+                      <include>**/_remote.repositories</include>
+                      <include>**/resolver-status.properties</include>
+                      <include>**/*.lastUpdated</include>
+                    </includes>
+                  </fileset>
+                </filesets>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
 </project>

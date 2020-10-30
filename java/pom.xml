@@ -47,7 +47,7 @@
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <knative-client.version>4.10.3</knative-client.version>
     <postgresql.version>9.4.1212</postgresql.version>
-    <testcontainers.version>1.10.7</testcontainers.version>
+    <testcontainers.version>1.15.0-rc2</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
