@@ -26,6 +26,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.SpringCamelContext;
 import org.citrusframework.yaks.report.SystemOutTestReporter;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -36,7 +37,7 @@ import org.springframework.context.annotation.DependsOn;
 @Configuration
 public class EndpointConfiguration {
 
-    private CamelContext camelContext = new SpringCamelContext();
+    private CamelContext camelContext;
 
     @Bean
     public DirectEndpoint fooEndpoint() {
@@ -57,8 +58,9 @@ public class EndpointConfiguration {
     }
 
     @Bean
-    public CamelContext camelContext() {
-        RouteBuilder routeBuilder = new RouteBuilder() {
+    public CamelContext camelContext(ApplicationContext applicationContext) {
+        camelContext = new SpringCamelContext(applicationContext);
+        RouteBuilder routeBuilder = new RouteBuilder(camelContext) {
             @Override
             public void configure() throws Exception {
                 from("direct:echo")

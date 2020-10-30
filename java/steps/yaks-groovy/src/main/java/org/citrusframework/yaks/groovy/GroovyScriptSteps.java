@@ -26,6 +26,7 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.common.InitializingPhase;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.endpoint.Endpoint;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
@@ -38,7 +39,6 @@ import org.citrusframework.yaks.groovy.dsl.ConfigurationScript;
 import org.citrusframework.yaks.groovy.dsl.actions.ActionScript;
 import org.citrusframework.yaks.groovy.dsl.endpoints.EndpointConfigurationScript;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
 /**
@@ -78,12 +78,8 @@ public class GroovyScriptSteps {
     public void createEndpoint(String name, String configurationScript) {
         Endpoint endpoint = new EndpointConfigurationScript(configurationScript).get();
 
-        if (endpoint instanceof InitializingBean) {
-            try {
-                ((InitializingBean) endpoint).afterPropertiesSet();
-            } catch (Exception e) {
-                throw new CitrusRuntimeException(String.format("Failed to initialize endpoint %s", name), e);
-            }
+        if (endpoint instanceof InitializingPhase) {
+            ((InitializingPhase) endpoint).initialize();
         }
 
         citrus.getCitrusContext().bind(name, endpoint);

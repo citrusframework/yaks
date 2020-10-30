@@ -55,6 +55,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
 
 /**
  * @author Christoph Deppisch
@@ -75,7 +76,7 @@ public class HttpClientSteps implements HttpSteps {
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
 
-    private Map<String, String> bodyValidationExpressions = new HashMap<>();
+    private Map<String, Object> bodyValidationExpressions = new HashMap<>();
 
     private String requestMessageType;
     private String responseMessageType;
@@ -320,9 +321,7 @@ public class HttpClientSteps implements HttpSteps {
                 .response(response.getStatusCode())
                 .message(response);
 
-        for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
-            responseBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
-        }
+        responseBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
         bodyValidationExpressions.clear();
 
         responseBuilder.timeout(timeout);

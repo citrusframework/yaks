@@ -32,6 +32,6 @@ public class QueueConfiguration {
     }
 
     public void queue(String name) {
-        citrus.getCitrusContext().bind(name, new DefaultMessageQueue());
+        citrus.getCitrusContext().bind(name, new DefaultMessageQueue(name));
     }
 }

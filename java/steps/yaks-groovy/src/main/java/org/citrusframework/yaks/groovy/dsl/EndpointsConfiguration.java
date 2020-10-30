@@ -20,14 +20,13 @@ package org.citrusframework.yaks.groovy.dsl;
 import java.util.function.Supplier;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.common.InitializingPhase;
 import com.consol.citrus.endpoint.Endpoint;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
-import groovy.lang.MissingPropertyException;
 import org.citrusframework.yaks.groovy.dsl.endpoints.EndpointConfiguration;
 import org.citrusframework.yaks.groovy.dsl.endpoints.Endpoints;
-import org.springframework.beans.factory.InitializingBean;
 
 /**
  * @author Christoph Deppisch
@@ -47,12 +46,8 @@ public class EndpointsConfiguration extends GroovyObjectSupport {
         callable.call();
 
         Endpoint endpoint = endpointSupplier.get();
-        if (endpoint instanceof InitializingBean) {
-            try {
-                ((InitializingBean) endpoint).afterPropertiesSet();
-            } catch (Exception e) {
-                throw new MissingPropertyException(type, this.getClass());
-            }
+        if (endpoint instanceof InitializingPhase) {
+            ((InitializingPhase) endpoint).initialize();
         }
         citrus.getCitrusContext().bind(endpoint.getName(), endpoint);
 

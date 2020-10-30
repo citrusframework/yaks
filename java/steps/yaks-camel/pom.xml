@@ -67,6 +67,12 @@
 
     <!-- Test scope -->
     <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-standard</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-junit</artifactId>
       <scope>test</scope>
@@ -78,7 +84,7 @@
     </dependency>
     <dependency>
       <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-core-spring</artifactId>
+      <artifactId>citrus-spring</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
