@@ -176,12 +176,12 @@ public class OpenApiSteps {
         if (operation.parameters != null) {
             operation.parameters.stream()
                     .filter(param -> "header".equals(param.in))
-                    .filter(param -> param.required)
+                    .filter(param -> param.required != null && param.required)
                     .forEach(param -> clientSteps.addRequestHeader(param.getName(), OpenApiTestDataGenerator.createRandomValueExpression((OasSchema) param.schema, OasModelHelper.getSchemaDefinitions(openApiDoc), false)));
 
             operation.parameters.stream()
                     .filter(param -> "query".equals(param.in))
-                    .filter(param -> param.required)
+                    .filter(param -> param.required != null && param.required)
                     .forEach(param -> clientSteps.addRequestQueryParam(param.getName(), OpenApiTestDataGenerator.createRandomValueExpression((OasSchema) param.schema)));
         }
 
