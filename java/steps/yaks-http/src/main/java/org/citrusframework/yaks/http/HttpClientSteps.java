@@ -89,13 +89,17 @@ public class HttpClientSteps implements HttpSteps {
 
     private long timeout;
 
+    private boolean forkMode = HttpSettings.getForkMode();
+
     @Before
     public void before(Scenario scenario) {
         if (httpClient == null) {
             if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
                 httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
             } else {
-                httpClient = new HttpClientBuilder().build();
+                httpClient = new HttpClientBuilder()
+                        .timeout(HttpSettings.getTimeout())
+                        .build();
             }
         }
 
@@ -134,6 +138,11 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^HTTP request timeout is (\\d+)(?: ms| milliseconds)$")
     public void configureTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    @Given("^HTTP request fork mode is (enabled|disabled)$")
+    public void configureForkMode(String mode) {
+        this.forkMode = "enabled".equals(mode);
     }
 
     @Given("^(?:URL|url) is healthy$")
@@ -298,6 +307,8 @@ public class HttpClientSteps implements HttpSteps {
         } else {
             requestBuilder = sendBuilder.post().message(request);
         }
+
+        requestBuilder.fork(forkMode);
 
         if (StringUtils.hasText(requestUrl)) {
             requestBuilder.uri(requestUrl);

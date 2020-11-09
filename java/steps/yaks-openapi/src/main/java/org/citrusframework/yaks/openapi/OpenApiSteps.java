@@ -114,6 +114,11 @@ public class OpenApiSteps {
         }
     }
 
+    @Given("^OpenAPI request fork mode is (enabled|disabled)$")
+    public void configureForkMode(String mode) {
+        clientSteps.configureForkMode(mode);
+    }
+
     @Given("^outbound dictionary$")
     public void createOutboundDictionary(DataTable dataTable) {
         Map<String, String> mappings = dataTable.asMap(String.class, String.class);

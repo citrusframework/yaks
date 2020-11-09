@@ -29,6 +29,10 @@ public class HttpSettings {
     private static final String TIMEOUT_ENV = HTTP_ENV_PREFIX + "_TIMEOUT";
     private static final String TIMEOUT_DEFAULT = "2000";
 
+    private static final String FORK_MODE_PROPERTY = HTTP_PROPERTY_PREFIX + ".fork.mode";
+    private static final String FORK_MODE_ENV = HTTP_ENV_PREFIX + "_FORK_MODE";
+    private static final String FORK_MODE_DEFAULT = "false";
+
     private static final String SERVER_NAME_PROPERTY = HTTP_PROPERTY_PREFIX + "server.name";
     private static final String SERVER_NAME_ENV = HTTP_ENV_PREFIX + "SERVER_NAME";
     private static final String SERVER_NAME_DEFAULT = "yaks-http-server";
@@ -48,6 +52,15 @@ public class HttpSettings {
     public static long getTimeout() {
         return Long.parseLong(System.getProperty(TIMEOUT_PROPERTY,
                 System.getenv(TIMEOUT_ENV) != null ? System.getenv(TIMEOUT_ENV) : TIMEOUT_DEFAULT));
+    }
+
+    /**
+     * Request fork mode when sending messages.
+     * @return
+     */
+    public static boolean getForkMode() {
+        return Boolean.parseBoolean(System.getProperty(FORK_MODE_PROPERTY,
+                System.getenv(FORK_MODE_ENV) != null ? System.getenv(FORK_MODE_ENV) : FORK_MODE_DEFAULT));
     }
 
     /**
