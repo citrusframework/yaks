@@ -122,4 +122,4 @@ jobs:
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Build
       run: |
-        make IMAGE_NAME=$IMAGE_NAME clean release-snapshot
+        make IMAGE_NAME=$IMAGE_NAME release-snapshot
