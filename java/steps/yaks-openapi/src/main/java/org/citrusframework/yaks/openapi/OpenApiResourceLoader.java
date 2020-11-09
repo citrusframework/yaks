@@ -30,9 +30,12 @@ import java.util.Objects;
 import com.consol.citrus.util.FileUtils;
 import io.apicurio.datamodels.Library;
 import io.apicurio.datamodels.openapi.models.OasDocument;
+import org.apache.http.HttpHeaders;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.ssl.SSLContexts;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 
 /**
  * Loads Open API specifications from different locations like file resource or web resource.
@@ -69,7 +72,8 @@ public final class OpenApiResourceLoader {
         HttpURLConnection con = null;
         try {
             con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
+            con.setRequestMethod(HttpMethod.GET.name());
+            con.setRequestProperty(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
             int status = con.getResponseCode();
             if (status > 299) {
@@ -106,7 +110,8 @@ public final class OpenApiResourceLoader {
             HttpsURLConnection.setDefaultHostnameVerifier(NoopHostnameVerifier.INSTANCE);
 
             con = (HttpsURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
+            con.setRequestMethod(HttpMethod.GET.name());
+            con.setRequestProperty(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 
             int status = con.getResponseCode();
             if (status > 299) {
