@@ -124,9 +124,11 @@ git-tag:
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
 
-docker-image:
+docker-image: build-yaks
 	mkdir -p build/_output/bin
-	operator-sdk build --image-builder docker $(IMAGE_NAME):$(VERSION)
+	#operator-sdk build --image-builder docker $(IMAGE_NAME):$(VERSION)
+	cp yaks build/_output/bin
+	docker build -t $(IMAGE_NAME):$(VERSION) -f build/Dockerfile .
 
 images-no-test: build package-artifacts-no-test docker-image
 

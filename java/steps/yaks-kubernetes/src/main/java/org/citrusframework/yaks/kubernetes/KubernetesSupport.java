@@ -114,7 +114,7 @@ public final class KubernetesSupport {
                 .withName(resourceType.contains(".") ? resourceType : String.format("%s.%s", resourceType, group))
                 .withGroup(group)
                 .withVersion(version)
-                .withPlural(kind)
+                .withPlural(resourceType.contains(".") ? resourceType.substring(0, resourceType.indexOf(".")) : resourceType)
                 .withScope("Namespaced")
                 .build();
     }
