@@ -319,8 +319,10 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
+	// looking for operator in current namespace
 	operator, err := o.findOperator(c, o.Namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
+		// looking for operator in cluster-wide operator namespace
 		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
 			operator, err = o.findOperator(c, operatorNamespace)
 		} else {
@@ -328,15 +330,13 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 		}
 	}
 
-	if err != nil {
-		return namespace, err
-	}
 
-	if isOperatorGlobal(operator) {
+	if err == nil && isOperatorGlobal(operator) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
 	}
 
+	// no operator or non-global operator found, deploy into temp namespace
 	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
 	clientProvider := client.Provider{Get: o.NewCmdClient}
 
