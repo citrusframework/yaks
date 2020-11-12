@@ -42,7 +42,7 @@
     <spring.version>5.2.8.RELEASE</spring.version>
     <cucumber.version>5.7.0</cucumber.version>
     <camel.version>3.5.0</camel.version>
-    <jackson.version>2.11.2</jackson.version>
+    <jackson.version>2.11.3</jackson.version>
     <junit.version>4.13.1</junit.version>
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <knative-client.version>4.10.3</knative-client.version>
