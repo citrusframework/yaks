@@ -68,9 +68,77 @@ jobs:
       run: |
         make check-licenses test package-artifacts
 
+  test:
+    runs-on: ubuntu-latest
+    env:
+      KAMEL_INSTALL_REGISTRY: "kind-registry:5000"
+      KAMEL_INSTALL_REGISTRY_INSECURE: true
+    steps:
+    - name: Set Up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Cache Go modules
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Cache Maven modules
+      uses: actions/cache@v1
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-m2-
+    - name: Build
+      run: |
+        make
+        sudo cp yaks /usr/local/bin/
+    - name: Kind Cluster
+      uses: container-tools/kind-action@v1
+    - name: Camel K Tools
+      uses: container-tools/camel-k-action@v1
+    - name: Install
+      run: |
+        kamel install --cluster-setup
+        yaks install
+    - name: E2E Tests
+      run: |
+        # Eventually `yaks test examples` should work
+
+        # For now:
+        yaks test examples/camel
+        yaks test examples/camel-k
+        #yaks test examples/extension
+        #yaks test examples/http
+        #yaks test examples/jdbc
+        yaks test examples/jitpack
+        #yaks test examples/kamelets
+        #yaks test examples/knative
+        yaks test examples/kubernetes
+        yaks test examples/logging
+        yaks test examples/namespace
+        #yaks test examples/openapi
+        yaks test examples/run-scripts
+        #yaks test examples/secrets
+        yaks test examples/settings
+        yaks test examples/test-group
+        yaks test examples/helloworld.feature
+
+
   snapshot:
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+    - build
+    - test
     if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
 
     steps:
