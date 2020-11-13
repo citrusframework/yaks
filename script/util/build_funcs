@@ -1,0 +1,121 @@
+#!/bin/bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+build_artifacts () {
+  local working_dir="$1"
+  local release_version="$2"
+  local maven_opts="$3"
+
+  mkdir -p ${working_dir}/build/_maven_repository
+  mkdir -p ${working_dir}/build/_maven_project
+
+  cd ${working_dir}/java
+
+  # copy YAKS Maven project to image, this will be the runtime for the tests
+  echo "Copy YAKS runtime ..."
+
+  ./mvnw \
+      ${maven_opts} \
+      -f runtime/yaks-runtime-maven/pom.xml \
+      clean
+
+  cp -r runtime/yaks-runtime-maven ${working_dir}/build/_maven_project
+
+  # fresh build YAKS java modules
+  echo "Build YAKS modules ..."
+
+  if [ $(hasflag --local-release) ]; then
+      echo "Build local v$release_version"
+      ./mvnw ${maven_opts} clean install
+  elif [ $(hasflag --snapshot-release) ]; then
+      echo "Build snapshot v$release_version"
+      ./mvnw ${maven_opts} clean install deploy -Prelease-labs
+  else
+      echo "Build release v$release_version"
+      ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging Syndesis for $release_version"
+  fi
+
+  # install YAKS Maven extension to runtime project in image
+  echo "Install YAKS Maven extension"
+
+  mkdir -p ${working_dir}/build/_maven_project/yaks-runtime-maven/.mvn
+  mv ${working_dir}/build/_maven_project/yaks-runtime-maven/extensions.xml ${working_dir}/build/_maven_project/yaks-runtime-maven/.mvn/
+
+  # copy all dependencies to image
+  echo "Copy project dependencies ..."
+
+  ./mvnw \
+      ${maven_opts} \
+      -f runtime/yaks-runtime-maven/pom.xml \
+      -DskipTests \
+      -Plocal-settings \
+      resources:copy-resources
+
+  ./mvnw \
+      ${maven_opts} \
+      -f runtime/yaks-runtime-maven/pom.xml \
+      -s runtime/yaks-runtime-maven/target/settings_local.xml \
+      -DskipTests \
+      -Dmaven.repo.local=${working_dir}/build/_maven_repository \
+      de.qaware.maven:go-offline-maven-plugin:1.2.7:resolve-dependencies
+
+  # remove some of the tracking files Maven puts in the repository we created above
+  echo "Clean tracking files ..."
+
+  ./mvnw \
+      ${maven_opts} \
+      -Dimage.repository.directory=${working_dir}/build/_maven_repository \
+      -Plocal-settings \
+      clean:clean
+
+  # install YAKS Maven extension to image
+  echo "Install YAKS Maven extension ..."
+
+  ./mvnw \
+      ${maven_opts} \
+      -f tools/pom.xml \
+      -DskipTests \
+      -Dmaven.repo.local=${working_dir}/build/_maven_repository \
+      install
+
+  # install YAKS runtime to image
+  echo "Install YAKS runtime ..."
+
+  ./mvnw \
+      ${maven_opts} \
+      -f runtime/pom.xml \
+      -Dmaven.repo.local=${working_dir}/build/_maven_repository \
+      install
+}
+
+# =======================================================================
+# Helper
+
+extract_maven_opts() {
+    local maven_opts=""
+
+    if [ $(hasflag --quiet -q) ]; then
+        maven_opts="$maven_opts -q"
+    fi
+
+    if [ $(hasflag --skip-tests) ]; then
+        # Do not run any tests but compile test sources
+        maven_opts="$maven_opts -Dtest -Dit.test -DfailIfNoTests=false"
+    fi
+
+    echo $maven_opts
+}

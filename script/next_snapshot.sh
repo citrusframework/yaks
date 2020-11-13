@@ -15,25 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+# Exit if any error occurs
+# Fail on a single failed command in a pipeline (if supported)
+set -o pipefail
+
+# Save global script args, use "help" as default
+if [ -z "$1" ]; then
+    ARGS=("help")
+else
+    ARGS=("$@")
+fi
+
+# Fail on error and undefined vars (please don't use global vars, but evaluation of functions for return values)
+set -eu
 
 location=$(dirname $0)
-make_file=$location/../Makefile
+working_dir=$(realpath ${location}/../)
 
-version=$(make -s version | tr '[:lower:]' '[:upper:]')
-version_num=$(echo $version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
-next_version_num=$(echo $version_num | awk 'BEGIN { FS = "." } ; {print $1"."++$2".0"}')
-next_version="$next_version_num-SNAPSHOT"
+source "$location/util/common_funcs"
+source "$location/util/version_funcs"
 
-echo "Increasing version to $next_version"
+snapshot_version=$(get_snapshot_version "$working_dir/java")
+check_error $snapshot_version
 
-$location/set_version.sh $next_version $version
+next_version=$(get_next_snapshot_version "$working_dir/java")
+check_error $next_version
 
-version_rule="s/$version_num\-SNAPSHOT/$next_version_num\-SNAPSHOT/g"
-
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  sed -i "$version_rule" $make_file
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-  # Mac OSX
-  sed -i '' "$version_rule" $make_file
-fi
+set_next_version "$working_dir" "$snapshot_version" "$next_version"

@@ -1,0 +1,173 @@
+#!/bin/bash
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Get release version from arguments or exit with error
+get_release_version() {
+    local working_dir="$1"
+
+    if [ $(hasflag --snapshot-release) ]; then
+        if [ $(hasflag --snapshot-version) ]; then
+            echo $(get_snapshot_version "$working_dir")
+        else
+            echo $(calc_timestamp_version "$working_dir")
+        fi
+        return
+    fi
+
+    local release_version=$(readopt --release-version)
+    if [ -z "${release_version}" ]; then
+        echo "ERROR: Please specify --release-version"
+        exit 1
+    fi
+    echo $release_version
+}
+
+# Get current snapshot version from arguments or from Maven POM
+get_snapshot_version() {
+    local working_dir="$1"
+
+    local snapshot_version=$(readopt --snapshot-version | tr '[:lower:]' '[:upper:]')
+    if [ -z "${snapshot_version}" ]; then
+        # Get version from Maven POM
+        # ./mvnw -N help:evaluate -Dexpression="project.version"
+        local pom_version=$(cd "$working_dir" && ./mvnw -N help:evaluate -Dexpression="project.version" | grep  '^[0-9]')
+        if [ -z "${pom_version}" ]; then
+            echo "ERROR: Cannot extract version from pom.xml"
+            exit 1
+        fi
+
+        snapshot_version="$pom_version"
+    fi
+    echo $snapshot_version
+}
+
+# Get next snapshot version from arguments or auto increase given snapshot version
+get_next_snapshot_version() {
+    local working_dir="$1"
+
+    local next_version=$(readopt --next-version)
+    if [ -z "${next_version}" ]; then
+      local snapshot_version=$(get_snapshot_version "$working_dir")
+      check_error $snapshot_version
+
+      local version_num=$(echo $snapshot_version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
+      local next_version_num=$(echo $version_num | awk 'BEGIN { FS = "." } ; {print $1"."++$2".0"}')
+      next_version="$next_version_num-SNAPSHOT"
+    fi
+    echo $next_version
+}
+
+# Set version in sources
+set_version() {
+  local working_dir="$1"
+  local version="$2"
+  local snapshot_version="$3"
+  local image_name=${4:-docker.io\/yaks\/yaks}
+  local sanitized_image_name=${image_name//\//\\\/}
+
+  if [[ "$version" == "$snapshot_version" ]]; then
+      echo "Using version: $version"
+      return
+  fi
+
+  # Update olm-catalog
+
+  for f in $(find $working_dir/deploy -type f -name "*.yaml" | grep -v olm-catalog);
+  do
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i -r "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' -E "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+    fi
+  done
+
+  # Update Java sources
+
+  local exclude=("./.mvn/wrapper" "./.git" "./.idea" "/target/" "/test-output/")
+  local include=(".java" ".xml" ".properties" ".xsd" ".adoc")
+
+  java_sources=${working_dir}/java
+
+  find ${java_sources} -type f -print0 | while IFS= read -r -d '' file; do
+    check=false
+    for b in ${include[*]}; do
+      # check file includes
+      if [[ "$file" == *"$b" ]]; then
+        check=true
+        break
+      fi
+    done
+
+    if [ "$check" = true ]; then
+        # double check for explicit directory excludes
+        for b in ${exclude[*]}; do
+          if [[ "$file" == *"$b"* ]]; then
+            #echo "exclude $file"
+            check=false
+            break
+          fi
+        done
+    fi
+
+    if [ "$check" = true ]; then
+      #echo "update $file"
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed -i "s/$snapshot_version/$version/g" $file
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        sed -i '' "s/$snapshot_version/$version/g" $file
+      fi
+    fi
+  done
+
+  echo "YAKS version set to: $version and image name to: $image_name:$version"
+}
+
+set_next_version() {
+    local working_dir="$1"
+    local version="$2"
+    local next_version="$3"
+
+    local make_file=${working_dir}/Makefile
+
+    echo "Increasing version to $next_version"
+
+    set_version "$working_dir" "$next_version" "$version"
+
+    version_rule="s/$version/$next_version/g"
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i "$version_rule" $make_file
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' "$version_rule" $make_file
+    fi
+}
+
+calc_timestamp_version() {
+    local working_dir="$1"
+    cd $working_dir
+    # ./mvnw -N help:evaluate -Dexpression="project.version"
+    local pom_version=$(./mvnw -N help:evaluate -Dexpression="project.version" | grep  '^[0-9]')
+    if [ -z "${pom_version}" ]; then
+        echo "ERROR: Cannot extract version from pom.xml"
+        exit 1
+    fi
+    local version_num=$(echo pom_version | sed -E "s/([0-9.]*)-SNAPSHOT/\1/g")
+    echo "${version_num}-$(date '+%Y%m%d%H%M')"
+}

@@ -15,12 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Prefer removing snapshot to regenerating, because changes done to snapshot file may get lost
-
 location=$(dirname $0)
-working_dir=$location/../
+working_dir=$(realpath ${location}/../)
+
+if [ "$#" -ne 2 ]; then
+    echo "usage: $0 version snapshot-version"
+    exit 1
+fi
+
+version=$1
+snapshot_version=$2
 
 source "$location/util/common_funcs"
 source "$location/util/olm_funcs"
 
-unsnapshot_olm $working_dir
+cd $working_dir
+
+update_olm "$working_dir" "$version" "$snapshot_version"

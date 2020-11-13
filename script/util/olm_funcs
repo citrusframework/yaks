@@ -1,0 +1,70 @@
+#!/bin/sh
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+update_olm() {
+    local working_dir="$1"
+    local version="$2"
+    local snapshot_version="$3"
+    local olm_catalog=${working_dir}/deploy/olm-catalog
+
+    if [[ "$version" == "$snapshot_version" ]]; then
+        echo "Using OLM version: $version"
+        return
+    fi
+
+    for d in $(find ${olm_catalog} -type d -name "*-snapshot*");
+    do
+      mv ${d} ${olm_catalog}/yaks/${version}
+    done
+
+    for f in $(find ${olm_catalog}/yaks/${version} -type f -name "*-snapshot*");
+    do
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed -i "s/$snapshot_version/$version/g" $f
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        sed -i '' "s/$snapshot_version/$version/g" $f
+      fi
+
+      mv ${f} ${f//v*-snapshot/v${version}}
+    done
+}
+
+unsnapshot_olm() {
+    local working_dir="$1"
+    local olm_catalog=${working_dir}/deploy/olm-catalog
+
+    for d in $(find ${olm_catalog} -type d -name "*-snapshot*");
+    do
+      mv ${d} ${d//-snapshot/}
+    done
+
+    for f in $(find ${olm_catalog} -type f -name "*-snapshot*");
+    do
+      mv ${f} ${f//-snapshot/}
+    done
+
+    for f in $(find ${olm_catalog}/yaks -type f);
+    do
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed -i 's/-SNAPSHOT//g' $f
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        sed -i '' 's/-SNAPSHOT//g' $f
+      fi
+    done
+}
