@@ -28,6 +28,7 @@ import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.camel.endpoint.CamelEndpoint;
 import com.consol.citrus.camel.endpoint.CamelEndpointConfiguration;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
@@ -66,6 +67,9 @@ public class CamelSteps {
 
     @CitrusFramework
     private Citrus citrus;
+
+    @CitrusResource
+    private TestContext context;
 
     private CamelContext camelContext;
 
@@ -129,7 +133,8 @@ public class CamelSteps {
         destroyCamelContext();
 
         try {
-            ApplicationContext ctx = new GenericXmlApplicationContext(new ByteArrayResource(beans.getBytes(StandardCharsets.UTF_8)));
+            ApplicationContext ctx = new GenericXmlApplicationContext(
+                    new ByteArrayResource(context.replaceDynamicContentInString(beans).getBytes(StandardCharsets.UTF_8)));
             camelContext = ctx.getBean(SpringCamelContext.class);
             camelContext.start();
         } catch (Exception e) {
@@ -156,7 +161,8 @@ public class CamelSteps {
         }
 
         final XMLRoutesDefinitionLoader loader = camelContext().adapt(ExtendedCamelContext.class).getXMLRoutesDefinitionLoader();
-        Object result = loader.loadRoutesDefinition(camelContext(), new ByteArrayInputStream(routeXml.getBytes(StandardCharsets.UTF_8)));
+        Object result = loader.loadRoutesDefinition(camelContext(),
+                new ByteArrayInputStream(context.replaceDynamicContentInString(routeXml).getBytes(StandardCharsets.UTF_8)));
         if (result instanceof RoutesDefinition) {
             RoutesDefinition routeDefinition = (RoutesDefinition) result;
 
@@ -195,7 +201,7 @@ public class CamelSteps {
                 ClassLoader cl = Thread.currentThread().getContextClassLoader();
                 GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
 
-                DelegatingScript script = (DelegatingScript) sh.parse(route);
+                DelegatingScript script = (DelegatingScript) sh.parse(context.replaceDynamicContentInString(route));
 
                 // set the delegate target
                 script.setDelegate(this);

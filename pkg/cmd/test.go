@@ -325,13 +325,17 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 		// looking for operator in cluster-wide operator namespace
 		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
 			operator, err = o.findOperator(c, operatorNamespace)
+			if err != nil {
+				return namespace, err
+			}
 		} else {
 			return namespace, namespaceErr
 		}
+	} else if err != nil {
+		return namespace, err
 	}
 
-
-	if err == nil && isOperatorGlobal(operator) {
+	if isOperatorGlobal(operator) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
 	}

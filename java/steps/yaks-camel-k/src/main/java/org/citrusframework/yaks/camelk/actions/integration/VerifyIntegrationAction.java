@@ -19,6 +19,7 @@ package org.citrusframework.yaks.camelk.actions.integration;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -85,7 +86,9 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
             }
         }
 
-        throw new ActionTimeoutException(String.format("Failed to verify integration '%s' - has not printed message '%s' after %d attempts", name, logMessage, maxAttempts));
+        throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
+                new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
+                        "has not printed message '%s' after %d attempts", name, logMessage, maxAttempts)));
     }
 
     /**
@@ -133,7 +136,9 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
             }
         }
 
-        throw new ActionTimeoutException(String.format("Failed to verify integration '%s' - is not running after %d attempts", name, maxAttempts));
+        throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
+                new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
+                        "is not running after %d attempts", name, maxAttempts)));
     }
 
     /**

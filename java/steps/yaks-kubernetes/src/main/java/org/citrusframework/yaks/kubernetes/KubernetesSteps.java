@@ -75,11 +75,7 @@ public class KubernetesSteps {
                     .build();
 
             citrus.getCitrusContext().getReferenceResolver().bind(serviceName, httpServer);
-            try {
-                httpServer.afterPropertiesSet();
-            } catch (Exception e) {
-                throw new IllegalStateException("Failed to initialize Http server as Knative service", e);
-            }
+            httpServer.initialize();
         }
 
         if (k8sClient == null) {

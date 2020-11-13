@@ -17,12 +17,14 @@
 
 package org.citrusframework.yaks.openapi;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,7 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.variable.dictionary.AbstractDataDictionary;
 import com.consol.citrus.variable.dictionary.json.JsonPathMappingDataDictionary;
 import io.apicurio.datamodels.openapi.models.OasDocument;
@@ -49,6 +52,8 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.citrusframework.yaks.http.HttpClientSteps;
 import org.citrusframework.yaks.openapi.model.OasModelHelper;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
@@ -81,8 +86,7 @@ public class OpenApiSteps {
         inboundDictionary = new JsonPathMappingDataDictionary();
     }
 
-    @Given("^OpenAPI specification: ([^\\s]+)$")
-    @Given("^OpenAPI resource: ([^\\s]+)$")
+    @Given("^OpenAPI (?:specification|resource): ([^\\s]+)$")
     public void loadOpenApiResource(String resource) {
         if (resource.startsWith("http")) {
             try {
@@ -110,6 +114,11 @@ public class OpenApiSteps {
         }
     }
 
+    @Given("^OpenAPI request fork mode is (enabled|disabled)$")
+    public void configureForkMode(String mode) {
+        clientSteps.configureForkMode(mode);
+    }
+
     @Given("^outbound dictionary$")
     public void createOutboundDictionary(DataTable dataTable) {
         Map<String, String> mappings = dataTable.asMap(String.class, String.class);
@@ -118,12 +127,22 @@ public class OpenApiSteps {
         }
     }
 
+    @Given("^load outbound dictionary ([^\\s]+)$")
+    public void createOutboundDictionary(String fileName) {
+        addMappingsFromFile(fileName, outboundDictionary);
+    }
+
     @Given("^inbound dictionary$")
     public void createInboundDictionary(DataTable dataTable) {
         Map<String, String> mappings = dataTable.asMap(String.class, String.class);
         for (Map.Entry<String, String> mapping : mappings.entrySet()) {
             inboundDictionary.getMappings().put(mapping.getKey(), mapping.getValue());
         }
+    }
+
+    @Given("^load inbound dictionary ([^\\s]+)$")
+    public void createInboundDictionary(String fileName) {
+        addMappingsFromFile(fileName, inboundDictionary);
     }
 
     @When("^(?:I|i)nvoke operation: (.+)$")
@@ -162,12 +181,12 @@ public class OpenApiSteps {
         if (operation.parameters != null) {
             operation.parameters.stream()
                     .filter(param -> "header".equals(param.in))
-                    .filter(param -> param.required)
+                    .filter(param -> param.required != null && param.required)
                     .forEach(param -> clientSteps.addRequestHeader(param.getName(), OpenApiTestDataGenerator.createRandomValueExpression((OasSchema) param.schema, OasModelHelper.getSchemaDefinitions(openApiDoc), false)));
 
             operation.parameters.stream()
                     .filter(param -> "query".equals(param.in))
-                    .filter(param -> param.required)
+                    .filter(param -> param.required != null && param.required)
                     .forEach(param -> clientSteps.addRequestQueryParam(param.getName(), OpenApiTestDataGenerator.createRandomValueExpression((OasSchema) param.schema)));
         }
 
@@ -245,6 +264,25 @@ public class OpenApiSteps {
             clientSteps.receiveClientResponse(Integer.parseInt(status));
         } else {
             clientSteps.receiveClientResponse(HttpStatus.OK.value());
+        }
+    }
+
+    /**
+     * Read given file resource and add mappings to provided data dictionary.
+     * @param fileName
+     * @param dictionary
+     */
+    private void addMappingsFromFile(String fileName, AbstractDataDictionary<?> dictionary) {
+        try {
+            Resource resource = new ClassPathResource(fileName);
+            Properties properties = new Properties();
+            properties.load(resource.getInputStream());
+
+            for (Map.Entry<Object, Object> mapping : properties.entrySet()) {
+                dictionary.getMappings().put(mapping.getKey().toString(), mapping.getValue().toString());
+            }
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load dictionary from resource %s", fileName));
         }
     }
 }

@@ -55,6 +55,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
 
 /**
  * @author Christoph Deppisch
@@ -75,7 +76,7 @@ public class HttpClientSteps implements HttpSteps {
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
 
-    private Map<String, String> bodyValidationExpressions = new HashMap<>();
+    private Map<String, Object> bodyValidationExpressions = new HashMap<>();
 
     private String requestMessageType;
     private String responseMessageType;
@@ -88,13 +89,17 @@ public class HttpClientSteps implements HttpSteps {
 
     private long timeout;
 
+    private boolean forkMode = HttpSettings.getForkMode();
+
     @Before
     public void before(Scenario scenario) {
         if (httpClient == null) {
             if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpClient.class).size() == 1L) {
                 httpClient = citrus.getCitrusContext().getReferenceResolver().resolve(HttpClient.class);
             } else {
-                httpClient = new HttpClientBuilder().build();
+                httpClient = new HttpClientBuilder()
+                        .timeout(HttpSettings.getTimeout())
+                        .build();
             }
         }
 
@@ -133,6 +138,11 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^HTTP request timeout is (\\d+)(?: ms| milliseconds)$")
     public void configureTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    @Given("^HTTP request fork mode is (enabled|disabled)$")
+    public void configureForkMode(String mode) {
+        this.forkMode = "enabled".equals(mode);
     }
 
     @Given("^(?:URL|url) is healthy$")
@@ -298,6 +308,8 @@ public class HttpClientSteps implements HttpSteps {
             requestBuilder = sendBuilder.post().message(request);
         }
 
+        requestBuilder.fork(forkMode);
+
         if (StringUtils.hasText(requestUrl)) {
             requestBuilder.uri(requestUrl);
         }
@@ -320,9 +332,7 @@ public class HttpClientSteps implements HttpSteps {
                 .response(response.getStatusCode())
                 .message(response);
 
-        for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
-            responseBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
-        }
+        responseBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
         bodyValidationExpressions.clear();
 
         responseBuilder.timeout(timeout);

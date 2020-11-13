@@ -52,7 +52,6 @@ check_licenses() {
   fi
 }
 
-
 check_licenses *.go ./script/headers/default.txt
 check_licenses *.groovy ./script/headers/default-jvm.txt
 check_licenses *.java ./script/headers/default-jvm.txt

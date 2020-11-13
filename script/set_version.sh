@@ -46,21 +46,20 @@ java_sources=${location}/../java
 
 blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
 
-for f in $(find ${java_sources} -type f);
-do
+find ${java_sources} -type f -print0 | while IFS= read -r -d '' file; do
   check=true
   for b in ${blacklist[*]}; do
-    if [[ "$f" == *"$b"* ]]; then
-      #echo "skip $f"
+    if [[ "$file" == *"$b"* ]]; then
+      #echo "skip $file"
       check=false
     fi
   done
   if [ "$check" = true ]; then
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "s/$snapshot_version/$version/g" $f
+      sed -i "s/$snapshot_version/$version/g" $file
     elif [[ "$OSTYPE" == "darwin"* ]]; then
       # Mac OSX
-      sed -i '' "s/$snapshot_version/$version/g" $f
+      sed -i '' "s/$snapshot_version/$version/g" $file
     fi
   fi
 done

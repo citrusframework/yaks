@@ -1,10 +1,11 @@
 Feature: Camel groovy route
 
   Background:
+    Given variable logLevel is "INFO"
     Given Camel route hello.groovy
     """
     from("direct:hello")
-     .to("log:org.citrusframework.yaks.camel?level=INFO")
+     .to("log:org.citrusframework.yaks.camel?level=${logLevel}")
      .split(body().tokenize(" "))
        .to("seda:tokens")
      .end()

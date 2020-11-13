@@ -37,7 +37,7 @@ public class BeansConfiguration extends GroovyObjectSupport {
     }
 
     public void queue(String name) {
-        citrus.getCitrusContext().bind(name, new DefaultMessageQueue());
+        citrus.getCitrusContext().bind(name, new DefaultMessageQueue(name));
     }
 
     public void propertyMissing(String name, Object value) {

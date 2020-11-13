@@ -32,6 +32,6 @@ public class ComponentSteps {
 
     @Given("^(?:create|new) message queue ([^\"\\s]+)$")
     public void createMessageQueue(String name) {
-        citrus.getCitrusContext().getReferenceResolver().bind(name, new DefaultMessageQueue());
+        citrus.getCitrusContext().getReferenceResolver().bind(name, new DefaultMessageQueue(name));
     }
 }

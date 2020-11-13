@@ -40,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
 
 /**
  * @author Christoph Deppisch
@@ -58,7 +59,7 @@ public class HttpServerSteps implements HttpSteps {
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
 
-    private Map<String, String> bodyValidationExpressions = new HashMap<>();
+    private Map<String, Object> bodyValidationExpressions = new HashMap<>();
 
     private String requestMessageType;
     private String responseMessageType;
@@ -90,11 +91,7 @@ public class HttpServerSteps implements HttpSteps {
                         .build();
 
                 citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
-                try {
-                    httpServer.afterPropertiesSet();
-                } catch (Exception e) {
-                    throw new IllegalStateException("Failed to initialize Http server", e);
-                }
+                httpServer.initialize();
             }
         }
 
@@ -264,9 +261,7 @@ public class HttpServerSteps implements HttpSteps {
             requestBuilder = receiveBuilder.post().message(request);
         }
 
-        for (Map.Entry<String, String> headerEntry : bodyValidationExpressions.entrySet()) {
-            requestBuilder.validate(headerEntry.getKey(), headerEntry.getValue());
-        }
+        requestBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
         bodyValidationExpressions.clear();
 
         requestBuilder
