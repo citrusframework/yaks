@@ -73,6 +73,8 @@ jobs:
     env:
       KAMEL_INSTALL_REGISTRY: "kind-registry:5000"
       KAMEL_INSTALL_REGISTRY_INSECURE: true
+      YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
+      YAKS_IMAGE_VERSION: "latest"
     steps:
     - name: Set Up Java
       uses: actions/setup-java@v1
@@ -98,18 +100,19 @@ jobs:
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
           ${{ runner.os }}-m2-
-    - name: Build
-      run: |
-        make
-        sudo cp yaks /usr/local/bin/
     - name: Kind Cluster
       uses: container-tools/kind-action@v1
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1
+    - name: Build
+      run: |
+        make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION codegen build images-no-test
+        sudo cp yaks /usr/local/bin/
+        docker push $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
     - name: Install
       run: |
         kamel install --cluster-setup
-        yaks install
+        yaks install --operator-image $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
     - name: E2E Tests
       run: |
         # Eventually `yaks test examples` should work
