@@ -118,8 +118,8 @@ update-olm:
 set-version:
 	./script/set_version.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
 
-set-next-snapshot:
-	./script/next_snapshot.sh --snapshot-version $(SNAPSHOT_VERSION)
+set-next-version:
+	./script/set_next_version.sh --snapshot-version $(SNAPSHOT_VERSION)
 
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
@@ -166,4 +166,4 @@ snapshot-version:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources update-olm unsnapshot-olm codegen cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version check-repo check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-resources update-olm unsnapshot-olm codegen cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version set-next-version check-repo check-licenses snapshot-version version
