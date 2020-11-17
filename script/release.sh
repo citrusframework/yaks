@@ -91,8 +91,8 @@ release() {
 
     # Build Docker image
     mkdir -p ${working_dir}/build/_output/bin
-    GOOS=linux go build $build_flags -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
-    docker build -t $image -f ${working_dir}/build/Dockerfile ${working_dir}
+    GOOS=linux go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
+    docker build -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 
     # Push everything (if configured)
     git_push "$working_dir" "$release_version"
