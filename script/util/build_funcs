@@ -43,7 +43,7 @@ build_artifacts () {
       ./mvnw ${maven_opts} clean install
   elif [ $(hasflag --snapshot-release) ]; then
       echo "Build snapshot v$release_version"
-      ./mvnw ${maven_opts} clean install deploy -Prelease-labs
+      ./mvnw ${maven_opts} clean install
   else
       echo "Build release v$release_version"
       ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging Syndesis for $release_version"
