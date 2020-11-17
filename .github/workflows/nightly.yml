@@ -78,7 +78,7 @@ jobs:
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Build
       run: |
-        make VERSION=$VERSION IMAGE_NAME=$IMAGE_NAME release-snapshot
+        make VERSION=$VERSION IMAGE_NAME=$IMAGE_NAME release-nightly
     - name: Check
       run: ls -l
     - name: Create Release
