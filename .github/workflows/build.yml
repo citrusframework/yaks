@@ -183,11 +183,11 @@ jobs:
       run: |
         SNAPSHOT_VERSION=$(make snapshot-version)
         echo "Using SNAPSHOT_VERSION=$SNAPSHOT_VERSION"
-        echo "::set-env name=SNAPSHOT_VERSION::$SNAPSHOT_VERSION"
+        echo "SNAPSHOT_VERSION=$SNAPSHOT_VERSION" >> $GITHUB_ENV
 
         IMAGE_NAME=docker.io/yaks/yaks
         echo "Using IMAGE_NAME=$IMAGE_NAME"
-        echo "::set-env name=IMAGE_NAME::$IMAGE_NAME"
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
         git fetch --prune --unshallow
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
