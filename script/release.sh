@@ -133,6 +133,11 @@ git_push() {
     local staging_branch="staging-v$release_version"
     local original_branch=$(git rev-parse --abbrev-ref HEAD)
 
+    if [ $(hasflag --no-git-push) ]; then
+        echo "Skip git push"
+        return
+    fi
+
     cd $working_dir
     echo "==== Pushing $release_version to GitHub"
     local remote=$(get_git_remote)
@@ -144,14 +149,12 @@ git_push() {
     git add * || true
     git commit -a -m "Release ${release_version}"
 
-    if [ ! $(hasflag --no-git-push) ]; then
-        echo "* Using remote git repository '$remote'"
+    echo "* Using remote git repository '$remote'"
 
-        # push tag to remote
-        git tag --force ${tag} ${staging_branch}
-        git push --force ${remote} ${tag}
-        echo "* Tag ${tag} pushed to ${remote}"
-    fi
+    # push tag to remote
+    git tag --force ${tag} ${staging_branch}
+    git push --force ${remote} ${tag}
+    echo "* Tag ${tag} pushed to ${remote}"
 
     # Check out original branch
     git checkout ${original_branch}
@@ -161,6 +164,11 @@ git_push_next_snapshot() {
     local working_dir="$1"
     local next_version="$2"
 
+    if [ $(hasflag --no-git-push) ]; then
+        echo "Skip git push"
+        return
+    fi
+
     local remote=$(get_git_remote)
 
     cd $working_dir
@@ -168,10 +176,8 @@ git_push_next_snapshot() {
     git add * || true
     git commit -a -m "Use next snapshot version $next_version"
 
-    if [ ! $(hasflag --no-git-push) ]; then
-        # Push changes
-        git push ${remote}
-    fi
+    # Push changes
+    git push ${remote}
 }
 
 source "$location/util/common_funcs"
