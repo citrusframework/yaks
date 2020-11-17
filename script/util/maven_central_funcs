@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,19 +15,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-location=$(dirname $0)
-olm_catalog=${location}/../deploy/olm-catalog
+# =======================================================================
+# Maven central OSS Sonatype connectivity
 
-if [ "$#" -ne 1 ]; then
-    echo "usage: $0 version"
-    exit 1
-fi
+release_staging_repo() {
+    local working_dir="$1"
+    local maven_opts="$2"
 
-version=$1
+    echo "==== Releasing Sonatype staging repo"
+    cd $working_dir
+    ./mvnw ${maven_opts} -N -Prelease-central nexus-staging:release -DstagingDescription="Releasing $(readopt --release-version)"
+}
 
-cd $location/..
+drop_staging_repo() {
+    local working_dir="$1"
+    local maven_opts="$2"
 
-operator-sdk generate csv --csv-version ${version} --csv-config deploy/olm-catalog/csv-config.yaml --update-crds
-
-rm $olm_catalog/yaks/${version}/crd-*.yaml 2>/dev/null || true
-cp $location/../deploy/crd-*.yaml $olm_catalog/yaks/${version}/
+    echo "==== Dropping Sonatype staging repo"
+    cd $working_dir
+    ./mvnw ${maven_opts} -N -Prelease-central nexus-staging:drop -DstagingDescription="Dropping repo"
+}

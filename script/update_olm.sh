@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,24 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+location=$(dirname $0)
+working_dir=$(realpath ${location}/../)
 
 if [ "$#" -ne 2 ]; then
-    echo "usage: $0 version remote"
+    echo "usage: $0 version snapshot-version"
     exit 1
 fi
 
-location=$(dirname $0)
-target_version=$1
-target_tag=v$target_version
-target_staging=staging-$target_tag
-target_remote=$2
+version=$1
+snapshot_version=$2
 
-git branch -D ${target_staging} || true
-git checkout -b ${target_staging}
-git add * || true
-git commit -a -m "Release ${target_version}"
+source "$location/util/common_funcs"
+source "$location/util/olm_funcs"
 
-git tag --force ${target_tag} ${target_staging}
-git push --force ${target_remote} ${target_tag}
-echo "Tag ${target_tag} pushed to ${target_remote}"
+cd $working_dir
+
+update_olm "$working_dir" "$version" "$snapshot_version"

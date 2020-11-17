@@ -15,7 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+# Exit if any error occurs
+# Fail on a single failed command in a pipeline (if supported)
+set -o pipefail
+
+# Save global script args, use "help" as default
+if [ -z "$1" ]; then
+    ARGS=("help")
+else
+    ARGS=("$@")
+fi
+
+# Fail on error and undefined vars (please don't use global vars, but evaluation of functions for return values)
+set -eu
 
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
     echo "usage: $0 version snapshot_version [image_name]"
@@ -23,45 +35,13 @@ if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
 fi
 
 location=$(dirname $0)
-version=$1
-snapshot_version=$2
-image_name=${3:-docker.io\/yaks\/yaks}
-sanitized_image_name=${image_name//\//\\\/}
+working_dir=$(realpath ${location}/../)
 
-# Update olm-catalog
+version="$1"
+snapshot_version="$2"
+image_name=${3:-}
 
-for f in $(find $location/../deploy -type f -name "*.yaml" | grep -v olm-catalog);
-do
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    sed -i -r "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX
-    sed -i '' -E "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
-  fi
-done
+source "$location/util/common_funcs"
+source "$location/util/version_funcs"
 
-# Update Java sources
-
-java_sources=${location}/../java
-
-blacklist=("./java/.mvn/wrapper" "./java/.idea" ".DS_Store" "/target/")
-
-find ${java_sources} -type f -print0 | while IFS= read -r -d '' file; do
-  check=true
-  for b in ${blacklist[*]}; do
-    if [[ "$file" == *"$b"* ]]; then
-      #echo "skip $file"
-      check=false
-    fi
-  done
-  if [ "$check" = true ]; then
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "s/$snapshot_version/$version/g" $file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' "s/$snapshot_version/$version/g" $file
-    fi
-  fi
-done
-
-echo "YAKS version set to: $version and image name to: $image_name:$version"
+set_version "$working_dir" "$version" "$snapshot_version" "$image_name"

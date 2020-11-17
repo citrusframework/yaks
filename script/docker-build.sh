@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,16 +15,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "$#" -ne 1 ]; then
-    echo "usage: $0 image:version"
+if [ "$#" -ne 2 ]; then
+    echo "usage: $0 image:version flags"
     exit 1
 fi
 
 location=$(dirname $0)
-image=$1
+image="$1"
+build_flags="$2"
 
 cd $location/..
 
+export GOOS=linux
+
 mkdir -p build/_output/bin
-GOOS=linux go build $(GOFLAGS) -o build/_output/bin/yaks ./cmd/manager/*.go
+eval go build "$build_flags" -o build/_output/bin/yaks ./cmd/manager/*.go
 docker build -t $image -f build/Dockerfile .

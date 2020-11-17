@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,14 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "$#" -ne 1 ]; then
-    echo "usage: $0 version"
-    exit 1
-fi
-
 location=$(dirname $0)
-version=$1
+rootdir=$location/../
 
-cd $location/..
+# Checks if git subtree has changes in given top directory
+check_git_clean() {
+    local working_dir="$1"
 
-make VERSION="$version" clean prepare-release build package-artifacts-no-test
+    cd $working_dir
+    echo "==== Checking for clean Git Repo"
+    set +e
+    git diff-index --quiet HEAD --
+    local git_uncommitted=$?
+    set -e
+    if [ $git_uncommitted != 0 ]; then
+       git status
+       echo "Untracked or changed files exist. Please run release on a clean repo"
+       exit 1
+    fi
+}
+
+check_git_clean $rootdir

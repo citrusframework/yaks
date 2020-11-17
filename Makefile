@@ -87,6 +87,9 @@ clean:
 check-licenses:
 	./script/check_licenses.sh
 
+check-repo:
+	./script/check_repo.sh
+
 generate: generate-deepcopy generate-crd generate-client
 
 generate-client:
@@ -109,48 +112,53 @@ build-yaks:
 build-resources:
 	./script/embed_resources.sh deploy
 
-build-olm:
-	./script/build_olm.sh $(VERSION)
+update-olm:
+	./script/update_olm.sh $(VERSION) $(SNAPSHOT_VERSION)
 
 set-version:
 	./script/set_version.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
 
-set-next-snapshot:
-	./script/next_snapshot.sh
-
-git-tag:
-	./script/git_tag.sh $(VERSION) $(RELEASE_GIT_REMOTE)
+set-next-version:
+	./script/set_next_version.sh --snapshot-version $(SNAPSHOT_VERSION)
 
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
 
-docker-image:
-	./script/docker-build.sh $(IMAGE_NAME):$(VERSION)
+docker-build:
+	./script/docker-build.sh $(IMAGE_NAME):$(VERSION) '$(GOFLAGS)'
 
-images-no-test: build package-artifacts-no-test docker-image
+images-no-test: build package-artifacts-no-test docker-build
 
-images: test package-artifacts docker-image
+images: test package-artifacts docker-build
 
 images-push:
 	docker push $(IMAGE_NAME):$(VERSION)
 
-prepare-release: clean codegen set-version check-licenses unsnapshot-olm cross-compile
+prepare-release: check-repo clean codegen check-licenses
 
-release: prepare-release images images-push git-tag
+release-dry-run: prepare-release
+	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests --dry-run --no-git-push --keep-staging-repo
 
-release-snapshot: clean codegen set-version cross-compile images images-push
+release: prepare-release
+	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests
+
+release-local: prepare-release
+	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --local-release --no-git-push --no-docker-push
+
+release-major: prepare-release
+	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --major-release
+
+release-snapshot: prepare-release
+	./script/release.sh --snapshot-release --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE)
 
 package-artifacts-no-test:
-	./script/package_maven_artifacts.sh -DskipTests
+	./script/package_maven_artifacts.sh --release-version $(VERSION) --local-release --skip-tests
 
 package-artifacts:
-	./script/package_maven_artifacts.sh
+	./script/package_maven_artifacts.sh --release-version $(VERSION) --local-release
 
 unsnapshot-olm:
 	./script/unsnapshot_olm.sh
-
-unsnapshot-sources:
-	./script/unsnapshot_sources.sh
 
 snapshot-version:
 	@echo $(SNAPSHOT_VERSION)
@@ -158,4 +166,4 @@ snapshot-version:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources build-olm unsnapshot-olm codegen cross-compile test docker-image images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version git-tag check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-resources update-olm unsnapshot-olm codegen cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version set-next-version check-repo check-licenses snapshot-version version

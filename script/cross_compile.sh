@@ -16,49 +16,19 @@
 # limitations under the License.
 
 location=$(dirname $0)
-builddir=$(realpath ${location}/../xtmp)
-
-rm -rf ${builddir}
-
-basename=yaks
+working_dir=$location/../
+build_dir=$(realpath ${working_dir}/xtmp)
 
 if [ "$#" -ne 2 ]; then
     echo "usage: $0 version build_flags"
     exit 1
 fi
 
-version=$1
-build_flags=$2
+version="$1"
+build_flags="$2"
 
-cross_compile () {
-	local label=$1
-	local extension=""
-	export GOOS=$2
-	export GOARCH=$3
+source "$location/util/go_funcs"
 
-	if [ "${GOOS}" == "windows" ]; then
-		extension=".exe"
-	fi
-
-  echo "Generating ${label}${extension}..."
-
-	targetdir=${builddir}/${label}
-	eval go build "$build_flags" -o ${targetdir}/yaks${extension} ./cmd/manager/...
-
-	if [ -n "$GPG_PASS" ]; then
-	    gpg --output ${targetdir}/yaks${extension}.asc --armor --detach-sig --passphrase ${GPG_PASS} ${targetdir}/yaks${extension}
-	fi
-
-    pushd . && cd ${targetdir} && sha512sum -b yaks${extension} > yaks${extension}.sha512 && popd
-
-	cp ${location}/../LICENSE ${targetdir}/
-	cp ${location}/../NOTICE ${targetdir}/
-
-	pushd . && cd ${targetdir} && tar -zcvf ../../${label}.tar.gz . && popd
-}
-
-cross_compile ${basename}-${version}-linux-64bit linux amd64
-cross_compile ${basename}-${version}-mac-64bit darwin amd64
-cross_compile ${basename}-${version}-windows-64bit windows amd64
-
-rm -rf ${builddir}
+cross_compile "$working_dir" yaks-${version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
+cross_compile "$working_dir" yaks-${version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
+cross_compile "$working_dir" yaks-${version}-windows-64bit "$build_dir" windows amd64 "$build_flags"

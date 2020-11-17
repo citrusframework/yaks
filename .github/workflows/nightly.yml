@@ -68,11 +68,11 @@ jobs:
       run: |
         VERSION=$(make version | sed s/-SNAPSHOT/-$(date +%Y%m%d%H%M)/)
         echo "Using VERSION=$VERSION"
-        echo "::set-env name=VERSION::$VERSION"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
 
         IMAGE_NAME=docker.io/yaks/yaks
         echo "Using IMAGE_NAME=$IMAGE_NAME"
-        echo "::set-env name=IMAGE_NAME::$IMAGE_NAME"
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
         git fetch --prune --unshallow
         docker login $DOCKER_REGISTRY -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
