@@ -19,6 +19,11 @@
 get_release_version() {
     local working_dir="$1"
 
+    if [ $(hasflag --release-version) ]; then
+        echo $(readopt --release-version)
+        return
+    fi
+
     if [ $(hasflag --snapshot-release) ]; then
         if [ $(hasflag --snapshot-version) ]; then
             echo $(get_snapshot_version "$working_dir")
