@@ -18,7 +18,7 @@ VERSION := 0.1.0-SNAPSHOT
 SNAPSHOT_VERSION := 0.1.0-SNAPSHOT
 LAST_RELEASED_VERSION := 0.1.0
 LOCAL_REPOSITORY := /tmp/artifacts/m2
-IMAGE_NAME := docker.io/yaks/yaks
+IMAGE_NAME := docker.io/citrusframework/yaks
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
