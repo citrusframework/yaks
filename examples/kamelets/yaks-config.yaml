@@ -15,20 +15,8 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-apiVersion: camel.apache.org/v1alpha1
-kind: KameletBinding
-metadata:
-  name: timer-source-knative
-spec:
-  source:
-    ref:
-      kind: Kamelet
-      apiVersion: camel.apache.org/v1alpha1
-      name: timer-source
-    properties:
-      message: "Hello world!"
-  sink:
-    ref:
-      kind: InMemoryChannel
-      apiVersion: messaging.knative.dev/v1beta1
-      name: messages
+config:
+  runtime:
+    resources:
+    - timer-source.kamelet.yaml
+    - timer-to-log.groovy

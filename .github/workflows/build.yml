@@ -102,6 +102,10 @@ jobs:
           ${{ runner.os }}-m2-
     - name: Kind Cluster
       uses: container-tools/kind-action@v1
+      #with:
+      #  knative_serving: v0.19.0
+      #  knative_kourier: v0.19.0
+      #  knative_eventing: v0.19.0
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1
     - name: Build

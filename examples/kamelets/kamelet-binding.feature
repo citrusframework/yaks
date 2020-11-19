@@ -19,8 +19,9 @@ Feature: Kamelet resource
     When create KameletBinding timer-source-uri
     Then KameletBinding timer-source-uri should be available
 
-    Scenario: Verify binding
+  Scenario: Verify binding
     Given HTTP server "greeting-service"
-    And HTTP server timeout is 30000 ms
+    And HTTP server timeout is 60000 ms
     Then expect HTTP request body: Hello World
     And receive POST /greeting
+    And delete KameletBinding timer-source-uri

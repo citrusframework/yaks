@@ -15,3 +15,4 @@ Feature: Kamelet resource
     Given load Camel-K integration timer-to-log.groovy
     Then Camel-K integration timer-to-log should be running
     Then Camel-K integration timer-to-log should print Hello Kamelets
+    Then delete Camel-K integration timer-to-log
