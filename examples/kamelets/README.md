@@ -15,19 +15,7 @@ $ yaks test examples/kamelets/kamelet.feature
 
 ## Create Kamelets using file resources
 
-File resources are added to the test with the `--resource` CLI option.
-
-[kamelet-resource.feature](kamelet-resource.feature)
-```shell script
-$ yaks test examples/kamelets/kamelet-resource.feature \
-            --resource timer-to-log.groovy \
-            --resource timer-source.kamelet.yaml
-```             
-
-The test is able to load the Kamelet using the external file resource. Also the Camel-K integration code
-is loaded from a file resource in this example.
-
-You can also add resources to the `yaks-config.xml`
+File resources are added to the test using the `yaks-config.yaml` file present in the test directory, which is automatically loaded by YAKS.
 
 *yaks-config.yaml*
 ```yaml
@@ -37,3 +25,20 @@ config:
     - timer-to-log.groovy 
     - timer-source.kamelet.yaml 
 ```
+
+
+[kamelet-resource.feature](kamelet-resource.feature)
+```shell script
+$ yaks test examples/kamelets/kamelet-resource.feature
+```             
+
+The test is able to load the Kamelet using the external file resource. Also the Camel-K integration code
+is loaded from a file resource in this example.
+
+You could also specify files to load in the command line
+
+```shell script
+$ yaks test examples/kamelets/kamelet-resource.feature \
+            --resource timer-to-log.groovy \
+            --resource timer-source.kamelet.yaml
+``` 

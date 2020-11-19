@@ -141,10 +141,17 @@ public class KameletBindingSpec implements KubernetesResource {
                 super();
             }
 
-            public ObjectReference(String name, String kind, String namespace) {
-                this.name = name;
+            public ObjectReference(String apiVersion, String kind, String namespace, String name) {
+                this.apiVersion = apiVersion;
                 this.kind = kind;
                 this.namespace = namespace;
+                this.name = name;
+            }
+
+            public ObjectReference(String kind, String namespace, String name) {
+                this.kind = kind;
+                this.namespace = namespace;
+                this.name = name;
             }
 
             public String getName() {

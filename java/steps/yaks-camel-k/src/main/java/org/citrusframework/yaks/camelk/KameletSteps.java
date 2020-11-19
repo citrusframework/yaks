@@ -144,7 +144,7 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to uri ([^\\s]+)$")
     public void bindKameletToUri(String kameletName, String uri) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(kameletName, "Kamelet", CamelKSettings.getNamespace());
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         sink = new KameletBindingSpec.Endpoint(uri);
@@ -153,11 +153,11 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to Kafka topic ([^\\s]+)$")
     public void bindKameletToKafka(String kameletName, String topic) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(kameletName, "Kamelet", CamelKSettings.getNamespace());
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         KameletBindingSpec.Endpoint.ObjectReference sinkRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(topic, "KafkaTopic", KafkaSettings.getNamespace());
+                new KameletBindingSpec.Endpoint.ObjectReference("KafkaTopic", KafkaSettings.getNamespace(), topic);
         sink = new KameletBindingSpec.Endpoint(sinkRef);
     }
 
@@ -169,11 +169,11 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+) of kind ([^\\s]+)$")
     public void bindKameletToKnativeChannel(String kameletName, String channel, String channelKind) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(kameletName, "Kamelet", CamelKSettings.getNamespace());
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         KameletBindingSpec.Endpoint.ObjectReference sinkRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(channel, channelKind, KnativeSettings.getNamespace());
+                new KameletBindingSpec.Endpoint.ObjectReference(channelKind, KnativeSettings.getNamespace(), channel);
         sink = new KameletBindingSpec.Endpoint(sinkRef);
     }
 

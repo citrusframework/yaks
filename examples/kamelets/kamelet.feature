@@ -39,3 +39,4 @@ from:
     """
     Then Camel-K integration timer-to-log should be running
     Then Camel-K integration timer-to-log should print Hello Kamelets
+    Then delete Camel-K integration timer-to-log
