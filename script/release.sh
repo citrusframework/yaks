@@ -173,7 +173,7 @@ git_push_next_snapshot() {
     local remote=$(get_git_remote)
 
     cd $working_dir
-    echo "==== Using next napshot version $next_version"
+    echo "==== Using next snapshot version $next_version"
     git add * || true
     git commit -a -m "Use next snapshot version $next_version"
 

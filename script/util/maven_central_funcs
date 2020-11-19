@@ -22,8 +22,9 @@ release_staging_repo() {
     local working_dir="$1"
     local maven_opts="$2"
 
+    cd ${working_dir}/java
+
     echo "==== Releasing Sonatype staging repo"
-    cd $working_dir
     ./mvnw ${maven_opts} -N -Prelease-central nexus-staging:release -DstagingDescription="Releasing $(readopt --release-version)"
 }
 
@@ -31,7 +32,8 @@ drop_staging_repo() {
     local working_dir="$1"
     local maven_opts="$2"
 
+    cd ${working_dir}/java
+
     echo "==== Dropping Sonatype staging repo"
-    cd $working_dir
     ./mvnw ${maven_opts} -N -Prelease-central nexus-staging:drop -DstagingDescription="Dropping repo"
 }
