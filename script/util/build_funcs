@@ -40,14 +40,13 @@ build_artifacts () {
 
   if [ $(hasflag --local-release) ]; then
       echo "Build local v$release_version"
-      ./mvnw ${maven_opts} clean install
   elif [ $(hasflag --snapshot-release) ]; then
       echo "Build snapshot v$release_version"
-      ./mvnw ${maven_opts} clean install
   else
       echo "Build release v$release_version"
-      ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging Syndesis for $release_version"
   fi
+
+  ./mvnw ${maven_opts} clean install
 
   # install YAKS Maven extension to runtime project in image
   echo "Install YAKS Maven extension"
@@ -100,6 +99,13 @@ build_artifacts () {
       -f runtime/pom.xml \
       -Dmaven.repo.local=${working_dir}/build/_maven_repository \
       install
+
+  if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
+      # deploy artifacts to Sonatype OSS staging
+      echo "Deploy YAKS artifacts ..."
+
+      ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging Syndesis for $release_version"
+  fi
 }
 
 # =======================================================================
