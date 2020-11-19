@@ -81,7 +81,7 @@ set_version() {
   local working_dir="$1"
   local version="$2"
   local snapshot_version="$3"
-  local image_name=${4:-docker.io\/yaks\/yaks}
+  local image_name=${4:-docker.io\/citrusframework\/yaks}
   local sanitized_image_name=${image_name//\//\\\/}
 
   if [[ "$version" == "$snapshot_version" ]]; then
@@ -94,10 +94,10 @@ set_version() {
   for f in $(find $working_dir/deploy -type f -name "*.yaml" | grep -v olm-catalog);
   do
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i -r "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
     elif [[ "$OSTYPE" == "darwin"* ]]; then
       # Mac OSX
-      sed -i '' -E "s/docker.io\/yaks\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
     fi
   done
 
