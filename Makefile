@@ -160,13 +160,10 @@ package-artifacts-no-test:
 package-artifacts:
 	./script/package_maven_artifacts.sh --release-version $(VERSION) --local-release
 
-unsnapshot-olm:
-	./script/unsnapshot_olm.sh
-
 snapshot-version:
 	@echo $(SNAPSHOT_VERSION)
 
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources update-olm unsnapshot-olm codegen cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version set-next-version check-repo check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-resources update-olm codegen cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version set-next-version check-repo check-licenses snapshot-version version

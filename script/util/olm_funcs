@@ -42,29 +42,13 @@ update_olm() {
 
       mv ${f} ${f//v*-snapshot/v${version}}
     done
-}
 
-unsnapshot_olm() {
-    local working_dir="$1"
-    local olm_catalog=${working_dir}/deploy/olm-catalog
-
-    for d in $(find ${olm_catalog} -type d -name "*-snapshot*");
-    do
-      mv ${d} ${d//-snapshot/}
-    done
-
-    for f in $(find ${olm_catalog} -type f -name "*-snapshot*");
-    do
-      mv ${f} ${f//-snapshot/}
-    done
-
-    for f in $(find ${olm_catalog}/yaks -type f);
-    do
-      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i 's/-SNAPSHOT//g' $f
-      elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' 's/-SNAPSHOT//g' $f
-      fi
-    done
+    # Update package file
+    local package_file=${olm_catalog}/yaks/yaks.package.yaml
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i "s/$snapshot_version/$version/g" $package_file
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' "s/$snapshot_version/$version/g" $package_file
+    fi
 }
