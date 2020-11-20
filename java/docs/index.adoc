@@ -1,0 +1,39 @@
+[[yaks]]
+= YAKS
+Authors: The YAKS Community
+:revnumber: {version}
+:revdate: {localdate}
+:sectanchors:
+:sectlinks:
+:sectnumlevels: 4
+:toc: macro
+:toclevels: 3
+:toc-title: yaks
+:doctype: book
+:icons: font
+:docinfo1:
+:plugindir: {plugindir}
+:imagesdir: images
+:numbered:
+
+ifndef::ebook-format[:leveloffset: 1]
+
+*Version: {version}*
+
+image::yaks-logo.png[yaks-logo]
+
+ifdef::basebackend-html[toc::[]]
+
+include::preface.adoc[]
+include::quickstart.adoc[]
+include::installation.adoc[]
+include::running.adoc[]
+include::cli.adoc[]
+include::configuration.adoc[]
+include::steps.adoc[]
+include::pre-post-scripts.adoc[]
+include::reporting.adoc[]
+include::contributing.adoc[]
+include::uninstall.adoc[]
+
+include::samples.adoc[]

@@ -1,0 +1,182 @@
+[[steps-groovy]]
+== Groovy steps
+
+The Groovy support in YAKS allows to add framework configuration, bean configuration and test actions via script snippets.
+In particular you can easily add customized endpoints that send/receive data over various messaging transports.
+
+[[groovy-configuration-script]]
+=== Framework configuration
+
+You can add endpoints and beans as Citrus framework configuration like follows:
+
+[source,gherkin]
+----
+Scenario: Endpoint script config
+  Given URL: http://localhost:18080
+  Given create configuration
+  """
+  citrus {
+      endpoints {
+          http {
+              server('helloServer') {
+                  port = 18080
+                  autoStart = true
+              }
+          }
+      }
+  }
+  """
+  When send GET /hello
+  Then receive HTTP 200 OK
+----
+
+In the example above the scenario creates a new Citrus endpoint named `helloServer` with given properties (`port`, `autoStart`) in form of a Groovy configuration script.
+The endpoint is a Http server component that is automatically started with the given port. In the following the scenario can send messages to that server endpoint.
+
+The Groovy configuration script adds Citrus components to the test context and supports following elements:
+
+* `endpoints`: Configure Citrus endpoint components that can be used to exchange data over various messaging transports
+* `queues`: In memory queues to handle message forwarding for incoming messages
+* `beans`: Custom beans configuration (e.g. data source, SSL context, request factory) that can be used in Citrus endpoint components
+
+Let's quickly have a look at a bean configuration where a new JDBC data source is added to the test suite.
+
+[source,gherkin]
+----
+Scenario: Bean configuration
+  Given create configuration
+  """
+  citrus {
+      beans {
+          dataSource(org.apache.commons.dbcp2.BasicDataSource) {
+              driverClassName = "org.h2.Driver"
+              url = "jdbc:h2:mem:camel"
+              username = "sa"
+              password = ""
+          }
+      }
+  }
+  """
+----
+
+The data source will be added as a bean named `dataSource` and can be referenced in all Citrus SQL test actions.
+
+All Groovy configuration scripts that we have seen so far can also be loaded from external file resources, too.
+
+[source,gherkin]
+----
+Scenario: Endpoint script config
+  Given load configuration citrus.configuration.groovy
+  When endpoint hello sends payload Hello from new direct endpoint!
+  Then endpoint hello should receive payload Hello from new direct endpoint!
+----
+
+.citrus.configuration.groovy
+[source]
+----
+citrus {
+    queues {
+        queue('say-hello')
+    }
+
+    endpoints {
+        direct {
+            asynchronous {
+                name = 'hello'
+                queue = 'say-hello'
+            }
+        }
+    }
+}
+----
+
+[[groovy-endpoint-script]]
+=== Endpoint configuration
+
+Endpoints describe an essential part in terms of messaging integration during a test. There are multiple ways to add custom endpoints
+to a test so you exchange and verify message data. Endpoint Groovy scripts is one comfortable way to add custom endpoint configurations
+in a test scenario.
+
+[source,gherkin]
+----
+Scenario: Create Http endpoint
+  Given URL: http://localhost:18081
+  Given create endpoint helloServer.groovy
+  """
+  http()
+    .server()
+    .port(18081)
+    .autoStart(true)
+  """
+  When send GET /hello
+  Then receive HTTP 200 OK
+----
+
+The scenario creates a new Http server endpoint named `helloServer`. This server component can be used directly in the
+scenario to receive and verify messages sent to that endpoint.
+
+You can also load the endpoint configuration from external file resources.
+
+[source,gherkin]
+----
+Scenario: Load endpoint
+  Given URL: http://localhost:18088
+  Given load endpoint fooServer.groovy
+  When send GET /hello
+  Then receive HTTP 200 OK
+`----
+
+.fooServer.groovy
+[source]
+----
+http()
+    .server()
+    .port(18088)
+    .autoStart(true)
+``----
+
+[[groovy-action-script]]
+=== Test actions
+
+YAKS provides a huge set of predefined test actions that users can add to the Gherkin feature files out of the box.
+However there might be situations where you want to run a customized test action code as a step in your feature scenario.
+
+With the Groovy script support in YAKS you can add such customized test actions via script snippets:
+
+[source,gherkin]
+----
+Scenario: Custom test actions
+  Given create actions basic.groovy
+  """
+  actions {
+    echo('Hello from Groovy script')
+    sleep().seconds(1)
+
+    createVariables()
+        .variable('foo', 'bar')
+
+    echo('Variable foo=${foo}')
+  }
+  """
+  Then apply basic.groovy
+----
+
+Users familiar with Citrus will notice immediately that the action script is using the Citrus actions DSL to describe
+what should be done when running the Groovy script as part of the test. The Citrus action DSL is quite powerful and allows to
+perform complex actions such as iterations, conditionals and send/receive operations.
+
+[source,gherkin]
+----
+Scenario: Messaging actions
+  Given create actions messaging.groovy
+  """
+  actions {
+    send('direct:myQueue')
+      .payload('Hello from Groovy script!')
+
+    receive('direct:myQueue')
+      .payload('Hello from Groovy script!')
+  }
+  """
+  Then apply messaging.groovy
+----

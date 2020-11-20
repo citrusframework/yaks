@@ -1,0 +1,43 @@
+[[pre-post-scripts]]
+= Pre/Post scripts
+
+You can run scripts before/after a test group. Just add your commands to the `yaks-config.yaml` configuration for the test group.
+
+[source,yaml]
+----
+config:
+  namespace:
+    temporary: false
+    autoRemove: true
+pre:
+  - script: prepare.sh
+  - run: echo Start!
+  - name: Optional name
+    timeout: 30m
+    run: |
+      echo "Multiline"
+      echo "Commands are also"
+      echo "Supported!"
+post:
+  - script: finish.sh
+  - run: echo Bye!
+----
+
+The section `pre` runs before a test group and `post` is added after the test group has finished. The post steps are run even if the tests or pre steps fail
+for some reason. This ensures that cleanup tasks are performed also in case of errors.
+
+The `script` option provides a file path to bash script to execute. The user has to make sure that the script is executable. If no absolute file path is
+given it is assumed to be a file path relative to the current test group directory.
+
+With `run` you can add any shell command. At the moment only single line commands are supported here. You can add multiple `run` commands in a `pre`
+or `post` section.
+
+Each step can also define a human readable `name` that will be printed before its execution.
+
+By default a step must complete within 30 minutes (`30m`). The timeout can be changed using the `timeout` option in the step declaration (in Golang duration format).
+
+Scripts can leverage the following environment variables that are set automatically by the Yaks runtime:
+
+- **YAKS_NAMESPACE**: always contains the namespace where the tests will be executed, no matter if the namespace is fixed or temporary
+
+

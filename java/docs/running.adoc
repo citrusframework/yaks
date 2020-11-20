@@ -1,0 +1,132 @@
+[[running]]
+= Running
+
+After completing and verifying the link:installation[] you can start running some tests.
+
+You should be connected to your Kubernetes cluster and you should have the YAKS CLI tool available on your machine.
+
+You can verify the proper YAKS CLI setup with:
+
+[source,shell script]
+----
+yaks version
+----
+
+This will print the YAKS version to the output.
+
+[source,shell script]
+----
+YAKS ${project.version}
+----
+
+You are now ready to run a first BDD test on the cluster. As a sample create a new feature file that prints some message
+to the test output.
+
+.helloworld.feature
+[source,gherkin]
+----
+Feature: Hello
+
+  Scenario: Print hello message
+    Given print 'Hello from YAKS!'
+
+----
+
+You just need this single file to run the test on the cluster.
+
+[source,shell script]
+----
+yaks test helloworld.feature
+----
+
+You will be provided with the log output of the test and see the results:
+
+[source]
+----
+test "helloworld" created
++ test-helloworld › test
+test-helloworld test INFO	|
+test-helloworld test INFO	| ------------------------------------------------------------------------
+test-helloworld test INFO	|        .__  __
+test-helloworld test INFO	|   ____ |__|/  |________ __ __  ______
+test-helloworld test INFO	| _/ ___\|  \   __\_  __ \  |  \/  ___/
+test-helloworld test INFO	| \  \___|  ||  |  |  | \/  |  /\___ \
+test-helloworld test INFO	|  \___  >__||__|  |__|  |____//____  >
+test-helloworld test INFO	|      \/                           \/
+test-helloworld test INFO	|
+test-helloworld test INFO	| C I T R U S  T E S T S  3.0.0-M2
+test-helloworld test INFO	|
+test-helloworld test INFO	| ------------------------------------------------------------------------
+test-helloworld test INFO	|
+test-helloworld test
+test-helloworld test Scenario: Print hello message    # org/citrusframework/yaks/helloworld.feature:3
+test-helloworld test   Given print 'Hello from YAKS!' # org.citrusframework.yaks.standard.StandardSteps.print(java.lang.String)
+test-helloworld test INFO	| ------------------------------------------------------------------------
+test-helloworld test INFO	|
+test-helloworld test INFO	| CITRUS TEST RESULTS
+test-helloworld test INFO	|
+test-helloworld test INFO	|  Print hello message ............................................ SUCCESS
+test-helloworld test INFO	|
+test-helloworld test INFO	| TOTAL:	1
+test-helloworld test INFO	| FAILED:	0 (0.0%)
+test-helloworld test INFO	| SUCCESS:	1 (100.0%)
+test-helloworld test INFO	|
+test-helloworld test INFO	| ------------------------------------------------------------------------
+test-helloworld test
+test-helloworld test 1 Scenarios (1 passed)
+test-helloworld test 1 Steps (1 passed)
+test-helloworld test 0m1.631s
+test-helloworld test
+test-helloworld test
+Test Passed
+Test results: Total: 1, Passed: 1, Failed: 0, Skipped: 0
+	Print hello message (helloworld.feature:3): Passed
+----
+
+By default, log levels are set to a minimum so you are not bothered with too much boilerplate output. You can increase log levels
+with the command line option `--logger`.
+
+[source,shell script]
+----
+yaks test helloworld.feature --logger root=INFO
+----
+
+The link:#logging[logging configuration] section in thi guide gives you some more details on this topic.
+
+You are now ready to explore the different link:steps[] that you can use in a feature file in order to connect with
+various messaging transports as part of your test.
+
+[[running-monitoring]]
+== Status monitoring
+
+As you run tests with YAKS you add tests to the current namespace. You can review the test status and monitor the
+test results with the default Kubernetes CLI tool.
+
+The following command will list all tests in your namespace:
+
+[source,shell script]
+----
+kubectl get tests
+----
+
+[source,shell script]
+----
+NAME         PHASE    TOTAL   PASSED   FAILED   SKIPPED   ERRORS
+helloworld   Passed   1       1        0        0
+----
+
+The overview includes the test outcome and outline the number of total scenarios that have been executed and the
+test results for these scenarios (skipped, passed or failed). When a scenario has been failing the error message is also
+displayed in this overview.
+
+You can get more details of a single test with:
+
+[source,shell script]
+----
+kubectl get test helloworld -o yaml
+----
+
+This gets you the complete test details as a YAML file. You can then review status and detailed error messages.
+
+Find out more about the individual test results and how to get reports (e.g. JUnit) from a test run in the
+section about link:reporting[].

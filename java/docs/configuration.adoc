@@ -1,0 +1,333 @@
+[[configuration]]
+= Configuration
+
+There are several runtime options that you can set in order to configure which tests to run for instance. Each test directory
+can have its own `yaks-config.yaml` configuration file that holds the runtime options for this specific test suite.
+
+[source,yaml]
+----
+config:
+  runtime:
+    cucumber:
+      tags:
+      - "not @ignored"
+      glue:
+      - "org.citrusframework.yaks"
+      - "com.company.steps.custom"
+----
+
+The sample above uses different runtime options for Cucumber to specify a tag filter and some custom glue packages that
+should be loaded. The given runtime options will be set as environment variables in the YAKS runtime pod.
+
+You can also specify the Cucumber options that get passed to the Cucumber runtime.
+
+[source,yaml]
+----
+config:
+  runtime:
+    cucumber:
+      options: "--strict --monochrome --glue org.citrusframework.yaks"
+----
+
+Also we can make use of command line options when using the `yaks` binary.
+
+[source,shell script]
+----
+yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+----
+
+[[configuration-dependencies]]
+== Runtime dependencies
+
+The YAKS testing framework provides a base runtime image that holds all required libraries and artifacts to execute tests. You may need to add
+additional runtime dependencies though in order to extend the framework capabilities.
+
+For instance when using a Camel route in your test you may need to add additional Camel components that are not part in the
+basic YAKS runtime (e.g. camel-groovy). You can add the runtime dependency to the YAKS runtime image in multiple ways:
+
+[[configuration-tags]]
+=== Cucumber tags
+
+You can simply add a tag to your BDD feature specification in order to declare a runtime dependency for your test.
+
+[source,gherkin]
+----
+@require('org.apache.camel:camel-groovy:@camel.version@')
+Feature: Camel route testing
+
+  Background:
+    Given Camel route hello.xml
+    """
+    <route>
+      <from uri="direct:hello"/>
+      <filter>
+        <groovy>request.body.startsWith('Hello')</groovy>
+        <to uri="log:org.citrusframework.yaks.camel?level=INFO"/>
+      </filter>
+      <split>
+        <tokenize token=" "/>
+        <to uri="seda:tokens"/>
+      </split>
+    </route>
+    """
+
+  Scenario: Hello route
+    When send to route direct:hello body: Hello Camel!
+    And receive from route seda:tokens body: Hello
+    And receive from route seda:tokens body: Camel!
+----
+
+The given Camel route uses the groovy language support and this is not part in the basic YAKS runtime image. So we add
+the tag `@require('org.apache.camel:camel-groovy:@camel.version@')`. This tag will load the Maven dependency at runtime
+before the test is executed in the YAKS runtime image.
+
+Note that you have to provide proper Maven artifact coordinates with proper `groupId`, `artifactId` and `version`. You can make
+use of version properties for these versions available in the YAKS base image:
+
+* citrus.version
+* camel.version
+* spring.version
+* cucumber.version
+
+[[configuration-properties]]
+=== System property or environment setting
+
+You can add dependencies also by specifying the dependencies as command line parameter when running the test via `yaks` CLI.
+
+[source,shell script]
+----
+yaks test --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
+----
+
+This will add a environment setting in the YAKS runtime container and the dependency will be loaded automatically
+at runtime.
+
+[[configuration-properties-file]]
+=== Property file
+
+YAKS supports adding runtime dependency information to a property file called `yaks.properties`. The dependency is added through
+Maven coordinates in the property file using a common property key prefix `yaks.dependency.`
+
+[source,properties]
+----
+# include these dependencies
+yaks.dependency.foo=org.foo:foo-artifact:1.0.0
+yaks.dependency.bar=org.bar:bar-artifact:1.5.0
+----
+
+You can add the property file when running the test via `yaks` CLI like follows:
+
+[source,shell script]
+----
+yaks test --settings yaks.properties camel-route.feature
+----
+
+[[configuration-file]]
+=== YAKS configuration file
+
+When more dependencies are required to run a test you may consider to add a configuration file as `.yaml` or `.json`.
+
+The configuration file is able to declare multiple dependencies:
+
+[source,yaml]
+----
+dependencies:
+  - groupId: org.foo
+    artifactId: foo-artifact
+    version: 1.0.0
+  - groupId: org.bar
+    artifactId: bar-artifact
+    version: 1.5.0
+----
+
+[source,json]
+----
+{
+  "dependencies": [
+    {
+      "groupId": "org.foo",
+      "artifactId": "foo-artifact",
+      "version": "1.0.0"
+    },
+    {
+      "groupId": "org.bar",
+      "artifactId": "bar-artifact",
+      "version": "1.5.0"
+    }
+  ]
+}
+----
+
+You can add the configuration file when running the test via `yaks` CLI like follows:
+
+[source,shell script]
+----
+yaks test --settings yaks.settings.yaml camel-route.feature
+----
+
+[[configuration-repositories]]
+== Maven repositories
+
+When adding custom runtime dependencies those artifacts might not be available on the public central Maven repository.
+Instead you may need to add a custom repository that holds your artifacts.
+
+You can do this with several configuration options:
+
+[[configuration-repository-properties]]
+=== System property or environment setting
+
+You can add repositories also by specifying the repositories as command line parameter when running the test via `yaks` CLI.
+
+[source,shell script]
+----
+yaks test --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
+----
+
+This will add a environment setting in the YAKS runtime container and the repository will be added to the Maven runtime project model.
+
+[[configuration-repository-file]]
+=== Property file
+
+YAKS supports adding Maven repository information to a property file called `yaks.properties`. The dependency is added through
+Maven repository id and url in the property file using a common property key prefix `yaks.repository.`
+
+[source,properties]
+----
+# Maven repositories
+yaks.repository.central=https://repo.maven.apache.org/maven2/
+yaks.repository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
+----
+
+You can add the property file when running the test via `yaks` CLI like follows:
+
+[source,shell script]
+----
+yaks test --settings yaks.properties my.feature
+----
+
+[[configuration-repository-config]]
+=== YAKS configuration file
+
+More complex repository configuration might require to add a configuration file as `.yaml` or `.json`.
+
+The configuration file is able to declare multiple repositories:
+
+[source,yaml]
+----
+repositories:
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jboss-ea"
+    name: "JBoss Community Early Access Release Repository"
+    url: "https://repository.jboss.org/nexus/content/groups/ea/"
+    layout: "default"
+----
+
+[source,json]
+----
+{
+  "repositories": [
+      {
+        "id": "central",
+        "name": "Maven Central",
+        "url": "https://repo.maven.apache.org/maven2/",
+        "releases": {
+          "enabled": "true",
+          "updatePolicy": "daily"
+        },
+        "snapshots": {
+          "enabled": "false"
+        }
+      },
+      {
+        "id": "jboss-ea",
+        "name": "JBoss Community Early Access Release Repository",
+        "url": "https://repository.jboss.org/nexus/content/groups/ea/",
+        "layout": "default"
+      }
+    ]
+}
+----
+
+You can add the configuration file when running the test via `yaks` CLI like follows:
+
+[source,shell script]
+----
+yaks test --settings yaks.settings.yaml my.feature
+----
+
+[[configuration-secrets]]
+== Using secrets
+
+Tests usually need to use credentials and connection URLs in order to connect to infrastructure components and services.
+This might be sensitive data that should not go into the test configuration directly as hardcoded value. You should rather load the
+credentials from a secret volume source.
+
+To use the implicit configuration via secrets, we first need to create a configuration file holding the properties of a named configuration.
+
+.mysecret.properties
+[source,properties]
+----
+# Only configuration related to the "mysecret" named config
+database.url=jdbc:postgresql://syndesis-db:5432/sampledb
+database.user=admin
+database.password=special
+----
+
+We can create a secret from that file and label it so that it will be picked up automatically by the YAKS operator:
+
+[source,shell script]
+----
+# Create the secret from the property file
+kubectl create secret generic my-secret --from-file=mysecret.properties
+----
+
+Once the secret is created you can bind it to tests by their name. Given the test `my-test.feature` you can bind the secret to the test
+by adding a label as follows:
+
+[source,shell script]
+----
+# Bind secret to the "my-test" test case
+kubectl label secret my-secret yaks.citrusframework.org/test=my-test
+----
+
+For multiple secrets and variants of secrets on different environments (e.g. dev, test, staging) you can add a secret id and label that one
+explicitly in addition to the test name.
+
+[source,shell script]
+----
+# Bind secret to the named configuration "staging" of the "my-test" test case
+kubectl label secret my-secret yaks.citrusframework.org/test=my-test yaks.citrusframework.org/test.configuration=staging
+----
+
+With that in place you just need to set the secret id in your `yaks-config.yaml` for that test.
+
+.yaks-config.yaml
+[source,yaml]
+----
+config:
+  runtime:
+    secret: staging
+----
+
+You can now write a test and use the secret properties as normal test variables:
+
+.my-test.feature
+[source,gherkin]
+----
+Feature: JDBC API
+
+  Background:
+    Given Database connection
+      | url       | ${database.url} |
+      | username  | ${database.user} |
+      | password  | ${database.password} |
+----
+
+

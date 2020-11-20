@@ -1,0 +1,38 @@
+[[cli]]
+= Command line interface (yaks)
+
+The YAKS command line interface (yaks) is the main entry point for
+installing the operator and for running tests on a Kubernetes cluster.
+
+Releases of the CLI are available on:
+
+- Github Releases: https://github.com/citrusfrmaework/yaks/releases
+- Homebrew (Mac and Linux): https://formulae.brew.sh/formula/yaks
+
+== Available Commands
+
+Some of the most used commands are:
+
+.Useful Commands
+|===
+|Name |Description |Example
+
+|help
+|Obtain the full list of available commands
+|`yaks help`
+
+|test
+|Run a test on Kubernetes
+|`yaks test helloworld.feature`
+
+|===
+
+The list above is not the full list of available commands. You can run `yaks help` to obtain the full list.
+And each command also takes `--help` as parameter to output more information:
+
+[source, shell script]
+----
+yaks test --help
+----
+
+
