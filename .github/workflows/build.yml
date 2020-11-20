@@ -110,7 +110,7 @@ jobs:
       uses: container-tools/camel-k-action@v1
     - name: Build
       run: |
-        make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION codegen build images-no-test
+        make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
         sudo cp yaks /usr/local/bin/
         docker push $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
     - name: Install

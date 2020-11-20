@@ -76,82 +76,92 @@ get_next_snapshot_version() {
     echo $next_version
 }
 
-# Set version in sources
-set_version() {
-  local working_dir="$1"
-  local version="$2"
-  local snapshot_version="$3"
-  local image_name=${4:-docker.io\/citrusframework\/yaks}
-  local sanitized_image_name=${image_name//\//\\\/}
+set_version_file() {
+    local working_dir="$1"
+    local version="$2"
+    local snapshot_version="$3"
+    local image_name=${4:-docker.io\/citrusframework\/yaks}
+    local sanitized_image_name=${image_name//\//\\\/}
 
-  if [[ "$version" == "$snapshot_version" ]]; then
-      echo "Using version: $version"
-      return
-  fi
-
-  # Update versions file
-  local version_file=${working_dir}/pkg/util/defaults/defaults.go
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    sed -i -r "s/docker.io\/citrusframework\/yaks/${sanitized_image_name}/" $version_file
-    sed -i "s/$snapshot_version/$version/g" $version_file
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX
-    sed -i '' -E "s/docker.io\/citrusframework\/yaks/${sanitized_image_name}/" $version_file
-    sed -i '' "s/$snapshot_version/$version/g" $version_file
-  fi
-
-  # Update olm-catalog
-
-  for f in $(find $working_dir/deploy -type f -name "*.yaml" | grep -v olm-catalog);
-  do
+    # Update versions file
+    local version_file=${working_dir}/pkg/util/defaults/defaults.go
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      sed -i -r "s/docker.io\/citrusframework\/yaks/${sanitized_image_name}/" $version_file
+      sed -i "s/$snapshot_version/$version/g" $version_file
     elif [[ "$OSTYPE" == "darwin"* ]]; then
       # Mac OSX
-      sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      sed -i '' -E "s/docker.io\/citrusframework\/yaks/${sanitized_image_name}/" $version_file
+      sed -i '' "s/$snapshot_version/$version/g" $version_file
     fi
-  done
+}
 
-  # Update Java sources
+# Set version in sources
+set_version() {
+    local working_dir="$1"
+    local version="$2"
+    local snapshot_version="$3"
+    local image_name=${4:-docker.io\/citrusframework\/yaks}
+    local sanitized_image_name=${image_name//\//\\\/}
 
-  local exclude=("./.mvn/wrapper" "./.git" "./.idea" "/target/" "/test-output/")
-  local include=(".java" ".xml" ".properties" ".xsd" ".adoc")
+    if [[ "$version" == "$snapshot_version" ]]; then
+        echo "Using version: $version"
+        return
+    fi
 
-  java_sources=${working_dir}/java
+    set_version_file "$working_dir" "$version" "$snapshot_version" "$image_name"
 
-  find ${java_sources} -type f -print0 | while IFS= read -r -d '' file; do
-    check=false
-    for b in ${include[*]}; do
-      # check file includes
-      if [[ "$file" == *"$b" ]]; then
-        check=true
-        break
+    # Update olm-catalog
+
+    for f in $(find $working_dir/deploy -type f -name "*.yaml" | grep -v olm-catalog);
+    do
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        # Mac OSX
+        sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
       fi
     done
 
-    if [ "$check" = true ]; then
-        # double check for explicit directory excludes
-        for b in ${exclude[*]}; do
-          if [[ "$file" == *"$b"* ]]; then
-            #echo "exclude $file"
-            check=false
-            break
-          fi
-        done
-    fi
+    # Update Java sources
 
-    if [ "$check" = true ]; then
-      #echo "update $file"
-      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i "s/$snapshot_version/$version/g" $file
-      elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' "s/$snapshot_version/$version/g" $file
+    local exclude=("./.mvn/wrapper" "./.git" "./.idea" "/target/" "/test-output/")
+    local include=(".java" ".xml" ".properties" ".xsd" ".adoc")
+
+    java_sources=${working_dir}/java
+
+    find ${java_sources} -type f -print0 | while IFS= read -r -d '' file; do
+      check=false
+      for b in ${include[*]}; do
+        # check file includes
+        if [[ "$file" == *"$b" ]]; then
+          check=true
+          break
+        fi
+      done
+
+      if [ "$check" = true ]; then
+          # double check for explicit directory excludes
+          for b in ${exclude[*]}; do
+            if [[ "$file" == *"$b"* ]]; then
+              #echo "exclude $file"
+              check=false
+              break
+            fi
+          done
       fi
-    fi
-  done
 
-  echo "YAKS version set to: $version and image name to: $image_name:$version"
+      if [ "$check" = true ]; then
+        #echo "update $file"
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+          sed -i "s/$snapshot_version/$version/g" $file
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+          # Mac OSX
+          sed -i '' "s/$snapshot_version/$version/g" $file
+        fi
+      fi
+    done
+
+    echo "YAKS version set to: $version and image name to: $image_name:$version"
 }
 
 set_next_version() {

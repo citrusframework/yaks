@@ -68,6 +68,9 @@ build-resources:
 update-olm:
 	./script/update_olm.sh $(VERSION) $(SNAPSHOT_VERSION)
 
+set-version-file:
+	./script/set_version_file.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
+
 set-version:
 	./script/set_version.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
 
@@ -119,4 +122,4 @@ snapshot-version:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version set-next-version check-repo check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-resources update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
