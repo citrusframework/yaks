@@ -26,5 +26,4 @@ cd $location/..
 destdir=$1
 
 echo "Building virtual file system for the \"$destdir\" directory..."
-
 go run ./cmd/util/vfs-gen/ $destdir

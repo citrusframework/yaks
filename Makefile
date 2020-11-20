@@ -63,7 +63,7 @@ build-yaks:
 	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
 
 build-resources:
-	./script/embed_resources.sh deploy
+	./script/build_resources.sh deploy
 
 update-olm:
 	./script/update_olm.sh $(VERSION) $(SNAPSHOT_VERSION)
