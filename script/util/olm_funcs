@@ -20,6 +20,7 @@ update_olm() {
     local version="$2"
     local snapshot_version="$3"
     local olm_catalog=${working_dir}/deploy/olm-catalog
+    local file_version=$(echo $version | tr '[:upper:]' '[:lower:]')
 
     if [[ "$version" == "$snapshot_version" ]]; then
         echo "Using OLM version: $version"
@@ -28,10 +29,10 @@ update_olm() {
 
     for d in $(find ${olm_catalog} -type d -name "*-snapshot*");
     do
-      mv ${d} ${olm_catalog}/yaks/${version}
+      mv ${d} ${olm_catalog}/yaks/${file_version}
     done
 
-    for f in $(find ${olm_catalog}/yaks/${version} -type f -name "*-snapshot*");
+    for f in $(find ${olm_catalog}/yaks/${file_version} -type f -name "*-snapshot*");
     do
       if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         sed -i "s/$snapshot_version/$version/g" $f
@@ -40,7 +41,7 @@ update_olm() {
         sed -i '' "s/$snapshot_version/$version/g" $f
       fi
 
-      mv ${f} ${f//v*-snapshot/v${version}}
+      mv ${f} ${f//v*-snapshot/v${file_version}}
     done
 
     # Update package file
