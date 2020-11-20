@@ -15,16 +15,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ $# -ne 1 ]; then
-    echo "Error invoking embed_resources.sh: directory argument required"
+# Fail on error and undefined vars (please don't use global vars, but evaluation of functions for return values)
+set -eu
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+    echo "usage: $0 version snapshot_version [image_name]"
     exit 1
 fi
 
 location=$(dirname $0)
+working_dir=$(realpath ${location}/../)
 
-cd $location/..
-destdir=$1
+version="$1"
+snapshot_version="$2"
+image_name=${3:-}
 
-echo "Building virtual file system for the \"$destdir\" directory..."
+source "$location/util/common_funcs"
+source "$location/util/version_funcs"
 
-go run ./cmd/util/vfs-gen/ $destdir
+set_version_file "$working_dir" "$version" "$snapshot_version" "$image_name"

@@ -15,12 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Prefer removing snapshot to regenerating, because changes done to snapshot file may get lost
+if [ $# -ne 1 ]; then
+    echo "Error invoking embed_resources.sh: directory argument required"
+    exit 1
+fi
 
 location=$(dirname $0)
-working_dir=$location/../
 
-source "$location/util/common_funcs"
-source "$location/util/olm_funcs"
+cd $location/..
+destdir=$1
 
-unsnapshot_olm $working_dir
+echo "Building virtual file system for the \"$destdir\" directory..."
+go run ./cmd/util/vfs-gen/ $destdir

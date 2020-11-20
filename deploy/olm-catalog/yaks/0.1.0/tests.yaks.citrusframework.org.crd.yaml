@@ -89,6 +89,18 @@ spec:
               items:
                 type: string
               type: array
+            resources:
+              items:
+                description: ResourceSpec--
+                properties:
+                  content:
+                    type: string
+                  name:
+                    type: string
+                type: object
+              type: array
+            secret:
+              type: string
             source:
               description: SourceSpec--
               properties:
