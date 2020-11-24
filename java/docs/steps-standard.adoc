@@ -1,0 +1,108 @@
+[[steps-standard]]
+== Standard steps
+
+The standard steps provide a lot of basic features and predefined steps that you can use to write feature files. Most of the steps aim
+to leverage capabilities of the underlying test framework Citrus. For instance the steps are able to create Citrus test variables or print messages
+to the output.
+
+[[steps-variables]]
+=== Variable steps
+
+Variables represent the fundamental concept to own test data throughout your test logic. Once a variable is created you can reference its value in
+many steps and places in YAKS and Citrus. You could add a new identifier as a variable and reference this in many places
+such as message headers, body content, SQL statements and many more.
+
+.create variable
+[source,gherkin]
+----
+Given variable orderId is "1001"
+----
+
+This will create the variable `orderId` in the current test context. All subsequent steps and operations may reference the variable with the expression `${orderId}`.
+Citrus makes sure to replace the variable placeholder with its actual value before sending out messages and before validating incoming messages. As already mentioned
+you can use the variable placeholder expression in many places such as message headers and body content:
+
+.json payload
+[source,json]
+----
+{
+  "id": "${orderId}",
+  "name": "Watermelon",
+  "amount": 10
+}
+----
+
+You can create multiple variables in one single step using:
+
+.creating variables
+[source,gherkin]
+----
+Given variables
+  | orderId  | 1001      |
+  | name     | Pineapple |
+----
+
+[[steps-log]]
+=== Log steps
+
+Logging a message to the output can be helpful in terms of debugging and/or to give information about the context of an operation.
+
+YAKS provides following steps to add log output:
+
+|===
+|Step |Parameter |Description
+
+|`print '<any text>'`
+|any text that should be printed to the output
+|Printing messages to the output. Supports variables and functions in text.
+
+|`log '<any text>'`
+|any text that should be logged
+|Log messages to the output. Supports variables and functions in text.
+
+|===
+
+.print/log messages
+[source,gherkin]
+----
+  Scenario: log messages
+    Then print 'YAKS rocks!'
+
+  Scenario: multiline log messages
+    Given print
+    """
+    Hello users!
+
+    YAKS provides Cloud Native BDD testing on Kubernetes!
+    """
+----
+
+[[steps-sleep]]
+=== Sleep
+
+The `sleep` step lets the test run wait for a given amount of time (in milliseconds). During the sleep no action will be performed and the subsequent steps are postponed respectively.
+
+|===
+|Step |Parameter |Description
+
+|`sleep`
+|-
+|Sleep the default time of 5000 milliseconds.
+
+|`sleep <time> ms`
+|time in milliseconds
+|Sleep given amount of time in milliseconds.
+
+|===
+
+.sleep
+[source,gherkin]
+----
+  Scenario: sleep time period
+    Then sleep 2500 ms
+----
+
+The step receives a numeric parameter that represents the amount of time (in milliseconds) to wait.
+
+TIP: The Citrus framework also provides a set of BDD step implementations that you can use in a feature file. Read more about the available steps
+(e.g. for connecting with Selenium) in the official https://citrusframework.org/citrus/reference/2.8.0/html/index.html#cucumber[Citrus documentation on BDD testing].

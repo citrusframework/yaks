@@ -1,0 +1,159 @@
+[[installation]]
+= Installation
+
+YAKS directly runs the test as part of a cloud infrastructure by leveraging the https://sdk.operatorframework.io/[Operator SDK]
+and the concept of custom resources in Kubernetes.
+
+As a user you need to enable YAKS on your infrastructure by installing the operator and creating the required custom resources and roles.
+
+[[installation-requirements]]
+== Requirements
+
+You need access to a Kubernetes or Openshift cluster in order to use YAKS. You have different options
+to setup/use a Kubernetes or OpenShift cluster.
+
+- https://minikube.sigs.k8s.io/docs/start/[Minikube]
+- https://docs.okd.io/3.11/minishift/getting-started/index.html[Minishift]
+- https://code-ready.github.io/crc/[Red Hat CodeReady Containers (CRC)]
+- https://console.cloud.google.com/[Google Kubernetes Engine (GKE)]
+- https://cloud.redhat.com/[OpenShift]
+- https://cloud.ibm.com/[IBM Kubernetes Service (IKS)]
+
+Obviously the cluster will be the place where the tests will be executed and probably also the place where to run the SUT (System Under Test).
+
+For setting up roles and custom resources you may need to have administrative rights on that cluster.
+
+[[installation-windows]]
+== Windows prerequisite
+
+For full support of Yaks on Windows please enable "Windows Subsystem for Linux". You can do it manually by heading to Control Panel > Programs > Turn
+Windows Features On or Off and checking "Windows Subsystem for Linux". Or you can simply execute this command in powershell:
+
+[source,shell script]
+----
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+----
+
+This action requires a full reboot of the system.
+
+[[installation-operator]]
+== Operator install
+
+The YAKS operator will listen for new test resources in order to run those on the cloud infrastructure.
+The operators is in charge of preparing a proper runtime for each test and it will reconcile the status of a test.
+
+The easiest way to getting started with the YAKS operator installation is to use the **YAKS CLI**.
+You can download the CLI from the https://github.com/citrusframework/yaks/releases/[release page] where you will find installation
+archives for different operating systems.
+
+Download and decompress the archive. The archive holds a binary that will help you to install YAKS and run the tests.
+To install the `yaks` binary, just make it runnable and move it to a location in your `$PATH`, e.g. on linux:
+
+[source,shell script]
+----
+# Make executable and move to usr/local/bin
+$ chmod a+x yaks-${project.version}-linux-64bit
+$ mv yaks-${project.version}-linux-64bit /usr/local/bin/yaks
+
+# Alternatively, set a symbolic link to "yaks"
+$ mv yaks-${project.version}-linux-64bit yaks
+$ ln -s $(pwd)/yaks /usr/local/bin
+----
+
+Once you have the `yaks` CLI available, log into your cluster using the
+standard `oc` (OpenShift) or `kubectl` (Kubernetes) client tool.
+
+Once you are properly connected to your cluster execute the following command to install YAKS:
+
+[source,shell script]
+----
+yaks install
+----
+
+This will install and run the YAKS operator in the current namespace.
+
+You can specify the target namespace where to run the operator with a `--namespace` option:
+[source,shell script]
+----
+yaks install -n kube-operators
+----
+
+The namespace must available on the cluster before running the install command. If the namespace has not
+been created, yet you can create it with the following command:
+
+[source,shell script]
+----
+kubectl create namespace kube-operators
+----
+
+If not already configured, the command will also setup the YAKS custom resource definitions and roles
+on the cluster (in this case, the user needs cluster-admin permissions).
+
+IMPORTANT: Custom Resource Definitions (CRD) are cluster-wide objects and you need admin rights to install them. Fortunately, this
+operation can be done *once per cluster*. So, if the `yaks install` operation fails, you'll be asked to repeat it when logged as admin.
+For Minishift, this means executing `oc login -u system:admin` then `yaks install --cluster-setup` only for the first-time installation.
+
+[[installation-global-mode]]
+=== Global mode
+
+By default, the installation is using a `global` operator mode. This means that the operator
+only lives once in your cluster watching for tests in all namespaces. A global operator uses cluster-roles
+in order to manage tests in all namespaces.
+
+When running on OpenShift the default namespace for global operators is `openshift-operators` (it is available by default). Be sure to
+select this namespace when installing YAKS in the global mode:
+
+[source,shell script]
+----
+yaks install -n openshift-operators
+----
+
+[[installation-namespaced-mode]]
+=== Namespaced mode
+
+You can disable the `global` mode with a CLI setting when running the `install` command:
+
+[source,shell script]
+----
+yaks install --global=false
+----
+
+In the non global `namespaced` mode the YAKS operator will only have the rights to create new tests in the same namespace as it is
+running on. The operator will only watch for tests created in that the very same namespace.
+
+TIP: Which mode to choose depends on your very specific needs. When you expect to have many tests in different namespaces that will
+be recreated on a regular basis you may choose the global operator mode because you will not have to reinstall the operator many times.
+
+TIP: If you expect to have all tests in a single namespace or if you do not want to use cluster-wide operator permissions
+for some reason you may want to switch the namespaced mode.
+
+Please also have a look at the link:#temporary-namespaces[temporary namespaces] section in this guide to make a decision on operator modes.
+
+[[installation-verify]]
+== Verify installation
+
+You can verify the installation by retrieving the custom resource definition provided in YAKS:
+
+[source,shell script]
+----
+kubectl get customresourcedefinitions -l app=yaks
+----
+
+[source,shell script]
+----
+NAME                             CREATED AT
+tests.yaks.citrusframework.org   2020-11-01T00:00:00Z
+----
+
+The following command will list all tests in your namespace:
+
+[source,shell script]
+----
+kubectl get tests
+----
+
+[source,shell script]
+----
+NAME         PHASE    TOTAL   PASSED   FAILED   SKIPPED   ERRORS
+helloworld   Passed   1       1        0        0
+----

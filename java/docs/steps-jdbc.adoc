@@ -1,0 +1,9 @@
+[[steps-jdbc]]
+== JDBC steps
+
+YAKS provides a library that allows to execute SQL actions on relational DBs (limited to PostgreSQL for this POC).
+
+You can find examples of JDBC steps in the xref:../../examples/jdbc/jdbc.feature[examples] file.
+
+There's also an example that uses xref:../../examples/openapi/task-api.feature[JDBC and REST together] and targets the
+https://github.com/syndesisio/todo-example[Syndesis TODO App] database.

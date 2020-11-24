@@ -1,0 +1,58 @@
+[[steps-http]]
+== Http steps
+
+The Http protocol is a widely used communication protocol when it comes to exchanging data between systems. REST Http services
+are very prominent and producing/consuming those services is a common task in software development these days. YAKS provides
+ready to use steps that are able to exchange request/response messages via Http during the test.
+
+As a client you can specify the server URL and send requests to it.
+
+[source,gherkin]
+----
+Feature: Http client
+
+  Background:
+    Given URL: http://localhost:8080
+
+  Scenario: Health check
+    Given path /health is healthy
+
+  Scenario: GET request
+    When send GET /todo
+    Then verify HTTP response body: {"id": "@ignore@", "task": "Sample task", "completed": 0}
+    And receive HTTP 200 OK
+----
+
+The example above sets a base request URL to `http://localhost:8080` and performs a health check on path `/health`. After that we can
+send any request to the server and verify the response body and status code.
+
+All these steps are part of the core YAKS framework and you can just use them.
+
+On the server side we can start a new Http server instance on a given port and listen for incoming requests. These request can be verified and
+the test can provide a simulated response message with body and header data.
+
+[source,gherkin]
+----
+Feature: Http server
+
+  Background:
+    Given HTTP server listening on port 8080
+
+  Scenario: Expect GET request
+    When receive GET /todo
+    Then HTTP response body:  {"id": 1000, "task": "Sample task", "completed": 0}
+    And send HTTP 200 OK
+
+  Scenario: Expect POST request
+    Given expect HTTP request body: {"id": "@isNumber()@", "task": "New task", "completed": "@matches(0|1)@"}
+    When receive POST /todo
+    Then send HTTP 201 CREATED
+----
+
+In the HTTP server sample above we create a new server instance listening on port `8080`. Then we expect a `GET` request on path `/todo`. The server responds with
+a Http `200 OK` response message and given Json body as payload.
+
+The second scenario expects a POST request with a given body as Json payload. The expected request payload is verified with the powerful Citrus JSON
+message validator being able to compare JSON tree structures in combination with validation matchers such as `isNumber()` or `matches(0|1)`.
+
+Once the request is verified the server responds with a simple Http `201 CREATED`.

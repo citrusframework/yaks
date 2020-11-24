@@ -1,0 +1,26 @@
+[[quickstart]]
+= Getting started
+
+Assuming you have a Kubernetes playground and that you are connected to a namespace on that cluster
+just write a `helloworld.feature` BDD file with the following content:
+
+.helloworld.feature
+[source,gherkin]
+----
+Feature: Hello
+
+  Scenario: Print hello message
+    Given print 'Hello from YAKS!'
+----
+
+You can then execute the following command using the https://github.com/citrusframework/yaks/releases/[YAKS CLI tool]:
+
+[source,shell script]
+----
+yaks test helloworld.feature
+----
+
+This runs the test immediately on the current namespace in your connected Kubernetes cluster.
+Nothing else is needed.
+
+Continue reading the documentation and learn how to install and get started working with YAKS.

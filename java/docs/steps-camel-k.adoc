@@ -1,0 +1,16 @@
+[[steps-camel-k]]
+== Apache Camel K steps
+
+If the subject under test is a Camel K integration, you can leverage the YAKS Camel K bindings
+that provide useful steps for checking the status of integrations.
+
+For example:
+
+[source,gherkin]
+----
+   ...
+   Given integration xxx is running
+   Then integration xxx should print Hello world!
+----
+
+The Camel K extension library is provided by default in YAKS.

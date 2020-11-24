@@ -1,0 +1,32 @@
+[[contributing]]
+= Contributing
+
+Requirements:
+
+- Go 1.13+
+- Operator SDK 0.19.4+
+- Maven 3.6.2+
+- Git client
+
+You can build the YAKS project and get the `yaks` CLI by running:
+
+[source,shell script]
+----
+make build
+----
+
+If you want to build the operator image locally for development in Minishift for instance, then:
+
+[source,shell script]
+----
+# Build binaries and images
+eval $(minishift docker-env)
+make clean images-no-test
+----
+
+If the operator pod is running, just delete it to let it grab the new image.
+
+[source,shell script]
+----
+oc delete pod yaks
+----

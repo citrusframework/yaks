@@ -1,0 +1,18 @@
+[[preface]]
+= What is YAKS!?
+
+YAKS is a framework to enable Cloud Native BDD testing on Kubernetes! Cloud Native here means that your tests execute
+as Kubernetes PODs.
+
+As a user you can run tests by creating a `Test` custom resource on your favorite Kubernetes based cloud provider.
+Once the YAKS operator is installed it will listen for custom resources and automatically prepare a test runtime
+that runs the test as part of the cloud infrastructure.
+
+Tests in YAKS follow the BDD (Behavior Driven Development) concept and represent feature specifications written
+in https://cucumber.io/docs/gherkin/[Gherkin] syntax.
+
+As a framework YAKS provides a set of predefined https://cucumber.io/[Cucumber] steps which help you to connect with different
+messaging transports (Http REST, JMS, Kafka, Knative eventing) and verify message data with assertions on the header and body content.
+
+YAKS adds its functionality on top of on https://citrusframework.org[Citrus] for connecting to different endpoints as a client
+and/or server.

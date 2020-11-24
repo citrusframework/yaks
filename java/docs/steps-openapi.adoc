@@ -1,0 +1,137 @@
+[[steps-openapi]]
+== Open API steps
+
+OpenAPI documents specify RESTful Http services in a standardized, language-agnostic way. The specifications describe
+resources, path items, operations, security schemes and many more components that are part of the REST service. YAKS as a
+framework is able to use these information in order to generate proper request and response data for your test.
+
+You can find examples of how to use OpenAPI specifications in YAKS in the xref:../../examples/openapi[examples].
+
+Given an OpenAPI specification that you can access via Http URL or local file system you can load all available operations
+into the test. Once this is completed you can invoke operations by name and verify the response status codes. YAKS will automatically
+generate proper request/response data for you.
+
+[source,gherkin]
+----
+Feature: Petstore API V3
+
+  Background:
+    Given OpenAPI specification: http://localhost:8080/petstore/v3/openapi.json
+
+  Scenario: getPet
+    When invoke operation: getPetById
+    Then verify operation result: 200 OK
+
+  Scenario: petNotFound
+    Given variable petId is "0"
+    When invoke operation: getPetById
+    Then verify operation result: 404 NOT_FOUND
+
+  Scenario: addPet
+    When invoke operation: addPet
+    Then verify operation result: 201 CREATED
+
+  Scenario: updatePet
+    When invoke operation: updatePet
+    Then verify operation result: 200 OK
+
+  Scenario: deletePet
+    When invoke operation: deletePet
+    Then verify operation result: 204 NO_CONTENT
+----
+
+The request/response data is generated from the OpenAPI specification rules and holds randomized values. The following sample  shows a generated
+request for the `addPet` operation where a new pet is transmitted via Http POST.
+
+[source,json]
+----
+{
+  "photoUrls": [
+    "XHAGIyFcyh"
+  ],
+  "name": "mGNTgkfxgg",
+  "id": 26866048,
+  "category": {
+    "name": "konwOUYwMo",
+    "id": 18676332
+  },
+  "tags": [
+    {
+      "name": "KDnoWCfUBn",
+      "id": 31444049
+    }
+  ],
+  "status": "sold"
+}
+----
+
+The generated request should be valid according to the rules in the OpenAPI specification. You can overwrite the
+randomized values with test variables and inbound/outbound data dictionaries in order to have more human readable test data.
+
+[source,gherkin]
+----
+Feature: Petstore API V3
+
+  Background:
+    Given OpenAPI specification: http://localhost:8080/petstore/v3/openapi.json
+    Given variable petId is "citrus:randomNumber(5)"
+    Given inbound dictionary
+      | $.name          | @assertThat(anyOf(is(hasso),is(cutie),is(fluffy)))@ |
+      | $.category.name | @assertThat(anyOf(is(dog),is(cat),is(fish)))@ |
+    Given outbound dictionary
+      | $.name          | citrus:randomEnumValue('hasso','cutie','fluffy') |
+      | $.category.name | citrus:randomEnumValue('dog', 'cat', 'fish') |
+
+  [...]
+----
+
+With this data dictionaries in place the generated request looks like follows:
+
+[source,json]
+----
+{
+  "photoUrls": [
+    "aaKoEDhLYc"
+  ],
+  "name": "hasso",
+  "id": 12337393,
+  "category": {
+    "name": "cat",
+    "id": 23927231
+  },
+  "tags": [
+    {
+      "name": "FQxvuCbcqT",
+      "id": 58291150
+    }
+  ],
+  "status": "pending"
+}
+----
+
+You see that we are now using more human readable values for `$.name` and `$.category.name`.
+
+The same mechanism applies for inbound messages that are verified by YAKS. The framework will generate an expected response
+data structure coming from the OpenAPI specification. Below is a sample Json payload that verifies the response for the `getPetById` operation.
+
+[source,json]
+----
+{
+  "photoUrls": "@ignore@",
+  "name": "@assertThat(anyOf(is(hasso),is(cutie),is(fluffy)))@",
+  "id": "@isNumber()@",
+  "category": {
+    "name": "@assertThat(anyOf(is(dog),is(cat),is(fish)))@",
+    "id": "@isNumber()@"
+  },
+  "tags": "@ignore@",
+  "status": "@matches(available|pending|sold)@"
+}
+----
+
+All mandatory fields need to be in the received json document. Also enumerations and number values are checked to meet the expected
+values coming form the OpenAPI specification (e.g. `status=@matches(available|pending|sold)@`). This ensures that the response respects the rules
+defined in the specification.
+
+In case you also want to validate the exact values on each field please use the generic Http steps where you can provide a complete expected
+Http response with payload and header data.

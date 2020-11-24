@@ -1,0 +1,40 @@
+[[uninstall]]
+= Uninstall
+
+In case you really need to remove YAKS and all related resources from Kubernetes or OpenShift you can do so with the
+following command:
+
+[source,shell script]
+----
+yaks uninstall
+----
+
+This will remove the YAKS operator from the current namespace along with all related custom resource definitions.
+
+When using the global operator mode you may need to select the proper namespace here.
+
+[source,shell script]
+----
+yaks uninstall -n kube-operators
+----
+
+NOTE: By default, the uninstall will *not* remove resources that are possibly shared between namespaces and clusters (e.g. CRDs and roles).
+Please use the `--all` flag if you need to wipe out these, too.
+
+[source,shell script]
+----
+yaks uninstall -n kube-operators --all
+----
+
+The `--all` option removes the operator and all related resources such as https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources[CustomResourceDefinitions (CRD)] and
+https://kubernetes.io/docs/reference/access-authn-authz/rbac[ClusterRole].
+
+IMPORTANT: In case the operator has *not* been installed via https://docs.openshift.com/container-platform/4.1/applications/operators/olm-understanding-olm.html[Operator Lifecycle Manager(OLM)] you may need to
+use the option `--olm=false` also when uninstalling. In particular this is the case when installing YAKS from sources on https://code-ready.github.io/crc/[CRC].
+
+[source,shell script]
+----
+yaks uninstall --olm=false
+----
+
+Use this whenever you do not want to use OLM framework for performing the uninstall.

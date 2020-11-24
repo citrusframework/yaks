@@ -1,0 +1,33 @@
+= YAKS Documentation
+:imagesdir: reference/html/images
+
+image::yaks-logo.png[yaks-logo]
+
+YAKS is a platform to enable Cloud Native BDD testing on Kubernetes! The user guide offers comprehensive explanations and
+code examples to all YAKS features.
+
+In case you miss something in our documentation please tell us. Also in case you discover something wrong or unclear please do not
+hesitate to contact us. Find below the reference documentation for the latest YAKS releases.
+
+[cols="<,<,<"]
+|===
+|Version |HTML |PDF
+
+|Latest	|link:/yaks/reference/html/index.html[HTML] |link:/yaks/reference/pdf/yaks-reference.pdf[PDF]
+|0.1.0	|link:/yaks/reference/0.1.0/html/index.html[HTML] |link:/yaks/reference/0.1.0/pdf/yaks-reference-0.1.0.pdf[PDF]
+|===
+
+== Additional material
+
+* link:https://citrusframework.org/[Homepage]
+* link:https://github.com/citrusframework/yaks[Sources]
+* link:https://github.com/citrusframework/yaks/issues[Issues]
+* link:https://citrusframework.zulipchat.com/[Chat]
+
+== Contribute
+
+In case you would like to checkout the Citrus code base and build Citrus yourself follow these instructions:
+
+* link:https://citrusframework.org/docs/development[Development quickstart]
+* link:https://citrusframework.org/docs/conventions[Coding conventions]
+* link:https://citrusframework.org/docs/contribute[How to contribute]

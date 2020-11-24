@@ -1,0 +1,21 @@
+[[steps]]
+= Steps
+
+Each line in a BDD feature file is backed by a step implementation that covers the actual runtime logic executed. YAKS
+provides a set of step implementations that you can just out-of-the-box use in your feature file.
+
+See the following step implementations that enable you to cover various areas of messaging and integration testing.
+
+include::steps-standard.adoc[]
+include::steps-camel.adoc[]
+include::steps-camel-k.adoc[]
+include::steps-groovy.adoc[]
+include::steps-http.adoc[]
+include::steps-jdbc.adoc[]
+include::steps-jms.adoc[]
+include::steps-kafka.adoc[]
+include::steps-kubernetes.adoc[]
+include::steps-knative.adoc[]
+include::steps-openapi.adoc[]
+
+
