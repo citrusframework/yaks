@@ -32,7 +32,7 @@ import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"definition", "dependencies", "types", "sources", "flow"})
+@JsonPropertyOrder({"definition", "dependencies", "types", "sources", "authorization", "flow"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
@@ -46,6 +46,8 @@ public class KameletSpec implements KubernetesResource {
     private Map<String, TypeSpec> types;
     @JsonProperty("sources")
     private List<Source> sources;
+    @JsonProperty("authorization")
+    private AuthorizationSpec authorization;
     @JsonProperty("flow")
     private Map<String, Object> flow;
 
@@ -63,6 +65,14 @@ public class KameletSpec implements KubernetesResource {
 
     public void setSources(List<Source> sources) {
         this.sources = sources;
+    }
+
+    public AuthorizationSpec getAuthorization() {
+        return authorization;
+    }
+
+    public void setAuthorization(AuthorizationSpec authorization) {
+        this.authorization = authorization;
     }
 
     public List<String> getDependencies() {
@@ -270,5 +280,9 @@ public class KameletSpec implements KubernetesResource {
                 this.example = example;
             }
         }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class AuthorizationSpec {
     }
 }
