@@ -1,0 +1,117 @@
+[[extensions]]
+= Extensions
+
+[[extensions-minio]]
+== Minio upload
+
+Extensions add custom steps to the test runtime so you can use custom step definitions in your feature file.
+
+.extension.feature
+[source,gherkin]
+----
+Scenario: print extended slogan
+    Given YAKS does Cloud-Native BDD testing
+    Then YAKS can be extended!
+----
+
+The step `YAKS can be extended!` is not available in the default step implementations provided by YAKS. The step definition
+is implemented in a separate custom Maven module and gets uploaded to the Kubernetes cluster using the
+https://github.com/container-tools/snap[container-tools/snap] library.
+
+Snap uses a https://min.io/[Minio] object storage that is automatically installed in the current namespace. You can build and upload
+custom Maven modules with:
+
+[source,shell script]
+----
+$ yaks upload examples/extensions/steps
+----
+
+This will create the Minio storage and perform the upload. After that you can use the custom steps in your feature file. Be sure to add
+the dependency and the additional glue code in `yaks-config.yaml`.
+
+.yaks-config.yaml
+[source,yaml]
+----
+config:
+  runtime:
+    cucumber:
+      glue:
+      - "org.citrusframework.yaks"
+      - "com.company.steps.custom"
+dependencies:
+  - groupId: com.company
+    artifactId: steps
+    version: "1.0.0-SNAPSHOT"
+----
+
+The additional glue code should match the package name where to find the custom step definitions in your custom code.
+
+With that you are all set and can run the test as usual:
+
+[source,shell script]
+----
+$ yaks test extension.feature
+----
+
+You can also use the upload as part of the test command:
+
+[source,shell script]
+----
+$ yaks test extension.feature --upload steps
+----
+
+The `--upload` option builds and uploads the custom Maven module automatically before the test.
+
+[[extensions-jitpack]]
+== Jitpack extensions
+
+Jitpack allows you to load custom steps from an external GitHub repository in order to use
+custom step definitions in your feature file.
+
+.jitpack.feature
+[source,gherkin]
+----
+Scenario: Use custom steps
+    Given My steps are loaded
+    Then I can do whatever I want!
+----
+
+The steps `My steps are loaded` and `I can do whatever I want!` live in a separate repository on
+GitHub ([https://github.com/citrusframework/yaks-step-extension](https://github.com/citrusframework/yaks-step-extension)).
+
+We need to add the Jitpack Maven repository, the dependency and the additional glue code in the `yaks-config.yaml`.
+
+.yaks-config.yaml
+[source,yaml]
+----
+config:
+  runtime:
+    cucumber:
+      glue:
+      - "org.citrusframework.yaks"
+      - "dev.yaks.testing.standard"
+    settings:
+      repositories:
+        - id: "central"
+          name: "Maven Central"
+          url: "https://repo.maven.apache.org/maven2/"
+        - id: "jitpack.io"
+          name: "JitPack Repository"
+          url: "https://jitpack.io"
+      dependencies:
+        - groupId: com.github.citrusframework
+          artifactId: yaks-step-extension
+          version: "0.0.1"
+----
+
+The additional glue code `dev.yaks.testing.standard` should match the package name where to find the custom step definitions in the library. The Jitpack
+Maven repository makes sure the library gets resolved at runtime.
+
+With that you are all set and can run the test as usual:
+
+[source,shell script]
+----
+$ yaks test jitpack.feature
+----
+
+In the logs you will see that Jitpack automatically loads the additional dependency before the test.

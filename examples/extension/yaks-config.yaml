@@ -23,3 +23,7 @@ config:
       glue:
       - "org.citrusframework.yaks"
       - "com.company.steps.custom"
+dependencies:
+  - groupId: com.company
+    artifactId: steps
+    version: "1.0.0-SNAPSHOT"
