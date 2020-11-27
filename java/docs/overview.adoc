@@ -1,4 +1,5 @@
 = YAKS Documentation
+:docinfo1:
 :imagesdir: reference/html/images
 
 image::yaks-logo.png[yaks-logo]

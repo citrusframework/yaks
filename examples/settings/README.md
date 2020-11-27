@@ -1,4 +1,4 @@
-# Settings example
+# Settings
 
 This example shows the usage of settings when running a test. Users can add settings to the test
 execution via CLI options.

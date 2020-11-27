@@ -1,4 +1,4 @@
-# Kamelet sample
+# Kamelets support
 
 This sample shows the usage of Apache Camel-K Kamelets. Users can create Kamelets and verify the ready state
 in the current namespace. Once the Kamelet is ready the tests can create a Camel-K integration that uses the Kamelet as source.
