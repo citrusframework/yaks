@@ -199,12 +199,19 @@ func (o *testCmdOptions) findOperator(c client.Client, namespace string) (*v1.De
 		Name:      "yaks-operator",
 	}
 
-	err := c.Get(o.Context, key, &operator)
-	return &operator, err
+	if err := c.Get(o.Context, key, &operator); err != nil {
+		return nil, err
+	}
+
+	return &operator, nil
 }
 
 // IsOperatorGlobal returns true if the operator is configured to watch all namespaces
 func isOperatorGlobal(operator *v1.Deployment) bool {
+	if operator == nil {
+		return false;
+	}
+
 	envSet := operator.Spec.Template.Spec.Containers[0].Env
 	for _, env := range envSet {
 		if env.Name == OperatorWatchNamespaceEnv && strings.TrimSpace(env.Value) == "" && env.ValueFrom == nil {

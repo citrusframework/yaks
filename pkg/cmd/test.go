@@ -319,13 +319,16 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	// looking for operator in current namespace
+	// looking for existing operator in current namespace
 	operator, err := o.findOperator(c, o.Namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
 		// looking for operator in cluster-wide operator namespace
 		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
 			operator, err = o.findOperator(c, operatorNamespace)
-			if err != nil {
+			if err != nil && k8serrors.IsNotFound(err) {
+				fmt.Printf("Unable to find existing YAKS operator - " +
+					"adding new operator instance to temporary namespace by default\n")
+			} else {
 				return namespace, err
 			}
 		} else {
@@ -335,7 +338,7 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 		return namespace, err
 	}
 
-	if isOperatorGlobal(operator) {
+	if operator != nil && isOperatorGlobal(operator) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
 	}
