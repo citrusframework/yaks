@@ -9,6 +9,7 @@ Releases of the CLI are available on:
 - Github Releases: https://github.com/citrusfrmaework/yaks/releases
 - Homebrew (Mac and Linux): https://formulae.brew.sh/formula/yaks
 
+[[cli-commands]]
 == Available Commands
 
 Some of the most used commands are:
@@ -21,18 +22,95 @@ Some of the most used commands are:
 |Obtain the full list of available commands
 |`yaks help`
 
+|completion
+|Generates completion scripts (bash, zsh)
+|`yaks completion`
+
+|install
+|Install YAKS operator and setup cluster (roles, CRDs)
+|`yaks install`
+
 |test
 |Run a test on Kubernetes
 |`yaks test helloworld.feature`
 
+|report
+|Fetches and generates reports from test results
+|`yaks report --fetch -o junit`
+
+|upload
+|Upload custom artifacts (steps, extensions) to Minio storage
+|`yaks upload ./steps/my-custom-steps`
+
+|uninstall
+|Remove YAKS (operator, roles, CRDs, ...) from the cluster
+|`yaks uninstall`
+
+|version
+|Print current YAKS version
+|`yaks version`
+
 |===
 
 The list above is not the full list of available commands. You can run `yaks help` to obtain the full list.
-And each command also takes `--help` as parameter to output more information:
+Each sub-command also takes `--help` as parameter to output more information on that specific command usage:
 
+.Overall help
+[source, shell script]
+----
+yaks help
+----
+
+[source]
+----
+YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
+
+Usage:
+  yaks [command]
+
+Available Commands:
+  completion  Generates completion scripts
+  help        Help about any command
+  install     Installs YAKS on a Kubernetes cluster
+  report      Generate test report from last test run
+  test        Execute a test on Kubernetes
+  uninstall   Uninstall YAKS from a Kubernetes cluster
+  upload      Upload a local test artifact to the cluster
+  version     Display version information
+
+Flags:
+      --config string      Path to the config file to use for CLI requests
+  -h, --help               help for yaks
+  -n, --namespace string   Namespace to use for all operations
+
+Use "yaks [command] --help" for more information about a command.
+----
+
+.Command help
 [source, shell script]
 ----
 yaks test --help
 ----
 
+[[cli-install]]
+== install
 
+The command `install` performs the YAKS installation on a target cluster. The command has two separate install steps:
+
+. Setup cluster resources (CRDs, roles, rolebindings)
+. Install YAKS operator to current namespace (or to the provided namespace in settings)
+
+[[cli-test]]
+== test
+
+[[cli-report]]
+== report
+
+[[cli-upload]]
+== upload
+
+[[cli-uninstall]]
+== uninstall
+
+[[cli-version]]
+== version

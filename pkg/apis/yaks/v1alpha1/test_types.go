@@ -145,6 +145,8 @@ const (
 
 	// TestPhaseNone
 	TestPhaseNone TestPhase = ""
+	// TestPhaseNew
+	TestPhaseNew TestPhase = "New"
 	// TestPhasePending
 	TestPhasePending TestPhase = "Pending"
 	// TestPhaseRunning
@@ -161,9 +163,16 @@ const (
 	TestPhaseUpdating TestPhase = "Updating"
 )
 
-func (phase TestPhase) AsError() error {
+func (phase TestPhase) AsError(name string) error {
+	if phase == TestPhaseNone ||
+		phase == TestPhaseNew ||
+		phase == TestPhasePending ||
+		phase == TestPhaseRunning {
+		return fmt.Errorf("test %s timed out with status: %s", name, string(phase))
+	}
+
 	if phase != TestPhasePassed {
-		return fmt.Errorf("Test %s", string(phase))
+		return fmt.Errorf("test %s finished with status: %s", name, string(phase))
 	}
 	return nil
 }

@@ -160,8 +160,8 @@ func PrintSummaryReport(results *v1alpha1.TestResults) {
 }
 
 func GetSummaryReport(results *v1alpha1.TestResults) string {
-	summary := fmt.Sprintf("Test results: Total: %d, Passed: %d, Failed: %d, Skipped: %d\n",
-		results.Summary.Total, results.Summary.Passed, results.Summary.Failed, results.Summary.Skipped)
+	summary := fmt.Sprintf("Test results: Total: %d, Passed: %d, Failed: %d, Errors: %d, Skipped: %d\n",
+		results.Summary.Total, results.Summary.Passed, results.Summary.Failed, len(results.Errors), results.Summary.Skipped)
 
 	for _, test := range results.Tests {
 		result := "Passed"
@@ -174,7 +174,7 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 
 	if len(results.Errors) > 0 {
 		if prettyPrint, err := json.MarshalIndent(results.Errors, "", "  "); err == nil {
-			summary += fmt.Sprintf("\nErrors: \n%s", string(prettyPrint))
+			summary += fmt.Sprintf("\nErrors: %d\n%s", len(results.Errors), string(prettyPrint))
 		} else {
 			fmt.Printf("Failed to read error details from test results: %s", err.Error())
 		}
