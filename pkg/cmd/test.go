@@ -69,8 +69,6 @@ const (
 	CucumberGlue       = "CUCUMBER_GLUE"
 	CucumberFeatures   = "CUCUMBER_FEATURES"
 	CucumberFilterTags = "CUCUMBER_FILTER_TAGS"
-
-	DefaultStepTimeout = "30m"
 )
 
 func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions) {
@@ -101,26 +99,28 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions
 	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
 	cmd.Flags().String("dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
 	cmd.Flags().StringP("report", "r", "junit", "Create test report in given output format")
+	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
 
 	return &cmd, &options
 }
 
 type testCmdOptions struct {
 	*RootCmdOptions
-	Repositories  []string `mapstructure:"maven-repository"`
-	Dependencies  []string `mapstructure:"dependency"`
-	Logger        []string `mapstructure:"logger"`
-	Uploads       []string `mapstructure:"upload"`
-	Settings      string `mapstructure:"settings"`
-	Env           []string `mapstructure:"env"`
-	Tags          []string `mapstructure:"tag"`
-	Features      []string `mapstructure:"feature"`
-	Resources     []string `mapstructure:"resources"`
-	PropertyFiles []string `mapstructure:"property-files"`
-	Glue          []string `mapstructure:"glue"`
-	Options       string `mapstructure:"options"`
-	DumpFormat    string `mapstructure:"dump"`
-	ReportFormat report.OutputFormat `mapstructure:"report"`
+	Repositories  []string            `mapstructure:"maven-repository"`
+	Dependencies  []string            `mapstructure:"dependency"`
+	Logger        []string            `mapstructure:"logger"`
+	Uploads       []string            `mapstructure:"upload"`
+	Settings      string              `mapstructure:"settings"`
+	Env           []string            `mapstructure:"env"`
+	Tags          []string            `mapstructure:"tag"`
+	Features      []string            `mapstructure:"feature"`
+	Resources     []string            `mapstructure:"resources"`
+	PropertyFiles []string            `mapstructure:"property-files"`
+	Glue          []string            `mapstructure:"glue"`
+	Options       string              `mapstructure:"options"`
+	DumpFormat    string              `mapstructure:"dump"`
+	ReportFormat  report.OutputFormat `mapstructure:"report"`
+	Timeout       string              `mapstructure:"timeout"`
 }
 
 func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -527,20 +527,38 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	}
 
 	ctx, cancel := context.WithCancel(o.Context)
-	var status v1alpha1.TestPhase = "Unknown"
+	var status = v1alpha1.TestPhaseNew
 	go func() {
+		var timeout string
+		if o.Timeout != "" {
+			timeout = o.Timeout
+		} else if runConfig.Config.Timeout != "" {
+			timeout = runConfig.Config.Timeout
+		} else {
+			timeout = config.DefaultTimeout
+		}
+
+		waitTimeout, parseErr := time.ParseDuration(timeout)
+		if parseErr != nil {
+			fmt.Printf("failed to parse test timeout setting - " + parseErr.Error())
+			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout);
+		}
+
 		err = kubernetes.WaitCondition(o.Context, c, &test, func(obj interface{}) (bool, error) {
 			if val, ok := obj.(*v1alpha1.Test); ok {
+				if val.Status.Phase != v1alpha1.TestPhaseNone {
+					status = val.Status.Phase
+				}
+
 				if val.Status.Phase == v1alpha1.TestPhaseDeleting ||
 					val.Status.Phase == v1alpha1.TestPhaseError ||
 					val.Status.Phase == v1alpha1.TestPhasePassed ||
 					val.Status.Phase == v1alpha1.TestPhaseFailed {
-					status = val.Status.Phase
 					return true, nil
 				}
 			}
 			return false, nil
-		}, 30*time.Minute)
+		}, waitTimeout)
 
 		cancel()
 	}()
@@ -549,8 +567,8 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		return nil, err
 	}
 
-	fmt.Printf("Test %s\n", string(status))
-	return &test, status.AsError()
+	fmt.Printf("Test %s finished with status: %s\n", name, string(status))
+	return &test, status.AsError(name)
 }
 
 func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
@@ -657,12 +675,12 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 
 func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *config.RunConfig) error {
 	t := "{{color .PodColor .PodName}} {{color .ContainerColor .ContainerName}} {{.Message}}"
-	funs := map[string]interface{}{
+	funcs := map[string]interface{}{
 		"color": func(color color.Color, text string) string {
 			return color.SprintFunc()(text)
 		},
 	}
-	templ, err := template.New("log").Funcs(funs).Parse(t)
+	templ, err := template.New("log").Funcs(funcs).Parse(t)
 	if err != nil {
 		return err
 	}
@@ -756,7 +774,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 
 func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 	if timeout == "" {
-		timeout = DefaultStepTimeout
+		timeout = config.DefaultTimeout
 	}
 	actualTimeout, err := time.ParseDuration(timeout)
 	if err != nil {

@@ -27,6 +27,7 @@ import (
 const (
     OperatorNamespaceOpenShift  = "openshift-operators"
     OperatorNamespaceKubernetes = "kube-operators"
+    DefaultTimeout = "30m"
 )
 
 type RunConfig struct {
@@ -38,6 +39,7 @@ type RunConfig struct {
 
 type Config struct {
     Recursive bool            `yaml:"recursive"`
+    Timeout   string          `yaml:"timeout"`
     Namespace NamespaceConfig `yaml:"namespace"`
     Operator  OperatorConfig  `yaml:"operator"`
     Runtime   RuntimeConfig   `yaml:"runtime"`
@@ -116,7 +118,7 @@ func NewWithDefaults() *RunConfig {
         Temporary:  false,
     }
 
-    var config = Config {Recursive: true, Namespace: ns}
+    var config = Config {Recursive: true, Namespace: ns, Timeout: DefaultTimeout}
     return &RunConfig {Config: config, BaseDir: ""}
 }
 
