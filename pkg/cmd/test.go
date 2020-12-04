@@ -143,11 +143,14 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 
 	if isDir(source) {
 		err = o.runTestGroup(source, &results)
-		if err == nil && len(results.Errors) > 0 {
-			err = errors.New("There are test failures!")
-		}
 	} else {
 		err = o.runTest(source, &results)
+	}
+
+	if err != nil {
+		results.Errors = append(results.Errors, err.Error())
+	} else if len(results.Errors) > 0 {
+		err = errors.New("There are test failures!")
 	}
 
 	return err
@@ -193,7 +196,7 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 		report.AppendTestResults(results, test.Status.Results)
 
 		if saveErr := report.SaveTestResults(test); saveErr != nil {
-			fmt.Printf("Failed to save test results: %s", saveErr.Error())
+			fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
 		}
 	}
 	return err
@@ -248,7 +251,7 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 				report.AppendTestResults(results, test.Status.Results)
 
 				if saveErr := report.SaveTestResults(test); saveErr != nil {
-					fmt.Printf("Failed to save test results: %s", saveErr.Error())
+					fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
 				}
 			}
 
@@ -326,8 +329,8 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
 			operator, err = o.findOperator(c, operatorNamespace)
 			if err != nil && k8serrors.IsNotFound(err) {
-				fmt.Printf("Unable to find existing YAKS operator - " +
-					"adding new operator instance to temporary namespace by default\n")
+				fmt.Println("Unable to find existing YAKS operator - " +
+					"adding new operator instance to temporary namespace by default")
 			} else {
 				return namespace, err
 			}
@@ -521,9 +524,9 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	}
 
 	if !existed {
-		fmt.Printf("test \"%s\" created\n", name)
+		fmt.Println(fmt.Sprintf("test \"%s\" created", name))
 	} else {
-		fmt.Printf("test \"%s\" updated\n", name)
+		fmt.Println(fmt.Sprintf("test \"%s\" updated", name))
 	}
 
 	ctx, cancel := context.WithCancel(o.Context)
@@ -540,7 +543,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 
 		waitTimeout, parseErr := time.ParseDuration(timeout)
 		if parseErr != nil {
-			fmt.Printf("failed to parse test timeout setting - " + parseErr.Error())
+			fmt.Println(fmt.Sprintf("failed to parse test timeout setting - %s", parseErr.Error()))
 			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout);
 		}
 
@@ -567,7 +570,7 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		return nil, err
 	}
 
-	fmt.Printf("Test %s finished with status: %s\n", name, string(status))
+	fmt.Println(fmt.Sprintf("Test %s finished with status: %s", name, string(status)))
 	return &test, status.AsError(name)
 }
 
@@ -728,7 +731,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 				desc = fmt.Sprintf("script %s", step.Script)
 			}
 			if err := runScript(step.Script, desc, namespace, baseDir, step.Timeout); err != nil {
-				return err
+				return fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err))
 			}
 		}
 
@@ -764,7 +767,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 				desc = fmt.Sprintf("inline command %d", idx)
 			}
 			if err := runScript(file.Name(), desc, namespace, baseDir, step.Timeout); err != nil {
-				return err
+				return fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err))
 			}
 		}
 	}
@@ -799,9 +802,9 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 	command.Stderr = os.Stderr
 	command.Stdout = os.Stdout
 
-	fmt.Printf("Running %s: \n", desc)
+	fmt.Println(fmt.Sprintf("Running %s:", desc))
 	if err := command.Run(); err != nil {
-		fmt.Printf("Failed to run %s: \n%v\n", desc, err)
+		fmt.Println(fmt.Sprintf("Failed to run %s: \n%v", desc, err))
 		return err
 	}
 	return nil
@@ -833,7 +836,7 @@ func initializeTempNamespace(name string, c client.Client, context context.Conte
 			},
 		}
 	}
-	fmt.Printf("Creating new test namespace %s\n", name)
+	fmt.Println(fmt.Sprintf("Creating new test namespace %s", name))
 	err := c.Create(context, obj)
 	return obj.(metav1.Object), err
 }
@@ -859,7 +862,7 @@ func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Cont
 			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
 		}
 	}
-	fmt.Printf("AutoRemove namespace %s\n", ns.GetName())
+	fmt.Println(fmt.Sprintf("AutoRemove namespace %s", ns.GetName()))
 }
 
 func (*testCmdOptions) loadData(fileName string) (string, error) {
