@@ -81,6 +81,28 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
     }
 
     /**
+     * Create any Kubernetes resource instance from yaml.
+     */
+    public CreateResourceAction.Builder createResource() {
+        CreateResourceAction.Builder builder = new CreateResourceAction.Builder()
+                .client(kubernetesClient);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Delete any Kubernetes resource instance.
+     * @param content the Kubernetes resource as YAML content.
+     */
+    public DeleteResourceAction.Builder deleteResource(String content) {
+        DeleteResourceAction.Builder builder = new DeleteResourceAction.Builder()
+                .client(kubernetesClient)
+                .content(content);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
      * Create custom resource instance.
      */
     public CreateCustomResourceAction.Builder createCustomResource() {

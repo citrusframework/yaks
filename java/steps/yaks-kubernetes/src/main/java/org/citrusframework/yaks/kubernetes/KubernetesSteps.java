@@ -119,31 +119,22 @@ public class KubernetesSteps {
     }
 
     @Given("^create Kubernetes custom resource in ([^\\s]+)$")
-    public void createCustomResource(String resourceType, String content) {
-        Map<String, Object> yamlContent = KubernetesSupport.yaml().load(content);
-        Object metadata = yamlContent.get("metadata");
-
-        if (!(metadata instanceof Map)) {
-            throw new CitrusRuntimeException("Missing metadata on Kubernetes custom resource");
-        }
-
-        String name = ((Map<String, Object>) metadata).getOrDefault("name", "").toString();
-        String kind = yamlContent.getOrDefault("kind", "").toString();
-        String apiVersion = yamlContent.getOrDefault("apiVersion", KubernetesSupport.kubernetesApiVersion()).toString();
+    public void createCustomResource(String resourceType, String yaml) {
+        KubernetesResource resource = KubernetesSupport.yaml().loadAs(yaml, KubernetesResource.class);
 
         runner.run(kubernetes().client(k8sClient).createCustomResource()
                 .type(resourceType)
-                .kind(kind)
-                .apiVersion(apiVersion)
-                .content(content));
+                .kind(resource.getKind())
+                .apiVersion(resource.getApiVersion())
+                .content(yaml));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(kubernetes().client(k8sClient)
-                            .deleteCustomResource(name)
+                            .deleteCustomResource(resource.getMetadata().getName())
                             .type(resourceType)
-                            .kind(kind)
-                            .apiVersion(apiVersion)));
+                            .kind(resource.getKind())
+                            .apiVersion(resource.getApiVersion())));
         }
     }
 
@@ -152,7 +143,63 @@ public class KubernetesSteps {
         try {
             createCustomResource(resourceType, FileUtils.readToString(FileUtils.getFileResource(fileName)));
         } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to read properties file", e);
+            throw new CitrusRuntimeException("Failed to read custom resource from file", e);
+        }
+    }
+
+    @Given("^delete Kubernetes custom resource in ([^\\s]+)$")
+    public void deleteCustomResource(String resourceType, String yaml) {
+        KubernetesResource resource = KubernetesSupport.yaml().loadAs(yaml, KubernetesResource.class);
+
+        runner.run(kubernetes().client(k8sClient)
+                        .deleteCustomResource(resource.getMetadata().getName())
+                        .type(resourceType)
+                        .kind(resource.getKind())
+                        .apiVersion(resource.getApiVersion()));
+    }
+
+    @Given("^delete Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
+    public void deleteCustomResourceFromFile(String fileName, String resourceType) {
+        try {
+            deleteCustomResource(resourceType, FileUtils.readToString(FileUtils.getFileResource(fileName)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to read custom resource from file", e);
+        }
+    }
+
+    @Given("^create Kubernetes resource$")
+    public void createResource(String content) {
+        runner.run(kubernetes().client(k8sClient).createResource()
+                .content(content));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .deleteResource(content)));
+        }
+    }
+
+    @Given("^load Kubernetes resource ([^\\s]+)$")
+    public void createResourceFromFile(String fileName) {
+        try {
+            createResource(FileUtils.readToString(FileUtils.getFileResource(fileName)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to read resource from file", e);
+        }
+    }
+
+    @Given("^delete Kubernetes resource$")
+    public void deleteResource(String yaml) {
+        runner.run(kubernetes().client(k8sClient)
+                .deleteResource(yaml));
+    }
+
+    @Given("^delete Kubernetes resource ([^\\s]+)$")
+    public void deleteResourceFromFile(String fileName) {
+        try {
+            deleteResource(FileUtils.readToString(FileUtils.getFileResource(fileName)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to read resource from file", e);
         }
     }
 

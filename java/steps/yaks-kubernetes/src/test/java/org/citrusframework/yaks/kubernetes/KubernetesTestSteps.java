@@ -51,6 +51,20 @@ public class KubernetesTestSteps {
         });
     }
 
+    @Then("^verify pod ([^\\s]+) exists$")
+    public void verifyPod(String podName) {
+        runner.run(new KubernetesTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Assertions.assertThat(getKubernetesClient()
+                        .pods()
+                        .inNamespace(namespace(context))
+                        .withName(podName)
+                        .get()).isNotNull();
+            }
+        });
+    }
+
     @Then("^verify secret ([^\\s]+) exists$")
     public void verifySecret(String name) {
         runner.run(new KubernetesTestAction() {
