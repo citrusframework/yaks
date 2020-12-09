@@ -207,6 +207,15 @@ spec:
           - update
           - watch
         - apiGroups:
+          - ""
+          resources:
+          - pods/log
+          - pods/status
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
           - rbac.authorization.k8s.io
           resources:
           - roles
