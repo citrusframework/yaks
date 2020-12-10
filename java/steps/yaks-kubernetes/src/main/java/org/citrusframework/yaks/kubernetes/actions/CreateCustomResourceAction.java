@@ -49,8 +49,11 @@ public class CreateCustomResourceAction extends AbstractKubernetesAction impleme
     public void doExecute(TestContext context) {
         try {
             Map<String, Object> resources = getKubernetesClient()
-                     .customResource(KubernetesSupport.crdContext(type, group, kind, version))
-                     .createOrReplace(namespace(context), content);
+                     .customResource(KubernetesSupport.crdContext(context.replaceDynamicContentInString(type),
+                             context.replaceDynamicContentInString(group),
+                             context.replaceDynamicContentInString(kind),
+                             context.replaceDynamicContentInString(version)))
+                     .createOrReplace(namespace(context), context.replaceDynamicContentInString(content));
 
             if (resources.get("messages") != null) {
                 throw new CitrusRuntimeException(String.format("Failed to create custom resource - %s", resources.get("messages")));

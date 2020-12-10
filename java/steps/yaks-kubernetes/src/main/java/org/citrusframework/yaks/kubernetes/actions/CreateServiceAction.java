@@ -49,7 +49,7 @@ public class CreateServiceAction extends AbstractKubernetesAction {
         getKubernetesClient().services().inNamespace(namespace(context)).createOrReplaceWithNew()
                 .withNewMetadata()
                     .withNamespace(namespace(context))
-                    .withName(serviceName)
+                    .withName(context.replaceDynamicContentInString(serviceName))
                     .withLabels(KubernetesSettings.getDefaultLabels())
                 .endMetadata()
                 .withNewSpec()

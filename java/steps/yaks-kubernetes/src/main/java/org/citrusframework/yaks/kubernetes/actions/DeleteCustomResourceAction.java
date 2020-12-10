@@ -46,11 +46,12 @@ public class DeleteCustomResourceAction extends AbstractKubernetesAction {
 
     @Override
     public void doExecute(TestContext context) {
+        String resourceName = context.replaceDynamicContentInString(name);
         try {
             getKubernetesClient().customResource(KubernetesSupport.crdContext(type, group, kind, version))
-                                 .delete(namespace(context), name);
+                                 .delete(namespace(context), resourceName);
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to delete custom resource '%s'", name), e);
+            throw new CitrusRuntimeException(String.format("Failed to delete custom resource '%s'", resourceName), e);
         }
     }
 

@@ -35,7 +35,7 @@ public class DeleteSecretAction extends AbstractKubernetesAction {
     @Override
     public void doExecute(TestContext context) {
         getKubernetesClient().secrets().inNamespace(namespace(context))
-                .withName(secretName)
+                .withName(context.replaceDynamicContentInString(secretName))
                 .delete();
     }
 
