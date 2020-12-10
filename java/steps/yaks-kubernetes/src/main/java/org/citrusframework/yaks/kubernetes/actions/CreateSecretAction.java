@@ -19,6 +19,7 @@ package org.citrusframework.yaks.kubernetes.actions;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -46,11 +47,14 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
 
     @Override
     public void doExecute(TestContext context) {
+        Map<String, String> secrets = new LinkedHashMap<>(properties);
         if (filePath != null) {
             try {
                 Properties resourceProperties = new Properties();
-                resourceProperties.load(FileUtils.getFileResource(filePath, context).getInputStream());
-                resourceProperties.forEach((key, value) -> properties.put(key.toString(), Optional.ofNullable(value).map(Object::toString).orElse("")));
+                resourceProperties.load(FileUtils.getFileResource(
+                        context.replaceDynamicContentInString(filePath), context).getInputStream());
+                resourceProperties.forEach((key, value) -> secrets.put(key.toString(),
+                        Optional.ofNullable(value).map(Object::toString).orElse("")));
             } catch (IOException e) {
                 throw new CitrusRuntimeException("Failed to read properties file", e);
             }
@@ -61,10 +65,10 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
                 .createOrReplaceWithNew()
                 .withNewMetadata()
                     .withNamespace(namespace(context))
-                    .withName(secretName)
+                    .withName(context.replaceDynamicContentInString(secretName))
                 .endMetadata()
                 .withType("generic")
-                .withData(properties)
+                .withData(context.resolveDynamicValuesInMap(secrets))
             .done();
     }
 
@@ -75,7 +79,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
 
         private String secretName;
         private String filePath;
-        private Map<String, String> properties = new HashMap<>();
+        private final Map<String, String> properties = new HashMap<>();
 
         public Builder name(String secretName) {
             this.secretName = secretName;

@@ -35,7 +35,7 @@ public class DeleteServiceAction extends AbstractKubernetesAction {
     @Override
     public void doExecute(TestContext context) {
         getKubernetesClient().services().inNamespace(namespace(context))
-                .withName(serviceName)
+                .withName(context.replaceDynamicContentInString(serviceName))
                 .delete();
     }
 

@@ -37,7 +37,8 @@ public class DeleteResourceAction extends AbstractKubernetesAction {
     @Override
     public void doExecute(TestContext context) {
         getKubernetesClient()
-                .load(new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
+                .load(new ByteArrayInputStream(context.replaceDynamicContentInString(content)
+                        .getBytes(StandardCharsets.UTF_8)))
                 .inNamespace(namespace(context))
                 .delete();
     }
