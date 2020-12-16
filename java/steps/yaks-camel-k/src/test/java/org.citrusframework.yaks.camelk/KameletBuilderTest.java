@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.util.FileUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -63,5 +64,11 @@ public class KameletBuilderTest {
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("kamelet.json", KameletBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
+	}
+
+	@Test
+	public void shouldDeserializeKamelet() throws IOException {
+		new ObjectMapper().readValue(
+				FileUtils.readToString(new ClassPathResource("timer-source.kamelet.json")), Kamelet.class);
 	}
 }
