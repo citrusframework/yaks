@@ -9,6 +9,7 @@ See the following step implementations that enable you to cover various areas of
 include::steps-standard.adoc[]
 include::steps-camel.adoc[]
 include::steps-camel-k.adoc[]
+include::steps-kamelet.adoc[]
 include::steps-groovy.adoc[]
 include::steps-http.adoc[]
 include::steps-jdbc.adoc[]

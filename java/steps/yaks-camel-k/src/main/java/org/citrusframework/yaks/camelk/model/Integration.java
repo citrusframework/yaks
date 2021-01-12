@@ -70,6 +70,7 @@ public class Integration extends CustomResource {
 	public static class Builder {
 		private Map<String, IntegrationSpec.TraitConfig> traits;
 		private List<String> dependencies;
+		private List<IntegrationSpec.Configuration> configuration;
 		private String source;
 		private String name;
 
@@ -93,12 +94,18 @@ public class Integration extends CustomResource {
 			return this;
 		}
 
+		public Builder configuration(List<IntegrationSpec.Configuration> configuration) {
+			this.configuration = Collections.unmodifiableList(configuration);
+			return this;
+		}
+
 		public Integration build() {
 			Integration i = new Integration();
 			i.getMetadata().setName(name.substring(0, name.indexOf(".")));
 			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(name, source)));
 			i.getSpec().setDependencies(dependencies);
 			i.getSpec().setTraits(traits);
+			i.getSpec().setConfiguration(configuration);
 			return i;
 		}
 	}

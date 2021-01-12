@@ -1,16 +1,161 @@
 [[steps-camel-k]]
 == Apache Camel K steps
 
+Apache Camel K is a lightweight integration framework built from Apache Camel that runs natively on Kubernetes and is specifically designed for serverless and microservice architectures.
+
+Users of Camel K can instantly run integration code written in Camel DSL on their preferred cloud (Kubernetes or OpenShift).
+
 If the subject under test is a Camel K integration, you can leverage the YAKS Camel K bindings
-that provide useful steps for checking the status of integrations.
+that provide useful steps for managing Camel K integrations.
 
-For example:
-
+.Working with Camel K integrations
 [source,gherkin]
 ----
-   ...
-   Given integration xxx is running
-   Then integration xxx should print Hello world!
+Given create Camel-K integration helloworld.groovy
+"""
+from('timer:tick?period=1000')
+  .setBody().constant('Hello world from Camel K!')
+  .to('log:info')
+"""
+Given Camel-K integration helloworld is running
+Then Camel-K integration helloworld should print Hello world from Camel K!
 ----
 
-The Camel K extension library is provided by default in YAKS.
+The YAKS framework provides the Camel K extension library by default. You can create a new Camel K integration and check the status of
+the integration (e.g. running).
+
+The following sections describe the available Camel K steps in detail.
+
+[[camel-k-resources]]
+=== Manage Camel K resources
+
+The Camel K steps are able to create resources such as integrations. By default these resources get removed automatically after the test scenario.
+This auto removal of Camel K resources can be turned off with the following step.
+
+.@Given("^Disable auto removal of Camel-K resources$")
+[source,gherkin]
+----
+Given Disable auto removal of Camel-K resources
+----
+
+Usually this step is a `Background` step for all scenarios in a feature file. This way multiple scenarios can work on the very same Camel K resources and share
+integrations.
+
+There is also a separate step for enabling the auto removal.
+
+.@Given("^Enable auto removal of Camel-K resources$")
+[source,gherkin]
+----
+Given Enable auto removal of Camel-K resources
+----
+
+By default, all Camel K resources are automatically removed after each scenario.
+
+[[camel-k-create]]
+=== Create Camel K integrations
+
+.@Given("^(?:create|new) Camel-K integration {name}.{type}$")
+[source,gherkin]
+----
+Given create Camel-K integration {name}.groovy
+"""
+<<Camel DSL>>
+"""
+----
+
+Creates a new Camel K integration with specified route DSL. The integration is automatically started and can be referenced with its
+`{name}` in other steps.
+
+.@Given("^(?:create|new) Camel-K integration {name}.{type} with configuration:$")
+[source,gherkin]
+----
+Given create Camel-K integration {name}.groovy with configuration:
+  | dependencies | mvn:org.foo:foo:1.0,mvn:org.bar:bar:0.9 |
+  | traits       | quarkus.native=true,quarkus.enabled=true,route.enabled=true |
+  | properties   | foo.key=value,bar.key=value |
+  | source       | <<Camel DSL>> |
+----
+
+You can add optional configurations to the Camel K integration such as dependencies, traits and properties.
+
+.Source
+The route DSL as source for the Camel K integration.
+
+.Dependencies
+List of Maven coordinates that will be added to the integration runtime as a library.
+
+.Traits
+List of trait configuration that will be added to the integration spec. Each trait configuration value must be in the format `traitname.key=value`.
+
+.Properties
+List of property bindings added to the integration. Each value must be in the format `key=value`.
+
+[[camel-k-load]]
+=== Load Camel K integrations
+
+.@Given("^load Camel-K integration {name}.{type}$")
+[source,gherkin]
+----
+Given load Camel-K integration {name}.groovy
+----
+
+Loads the file `{name}.groovy` as a Camel K integration.
+
+[[camel-k-delete]]
+=== Delete Camel K integrations
+
+.@Given("^delete Camel-K integration {name}$")
+[source,gherkin]
+----
+Given delete Camel-K integration {name}
+----
+
+Deletes the Camel K integration with given `{name}`.
+
+[[camel-k-running-state]]
+=== Verify integration is running
+
+.@Given("^Camel-K integration {name} is running$")
+[source,gherkin]
+----
+Given Camel-K integration {name} is running
+----
+
+Checks that the Camel K integration with given `{name}` is in state running and that the number of replicas is > 0. The step polls
+the state of the integration for a given amount of attempts with a given delay between attempts. You can adjust the polling settings with:
+
+.@Given Camel-K resource polling configuration
+[source,gherkin]
+----
+Given Camel-K resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweenAttempts | 1000 |
+----
+
+[[camel-k-watch-logs]]
+=== Watch Camel K integration logs
+
+.@Given("^Camel-K integration {name} should print (.*)$")
+[source,gherkin]
+----
+Given Camel-K integration {name} should print {log-message}
+----
+
+Watches the log output of a Camel K integration and waits for given `{log-message}` to be present in the logs. The step polls the
+logs for a given amount of time. You can adjust the polling configuration with:
+
+.@Given Camel-K resource polling configuration
+[source,gherkin]
+----
+Given Camel-K resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweenAttempts | 1000 |
+----
+
+You can also wait for a log message to *not* be present in the output. Just use this step:
+
+.@Given("^Camel-K integration {name} should not print (.*)$")
+[source,gherkin]
+----
+Given Camel-K integration {name} should not print {log-message}
+----

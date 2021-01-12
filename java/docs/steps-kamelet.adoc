@@ -1,0 +1,4 @@
+[[steps-kamelet]]
+== Kamelet steps
+
+ToDo

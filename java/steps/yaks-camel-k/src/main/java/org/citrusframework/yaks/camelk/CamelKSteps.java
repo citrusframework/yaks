@@ -18,6 +18,8 @@
 package org.citrusframework.yaks.camelk;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
@@ -54,11 +56,15 @@ public class CamelKSteps {
     private int maxAttempts = CamelKSettings.getMaxAttempts();
     private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
 
+    private List<String> propertyFiles;
+
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
             k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
+
+        propertyFiles = new ArrayList<>();
     }
 
     @Given("^Disable auto removal of Camel-K resources$")
@@ -77,6 +83,11 @@ public class CamelKSteps {
         delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
     }
 
+	@Given("^Camel-K integration property file ([^\\s]+)$")
+    public void addPropertyFile(String filePath) {
+        propertyFiles.add(filePath);
+    }
+
 	@Given("^(?:create|new) Camel-K integration ([a-z0-9-]+).([a-z0-9-]+) with configuration:$")
 	public void createNewIntegration(String name, String language, Map<String, String> configuration) {
 		if (configuration.get("source") == null) {
@@ -88,6 +99,8 @@ public class CamelKSteps {
                     .createIntegration(name + "." + language)
                     .source(configuration.get("source"))
                     .dependencies(configuration.get("dependencies"))
+                    .properties(configuration.get("properties"))
+                    .propertyFiles(propertyFiles)
                     .traits(configuration.get("traits")));
 
         if (autoRemoveResources) {
@@ -111,6 +124,7 @@ public class CamelKSteps {
         runner.run(camelk()
                     .client(k8sClient)
                     .createIntegration(name + "." + language)
+                    .propertyFiles(propertyFiles)
                     .source(source));
 
         if (autoRemoveResources) {

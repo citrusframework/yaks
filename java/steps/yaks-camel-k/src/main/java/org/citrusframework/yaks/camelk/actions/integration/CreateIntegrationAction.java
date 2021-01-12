@@ -17,15 +17,19 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.consol.citrus.context.TestContext;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.util.FileUtils;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
@@ -46,6 +50,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final String integrationName;
     private final String source;
     private final List<String> dependencies;
+    private final List<String> properties;
+    private final List<String> propertyFiles;
     private final String traits;
 
     /**
@@ -57,6 +63,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.integrationName = builder.integrationName;
         this.source = builder.source;
         this.dependencies = builder.dependencies;
+        this.properties = builder.properties;
+        this.propertyFiles = builder.propertyFiles;
         this.traits = builder.traits;
     }
 
@@ -74,12 +82,25 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             integrationBuilder.dependencies(context.resolveDynamicValuesInList(dependencies));
         }
 
+        addPropertyConfigurationSpec(integrationBuilder, context);
+        addTraitSpec(integrationBuilder, context);
+
+        final Integration i = integrationBuilder.build();
+        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
+        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class, DoneableIntegration.class)
+                .inNamespace(CamelKSettings.getNamespace())
+                .createOrReplace(i);
+
+        LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
+    }
+
+    private void addTraitSpec(Integration.Builder integrationBuilder, TestContext context) {
         if (traits != null && !traits.isEmpty()) {
             final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
             for (String t : context.replaceDynamicContentInString(traits).split(",")){
                 //traitName.key=value
                 if (!validateTraitFormat(t)) {
-                    throw new IllegalArgumentException("Trait" + t + "does not match format traitName.key=value");
+                    throw new IllegalArgumentException("Trait " + t + " does not match format traitName.key=value");
                 }
                 final String[] trait = t.split("\\.",2);
                 final String[] traitConfig = trait[1].split("=", 2);
@@ -91,14 +112,46 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             }
             integrationBuilder.traits(traitConfigMap);
         }
+    }
 
-        final Integration i = integrationBuilder.build();
-        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class, DoneableIntegration.class)
-                .inNamespace(CamelKSettings.getNamespace())
-                .createOrReplace(i);
+    private void addPropertyConfigurationSpec(Integration.Builder integrationBuilder, TestContext context) {
+        final List<IntegrationSpec.Configuration> configurationList = new ArrayList<>();
+        if (properties != null && !properties.isEmpty()) {
+            for (String p : context.resolveDynamicValuesInList(properties)){
+                //key=value
+                if (!validatePropertyFormat(p)) {
+                    throw new IllegalArgumentException("Property " + p + " does not match format key=value");
+                }
+                final String[] property = p.split("=",2);
+                configurationList.add(
+                        new IntegrationSpec.Configuration("property", createPropertySpec(property[0], property[1])));
+            }
+        }
 
-        LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
+        if (propertyFiles != null && !propertyFiles.isEmpty()) {
+            for (String pf : propertyFiles){
+                try {
+                    Properties props = new Properties();
+                    props.load(FileUtils.getFileResource(pf, context).getInputStream());
+                    props.forEach((key, value) -> configurationList.add(
+                            new IntegrationSpec.Configuration("property", createPropertySpec(key.toString(), value.toString()))));
+                } catch (IOException e) {
+                    throw new CitrusRuntimeException("Failed to load property file", e);
+                }
+            }
+        }
+
+        if (!configurationList.isEmpty()) {
+            integrationBuilder.configuration(configurationList);
+        }
+    }
+
+    private String createPropertySpec(String key, String value) {
+        return escapePropertyItem(key) + "=" + escapePropertyItem(value);
+    }
+
+    private String escapePropertyItem(String item) {
+        return item.replaceAll(":", "\\:").replaceAll("=", "\\=");
     }
 
     private boolean validateTraitFormat(String trait) {
@@ -110,6 +163,15 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         return matcher.matches();
     }
 
+    private boolean validatePropertyFormat(String property) {
+        String patternString = "[^\\s]+=.*";
+
+        Pattern pattern = Pattern.compile(patternString);
+
+        Matcher matcher = pattern.matcher(property);
+        return matcher.matches();
+    }
+
     /**
      * Action builder.
      */
@@ -117,7 +179,9 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         private String integrationName;
         private String source;
-        private List<String> dependencies = new ArrayList<>();
+        private final List<String> dependencies = new ArrayList<>();
+        private final List<String> properties = new ArrayList<>();
+        private final List<String> propertyFiles = new ArrayList<>();
         private String traits;
 
         public Builder integration(String integrationName) {
@@ -135,6 +199,26 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return this;
         }
 
+        public Builder propertyFile(String propertyFile) {
+            this.propertyFiles.add(propertyFile);
+            return this;
+        }
+
+        public Builder propertyFiles(List<String> propertyFiles) {
+            this.propertyFiles.addAll(propertyFiles);
+            return this;
+        }
+
+        public Builder properties(String properties) {
+            this.properties.addAll(Arrays.asList(properties.split(",")));
+            return this;
+        }
+
+        public Builder properties(List<String> properties) {
+            this.properties.addAll(properties);
+            return this;
+        }
+
         public Builder dependencies(List<String> dependencies) {
             this.dependencies.addAll(dependencies);
             return this;
@@ -142,6 +226,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder dependency(String dependency) {
             this.dependencies.add(dependency);
+            return this;
+        }
+
+        public Builder property(String name, String value) {
+            this.properties.add(name + "=" + value);
             return this;
         }
 
