@@ -98,8 +98,8 @@ public class CamelKSteps {
                     .client(k8sClient)
                     .createIntegration(name + "." + language)
                     .source(configuration.get("source"))
-                    .dependencies(configuration.get("dependencies"))
-                    .properties(configuration.get("properties"))
+                    .dependencies(configuration.getOrDefault("dependencies", "").trim())
+                    .properties(configuration.getOrDefault("properties", "").trim())
                     .propertyFiles(propertyFiles)
                     .traits(configuration.get("traits")));
 
