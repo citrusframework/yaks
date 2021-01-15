@@ -19,6 +19,7 @@ package kubernetes
 
 import (
 	"context"
+	batchv1 "k8s.io/api/batch/v1"
 
 	"github.com/citrusframework/yaks/pkg/client"
 
@@ -57,6 +58,7 @@ func ReplaceResource(ctx context.Context, c client.Client, res runtime.Object) e
 		}
 		mapRequiredMeta(existing, res)
 		mapRequiredServiceData(existing, res)
+		mapRequiredJobData(existing, res)
 		err = c.Update(ctx, res)
 	}
 	if err != nil {
@@ -77,6 +79,16 @@ func mapRequiredServiceData(from runtime.Object, to runtime.Object) {
 	if fromC, ok := from.(*corev1.Service); ok {
 		if toC, ok := to.(*corev1.Service); ok {
 			toC.Spec.ClusterIP = fromC.Spec.ClusterIP
+		}
+	}
+}
+
+func mapRequiredJobData(from runtime.Object, to runtime.Object) {
+	if fromC, ok := from.(*batchv1.Job); ok {
+		if toC, ok := to.(*batchv1.Job); ok {
+			toC.Spec.Selector = fromC.Spec.Selector
+			toC.Spec.Template.Labels["job-name"] = fromC.Spec.Template.Labels["job-name"]
+			toC.Spec.Template.Labels["controller-uid"] = fromC.Spec.Template.Labels["controller-uid"]
 		}
 	}
 }

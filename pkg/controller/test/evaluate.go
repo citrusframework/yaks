@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +51,7 @@ func (action *evaluateAction) CanHandle(build *v1alpha1.Test) bool {
 
 // Handle handles the test
 func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
-	status, err := action.getTestPodStatus(ctx, test)
+	jobStatus, err := action.getTestJobStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = "Missing pod status for test " + test.Name
@@ -59,13 +60,25 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 		return nil, err
 	}
 
-	if status.Phase == v1.PodSucceeded {
-		test.Status.Phase = v1alpha1.TestPhasePassed
-		err = action.addTestResults(status, test)
-	} else if status.Phase == v1.PodFailed {
-		test.Status.Phase = v1alpha1.TestPhaseFailed
-		err = action.addTestResults(status, test)
+	if jobStatus.Active > 0 {
+		return test, nil
 	}
+
+	if jobStatus.Failed > 0 {
+		test.Status.Phase = v1alpha1.TestPhaseFailed
+	} else if jobStatus.Succeeded > 0 {
+		test.Status.Phase = v1alpha1.TestPhasePassed
+	}
+
+	status, err := action.getTestPodStatus(ctx, test)
+	if err != nil && k8serrors.IsNotFound(err) {
+		test.Status.Phase = v1alpha1.TestPhaseError
+		test.Status.Errors = err.Error()
+		return test, nil
+	} else if err != nil {
+		return nil, err
+	}
+	err = action.addTestResults(status, test)
 
 	if err != nil {
 		return nil, err
@@ -101,22 +114,38 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 }
 
 func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {
-	pod := v1.Pod{
+	pods := &v1.PodList{};
+	err := action.client.List(ctx, pods, client.InNamespace(test.Namespace), client.MatchingLabels{
+		TestIdLabel: test.Status.TestID,
+	})
+	if err != nil {
+		return v1.PodStatus{}, err
+	}
+
+	if len(pods.Items) == 0 {
+		return v1.PodStatus{}, fmt.Errorf("missing test pod for test %s", test.Name)
+	}
+
+	return pods.Items[0].Status, nil
+}
+
+func (action *evaluateAction) getTestJobStatus(ctx context.Context, test *v1alpha1.Test) (batchv1.JobStatus, error) {
+	job := batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
+			Kind:       "Job",
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: test.Namespace,
-			Name:      TestPodNameFor(test),
+			Name:      TestJobNameFor(test),
 		},
 	}
 	key := client.ObjectKey{
 		Namespace: test.Namespace,
-		Name:      TestPodNameFor(test),
+		Name:      TestJobNameFor(test),
 	}
-	if err := action.client.Get(ctx, key, &pod); err != nil {
-		return v1.PodStatus{}, err
+	if err := action.client.Get(ctx, key, &job); err != nil {
+		return batchv1.JobStatus{}, err
 	}
-	return pod.Status, nil
+	return job.Status, nil
 }

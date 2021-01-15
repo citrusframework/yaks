@@ -29,6 +29,27 @@ rules:
   verbs:
   - "*"
 - apiGroups:
+  - "batch"
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - "batch"
+  resources:
+  - jobs/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - ""
   resources:
   - pods

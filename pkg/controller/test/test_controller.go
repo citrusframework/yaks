@@ -19,7 +19,7 @@ package test
 
 import (
 	"context"
-	v1 "k8s.io/api/core/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -91,16 +91,16 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for related Pods changing
-	err = c.Watch(&source.Kind{Type: &v1.Pod{}}, &handler.EnqueueRequestsFromMapFunc{
+	// Watch for related Jobs changing
+	err = c.Watch(&source.Kind{Type: &batchv1.Job{}}, &handler.EnqueueRequestsFromMapFunc{
 		ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
-			pod := a.Object.(*v1.Pod)
+			job := a.Object.(*batchv1.Job)
 			var requests []reconcile.Request
 
-			if testName, ok := pod.Labels["yaks.citrusframework.org/test"]; ok {
+			if testName, ok := job.Labels["yaks.citrusframework.org/test"]; ok {
 				requests = append(requests, reconcile.Request{
 					NamespacedName: types.NamespacedName{
-						Namespace: pod.Namespace,
+						Namespace: job.Namespace,
 						Name:      testName,
 					},
 				})

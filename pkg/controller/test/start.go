@@ -28,6 +28,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	snap "github.com/container-tools/snap/pkg/api"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/api/rbac/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -68,14 +69,14 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 		return nil, err
 	}
 
-	configMap := action.newTestingConfigMap(ctx, test)
-	pod, err := action.newTestingPod(ctx, test, configMap)
+	configMap := action.newTestConfigMap(ctx, test)
+	job, err := action.newTestJob(ctx, test, configMap)
 	if err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = err.Error()
 		return nil, err
 	}
-	resources := []runtime.Object{configMap, pod}
+	resources := []runtime.Object{configMap, job}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = err.Error()
@@ -86,20 +87,21 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	return test, nil
 }
 
-func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Test, configMap *v1.ConfigMap) (*v1.Pod, error) {
+func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, configMap *v1.ConfigMap) (*batchv1.Job, error) {
 	controller := true
 	blockOwnerDeletion := true
-	pod := v1.Pod{
+	retries := int32(0)
+	job := batchv1.Job{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
+			Kind:       "Job",
 			APIVersion: v1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: test.Namespace,
-			Name:      TestPodNameFor(test),
+			Name:      TestJobNameFor(test),
 			Labels: map[string]string{
-				"app":     "yaks",
-				TestLabel:    test.Name,
+				"app":       "yaks",
+				TestLabel:   test.Name,
 				TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
@@ -113,50 +115,63 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 				},
 			},
 		},
-		Spec: v1.PodSpec{
-			ServiceAccountName: "yaks-viewer",
-			Containers: []v1.Container{
-				{
-					Name:  "test",
-					Image: config.GetTestBaseImage(),
-					Command: getMavenArgLine(),
-					TerminationMessagePolicy: "FallbackToLogsOnError",
-					TerminationMessagePath:   "/dev/termination-log",
-					ImagePullPolicy:          v1.PullIfNotPresent,
-					VolumeMounts: []v1.VolumeMount{
-						{
-							Name:      "tests",
-							MountPath: "/etc/yaks/tests",
-						},
-						{
-							Name:      "secrets",
-							MountPath: "/etc/yaks/secrets",
-						},
-					},
-					Env: []v1.EnvVar{
-						{
-							Name:  "YAKS_TERMINATION_LOG",
-							Value: "/dev/termination-log",
-						},
-						{
-							Name:  "YAKS_TESTS_PATH",
-							Value: "/etc/yaks/tests",
-						},
-						{
-							Name:  "YAKS_SECRETS_PATH",
-							Value: "/etc/yaks/secrets",
-						},
+		Spec: batchv1.JobSpec{
+			BackoffLimit: &retries,
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: test.Namespace,
+					Labels: map[string]string{
+						"app":       "yaks",
+						TestLabel:   test.Name,
+						TestIdLabel: test.Status.TestID,
 					},
 				},
-			},
-			RestartPolicy: v1.RestartPolicyNever,
-			Volumes: []v1.Volume{
-				{
-					Name: "tests",
-					VolumeSource: v1.VolumeSource{
-						ConfigMap: &v1.ConfigMapVolumeSource{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: configMap.Name,
+				Spec: v1.PodSpec{
+					ServiceAccountName: "yaks-viewer",
+					Containers: []v1.Container{
+						{
+							Name:                     "test",
+							Image:                    config.GetTestBaseImage(),
+							Command:                  getMavenArgLine(),
+							TerminationMessagePolicy: "FallbackToLogsOnError",
+							TerminationMessagePath:   "/dev/termination-log",
+							ImagePullPolicy:          v1.PullIfNotPresent,
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "tests",
+									MountPath: "/etc/yaks/tests",
+								},
+								{
+									Name:      "secrets",
+									MountPath: "/etc/yaks/secrets",
+								},
+							},
+							Env: []v1.EnvVar{
+								{
+									Name:  "YAKS_TERMINATION_LOG",
+									Value: "/dev/termination-log",
+								},
+								{
+									Name:  "YAKS_TESTS_PATH",
+									Value: "/etc/yaks/tests",
+								},
+								{
+									Name:  "YAKS_SECRETS_PATH",
+									Value: "/etc/yaks/secrets",
+								},
+							},
+						},
+					},
+					RestartPolicy: v1.RestartPolicyNever,
+					Volumes: []v1.Volume{
+						{
+							Name: "tests",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: configMap.Name,
+									},
+								},
 							},
 						},
 					},
@@ -172,7 +187,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 			v := strings.TrimSpace(pair[1])
 
 			if len(k) > 0 && len(v) > 0 {
-				pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+				job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 					Name:  k,
 					Value: v,
 				})
@@ -181,7 +196,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 	}
 
 	if test.Spec.Settings.Name != "" {
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  "YAKS_SETTINGS_FILE",
 			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
 		})
@@ -194,7 +209,7 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 		clusterType = v1alpha1.ClusterTypeKubernetes
 	}
 
-	pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+	job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 		Name:  "YAKS_CLUSTER_TYPE",
 		Value: strings.ToUpper(string(clusterType)),
 	}, v1.EnvVar{
@@ -205,15 +220,15 @@ func (action *startAction) newTestingPod(ctx context.Context, test *v1alpha1.Tes
 		Value: test.Status.TestID,
 	})
 
-	if err := action.bindSecrets(ctx, test, &pod); err != nil {
+	if err := action.bindSecrets(ctx, test, &job); err != nil {
 		return nil, err
 	}
 
-	if err := action.injectSnap(ctx, &pod); err != nil {
+	if err := action.injectSnap(ctx, &job); err != nil {
 		return nil, err
 	}
 
-	return &pod, nil
+	return &job, nil
 }
 
 func getMavenArgLine() []string {
@@ -238,7 +253,7 @@ func getMavenArgLine() []string {
 	return argLine
 }
 
-func (action *startAction) newTestingConfigMap(ctx context.Context, test *v1alpha1.Test) *v1.ConfigMap {
+func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.Test) *v1.ConfigMap {
 	controller := true
 	blockOwnerDeletion := true
 
@@ -297,7 +312,7 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	return err
 }
 
-func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, pod *v1.Pod) error {
+func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, job *batchv1.Job) error {
 	var options = metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", TestLabel, test.Name),
 	}
@@ -317,7 +332,7 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 			continue
 		}
 
-		pod.Spec.Volumes = append(pod.Spec.Volumes, v1.Volume{
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
 				Name: "secrets",
 				VolumeSource: v1.VolumeSource{
 					Secret: &v1.SecretVolumeSource{
@@ -330,7 +345,7 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 	}
 
 	if !found {
-		pod.Spec.Volumes = append(pod.Spec.Volumes, v1.Volume{
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: "secrets",
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{},
@@ -341,12 +356,12 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 	return nil
 }
 
-func (action *startAction) injectSnap(ctx context.Context, pod *v1.Pod) error {
+func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) error {
 	bucket := "yaks"
 	options := snap.SnapOptions{
 		Bucket: bucket,
 	}
-	s3, err := snap.NewSnap(action.config, pod.Namespace, true, options)
+	s3, err := snap.NewSnap(action.config, job.Namespace, true, options)
 	if err != nil {
 		return err
 	}
@@ -365,15 +380,15 @@ func (action *startAction) injectSnap(ctx context.Context, pod *v1.Pod) error {
 			return err
 		}
 
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  "YAKS_S3_REPOSITORY_URL",
 			Value: url,
-		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		},
+		v1.EnvVar{
 			Name:  "YAKS_S3_REPOSITORY_BUCKET",
 			Value: bucket,
-		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		},
+		v1.EnvVar{
 			Name: "YAKS_S3_REPOSITORY_ACCESS_KEY",
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
@@ -383,8 +398,8 @@ func (action *startAction) injectSnap(ctx context.Context, pod *v1.Pod) error {
 					Key: creds.AccessKeyEntry,
 				},
 			},
-		})
-		pod.Spec.Containers[0].Env = append(pod.Spec.Containers[0].Env, v1.EnvVar{
+		},
+		v1.EnvVar{
 			Name: "YAKS_S3_REPOSITORY_SECRET_KEY",
 			ValueFrom: &v1.EnvVarSource{
 				SecretKeyRef: &v1.SecretKeySelector{
