@@ -116,7 +116,10 @@ public class KameletSteps {
                     "Please add the property name to the property definition");
         }
 
-        String propertyName = propertyConfiguration.get("name").toString();
+        addPropertyDefinition(propertyConfiguration.get("name").toString(), propertyConfiguration);
+    }
+    @Given("^Kamelet property definition ([^\\s]+)$")
+	public void addPropertyDefinition(String propertyName, Map<String, Object> propertyConfiguration) {
         String type = propertyConfiguration.getOrDefault("type", "string").toString();
         String title = propertyConfiguration.getOrDefault("title", StringUtils.capitalize(propertyName)).toString();
         Object defaultValue = propertyConfiguration.get("default");
@@ -205,7 +208,7 @@ public class KameletSteps {
         }
     }
 
-    @Given("^create Kamelet ([a-z0-9-]+)$")
+    @Given("^(?:create|new) Kamelet ([a-z0-9-]+)$")
 	public void createNewKamelet(String name) {
         kamelet.name(name);
 
@@ -228,13 +231,13 @@ public class KameletSteps {
         }
 	}
 
-	@Given("^create Kamelet ([a-z0-9-]+) with flow$")
+	@Given("^(?:create|new) Kamelet ([a-z0-9-]+) with flow$")
 	public void createNewKameletWithFlow(String name, String flow) {
         kamelet.flow(flow);
         createNewKamelet(name);
 	}
 
-    @Given("^create KameletBinding ([a-z0-9-]+)$")
+    @Given("^(?:create|new) KameletBinding ([a-z0-9-]+)$")
     public void createNewKameletBinding(String name) {
         binding.name(name);
 
