@@ -51,7 +51,7 @@ public class JdbcSteps {
     private Citrus citrus;
 
     private DataSource dataSource;
-    private List<String> sqlQueryStatements = new ArrayList<>();
+    private final List<String> sqlQueryStatements = new ArrayList<>();
 
     @Before
     public void before(Scenario scenario) {
@@ -93,6 +93,11 @@ public class JdbcSteps {
         }
     }
 
+    @Given("^SQL query$")
+    public void addQueryStatementMultiline(String statement) {
+        addQueryStatement(statement);
+    }
+
     @Given("^SQL query statements:$")
     public void addQueryStatements(DataTable statements) {
         statements.asList().forEach(this::addQueryStatement);
@@ -101,8 +106,8 @@ public class JdbcSteps {
     @Then("^verify column ([^\"\\s]+)=(.+)$")
     public void verifyColumn(String name, String value) {
         runner.run(query(dataSource)
-                                     .statements(sqlQueryStatements)
-                                     .validate(name, value));
+                 .statements(sqlQueryStatements)
+                 .validate(name, value));
         sqlQueryStatements.clear();
     }
 
@@ -126,8 +131,8 @@ public class JdbcSteps {
     @Then("^verify result set$")
     public void verifyResultSet(String verifyScript) {
         runner.run(query(dataSource)
-                                     .statements(sqlQueryStatements)
-                                     .groovy(verifyScript));
+                 .statements(sqlQueryStatements)
+                 .groovy(verifyScript));
 
         sqlQueryStatements.clear();
     }
