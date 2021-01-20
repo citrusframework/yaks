@@ -26,31 +26,6 @@ the integration (e.g. running).
 
 The following sections describe the available Camel K steps in detail.
 
-[[camel-k-resources]]
-=== Manage Camel K resources
-
-The Camel K steps are able to create resources such as integrations. By default these resources get removed automatically after the test scenario.
-This auto removal of Camel K resources can be turned off with the following step.
-
-.@Given("^Disable auto removal of Camel-K resources$")
-[source,gherkin]
-----
-Given Disable auto removal of Camel-K resources
-----
-
-Usually this step is a `Background` step for all scenarios in a feature file. This way multiple scenarios can work on the very same Camel K resources and share
-integrations.
-
-There is also a separate step for enabling the auto removal.
-
-.@Given("^Enable auto removal of Camel-K resources$")
-[source,gherkin]
-----
-Given Enable auto removal of Camel-K resources
-----
-
-By default, all Camel K resources are automatically removed after each scenario.
-
 [[camel-k-create]]
 === Create Camel K integrations
 
@@ -159,3 +134,29 @@ You can also wait for a log message to *not* be present in the output. Just use 
 ----
 Given Camel-K integration {name} should not print {log-message}
 ----
+[[camel-k-resources]]
+=== Manage Camel K resources
+
+The Camel K steps are able to create resources such as integrations. By default these resources get removed automatically after the test scenario.
+
+The auto removal of Camel K resources can be turned off with the following step.
+
+.@Given("^Disable auto removal of Camel-K resources$")
+[source,gherkin]
+----
+Given Disable auto removal of Camel-K resources
+----
+
+Usually this step is a `Background` step for all scenarios in a feature file. This way multiple scenarios can work on the very same Camel K resources and share
+integrations.
+
+There is also a separate step to explicitly enable the auto removal.
+
+.@Given("^Enable auto removal of Camel-K resources$")
+[source,gherkin]
+----
+Given Enable auto removal of Camel-K resources
+----
+
+By default, all Camel K resources are automatically removed after each scenario.
+

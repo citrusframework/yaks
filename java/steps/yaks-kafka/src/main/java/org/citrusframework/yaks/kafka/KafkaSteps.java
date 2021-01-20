@@ -80,7 +80,7 @@ public class KafkaSteps {
         partition = null;
     }
 
-    @Given("^(?:K|k)afka connection$")
+    @Given("^(?:Kafka|kafka) connection$")
     public void setConnection(DataTable properties) {
         Map<String, String> connectionProps = properties.asMap(String.class, String.class);
 
@@ -95,19 +95,19 @@ public class KafkaSteps {
         kafkaEndpoint.getEndpointConfiguration().setConsumerGroup(consumerGroup);
     }
 
-    @Given("^(?:K|k)afka producer configuration$")
+    @Given("^(?:Kafka|kafka) producer configuration$")
     public void setProducerConfig(DataTable properties) {
         Map<String, Object> producerProperties = properties.asMap(String.class, Object.class);
         kafkaEndpoint.getEndpointConfiguration().setProducerProperties(producerProperties);
     }
 
-    @Given("^(?:K|k)afka consumer configuration$")
+    @Given("^(?:Kafka|kafka) consumer configuration$")
     public void setConsumerConfig(DataTable properties) {
         Map<String, Object> consumerProperties = properties.asMap(String.class, Object.class);
         kafkaEndpoint.getEndpointConfiguration().setConsumerProperties(consumerProperties);
     }
 
-    @Given("^(?:K|k)afka endpoint \"([^\"\\s]+)\"$")
+    @Given("^(?:Kafka|kafka) endpoint \"([^\"\\s]+)\"$")
     public void setServer(String name) {
         this.endpointName = name;
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
@@ -118,52 +118,52 @@ public class KafkaSteps {
         }
     }
 
-    @Given("^(?:K|k)afka message key: (.+)$")
+    @Given("^(?:Kafka|kafka) message key: (.+)$")
     public void setMessageKey(String key) {
         this.messageKey = key;
     }
 
-    @Given("^(?:K|k)afka consumer timeout is (\\d+)(?: ms| milliseconds)$")
+    @Given("^(?:Kafka|kafka) consumer timeout is (\\d+)(?: ms| milliseconds)$")
     public void setConsumerTimeout(int milliseconds) {
         this.timeout = milliseconds;
     }
 
-    @Given("^(?:K|k)afka topic partition: (\\d+)$")
+    @Given("^(?:Kafka|kafka) topic partition: (\\d+)$")
     public void setPartition(int partition) {
         this.partition = partition;
     }
 
-    @Given("^(?:K|k)afka topic: (.+)$")
+    @Given("^(?:Kafka|kafka) topic: (.+)$")
     public void setTopic(String topicName) {
         this.topic = topicName;
         kafkaEndpoint.getEndpointConfiguration().setTopic(topicName);
     }
 
-    @Given("^(?:K|k)afka message header ([^\\s]+)(?:=| is )\"(.+)\"$")
-    @Then("^(?:expect|verify) (?:K|k)afka message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    @Given("^(?:Kafka|kafka) message header ([^\\s]+)(?:=| is )\"(.+)\"$")
+    @Then("^(?:expect|verify) (?:Kafka|kafka) message header ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addMessageHeader(String name, Object value) {
         headers.put(name, value);
     }
 
-    @Given("^(?:K|k)afka message headers$")
+    @Given("^(?:Kafka|kafka) message headers$")
     public void addMessageHeaders(DataTable headers) {
         Map<String, Object> headerPairs = headers.asMap(String.class, Object.class);
         headerPairs.forEach(this::addMessageHeader);
     }
 
-    @Given("^(?:K|k)afka message body$")
-    @Then("^(?:expect|verify) (?:K|k)afka message body$")
+    @Given("^(?:Kafka|kafka) message body$")
+    @Then("^(?:expect|verify) (?:Kafka|kafka) message body$")
     public void setMessageBodyMultiline(String body) {
         setMessageBody(body);
     }
 
-    @Given("^(?:K|k)afka message body: (.+)$")
-    @Then("^(?:expect|verify) (?:K|k)afka message body: (.+)$")
+    @Given("^(?:Kafka|kafka) message body: (.+)$")
+    @Then("^(?:expect|verify) (?:Kafka|kafka) message body: (.+)$")
     public void setMessageBody(String body) {
         this.body = body;
     }
 
-    @When("^send (?:K|k)afka message$")
+    @When("^send (?:Kafka|kafka) message$")
     public void sendMessage() {
         runner.run(send().endpoint(kafkaEndpoint)
                 .message(createKafkaMessage()));
@@ -172,7 +172,7 @@ public class KafkaSteps {
         headers.clear();
     }
 
-    @Then("^receive (?:K|k)afka message$")
+    @Then("^receive (?:Kafka|kafka) message$")
     public void receiveMessage() {
         runner.run(receive().endpoint(kafkaEndpoint)
                 .timeout(timeout)
@@ -182,53 +182,53 @@ public class KafkaSteps {
         headers.clear();
     }
 
-    @When("^send (?:K|k)afka message to topic (.+)$")
+    @When("^send (?:Kafka|kafka) message to topic (.+)$")
     public void sendMessage(String topicName) {
         setTopic(topicName);
         sendMessage();
     }
 
-    @Then("^receive (?:K|k)afka message on topic (.+)")
+    @Then("^receive (?:Kafka|kafka) message on topic (.+)")
     public void receiveMessage(String topicName) {
         setTopic(topicName);
         receiveMessage();
     }
 
-    @When("^send (?:K|k)afka message with body and headers: (.+)$")
-    @Given("^message in (?:K|k)afka with body and headers: (.+)$")
+    @When("^send (?:Kafka|kafka) message with body and headers: (.+)$")
+    @Given("^message in (?:Kafka|kafka) with body and headers: (.+)$")
     public void sendMessageBodyAndHeaders(String body, DataTable headers) {
         setMessageBody(body);
         addMessageHeaders(headers);
         sendMessage();
     }
 
-    @When("^send (?:K|k)afka message with body: (.+)$")
-    @Given("^message in (?:K|k)afka with body: (.+)$")
+    @When("^send (?:Kafka|kafka) message with body: (.+)$")
+    @Given("^message in (?:Kafka|kafka) with body: (.+)$")
     public void sendMessageBody(String body) {
         setMessageBody(body);
         sendMessage();
     }
 
-    @When("^send (?:K|k)afka message with body$")
-    @Given("^message in (?:K|k)afka with body$")
+    @When("^send (?:Kafka|kafka) message with body$")
+    @Given("^message in (?:Kafka|kafka) with body$")
     public void sendMessageBodyMultiline(String body) {
         sendMessageBody(body);
     }
 
-    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body and headers: (.+)$")
+    @Then("^(?:receive|expect|verify) (?:Kafka|kafka) message with body and headers: (.+)$")
     public void receiveFromKafka(String body, DataTable headers) {
         setMessageBody(body);
         addMessageHeaders(headers);
         receiveMessage();
     }
 
-    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body: (.+)$")
+    @Then("^(?:receive|expect|verify) (?:Kafka|kafka) message with body: (.+)$")
     public void receiveMessageBody(String body) {
         setMessageBody(body);
         receiveMessage();
     }
 
-    @Then("^(?:receive|expect|verify) (?:K|k)afka message with body$")
+    @Then("^(?:receive|expect|verify) (?:Kafka|kafka) message with body$")
     public void receiveMessageBodyMultiline(String body) {
         receiveMessageBody(body);
     }

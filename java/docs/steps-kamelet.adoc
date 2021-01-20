@@ -1,4 +1,298 @@
 [[steps-kamelet]]
 == Kamelet steps
 
-ToDo
+Kamelets are a form of predefined Camel route templates implemented in Camel K. Usually
+a Kamelet encapsulates a certain functionality (e.g. send messages to an endpoint). Additionaly
+Kamelets define a set of properties that the user needs to provide when using the Kamelet.
+
+YAKS provides steps to manage Kamelets.
+
+[[kamelet-create]]
+=== Create Kamelets
+
+A Kamelets defines a set of properties and specifications that you can set with separate steps in your
+feature. Each of the following steps set a specific property on the Kamelet. Once you are done with the Kamelet
+specification you are able to create the Kamelet in the current namespace.
+
+First of all you can specify the media type of the available slots (in, out and error) in the Kamelet.
+
+.@Given("^Kamelet type (in|out|error)(?:=| is )\"{mediaType}\"$")
+[source,gherkin]
+----
+Given Kamelet type in="{mediaType}"
+----
+
+The Kamelet can use a title that you set with the following step.
+
+.@Given("^Kamelet title \"{title}\"$")
+[source,gherkin]
+----
+Given Kamelet title "{title}"
+----
+
+Each flow uses an endpoint uri and defines a set of steps that get called when the Kamelet processing takes place.
+The following step defines a flow on the current Kamelet.
+
+.@Given("^Kamelet flow$")
+[source,gherkin]
+----
+Given Kamelet flow
+"""
+from:
+  uri: timer:tick
+  parameters:
+    period: "#property:period"
+  steps:
+  - set-body:
+      constant: "{{message}}"
+  - to: "kamelet:sink"
+"""
+----
+
+The flow uses two properties `{{message}}` and `{{period}}`. These placeholders need to be provided by the Kamelet user.
+The next step defines the property `message` in detail:
+
+.@Given("^Kamelet property definition {name}$")
+[source,gherkin]
+----
+Given Kamelet property definition message
+  | type     | string        |
+  | required | true          |
+  | example  | "hello world" |
+  | default  | "hello"       |
+----
+
+The property receives specification such as type, required and an example. In addition to the example you can
+set a `default` value for the property.
+
+In addition to using a flow on the Kamelet you can add multiple sources to the Kamelet.
+
+.@Given("^Kamelet source {name}.{language}$")
+[source,gherkin]
+----
+Given Kamelet source timer.yaml
+"""
+<<YAML>>
+"""
+----
+
+The previous steps defined all properties and Kamelet specifications so now you are ready
+to create the Kamelet in the current namespace.
+
+.@Given("^(?:create|new) Kamelet {name}$")
+[source,gherkin]
+----
+Given create Kamelet {name}
+----
+
+The Kamelet requires a unique `name`. Creating a Kamelet means that a new custom resource of type Kamelet is created. As a variation
+you can also set the flow when creating the Kamelet.
+
+.@Given("^(?:create|new) Kamelet {name} with flow$")
+[source,gherkin]
+----
+Given create Kamelet {name} with flow
+"""
+<<YAML>>
+"""
+----
+
+This creates the Kamelet in the current namespace.
+
+[[kamelet-load]]
+=== Load Kamelets
+
+You can create new Kamelets by giving the complete specification in an external YAML file. The step loads the file content
+and creates the Kamelet in the current namespace.
+
+.@Given("^load Kamelet {name}.kamelet.yaml$")
+[source,gherkin]
+----
+Given load Kamelet {name}.kamelet.yaml
+----
+
+Loads the file `{name}.kamelet.yaml` as a Kamelet. At the moment only `kamelet.yaml` source file extension is supported.
+
+[[kamelet-delete]]
+=== Delete Kamelets
+
+.@Given("^delete Kamelet {name}$")
+[source,gherkin]
+----
+Given delete Kamelet {name}
+----
+
+Deletes the Kamelet with given `{name}` from the current namespace.
+
+[[kamelets-state]]
+=== Verify Kamelet is available
+
+.@Given("^Kamelet {name} is available$$")
+[source,gherkin]
+----
+Given Kamelet {name} is available$
+----
+
+Verifies that the Kamelet custom resource is available in the current namespace.
+
+[[steps-kamelet-binding]]
+== KameletBinding steps
+
+You can bind a Kamelet as a source to a sink. This concept is described with KameletBindings. YAKS as a framework
+is able to create and verify KameletBindings in combination with Kamelets.
+
+[[kamelet-binding-create]]
+=== Create KameletBindings
+
+YAKS provides multiple steps that bind a Kamelet source to a sink. The binding is going to forward all messages
+processed by the source to the sink.
+
+==== Bind to Http URI
+
+.@Given("^bind Kamelet {kamelet} to uri {uri}$")
+[source,gherkin]
+----
+Given bind Kamelet {name} to uri {uri}
+----
+
+This defines the KameletBinding with the given Kamelet name as source to the given
+Http URI as a sink.
+
+==== Bind to Kafka topic
+
+You can bind a Kamelet source to a Kafka topic sink. All messages will be forwarded to the topic.
+
+.@Given("^bind Kamelet {kamelet} to Kafka topic {topic}$")
+[source,gherkin]
+----
+Given bind Kamelet {kamelet} to Kafka topic {topic}
+----
+
+==== Bind to Knative channel
+
+Channels are part of the eventing in Knative. Similar to topics in Kafka the
+channels hold messages for subscribers.
+
+.@Given("^bind Kamelet {kamelet} to Knative channel {channel}$")
+[source,gherkin]
+----
+Given bind Kamelet {kamelet} to Knative channel {channel}
+----
+
+Channels can be backed with different implementations. You can explicitly set the channel type to use
+in the binding.
+
+.@Given("^bind Kamelet {kamelet} to Knative channel {channel} of kind {kind}$")
+[source,gherkin]
+----
+Given bind Kamelet {kamelet} to Knative channel {channel} of kind {kind}
+----
+
+==== Specify source/sink properties
+
+The KameletBinding may need to specify properties for source and sink. These properties
+are defined in the Kamelet source specifications for instance.
+
+You can set properties with values in the following step:
+
+.@Given("^KameletBinding source properties$")
+[source,gherkin]
+----
+Given KameletBinding source properties
+  | {property}  | {value} |
+----
+
+The Kamelet source that we have used in the examples above has defined a property
+`message`. So you can set the property on the binding as follows.
+
+[source,gherkin]
+----
+Given KameletBinding source properties
+  | message  | "Hello world" |
+----
+
+The same approach applies to sink properties.
+
+.@Given("^KameletBinding sink properties$")
+[source,gherkin]
+----
+Given KameletBinding sink properties
+  | {property}  | {value} |
+----
+
+==== Create the binding
+
+The previous steps have defined source and sink of the KameletBinding specification. Now you are ready
+to create the KameletBinding in the current namespace.
+
+.@Given("^(?:create|new) KameletBinding {name}$")
+[source,gherkin]
+----
+Given create KameletBinding {name}
+----
+
+The KameletBinding receives a unique `name` and uses the previously specified source and sink. Creating a KameletBinding means
+that a new custom resource of type KameletBinding is created in the current namespace.
+
+[[kamelet-binding-load]]
+=== Load KameletBindings
+
+You can create new KameletBindings by giving the complete specification in an external YAML file. The step loads the file content
+and creates the KameletBinding in the current namespace.
+
+.@Given("^load KameletBinding {name}.yaml$")
+[source,gherkin]
+----
+Given load KameletBinding {name}.yaml
+----
+
+Loads the file `{name}.yaml` as a KameletBinding. At the moment YAKS only supports `.yaml` source files.
+
+[[kamelet-binding-delete]]
+=== Delete KameletBindings
+
+.@Given("^delete KameletBinding {name}$")
+[source,gherkin]
+----
+Given delete KameletBinding {name}
+----
+
+Deletes the KameletBinding with given `{name}` from the current namespace.
+
+[[kamelet-bindings-state]]
+=== Verify KameletBinding is available
+
+.@Given("^KameletBinding {name} is available$$")
+[source,gherkin]
+----
+Given KameletBinding {name} is available$
+----
+
+Verifies that the KameletBinding custom resource is available in the current namespace.
+
+[[kamelets-resources]]
+=== Manage Kamelet and KameletBinding resources
+
+The described steps are able to create Kamelet resources on the current Kubernetes namespace.
+By default these resources get removed automatically after the test scenario.
+
+The auto removal of Kamelet resources can be turned off with the following step.
+
+.@Given("^Disable auto removal of Kamelet resources$")
+[source,gherkin]
+----
+Given Disable auto removal of Kamelet resources
+----
+
+Usually this step is a `Background` step for all scenarios in a feature file. This way multiple scenarios can work on
+the very same Kamelet resources and share integrations.
+
+There is also a separate step to explicitly enable the auto removal.
+
+.@Given("^Enable auto removal of Kamelet resources$")
+[source,gherkin]
+----
+Given Enable auto removal of Kamelet resources
+----
+
+By default, all Kamelet resources are automatically removed after each scenario.
