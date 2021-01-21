@@ -42,5 +42,5 @@ check_error $snapshot_version
 next_version=$(get_next_snapshot_version "$working_dir/java")
 check_error $next_version
 
-set_next_version "$working_dir" "$snapshot_version" "$next_version"
+set_next_version "$working_dir" "$next_version" "$snapshot_version"
 update_olm "$working_dir" "$next_version" "$snapshot_version"
