@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION := 0.2.0-SNAPSHOT
-SNAPSHOT_VERSION := 0.2.0-SNAPSHOT
-LAST_RELEASED_VERSION := 0.1.0
+VERSION := 0.3.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.3.0-SNAPSHOT
+LAST_RELEASED_VERSION := 0.2.0
 IMAGE_NAME := docker.io/citrusframework/yaks
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)

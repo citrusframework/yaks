@@ -166,8 +166,8 @@ set_version() {
 
 set_next_version() {
     local working_dir="$1"
-    local version="$2"
-    local next_version="$3"
+    local next_version="$2"
+    local version="$3"
 
     local make_file=${working_dir}/Makefile
 
