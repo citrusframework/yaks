@@ -140,6 +140,7 @@ public class CamelKSteps {
                     .deleteIntegration(name));
 	}
 
+    @Given("^wait for Camel-K integration ([a-z0-9-]+)$")
     @Given("^Camel-K integration ([a-z0-9-]+) is running$")
     @Then("^Camel-K integration ([a-z0-9-]+) should be running$")
     public void integrationShouldBeRunning(String name) {
@@ -149,6 +150,17 @@ public class CamelKSteps {
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .isRunning());
+    }
+
+    @Given("^Camel-K integration ([a-z0-9-]+) is stopped")
+    @Then("^Camel-K integration ([a-z0-9-]+) should be stopped")
+    public void integrationShouldBeStopped(String name) {
+        runner.run(camelk()
+                .client(k8sClient)
+                .verifyIntegration(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isStopped());
     }
 
     @Then("^Camel-K integration ([a-z0-9-]+) should print (.*)$")
@@ -172,5 +184,4 @@ public class CamelKSteps {
                     .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
     }
-
 }

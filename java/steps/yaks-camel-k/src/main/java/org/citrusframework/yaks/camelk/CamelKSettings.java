@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.camelk;
 
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 
 /**
  * @author Christoph Deppisch
@@ -29,11 +30,11 @@ public final class CamelKSettings {
 
     static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
     static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
-    static final String MAX_ATTEMPTS_DEFAULT = "150";
+    static final String MAX_ATTEMPTS_DEFAULT = String.valueOf(KubernetesSettings.getMaxAttempts());
 
     static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "delay.between.attempts";
     static final String DELAY_BETWEEN_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
-    static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
+    static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = String.valueOf(KubernetesSettings.getDelayBetweenAttempts());
 
     static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
     static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
@@ -42,8 +43,8 @@ public final class CamelKSettings {
     static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
     static final String API_VERSION_DEFAULT = "v1";
 
-    static final String KAMELET_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
-    static final String KAMELET_API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
+    static final String KAMELET_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "kamelet.api.version";
+    static final String KAMELET_API_VERSION_ENV = CAMELK_ENV_PREFIX + "_KAMELET_API_VERSION";
     static final String KAMELET_API_VERSION_DEFAULT = "v1alpha1";
 
     static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";

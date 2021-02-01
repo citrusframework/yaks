@@ -81,8 +81,8 @@ public class VerifyKameletAction extends AbstractCamelKAction {
             return this;
         }
 
-        public Builder isAvailable(String integrationName) {
-            this.name = integrationName;
+        public Builder kameletName(String kameletName) {
+            this.name = kameletName;
             return this;
         }
 

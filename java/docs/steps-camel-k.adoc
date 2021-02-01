@@ -26,6 +26,20 @@ the integration (e.g. running).
 
 The following sections describe the available Camel K steps in detail.
 
+[[camel-k-api-version]]
+=== API version
+
+The default Camel-K API version used to create and manage resources is `v1`. You can overwrite this
+version with a environment variable set on the YAKS configuration.
+
+.Overwrite Camel-K API version
+[source,bash]
+----
+YAKS_CAMELK_API_VERSION=v1
+----
+
+This sets the Camel-K API version for all operations.
+
 [[camel-k-create]]
 === Create Camel K integrations
 
@@ -87,10 +101,13 @@ Given delete Camel-K integration {name}
 
 Deletes the Camel K integration with given `{name}`.
 
-[[camel-k-running-state]]
-=== Verify integration is running
+[[camel-k-integration-state]]
+=== Verify integration state
 
-.@Given("^Camel-K integration {name} is running$")
+A Camel-K integration is run in a normal Kubernetes pod. The pod has a state and is in a phase (e.g. running, stopped).
+You can verify the state with an expectation.
+
+.@Given("^Camel-K integration {name} is running/stopped$")
 [source,gherkin]
 ----
 Given Camel-K integration {name} is running
@@ -134,6 +151,7 @@ You can also wait for a log message to *not* be present in the output. Just use 
 ----
 Given Camel-K integration {name} should not print {log-message}
 ----
+
 [[camel-k-resources]]
 === Manage Camel K resources
 
