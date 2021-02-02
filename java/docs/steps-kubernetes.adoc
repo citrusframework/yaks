@@ -7,6 +7,20 @@ of deployment, scaling and management of containerized applications.
 YAKS uses the Kubernetes client API and is able to create Kubernetes resources
 (e.g. secrets, services, deployments and so on) as part of the test.
 
+[[k8s-api-version]]
+=== API version
+
+The default Kubernetes API version used to create and manage resources is `v1`. You can overwrite this
+version with a environment variable set on the YAKS configuration.
+
+.Overwrite Kubernetes API version
+[source,bash]
+----
+YAKS_KUBERNETES_API_VERSION=v1
+----
+
+This sets the Kubernetes API version for all operations.
+
 [[k8s-client]]
 === Client configuration
 
@@ -28,6 +42,65 @@ can connect to a specific namespace with the follwing step.
 [source,gherkin]
 ----
 Given Kubernetes namespace {name}
+----
+
+[[k8s-pod-state]]
+=== Verify pod state
+
+A Kubernetes pod has a state and is in a phase (e.g. running, stopped). You can verify the state with an expectation.
+
+.@Given("^Kubernetes pod {name} is running/stopped$")
+[source,gherkin]
+----
+Given Kubernetes pod {name} is running
+----
+
+Checks that the Kubernetes pod with given `{name}` is in state running and that the number of replicas is > 0. The step polls
+the state of the pod for a given amount of attempts with a given delay between attempts. You can adjust the polling settings with:
+
+.@Given Kubernetes resource polling configuration
+[source,gherkin]
+----
+Given Kubernetes resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweenAttempts | 1000 |
+----
+
+Instead of identifying the pod by its name you can also filter the pod by a lable expression. The expression
+is a label key and value that identifies the pod in the current namespace.
+
+.@Given("^Kubernetes pod labeled with {label}={value} is running/stopped$")
+[source,gherkin]
+----
+Given Kubernetes pod labeled with {label}={value} is running
+----
+
+[[k8s-watch-logs]]
+=== Watch Kubernetes pod logs
+
+.@Given("^Kubernetes pod {name} should print (.*)$")
+[source,gherkin]
+----
+Given Kubernetes pod {name} should print {log-message}
+----
+
+Watches the log output of a Kubernetes pod and waits for given `{log-message}` to be present in the logs. The step polls the
+logs for a given amount of time. You can adjust the polling configuration with:
+
+.@Given Kubernetes resource polling configuration
+[source,gherkin]
+----
+Given Kubernetes resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweenAttempts | 1000 |
+----
+
+You can also wait for a log message to *not* be present in the output. Just use this step:
+
+.@Given("^Kubernetes pod {name} should not print (.*)$")
+[source,gherkin]
+----
+Given Kubernetes pod {name} should not print {log-message}
 ----
 
 [[k8s-service]]

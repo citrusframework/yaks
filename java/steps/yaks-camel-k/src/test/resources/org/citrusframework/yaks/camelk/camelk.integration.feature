@@ -21,6 +21,10 @@ Feature: Camel-K integration
       | properties   | foo.key=value,bar.key=value |
       | source       | from('timer:tick?period=1000').setBody().constant('Hello world from Camel K').to('log:info') |
 
-  Scenario: Verify integration state
-    Given Camel-K integration pod sample
-    Then Camel-K integration sample should be running
+  Scenario: Verify integration running
+    Given Camel-K integration pod i1
+    Then Camel-K integration i1 should be running
+
+  Scenario: Verify integration stopped
+    Given Camel-K integration pod i2 in phase Stopped
+    Then Camel-K integration i2 should be stopped

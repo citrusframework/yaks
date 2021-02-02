@@ -20,17 +20,17 @@ package org.citrusframework.yaks.camelk.actions.integration;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
- * Test action verifies integration Pod running state and optionally waits for a log message to be present. Raises errors
- * when either the integration is not in running state or the log message is not available. Both operations are automatically retried
+ * Test action verifies integration Pod running/stopped state and optionally waits for a log message to be present. Raises errors
+ * when either the integration is not in expected state or the log message is not available. Both operations are automatically retried
  * for a given amount of attempts.
  *
  * @author Christoph Deppisch
@@ -42,6 +42,8 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     private final int maxAttempts;
     private final long delayBetweenAttempts;
 
+    private final String phase;
+
     /**
      * Constructor using given builder.
      * @param builder
@@ -49,6 +51,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     public VerifyIntegrationAction(Builder builder) {
         super("verify-integration", builder);
         this.integrationName = builder.integrationName;
+        this.phase = builder.phase;
         this.logMessage = builder.logMessage;
         this.maxAttempts = builder.maxAttempts;
         this.delayBetweenAttempts = builder.delayBetweenAttempts;
@@ -57,7 +60,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     @Override
     public void doExecute(TestContext context) {
         String podName = context.replaceDynamicContentInString(integrationName);
-        Pod pod = verifyRunningIntegrationPod(podName);
+        Pod pod = verifyIntegrationPod(podName, context.replaceDynamicContentInString(phase));
 
         if (logMessage != null) {
             verifyIntegrationLogs(pod, podName, context.replaceDynamicContentInString(logMessage));
@@ -116,19 +119,20 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     }
 
     /**
-     * Wait for given pod to be in running state.
+     * Wait for given pod to be in given state.
      * @param name
+     * @param phase
      * @return
      */
-    private Pod verifyRunningIntegrationPod(String name) {
+    private Pod verifyIntegrationPod(String name, String phase) {
         for (int i = 0; i < maxAttempts; i++) {
-            Pod pod = getRunningIntegrationPod(name);
+            Pod pod = getIntegrationPod(name, phase);
             if (pod != null) {
-                LOG.info(String.format("Verified integration pod '%s' state running!", name));
+                LOG.info(String.format("Verified integration pod '%s' state '%s'!", name, phase));
                 return pod;
             }
 
-            LOG.warn(String.format("Waiting for running integration '%s' - retry in %s ms", name, delayBetweenAttempts));
+            LOG.warn(String.format("Waiting for integration '%s' in state '%s'- retry in %s ms", name, phase, delayBetweenAttempts));
             try {
                 Thread.sleep(delayBetweenAttempts);
             } catch (InterruptedException e) {
@@ -138,30 +142,25 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
 
         throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
                 new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
-                        "is not running after %d attempts", name, maxAttempts)));
+                        "is not in state '%s' after %d attempts", name, phase, maxAttempts)));
     }
 
     /**
-     * Retrieve pod running state.
+     * Retrieve pod given state.
      * @param integration
+     * @param phase
      * @return
      */
-    private Pod getRunningIntegrationPod(String integration) {
+    private Pod getIntegrationPod(final String integration, final String phase) {
         PodList pods = getKubernetesClient().pods()
                 .inNamespace(CamelKSettings.getNamespace())
                 .withLabel(CamelKSettings.INTEGRATION_LABEL, integration)
                 .list();
-        if (pods.getItems().size() == 0) {
-            return null;
-        }
-        for (Pod p : pods.getItems()) {
-            if (p.getStatus() != null
-                    && "Running".equals(p.getStatus().getPhase())
-                    && p.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)) {
-                return p;
-            }
-        }
-        return null;
+
+        return pods.getItems().stream()
+                .filter(pod -> KubernetesSupport.verifyPodStatus(pod, phase))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -175,11 +174,19 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
         private int maxAttempts = CamelKSettings.getMaxAttempts();
         private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
 
+        private String phase = "Running";
+
         public Builder isRunning() {
+            this.phase = "Running";
             return this;
         }
 
-        public Builder isRunning(String integrationName) {
+        public Builder isStopped() {
+            this.phase = "Stopped";
+            return this;
+        }
+
+        public Builder integrationName(String integrationName) {
             this.integrationName = integrationName;
             return this;
         }

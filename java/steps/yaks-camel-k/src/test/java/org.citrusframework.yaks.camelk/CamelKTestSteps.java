@@ -48,6 +48,11 @@ public class CamelKTestSteps {
 
     @Given("^Camel-K integration pod ([a-z0-9-]+)$")
     public void createIntegrationPod(String integrationName) {
+        createIntegrationPod(integrationName, "Running");
+    }
+
+    @Given("^Camel-K integration pod ([a-z0-9-]+) in phase (Running|Stopped)$")
+    public void createIntegrationPod(String integrationName, String phase) {
         Pod pod = new PodBuilder()
                 .withNewMetadata()
                     .withName(integrationName)
@@ -55,7 +60,7 @@ public class CamelKTestSteps {
                     .withLabels(Collections.singletonMap(CamelKSettings.INTEGRATION_LABEL, integrationName))
                 .endMetadata()
                 .withNewStatus()
-                    .withPhase("Running")
+                    .withPhase(phase)
                 .endStatus()
                 .build();
 

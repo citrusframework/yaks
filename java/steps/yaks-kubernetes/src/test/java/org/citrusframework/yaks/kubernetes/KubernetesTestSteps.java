@@ -17,13 +17,18 @@
 
 package org.citrusframework.yaks.kubernetes;
 
+import java.util.Collections;
+
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.actions.AbstractTestAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.kubernetes.actions.KubernetesAction;
@@ -89,6 +94,52 @@ public class KubernetesTestSteps {
                         .inNamespace(namespace(context))
                         .withName(serviceName)
                         .get()).isNotNull();
+            }
+        });
+    }
+
+    @Given("^Kubernetes pod ([a-z0-9-]+) in phase (Running|Stopped)$")
+    public void createPod(String podName, String status) {
+        runner.run(new KubernetesTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Pod pod = new PodBuilder()
+                        .withNewMetadata()
+                        .withName(podName)
+                        .withNamespace(KubernetesSettings.getNamespace())
+                        .endMetadata()
+                        .withNewStatus()
+                        .withPhase(status)
+                        .endStatus()
+                        .build();
+
+                getKubernetesClient().pods().inNamespace(KubernetesSettings.getNamespace()).create(pod);
+            }
+        });
+    }
+
+    @Given("^Kubernetes pod ([a-z0-9-]+)$")
+    public void createPod(String podName) {
+        createPod(podName, "yaks.citrusframework.org/pod", podName);
+    }
+
+    @Given("^Kubernetes pod ([a-z0-9-]+) with label ([^\\s]+)=([^\\s]+)$")
+    public void createPod(String podName, String label, String value) {
+        runner.run(new KubernetesTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Pod pod = new PodBuilder()
+                        .withNewMetadata()
+                        .withName(podName)
+                        .withNamespace(KubernetesSettings.getNamespace())
+                        .withLabels(Collections.singletonMap(label, value))
+                        .endMetadata()
+                        .withNewStatus()
+                        .withPhase("Running")
+                        .endStatus()
+                        .build();
+
+                getKubernetesClient().pods().inNamespace(KubernetesSettings.getNamespace()).create(pod);
             }
         });
     }

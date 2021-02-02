@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -121,5 +123,22 @@ public final class KubernetesSupport {
 
     public static String kubernetesApiVersion() {
         return KubernetesSettings.getApiVersion();
+    }
+
+    /**
+     * Checks pod status with expected phase. If expected status is "Running" all
+     * containers in the pod must be in ready state, too.
+     * @param pod
+     * @param status
+     * @return
+     */
+    public static boolean verifyPodStatus(Pod pod, String status) {
+        if (pod == null || pod.getStatus() == null ||
+                !status.equals(pod.getStatus().getPhase())) {
+            return false;
+        }
+
+        return !status.equals("Running") ||
+                pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
     }
 }

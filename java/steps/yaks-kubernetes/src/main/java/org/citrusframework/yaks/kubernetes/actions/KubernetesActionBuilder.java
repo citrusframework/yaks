@@ -148,6 +148,33 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         return builder;
     }
 
+    /**
+     * Verify that given pod is running.
+     * @param podName the name of the Camel-K pod.
+     */
+    public VerifyPodAction.Builder verifyPod(String podName) {
+        VerifyPodAction.Builder builder = new VerifyPodAction.Builder()
+                .client(kubernetesClient)
+                .podName(podName)
+                .isRunning();
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Verify that given pod is running.
+     * @param label the name of the pod label to filter on.
+     * @param value the value of the pod label to match.
+     */
+    public VerifyPodAction.Builder verifyPod(String label, String value) {
+        VerifyPodAction.Builder builder = new VerifyPodAction.Builder()
+                .client(kubernetesClient)
+                .label(label, value)
+                .isRunning();
+        this.delegate = builder;
+        return builder;
+    }
+
     @Override
     public KubernetesAction build() {
         Assert.notNull(delegate, "Missing delegate action to build");

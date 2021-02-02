@@ -9,6 +9,20 @@ Have a look at the complete example in xref:../../examples/knative/knative-event
 
 The following sections guide you through the Knative eventing capabilities in YAKS.
 
+[[knative-api-version]]
+=== API version
+
+The default Knative API version used to create and manage resources is `v1beta1`. You can overwrite this
+version with a environment variable set on the YAKS configuration.
+
+.Overwrite Knative API version
+[source,bash]
+----
+YAKS_KNATIVE_API_VERSION=v1
+----
+
+This sets the Knative API version for all operations.
+
 [[knative-client]]
 === Client configuration
 

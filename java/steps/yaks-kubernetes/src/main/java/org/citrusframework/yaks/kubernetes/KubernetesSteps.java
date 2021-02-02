@@ -24,6 +24,7 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
@@ -33,10 +34,12 @@ import com.consol.citrus.util.FileUtils;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.springframework.http.HttpStatus;
 
 import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
+import static com.consol.citrus.container.Assert.Builder.assertException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
@@ -59,6 +62,8 @@ public class KubernetesSteps {
     private KubernetesClient k8sClient;
 
     private boolean autoRemoveResources = KubernetesSettings.isAutoRemoveResources();
+    private int maxAttempts = KubernetesSettings.getMaxAttempts();
+    private long delayBetweenAttempts = KubernetesSettings.getDelayBetweenAttempts();
 
     @Before
     public void before(Scenario scenario) {
@@ -86,6 +91,12 @@ public class KubernetesSteps {
     @Given("^Disable auto removal of Kubernetes resources$")
     public void disableAutoRemove() {
         autoRemoveResources = false;
+    }
+
+    @Given("^Kubernetes resource polling configuration$")
+    public void configureResourcePolling(Map<String, Object> configuration) {
+        maxAttempts = Integer.parseInt(configuration.getOrDefault("maxAttempts", maxAttempts).toString());
+        delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
     }
 
     @Given("^Kubernetes namespace ([^\\s]+)$")
@@ -256,6 +267,95 @@ public class KubernetesSteps {
         runner.run(kubernetes()
                 .client(k8sClient)
                 .deleteSecret(secretName));
+    }
+
+    @Given("^wait for Kubernetes pod ([a-z0-9-]+)$")
+    @Given("^Kubernetes pod ([a-z0-9-]+) is running$")
+    @Then("^Kubernetes pod ([a-z0-9-]+) should be running$")
+    public void podShouldBeRunning(String name) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isRunning());
+    }
+
+    @Given("^Kubernetes pod ([a-z0-9-]+) is stopped")
+    @Then("^Kubernetes pod ([a-z0-9-]+) should be stopped")
+    public void podShouldBeStopped(String name) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isStopped());
+    }
+
+    @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is running$")
+    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be running$")
+    public void podByLabelShouldBeRunning(String label, String value) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(label, value)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isRunning());
+    }
+
+    @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is stopped")
+    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be stopped")
+    public void podByLabelShouldBeStopped(String label, String value) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(label, value)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .isStopped());
+    }
+
+    @Then("^Kubernetes pod ([a-z0-9-]+) should print (.*)$")
+    public void podShouldPrint(String name, String message) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(name)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .waitForLogMessage(message));
+    }
+
+    @Then("^Kubernetes pod ([a-z0-9-]+) should not print (.*)$")
+    public void podShouldNotPrint(String name, String message) {
+        runner.run(assertException()
+                .exception(ActionTimeoutException.class)
+                .when(kubernetes()
+                        .client(k8sClient)
+                        .verifyPod(name)
+                        .maxAttempts(maxAttempts)
+                        .delayBetweenAttempts(delayBetweenAttempts)
+                        .waitForLogMessage(message)));
+    }
+
+    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should print (.*)$")
+    public void podByLabelShouldPrint(String label, String value, String message) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyPod(label, value)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .waitForLogMessage(message));
+    }
+
+    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should not print (.*)$")
+    public void podByLabelShouldNotPrint(String label, String value, String message) {
+        runner.run(assertException()
+                .exception(ActionTimeoutException.class)
+                .when(kubernetes()
+                        .client(k8sClient)
+                        .verifyPod(label, value)
+                        .maxAttempts(maxAttempts)
+                        .delayBetweenAttempts(delayBetweenAttempts)
+                        .waitForLogMessage(message)));
     }
 
     public void receiveServiceRequest(HttpMessage request, MessageType messageType) {

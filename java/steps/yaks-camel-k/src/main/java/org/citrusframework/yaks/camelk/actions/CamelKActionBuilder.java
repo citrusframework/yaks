@@ -135,7 +135,7 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     public VerifyIntegrationAction.Builder verifyIntegration(String integrationName) {
         VerifyIntegrationAction.Builder builder = new VerifyIntegrationAction.Builder()
                 .client(kubernetesClient)
-                .isRunning(integrationName);
+                .integrationName(integrationName);
         this.delegate = builder;
         return builder;
     }
@@ -147,7 +147,7 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     public VerifyKameletAction.Builder verifyKamelet(String kameletName) {
         VerifyKameletAction.Builder builder = new VerifyKameletAction.Builder()
                 .client(kubernetesClient)
-                .isAvailable(kameletName);
+                .kameletName(kameletName);
         this.delegate = builder;
         return builder;
     }
