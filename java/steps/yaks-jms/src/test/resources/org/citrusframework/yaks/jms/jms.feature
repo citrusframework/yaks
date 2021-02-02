@@ -31,6 +31,12 @@ Feature: JMS steps
     When send JMS message with body: {"message": "Hello from YAKS!"}
     Then expect JMS message with body: {"message": "Hello from YAKS!"}
 
+  Scenario: Send and receive body from file
+    Given load JMS message body body.json
+    When send JMS message to destination hello
+    Then verify JMS message body loaded from body.json
+    And receive JMS message on destination hello
+
   Scenario: Send receive message with selector
     Given variable correctBody is "citrus:randomString(10)"
     And variable tag is "citrus:randomString(10)"

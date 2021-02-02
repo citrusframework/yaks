@@ -18,6 +18,12 @@ Feature: Kafka steps
     And verify Kafka message header ${key} is "${value}"
     And receive Kafka message
 
+  Scenario: Send and receive body from file
+    Given load Kafka message body body.json
+    When send Kafka message to topic hello
+    Then verify Kafka message body loaded from body.json
+    And receive Kafka message on topic hello
+
   Scenario: Send and receive body and headers
     And Kafka message key: 2
     When send Kafka message with body and headers: ${body}

@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.kafka;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,11 +25,13 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
 import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
 import com.consol.citrus.kafka.message.KafkaMessage;
 import com.consol.citrus.kafka.message.KafkaMessageHeaders;
 import com.consol.citrus.message.Message;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -155,6 +158,16 @@ public class KafkaSteps {
     @Then("^(?:expect|verify) (?:Kafka|kafka) message body$")
     public void setMessageBodyMultiline(String body) {
         setMessageBody(body);
+    }
+
+    @Given("^load (?:Kafka|kafka) message body ([^\\s]+)$")
+    @Given("^(?:expect|verify) (?:Kafka|kafka) message body loaded from ([^\\s]+)$")
+    public void loadMessageBody(String file) {
+        try {
+            setMessageBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
     }
 
     @Given("^(?:Kafka|kafka) message body: (.+)$")
