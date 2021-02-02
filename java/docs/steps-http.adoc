@@ -357,6 +357,7 @@ Feature: Http server
 
   Background:
     Given HTTP server listening on port 8080
+    And start HTTP server
 
   Scenario: Expect GET request
     When receive GET /todo
@@ -380,9 +381,12 @@ After the request verification has passed the server responds with a simple Http
 The next sections guide you through the Http server capabilities in YAKS.
 
 [[http-server-config]]
-=== Http server port
+=== Http server configuration
 
 When the test run starts YAKS will initialize the Http server instance and listen on a port for incoming requests.
+
+==== Http server port
+
 By default this server uses the port `8080`, but you can adjust the port with following step.
 
 .@Given("^HTTP server listening on port {port}$")
@@ -391,7 +395,23 @@ By default this server uses the port `8080`, but you can adjust the port with fo
 Given HTTP server listening on port {port}
 ----
 
-As an alternative to that you can reference a Http server component that can be found in the framework configuration.
+==== Http server timeout
+
+The test waits for incoming requests but the test may hit request timeouts when no request has been received. By default
+the server waits for five seconds each time a request is expected. You can adjust the server timeout.
+
+.@Given("^HTTP server timeout is {time} milliseconds$")
+[source,gherkin]
+----
+Given HTTP server timeout is {time} milliseconds
+----
+
+This sets the server timeout to the given time in milliseconds.
+
+==== Http server component
+
+You can use the default Http server instance that is automatically created
+or reference server component in the project configuration (e.g. Spring bean, component configuration).
 
 .@Given("^HTTP server \"{name}\"$")
 [source,gherkin]
@@ -400,6 +420,28 @@ Given HTTP server "{name}"
 ----
 
 This step loads a Http server component by its name and uses that for server side testing.
+
+==== Create Http server
+
+When dealing with multiple server components at the same time or when a fresh server instance is required you
+can create a new Http server with:
+
+.@Given("^(?:create|new) HTTP server \"{name}\"$")
+[source,gherkin]
+----
+Given new HTTP server "{name}"
+----
+
+This creates a fresh Http server instance. Please mind that a port can only be bound once so you may need to stop
+other server instances or choose another server port.
+
+.@Given("^(?:create|new) HTTP server \"{name}\" with configuration$")
+[source,gherkin]
+----
+Given new HTTP server "{name}" with configuration
+| port    | 8081 |
+| timeout | 1000 |
+----
 
 [[http-server-request]]
 === Receive Http requests
@@ -491,19 +533,6 @@ The Http request can have parameters on the request URL. You can verify those pa
 ----
 Given expect HTTP request query parameter {name}="{value}"
 ----
-
-==== Request timeouts
-
-The test waits for incoming requests but the test may hit request timeouts when no request has been received. By default
-the server waits for five seconds each time a request is expected. You can adjust the server timeout.
-
-.@Given("^HTTP server timeout is {time} milliseconds$")
-[source,gherkin]
-----
-Given HTTP server timeout is {time} milliseconds
-----
-
-This sets the server timeout to the given time in milliseconds.
 
 [[http-server-request-raw]]
 === Receive raw Http request data
@@ -748,3 +777,84 @@ Given wait for {method} on URL {url} to return {status_code} {reason_phrase}
 ----
 
 This completes the health check capabilities in the Http steps.
+
+[[http-secure]]
+=== Https support
+
+YAKS steps support secure Http connections on both client and server.
+
+On the client side enabling secure Http connection is as simple as defining a request URL
+with `https` scheme.
+
+.@Given("^(?:URL|url): {url}$")
+[source,gherkin]
+----
+Given URL: https://some.endpoint/path
+----
+
+YAKS is going to initialize the client with a SSL request factory and use secure Http connections.
+
+On the server side you have to enable secure Http with the following step:
+
+.@Given("^enable secure HTTP server$")
+[source,gherkin]
+----
+Given enable secure HTTP server
+----
+
+Please use this step before starting the server with:
+
+.@Given("^start HTTP server$")
+[source,gherkin]
+----
+Given start HTTP server
+----
+
+The secure SSL connector uses the port `8443` by default. You can adjust this secure port
+with:
+
+.@Given("^HTTP server secure port {port}$")
+[source,gherkin]
+----
+Given HTTP server secure port {port}
+----
+
+The Http server uses a default SSL keystore with a self signed certificate. Users are able
+to customize the server certificate with a custom SSL keystore.
+
+.@Given("^HTTP server SSL keystore path {file}$")
+[source,gherkin]
+----
+Given HTTP server SSL keystore path {file}
+----
+
+.@Given("^HTTP server SSL keystore password {password}$")
+[source,gherkin]
+----
+Given HTTP server SSL keystore password {password}
+----
+
+The steps set a custom keystore (e.g. server.jks) file and a custom keystore password.
+
+The keystore settings are also accessible via environment variables.
+
+.SSL keystore environment variables
+[source,properties]
+----
+YAKS_HTTP_SECURE_KEYSTORE_PATH={file}
+YAKS_HTTP_SECURE_KEYSTORE_PASSWIRD={password}
+----
+
+The Http server components also provide a convenient way to add server properties when creating
+new instances:
+
+.@Given("^(?:create|new) HTTP server \"{name}\" with configuration$")
+[source,gherkin]
+----
+Given new HTTP server "{name}" with configuration
+| secure              | true       |
+| securePort          | 8443       |
+| timeout             | 1000       |
+| sslKeystorePath     | server.jks |
+| sslKeystorePassword | secret     |
+----
