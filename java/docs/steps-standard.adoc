@@ -44,6 +44,42 @@ Given variables
   | name     | Pineapple |
 ----
 
+You can also load variables from an external property file resource.
+
+.@Given("^load variables {file}$")
+[source,gherkin]
+----
+Given load variables {file}
+----
+
+The given `{file}` should be a property file holding one to many test variables with key and value.
+
+.variable.properties
+[source,properties]
+----
+greeting=Hola
+name=Christoph
+text=YAKS rocks!
+----
+
+Sometimes variables values are too big to write them directly into the feature file (e.g. large request/response body data).
+In this case you may want to load the variable value from an external file.
+
+.@Given("^load variable {name} from {file}$")
+[source,gherkin]
+----
+Given load variable {name} from {file}
+----
+
+The step loads the file content as a String value and references it as a new test variable with the given name.
+
+.Load test variable from file
+[source,gherkin]
+----
+Given load variable body from request.json
+Then log 'Sending request body: ${body}'
+----
+
 [[steps-log]]
 === Log steps
 
