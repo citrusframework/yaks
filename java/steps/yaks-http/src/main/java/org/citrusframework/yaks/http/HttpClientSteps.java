@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.http;
 
 import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -37,6 +38,7 @@ import com.consol.citrus.http.actions.HttpClientResponseActionBuilder;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.http.client.HttpClientBuilder;
 import com.consol.citrus.http.message.HttpMessage;
+import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.variable.dictionary.DataDictionary;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
@@ -235,6 +237,15 @@ public class HttpClientSteps implements HttpSteps {
         setRequestBody(body);
     }
 
+    @Given("^load HTTP request body ([^\\s]+)$")
+    public void loadRequestBody(String file) {
+        try {
+            setRequestBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
+    }
+
     @Given("^HTTP request body: (.+)$")
     public void setRequestBody(String body) {
         this.requestBody = body;
@@ -243,6 +254,15 @@ public class HttpClientSteps implements HttpSteps {
     @Then("^(?:expect|verify) HTTP response body$")
     public void setResponseBodyMultiline(String body) {
         setResponseBody(body);
+    }
+
+    @Given("^(?:expect|verify) HTTP response body loaded from ([^\\s]+)$")
+    public void loadResponseBody(String file) {
+        try {
+            setResponseBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
     }
 
     @Then("^(?:expect|verify) HTTP response body: (.+)$")

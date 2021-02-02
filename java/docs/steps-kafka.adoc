@@ -147,6 +147,16 @@ Given Kafka message body
 """
 ----
 
+When the body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load (?:Kafka|kafka) message body {file}$")
+[source,gherkin]
+----
+Given load Kafka message body {file}
+----
+
+This step loads the body content from the given file resource.
+
 Now another step can publish the message as it has been specified in the previous steps.
 
 .@When("^send (?:Kafka|kafka) message$")
@@ -227,7 +237,7 @@ body before the message is received.
 Given Kafka message body: {body}
 ----
 
-This step can expect a single line body content. Of course you can also work with multiline body content.
+This step can expect a single line body content. Of course, you can also work with multiline body content.
 
 .@Given("^(?:Kafka|kafka) message body$")
 [source,gherkin]
@@ -237,6 +247,16 @@ Given Kafka message body
 {body}
 """
 ----
+
+When the body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load (?:Kafka|kafka) message body {file}$")
+[source,gherkin]
+----
+Given load Kafka message body {file}
+----
+
+This step loads the body content from the given file resource.
 
 With the steps above the test has specified the expected message content. With that in place another step can receive the message
 and perform the validation.

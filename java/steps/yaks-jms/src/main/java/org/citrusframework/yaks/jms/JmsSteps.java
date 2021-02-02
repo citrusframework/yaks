@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.jms;
 
 import javax.jms.ConnectionFactory;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
 import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -155,6 +157,16 @@ public class JmsSteps {
     @Then("^(?:expect|verify) (?:JMS|jms) message body$")
     public void setMessageBodyMultiline(String body) {
         setMessageBody(body);
+    }
+
+    @Given("^load (?:JMS|jms) message body ([^\\s]+)$")
+    @Given("^(?:expect|verify) (?:JMS|jms) message body loaded from ([^\\s]+)$")
+    public void loadMessageBody(String file) {
+        try {
+            setMessageBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
     }
 
     @Given("^(?:JMS|jms) message body: (.+)$")

@@ -42,3 +42,10 @@ Feature: Camel groovy route
     Camel!
     """
     And receive Camel exchange from("seda:tokens")
+
+  Scenario: Load body
+    Given load Camel exchange body body.txt
+    When send Camel exchange to("direct:hello")
+    And receive Camel exchange from("seda:tokens") with body: Hello
+    And receive Camel exchange from("seda:tokens") with body: from
+    And receive Camel exchange from("seda:tokens") with body: YAKS!

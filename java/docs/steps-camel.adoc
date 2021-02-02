@@ -247,6 +247,16 @@ Camel exchange body
 """
 ----
 
+When the body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load Camel exchange body {file}$")
+[source,gherkin]
+----
+Given load Camel exchange body {file}
+----
+
+This step loads the body content from the given file resource.
+
 Now that we have specified the exchange headers and body content we can send or receive that specific
 echange in a separate step.
 

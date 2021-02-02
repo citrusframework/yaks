@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.camel;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.consol.citrus.camel.endpoint.CamelEndpoint;
 import com.consol.citrus.camel.endpoint.CamelEndpointConfiguration;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.util.FileUtils;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.util.DelegatingScript;
@@ -257,6 +259,16 @@ public class CamelSteps {
     @Then("^(?:expect|verify) Camel exchange body: (.+)$")
     public void setExchangeBody(String body) {
         this.body = body;
+    }
+
+    @Given("^load Camel exchange body ([^\\s]+)$")
+    @Then("^(?:expect|verify) Camel exchange body loaded from ([^\\s]+)$")
+    public void loadExchangeBody(String file) {
+        try {
+            this.body = FileUtils.readToString(FileUtils.getFileResource(file));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
     }
 
     @When("^send Camel exchange to\\(\"(.+)\"\\)$")

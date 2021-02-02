@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.http;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,11 +26,13 @@ import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpServerActionBuilder;
 import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
 import com.consol.citrus.http.server.HttpServerBuilder;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -184,6 +187,15 @@ public class HttpServerSteps implements HttpSteps {
         setResponseBody(body);
     }
 
+    @Given("^load HTTP response body ([^\\s]+)$")
+    public void loadResponseBody(String file) {
+        try {
+            setResponseBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
+    }
+
     @Given("^HTTP response body: (.+)$")
     public void setResponseBody(String body) {
         this.responseBody = body;
@@ -192,6 +204,15 @@ public class HttpServerSteps implements HttpSteps {
     @Then("^(?:expect|verify) HTTP request body$")
     public void setRequestBodyMultiline(String body) {
         setRequestBody(body);
+    }
+
+    @Then("^(?:expect|verify) HTTP request body loaded from ([^\\s]+)$")
+    public void loadRequestBody(String file) {
+        try {
+            setRequestBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
     }
 
     @Then("^(?:expect|verify) HTTP request body: (.+)$")

@@ -127,6 +127,16 @@ Given HTTP request body
 """
 ----
 
+When the request body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load HTTP request body {file}$")
+[source,gherkin]
+----
+Given load HTTP request body {file}
+----
+
+This step loads the body content from the given file resource.
+
 ==== Request parameters
 
 The Http request is able to use parameters that get added to the request URL. You can set those parameters in a separate step.
@@ -274,6 +284,16 @@ Then expect HTTP response body
 <<content>>
 """
 ----
+
+When the response body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^expect HTTP response body loaded from {file}$")
+[source,gherkin]
+----
+Given expect HTTP response body loaded from {file}
+----
+
+This step loads the body content from the given file resource.
 
 [[http-client-response-raw]]
 === Verify raw Http response data
@@ -452,6 +472,16 @@ Given expect HTTP request body
 """
 ----
 
+When the request body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^expect HTTP request body loaded from {file}$")
+[source,gherkin]
+----
+Given expect HTTP request body loaded from {file}
+----
+
+This step loads the body content from the given file resource.
+
 ==== Request parameters
 
 The Http request can have parameters on the request URL. You can verify those parameters in a separate step.
@@ -594,6 +624,16 @@ Given HTTP response body
 <<content>>
 """
 ----
+
+When the response body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load HTTP response body {file}$")
+[source,gherkin]
+----
+Given load HTTP response body {file}
+----
+
+This step loads the body content from the given file resource.
 
 [[http-server-response-raw]]
 === Send raw Http response data

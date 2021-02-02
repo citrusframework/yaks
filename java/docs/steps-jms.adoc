@@ -121,6 +121,16 @@ Given JMS message body
 """
 ----
 
+When the body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load (?:JMS|jms) message body {file}$")
+[source,gherkin]
+----
+Given load JMS message body {file}
+----
+
+This step loads the body content from the given file resource.
+
 Now another step can send the message as it has been specified in the previous steps.
 
 .@When("^send (?:JMS|jms) message$")
@@ -211,6 +221,16 @@ Given JMS message body
 {body}
 """
 ----
+
+When the body is getting too big it may be a better idea to load the content from an external file resource:
+
+.@Given("^load (?:JMS|jms) message body {file}$")
+[source,gherkin]
+----
+Given load JMS message body {file}
+----
+
+This step loads the body content from the given file resource.
 
 With the steps above the test has specified the expected message content. With that in place another step can receive the message
 and perform the validation.

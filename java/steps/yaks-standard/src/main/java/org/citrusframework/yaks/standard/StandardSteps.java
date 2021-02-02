@@ -17,10 +17,14 @@
 
 package org.citrusframework.yaks.standard;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.Properties;
 
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
+import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -46,6 +50,31 @@ public class StandardSteps {
     @Given("^variable ([^\\s]+) is \"([^\"]*)\"$")
     public void variable(String name, String value) {
         runner.variable(name, value);
+    }
+
+    @Given("^load variable ([^\\s]+)\\.([a-z0-9-]+)$")
+    public void loadVariable(String name, String fileExtension) {
+        loadVariableFromFile(name, name + "." + fileExtension);
+    }
+
+    @Given("^load variable ([^\\s]+) from ([^\\s]+)$")
+    public void loadVariableFromFile(String name, String file) {
+        try {
+            variable(name, FileUtils.readToString(FileUtils.getFileResource(file)));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
+        }
+    }
+
+    @Given("^load variables ([^\\s]+)$")
+    public void loadVariables(String file) {
+        try {
+            Properties variables = new Properties();
+            variables.load(FileUtils.getFileResource(file).getInputStream());
+            variables.forEach((key, value) -> runner.variable(key.toString(), value));
+        } catch (IOException e) {
+            throw new CitrusRuntimeException(String.format("Failed to load variables from file resource %s", file));
+        }
     }
 
     @Given("^variables$")

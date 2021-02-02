@@ -20,6 +20,7 @@ package org.citrusframework.yaks.http;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
 import com.consol.citrus.endpoint.EndpointAdapter;
 import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter;
@@ -98,10 +99,32 @@ public class HttpEndpointConfiguration {
 
     @Bean
     public EndpointAdapter handleGetRequestAdapter(TestContextFactory contextFactory) {
-        StaticResponseEndpointAdapter responseEndpointAdapter = new StaticResponseEndpointAdapter();
+        StaticResponseEndpointAdapter responseEndpointAdapter = new StaticResponseEndpointAdapter() {
+            private TestContext context;
+
+            @Override
+            public Message handleMessageInternal(Message request) {
+                String requestUri = request.getHeader(HttpMessageHeaders.HTTP_REQUEST_URI).toString();
+                if (requestUri.startsWith("/todo/")) {
+                    getTestContext().setVariable("id", requestUri.substring("/todo/".length()));
+                } else {
+                    getTestContext().setVariable("id", "citrus:randomNumber(5)");
+                }
+                return super.handleMessageInternal(request);
+            }
+
+            @Override
+            protected TestContext getTestContext() {
+                if (context == null) {
+                    context = super.getTestContext();
+                }
+                return context;
+            }
+        };
+
         responseEndpointAdapter.getMessageHeader().put(HttpMessageHeaders.HTTP_CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        responseEndpointAdapter.getMessageHeader().put("X-TodoId", "citrus:randomNumber(5)");
-        responseEndpointAdapter.setMessagePayload("{\"id\": \"citrus:randomNumber(5)\", \"task\": \"Sample task\", \"completed\": 0}");
+        responseEndpointAdapter.getMessageHeader().put("X-TodoId", "${id}");
+        responseEndpointAdapter.setMessagePayload("{\"id\": \"${id}\", \"task\": \"Sample task\", \"completed\": 0}");
         responseEndpointAdapter.setTestContextFactory(contextFactory);
         return responseEndpointAdapter;
     }

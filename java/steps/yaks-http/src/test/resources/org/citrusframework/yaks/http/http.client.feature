@@ -88,6 +88,15 @@ Feature: Http client
     """
     And receive HTTP 200 OK
 
+  Scenario: Load request body
+    Given variable id is "citrus:randomNumber(5)"
+    And load HTTP request body task.json
+    When send POST /todo/${id}
+    Then receive HTTP 201 CREATED
+    When send GET /todo/${id}
+    Then verify HTTP response body loaded from task.json
+    And receive HTTP 200 OK
+
   Scenario: Verify RAW data
     Given variable id is "citrus:randomNumber(5)"
     When send HTTP request
