@@ -26,7 +26,6 @@ import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
 import org.citrusframework.yaks.groovy.dsl.endpoints.EndpointConfiguration;
-import org.citrusframework.yaks.groovy.dsl.endpoints.Endpoints;
 
 /**
  * @author Christoph Deppisch
@@ -40,7 +39,7 @@ public class EndpointsConfiguration extends GroovyObjectSupport {
     }
 
     public Endpoint endpoint(String type, Closure<?> callable) {
-        Supplier<Endpoint> endpointSupplier = new EndpointConfiguration(Endpoints.valueOf(type.toUpperCase()));
+        Supplier<Endpoint> endpointSupplier = new EndpointConfiguration(type);
         callable.setResolveStrategy(Closure.DELEGATE_FIRST);
         callable.setDelegate(endpointSupplier);
         callable.call();
