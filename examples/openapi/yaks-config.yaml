@@ -17,8 +17,6 @@
 
 config:
   runtime:
-    settings:
-      dependencies:
-        - groupId: org.postgresql
-          artifactId: postgresql
-          version: "@postgresql.version@"
+    resources:
+      - fruitstore-v1.json
+      - fruitstore-server.groovy
