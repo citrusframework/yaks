@@ -6,6 +6,7 @@ Feature: Kubernetes service
     Given HTTP server "greeting-service"
     And HTTP server timeout is 10000 ms
     And HTTP server listening on port 8080
+    And start HTTP server
 
   Scenario:
     Given create Camel-K integration helloworld.groovy

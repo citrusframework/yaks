@@ -41,6 +41,18 @@ public class HttpSettings {
     private static final String SERVER_PORT_ENV = HTTP_ENV_PREFIX + "SERVER_PORT";
     private static final String SERVER_PORT_DEFAULT = "8080";
 
+    private static final String SECURE_PORT_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.port";
+    private static final String SECURE_PORT_ENV = HTTP_ENV_PREFIX + "SECURE_PORT";
+    private static final String SECURE_PORT_DEFAULT = "8443";
+
+    private static final String SECURE_KEYSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.path";
+    private static final String SECURE_KEYSTORE_PATH_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PATH";
+    private static final String SECURE_KEYSTORE_PATH_DEFAULT = "classpath:keystore/http-server.jks";
+
+    private static final String SECURE_KEYSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.password";
+    private static final String SECURE_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PASSWORD";
+    private static final String SECURE_KEYSTORE_PASSWORD_DEFAULT = "secret";
+
     private HttpSettings() {
         // prevent instantiation of utility class
     }
@@ -79,5 +91,34 @@ public class HttpSettings {
     public static int getServerPort() {
         return Integer.parseInt(System.getProperty(SERVER_PORT_PROPERTY,
                 System.getenv(SERVER_PORT_ENV) != null ? System.getenv(SERVER_PORT_ENV) : SERVER_PORT_DEFAULT));
+    }
+
+    /**
+     * Secure port used when consuming cloud events via Https.
+     * @return
+     */
+    public static int getSecurePort() {
+        return Integer.parseInt(System.getProperty(SECURE_PORT_PROPERTY,
+                System.getenv(SECURE_PORT_ENV) != null ? System.getenv(SECURE_PORT_ENV) : SECURE_PORT_DEFAULT));
+    }
+
+    /**
+     * SSL key store path.
+     * @return
+     */
+    public static String getSslKeyStorePath() {
+        return System.getProperty(SECURE_KEYSTORE_PATH_PROPERTY,
+                System.getenv(SECURE_KEYSTORE_PATH_ENV) != null ? System.getenv(SECURE_KEYSTORE_PATH_ENV) :
+                        SECURE_KEYSTORE_PATH_DEFAULT);
+    }
+
+    /**
+     * SSL key store password.
+     * @return
+     */
+    public static String getSslKeyStorePassword() {
+        return System.getProperty(SECURE_KEYSTORE_PASSWORD_PROPERTY,
+                System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) != null ? System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) :
+                        SECURE_KEYSTORE_PASSWORD_DEFAULT);
     }
 }
