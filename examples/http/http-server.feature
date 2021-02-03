@@ -2,12 +2,12 @@
 Feature: Http server
 
   Background:
-    Given create HTTP server "greeting-service"
+    Given Disable auto removal of Camel resources
     And HTTP server timeout is 10000 ms
     And HTTP server listening on port 8080
     And start HTTP server
 
-  Scenario:
+  Scenario: Create Camel route
     Given Camel route greeting.groovy
     """
     from('timer:tick?period=5000')
