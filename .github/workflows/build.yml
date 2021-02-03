@@ -125,7 +125,7 @@ jobs:
         yaks test examples/camel
         yaks test examples/camel-k
         #yaks test examples/extension
-        #yaks test examples/http
+        yaks test examples/http
         #yaks test examples/jdbc
         yaks test examples/jitpack
         #yaks test examples/kamelets
