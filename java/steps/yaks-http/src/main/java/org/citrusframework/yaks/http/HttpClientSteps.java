@@ -306,7 +306,7 @@ public class HttpClientSteps implements HttpSteps {
      */
     private void sendClientRequest(HttpMessage request) {
         HttpClientActionBuilder.HttpClientSendActionBuilder sendBuilder = http().client(httpClient).send();
-        HttpClientRequestActionBuilder requestBuilder;
+        HttpClientRequestActionBuilder.HttpMessageBuilderSupport requestBuilder;
 
         if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
             requestBuilder = sendBuilder.post().message(request);
@@ -334,7 +334,7 @@ public class HttpClientSteps implements HttpSteps {
             requestBuilder.uri(requestUrl);
         }
 
-        requestBuilder.messageType(requestMessageType);
+        requestBuilder.type(requestMessageType);
 
         if (outboundDictionary != null) {
             requestBuilder.dictionary(outboundDictionary);
@@ -348,7 +348,7 @@ public class HttpClientSteps implements HttpSteps {
      * @param response
      */
     private void receiveClientResponse(HttpMessage response) {
-        HttpClientResponseActionBuilder responseBuilder = http().client(httpClient).receive()
+        HttpClientResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().client(httpClient).receive()
                 .response(response.getStatusCode())
                 .message(response);
 
@@ -356,7 +356,7 @@ public class HttpClientSteps implements HttpSteps {
         bodyValidationExpressions.clear();
 
         responseBuilder.timeout(timeout);
-        responseBuilder.messageType(responseMessageType);
+        responseBuilder.type(responseMessageType);
 
         if (inboundDictionary != null) {
             responseBuilder.dictionary(inboundDictionary);

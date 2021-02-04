@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        strict = true,
         extraGlue = {
                 "org.citrusframework.yaks.standard",
                 "org.citrusframework.yaks.http"

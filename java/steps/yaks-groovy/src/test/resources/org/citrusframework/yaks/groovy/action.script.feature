@@ -24,10 +24,12 @@ Feature: Run script actions
     """
     actions {
       send('direct:myQueue')
-        .payload('Hello from Groovy script!')
+        .message()
+        .body('Hello from Groovy script!')
 
       receive('direct:myQueue')
-        .payload('Hello from Groovy script!')
+        .message()
+        .body('Hello from Groovy script!')
     }
     """
     Then apply messaging.groovy

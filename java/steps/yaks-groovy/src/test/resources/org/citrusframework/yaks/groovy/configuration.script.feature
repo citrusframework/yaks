@@ -22,5 +22,5 @@ Feature: Configuration script
   Scenario: Config file resource
     Given load configuration citrus.configuration.groovy
     When verify endpoint hello
-    When endpoint hello sends payload Hello from new direct endpoint!
-    Then endpoint hello should receive payload Hello from new direct endpoint!
+    When endpoint hello sends body Hello from new direct endpoint!
+    Then endpoint hello should receive body Hello from new direct endpoint!

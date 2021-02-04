@@ -274,7 +274,8 @@ public class CamelSteps {
     @When("^send Camel exchange to\\(\"(.+)\"\\)$")
     public void sendExchange(String endpointUri) {
         runner.run(send().endpoint(camelEndpoint(endpointUri))
-                .payload(body)
+                .message()
+                .body(body)
                 .headers(headers));
 
         body = null;
@@ -285,7 +286,8 @@ public class CamelSteps {
     public void receiveExchange(String endpointUri) {
         runner.run(receive().endpoint(camelEndpoint(endpointUri))
                 .timeout(timeout)
-                .payload(body)
+                .message()
+                .body(body)
                 .headers(headers));
 
         body = null;

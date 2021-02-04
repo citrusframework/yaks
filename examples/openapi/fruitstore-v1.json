@@ -1,0 +1,200 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "FruitStore API",
+    "version" : "1.0",
+    "description": "A sample service managing fruits"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "paths" : {
+    "/openapi": {
+      "get": {
+        "operationId": "openapi",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Open API specification"
+          }
+        },
+        "summary": "Get the Open API V3 specification"
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Health indication"
+          }
+        },
+        "summary": "Health status of the application"
+      }
+    },
+    "/fruits" : {
+      "get" : {
+        "operationId" : "listFruits",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Fruits"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "operationId" : "addFruit",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Fruit"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/fruits/{id}" : {
+      "get" : {
+        "operationId" : "getFruitById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      },
+      "delete" : {
+        "operationId" : "deleteFruit",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/fruits/price/{id}" : {
+      "get" : {
+        "operationId" : "getPriceUpdate",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "TemplateInstance" : {
+        "type" : "object"
+      },
+      "Category" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "BigDecimal" : {
+        "type" : "number"
+      },
+      "Status" : {
+        "enum" : [ "AVAILABLE", "PENDING", "SOLD" ],
+        "type" : "string"
+      },
+      "Fruit" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "$ref" : "#/components/schemas/Category"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/BigDecimal"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/Status"
+          },
+          "tags" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "Fruits" : {
+        "uniqueItems" : true,
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/components/schemas/Fruit"
+        }
+      }
+    }
+  }
+}

@@ -17,33 +17,19 @@
 
 package org.citrusframework.yaks.groovy.dsl.endpoints;
 
-import java.util.function.Supplier;
-
-import com.consol.citrus.endpoint.Endpoint;
-import com.consol.citrus.endpoint.EndpointBuilder;
-import org.citrusframework.yaks.groovy.GroovyShellUtils;
-import org.codehaus.groovy.control.customizers.ImportCustomizer;
-
 /**
  * @author Christoph Deppisch
  */
-public class EndpointConfigurationScript implements Supplier<Endpoint> {
+public class EndpointConfigurationScript {
 
-    private final String configuration;
+    private String endpointType;
 
-    public EndpointConfigurationScript(String configuration) {
-        this.configuration = configuration;
-    }
-
-    @Override
-    public Endpoint get() {
-        ImportCustomizer ic = new ImportCustomizer();
-
-        for (Endpoints endpoint : Endpoints.values()) {
-            ic.addStaticImport(endpoint.builderType().getName(), endpoint.id());
+    public Object methodMissing(String name, Object argLine) {
+        if (endpointType == null) {
+            endpointType = name;
+            return this;
+        } else {
+            return EndpointBuilderHelper.find(endpointType + "." + EndpointBuilderHelper.sanitizeEndpointBuilderName(name));
         }
-
-        EndpointBuilder<?> builder = GroovyShellUtils.run(ic, configuration);
-        return builder.build();
     }
 }

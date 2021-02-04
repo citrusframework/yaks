@@ -29,5 +29,5 @@ Feature: Endpoint script config
       .queue("hello-queue")
     """
     When verify endpoint helloEndpoint
-    When endpoint helloEndpoint sends payload Hello from new direct endpoint!
-    Then endpoint helloEndpoint should receive payload Hello from new direct endpoint!
+    When endpoint helloEndpoint sends body Hello from new direct endpoint!
+    Then endpoint helloEndpoint should receive body Hello from new direct endpoint!

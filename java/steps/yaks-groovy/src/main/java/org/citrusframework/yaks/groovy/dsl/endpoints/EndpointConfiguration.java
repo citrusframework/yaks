@@ -32,11 +32,11 @@ import org.citrusframework.yaks.groovy.dsl.EndpointsConfiguration;
  */
 public class EndpointConfiguration extends GroovyObjectSupport implements Supplier<Endpoint> {
 
-    private final Endpoints endpoints;
+    private final String type;
     private EndpointBuilderConfiguration<?> delegate;
 
-    public EndpointConfiguration(Endpoints endpoints) {
-        this.endpoints = endpoints;
+    public EndpointConfiguration(String type) {
+        this.type = type;
     }
 
     private void delegateTo(EndpointBuilder<?> builder, Closure<?> callable) {
@@ -52,7 +52,7 @@ public class EndpointConfiguration extends GroovyObjectSupport implements Suppli
         }
 
         Object[] args = (Object[]) argLine;
-        EndpointBuilder<?> builder = endpoints.getEndpointBuilder(name);
+        EndpointBuilder<?> builder = EndpointBuilderHelper.find(type + "." + EndpointBuilderHelper.sanitizeEndpointBuilderName(name));
         Object closure = null;
         if (args.length > 1) {
             String endpointName = args[0].toString();

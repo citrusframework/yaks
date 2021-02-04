@@ -367,8 +367,7 @@ public class KubernetesSteps {
                 .receive()
                 .post()
                 .timeout(timeout)
-                .messageType(messageType)
-                .message(request));
+                .message(request.setType(messageType)));
     }
 
     public void sendServiceResponse(HttpStatus status) {

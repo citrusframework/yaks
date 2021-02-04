@@ -23,7 +23,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        strict = true,
         plugin = { "pretty", "org.citrusframework.yaks.report.TestReporter" }
 )
 public class YaksTest {

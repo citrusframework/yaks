@@ -29,6 +29,7 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.common.InitializingPhase;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.endpoint.Endpoint;
+import com.consol.citrus.endpoint.EndpointBuilder;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import io.cucumber.java.Before;
@@ -76,7 +77,8 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) endpoint ([^\"\\s]+)\\.groovy$")
     public void createEndpoint(String name, String configurationScript) {
-        Endpoint endpoint = new EndpointConfigurationScript(configurationScript).get();
+        EndpointBuilder<?> builder = GroovyShellUtils.run(new ImportCustomizer(), new EndpointConfigurationScript(), configurationScript);
+        Endpoint endpoint = builder.build();
 
         if (endpoint instanceof InitializingPhase) {
             ((InitializingPhase) endpoint).initialize();
