@@ -137,7 +137,7 @@ public class SendEventSteps {
 
         request.setHeader("Host", KnativeSettings.getBrokerHost());
 
-        HttpClientRequestActionBuilder requestBuilder = http().client(httpClient)
+        HttpClientRequestActionBuilder.HttpMessageBuilderSupport requestBuilder = http().client(httpClient)
                 .send()
                 .post()
                 .message(request);

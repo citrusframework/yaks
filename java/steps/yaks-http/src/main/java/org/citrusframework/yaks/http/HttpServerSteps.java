@@ -325,7 +325,7 @@ public class HttpServerSteps implements HttpSteps {
         }
 
         HttpServerActionBuilder.HttpServerReceiveActionBuilder receiveBuilder = http().server(httpServer).receive();
-        HttpServerRequestActionBuilder requestBuilder;
+        HttpServerRequestActionBuilder.HttpMessageBuilderSupport requestBuilder;
 
         if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
             requestBuilder = receiveBuilder.post().message(request);
@@ -352,7 +352,7 @@ public class HttpServerSteps implements HttpSteps {
 
         requestBuilder
                 .timeout(timeout)
-                .messageType(requestMessageType);
+                .type(requestMessageType);
 
         runner.run(requestBuilder);
     }
@@ -405,8 +405,7 @@ public class HttpServerSteps implements HttpSteps {
 
         runner.run(http().server(httpServer).send()
                 .response(response.getStatusCode())
-                .messageType(responseMessageType)
-                .message(response));
+                .message(response.setType(responseMessageType)));
     }
 
     private ServerConnector sslConnector() {

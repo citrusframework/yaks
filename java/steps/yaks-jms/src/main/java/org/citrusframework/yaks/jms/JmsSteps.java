@@ -217,7 +217,8 @@ public class JmsSteps {
     @When("^send (?:JMS|jms) message$")
     public void sendMessage() {
         runner.run(send().endpoint(jmsEndpoint)
-                .payload(body)
+                .message()
+                .body(body)
                 .headers(headers));
 
         body = null;
@@ -229,7 +230,8 @@ public class JmsSteps {
         runner.run(receive().endpoint(jmsEndpoint)
                 .selector(selector)
                 .timeout(timeout)
-                .payload(body)
+                .message()
+                .body(body)
                 .headers(headers));
 
         body = null;

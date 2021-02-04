@@ -66,18 +66,18 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <slf4j.version>1.7.30</slf4j.version>
-    <log4j2.version>2.13.3</log4j2.version>
+    <log4j2.version>2.14.0</log4j2.version>
     <groovy.version>2.5.14</groovy.version>
-    <citrus.version>3.0.0-M2</citrus.version>
+    <citrus.version>3.0.0-M3</citrus.version>
     <spring.version>5.2.8.RELEASE</spring.version>
-    <cucumber.version>5.7.0</cucumber.version>
+    <cucumber.version>6.9.0</cucumber.version>
     <camel.version>3.5.0</camel.version>
-    <jackson.version>2.11.3</jackson.version>
+    <jackson.version>2.12.1</jackson.version>
     <junit.version>4.13.1</junit.version>
     <kubernetes-client.version>4.10.3</kubernetes-client.version>
     <knative-client.version>4.10.3</knative-client.version>
     <postgresql.version>9.4.1212</postgresql.version>
-    <testcontainers.version>1.15.0-rc2</testcontainers.version>
+    <testcontainers.version>1.15.1</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>

@@ -68,18 +68,19 @@ public class MessagingSteps {
         }
     }
 
-    @When("^endpoint ([^\\s]+) sends payload ([\\w\\W]+)$")
-    @Then("^endpoint ([^\\s]+) should send payload ([\\w\\W]+)$")
-    public void sendPayload(final String endpoint, final String payload) {
+    @When("^endpoint ([^\\s]+) sends body ([\\w\\W]+)$")
+    @Then("^endpoint ([^\\s]+) should send body ([\\w\\W]+)$")
+    public void sendBody(final String endpoint, final String body) {
         runner.when(send()
                 .endpoint(endpoint)
-                .payload(payload));
+                .message()
+                .body(body));
     }
 
-    @When("^endpoint ([^\\s]+) sends payload$")
-    @Then("^endpoint ([^\\s]+) should send payload$")
-    public void sendMultilinePayload(String endpoint, String payload) {
-        sendPayload(endpoint, payload);
+    @When("^endpoint ([^\\s]+) sends body$")
+    @Then("^endpoint ([^\\s]+) should send body$")
+    public void sendMultilineBody(String endpoint, String body) {
+        sendBody(endpoint, body);
     }
 
     @When("^endpoint ([^\\s]+) receives ([^\\s]+) message \\$([^\\s]+)$")
@@ -88,8 +89,8 @@ public class MessagingSteps {
         if (messages.containsKey(messageId)) {
             runner.when(receive()
                     .endpoint(endpoint)
-                    .messageType(type)
-                    .message(new DefaultMessage(messages.get(messageId))));
+                    .message(new DefaultMessage(messages.get(messageId))
+                                    .setType(type)));
         } else {
             throw new CitrusRuntimeException(String.format("Unable to find message for id '%s'", messageId));
         }
@@ -101,31 +102,32 @@ public class MessagingSteps {
         receiveMessage(endpoint, CitrusSettings.DEFAULT_MESSAGE_TYPE, messageName);
     }
 
-    @When("^endpoint ([^\\s]+) receives ([^\\s]+) payload ([\\w\\W]+)$")
-    @Then("^endpoint ([^\\s]+) should receive ([^\\s]+) payload ([\\w\\W]+)$")
-    public void receivePayload(final String endpoint, final String type, final String payload) {
+    @When("^endpoint ([^\\s]+) receives ([^\\s]+) body ([\\w\\W]+)$")
+    @Then("^endpoint ([^\\s]+) should receive ([^\\s]+) body ([\\w\\W]+)$")
+    public void receiveBody(final String endpoint, final String type, final String body) {
         runner.when(receive()
                 .endpoint(endpoint)
-                .messageType(type)
-                .payload(payload));
+                .message()
+                .type(type)
+                .body(body));
     }
 
-    @When("^endpoint ([^\\s]+) receives payload ([\\w\\W]+)$")
-    @Then("^endpoint ([^\\s]+) should receive payload ([\\w\\W]+)$")
-    public void receiveDefault(String endpoint, String payload) {
-        receivePayload(endpoint, CitrusSettings.DEFAULT_MESSAGE_TYPE, payload);
+    @When("^endpoint ([^\\s]+) receives body ([\\w\\W]+)$")
+    @Then("^endpoint ([^\\s]+) should receive body ([\\w\\W]+)$")
+    public void receiveDefault(String endpoint, String body) {
+        receiveBody(endpoint, CitrusSettings.DEFAULT_MESSAGE_TYPE, body);
     }
 
-    @When("^endpoint ([^\\s]+) receives payload$")
-    @Then("^endpoint ([^\\s]+) should receive payload$")
-    public void receiveMultilinePayload(String endpoint, String payload) {
-        receivePayload(endpoint, CitrusSettings.DEFAULT_MESSAGE_TYPE, payload);
+    @When("^endpoint ([^\\s]+) receives body$")
+    @Then("^endpoint ([^\\s]+) should receive body$")
+    public void receiveMultilineBody(String endpoint, String body) {
+        receiveBody(endpoint, CitrusSettings.DEFAULT_MESSAGE_TYPE, body);
     }
 
-    @When("^endpoint ([^\\s]+) receives ([^\\s]+) payload$")
-    @Then("^endpoint ([^\\s]+) should receive ([^\\s]+) payload$")
-    public void shouldReceiveMultiline(String endpoint, String type, String payload) {
-        receivePayload(endpoint, type, payload);
+    @When("^endpoint ([^\\s]+) receives ([^\\s]+) body$")
+    @Then("^endpoint ([^\\s]+) should receive ([^\\s]+) body$")
+    public void shouldReceiveMultiline(String endpoint, String type, String body) {
+        receiveBody(endpoint, type, body);
     }
 
     @And("^\\$([^\\s]+) header ([^\\s]+)(?: is |=)\"([^\"]*)\"$")
@@ -133,13 +135,13 @@ public class MessagingSteps {
         messages.get(messageId).setHeader(name, value);
     }
 
-    @And("^\\$([^\\s]+) has payload ([\\w\\W]+)$")
-    public void addPayload(String messageId, String payload) {
-        messages.get(messageId).setPayload(payload);
+    @And("^\\$([^\\s]+) has body ([\\w\\W]+)$")
+    public void addBody(String messageId, String body) {
+        messages.get(messageId).setPayload(body);
     }
 
-    @And("^\\$([^\\s]+) has payload$")
-    public void addPayloadMultiline(String messageId, String payload) {
-        addPayload(messageId, payload);
+    @And("^\\$([^\\s]+) has body$")
+    public void addBodyMultiline(String messageId, String body) {
+        addBody(messageId, body);
     }
 }
