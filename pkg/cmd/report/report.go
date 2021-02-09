@@ -24,6 +24,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path"
 )
@@ -83,6 +84,7 @@ func GenerateReport(results *v1alpha1.TestResults, output OutputFormat) (string,
 }
 
 func AppendTestResults(results *v1alpha1.TestResults, result v1alpha1.TestResults) {
+	results.Summary.Errors += result.Summary.Errors
 	results.Summary.Passed += result.Summary.Passed
 	results.Summary.Failed += result.Summary.Failed
 	results.Summary.Skipped += result.Summary.Skipped
@@ -180,4 +182,34 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 		}
 	}
 	return summary
+}
+
+func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
+	return &v1alpha1.Test{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.TestKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      source,
+		},
+		Status: v1alpha1.TestStatus{
+			Errors: err.Error(),
+			Results: v1alpha1.TestResults{
+				Tests: []v1alpha1.TestResult{
+					{
+						Name: kubernetes.SanitizeName(source),
+						ClassName: source,
+						ErrorType: "InitializationError",
+						ErrorMessage: err.Error(),
+					},
+				},
+				Summary: v1alpha1.TestSummary{
+					Errors: 1,
+				},
+				Errors: []string{ err.Error() },
+			},
+		},
+	}
 }
