@@ -72,7 +72,7 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 			Failures: results.Summary.Failed,
 			Skipped: results.Summary.Skipped,
 			Tests: results.Summary.Total,
-			Errors: len(results.Errors),
+			Errors: results.Summary.Errors,
 		},
 	}
 
@@ -88,21 +88,6 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 				Type:       result.ErrorType,
 				Stacktrace: "",
 			}
-		}
-
-		report.Suite.TestCase = append(report.Suite.TestCase, testCase)
-	}
-
-	for _, errorDetail := range results.Errors {
-		testCase := TestCase{
-			Name: "initializationError",
-			ClassName: "Runtime",
-		}
-
-		testCase.Error = &Error{
-			Message:    errorDetail,
-			Type:       "Error",
-			Stacktrace: "",
 		}
 
 		report.Suite.TestCase = append(report.Suite.TestCase, testCase)

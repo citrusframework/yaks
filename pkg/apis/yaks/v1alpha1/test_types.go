@@ -122,6 +122,7 @@ type TestResults struct {
 
 type TestSummary struct {
 	Total  		int   	  `json:"total"`
+	Errors 		int   	  `json:"errors"`
 	Passed 		int   	  `json:"passed"`
 	Failed 		int   	  `json:"failed"`
 	Skipped 	int   	  `json:"skipped"`

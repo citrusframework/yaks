@@ -159,12 +159,12 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return err
+		return handleTestError("", source, results, err)
 	}
 
 	var runConfig *config.RunConfig
 	if runConfig, err = o.getRunConfig(source); err != nil {
-		return err
+		return handleTestError("", source, results, err)
 	}
 
 	if runConfig.Config.Namespace.Temporary {
@@ -174,65 +174,59 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 			}
 
 			if err != nil {
-				return err
+				return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 			}
 		} else if err != nil {
-			return err
+			return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 		}
 	}
 
 	if err = o.uploadArtifacts(runConfig); err != nil {
-		return err
+		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
 	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
-		return err
+		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 
 	var test *v1alpha1.Test
 	test, err = o.createAndRunTest(c, source, runConfig)
-	if test != nil {
-		report.AppendTestResults(results, test.Status.Results)
-
-		if saveErr := report.SaveTestResults(test); saveErr != nil {
-			fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
-		}
-	}
+	handleTestResult(test, results);
 	return err
 }
 
 func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResults) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return err
+		return handleTestError("", source, results, err)
 	}
 
 	var runConfig *config.RunConfig
 	if runConfig, err = o.getRunConfig(source); err != nil {
-		return err
+		return handleTestError("", source, results, err)
 	}
 
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
-			return err
+			return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
 
 	if err = o.uploadArtifacts(runConfig); err != nil {
-		return err
+		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 
 	var files []os.FileInfo
 	if files, err = ioutil.ReadDir(source); err != nil {
-		return err
+		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
 	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
-		return err
+		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 
 	suiteErrors := make([]string, 0)
@@ -247,13 +241,7 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 			var test *v1alpha1.Test
 			var testError error
 			test, testError = o.createAndRunTest(c, name, runConfig)
-			if test != nil {
-				report.AppendTestResults(results, test.Status.Results)
-
-				if saveErr := report.SaveTestResults(test); saveErr != nil {
-					fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
-				}
-			}
+			handleTestResult(test, results);
 
 			if testError != nil {
 				suiteErrors = append(suiteErrors, testError.Error())
@@ -266,6 +254,21 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 	}
 
 	return nil
+}
+
+func handleTestError(namespace string, source string, results *v1alpha1.TestResults, err error) error {
+	handleTestResult(report.GetErrorResult(namespace, source, err), results)
+	return err;
+}
+
+func handleTestResult(test *v1alpha1.Test, results *v1alpha1.TestResults) {
+	if test != nil {
+		report.AppendTestResults(results, test.Status.Results)
+
+		if saveErr := report.SaveTestResults(test); saveErr != nil {
+			fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
+		}
+	}
 }
 
 func getBaseDir(source string) string {
