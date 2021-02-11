@@ -87,6 +87,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
             }
 
             if (source != null) {
+                source.setProperties(context.resolveDynamicValuesInMap(source.getProperties()));
                 builder.source(source);
             }
 
@@ -95,6 +96,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
                     sink.setUri(context.replaceDynamicContentInString(sink.getUri()));
                 }
 
+                sink.setProperties(context.resolveDynamicValuesInMap(sink.getProperties()));
                 builder.sink(sink);
             }
 

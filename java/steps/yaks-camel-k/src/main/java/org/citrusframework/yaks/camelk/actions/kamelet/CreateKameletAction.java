@@ -87,6 +87,17 @@ public class CreateKameletAction extends AbstractCamelKAction {
                 throw new CitrusRuntimeException(String.format("Failed to load Kamelet from resource %s", name + ".kamelet.yaml"));
             }
         } else {
+            if (definition.getTitle() != null) {
+                definition.setTitle(context.replaceDynamicContentInString(definition.getTitle()));
+            }
+
+            if (definition.getDescription() != null) {
+                definition.setDescription(context.replaceDynamicContentInString(definition.getDescription()));
+            }
+
+            definition.setProperties(context.resolveDynamicValuesInMap(definition.getProperties()));
+            definition.setRequired(context.resolveDynamicValuesInList(definition.getRequired()));
+
             final Kamelet.Builder builder = new Kamelet.Builder()
                     .name(context.replaceDynamicContentInString(name))
                     .definition(definition);
