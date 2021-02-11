@@ -46,6 +46,7 @@ type TestSpec struct {
 	Source    SourceSpec     `json:"source,omitempty"`
 	Resources []ResourceSpec `json:"resources,omitempty"`
 	Settings  SettingsSpec   `json:"config,omitempty"`
+	Selenium  SeleniumSpec   `json:"selenium,omitempty"`
 	Env       []string       `json:"env,omitempty"`
 	Secret    string         `json:"secret,omitempty"`
 }
@@ -67,6 +68,11 @@ type ResourceSpec struct {
 type SettingsSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
+}
+
+// SeleniumSpec--
+type SeleniumSpec struct {
+	Image string `json:"image,omitempty"`
 }
 
 // TestStatus defines the observed state of Test

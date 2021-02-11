@@ -139,6 +139,7 @@ jobs:
         yaks test examples/settings
         yaks test examples/test-group
         yaks test examples/helloworld.feature
+        yaks test examples/selenium
 
   snapshot:
     runs-on: ubuntu-latest

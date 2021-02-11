@@ -54,6 +54,7 @@ type StepConfig struct {
 
 type RuntimeConfig struct {
     Cucumber  CucumberConfig `yaml:"cucumber"`
+    Selenium  SeleniumConfig `yaml:"selenium"`
     Resources []string 	     `yaml:"resources"`
     Settings  SettingsConfig `yaml:"settings"`
     Env 	  []EnvConfig 	 `yaml:"env"`
@@ -64,6 +65,10 @@ type CucumberConfig struct {
     Tags    []string `yaml:"tags"`
     Glue    []string `yaml:"glue"`
     Options string   `yaml:"options"`
+}
+
+type SeleniumConfig struct {
+    Image           string `yaml:"image"`
 }
 
 type EnvConfig struct {

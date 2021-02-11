@@ -191,6 +191,11 @@
         <artifactId>citrus-ws</artifactId>
         <version>${citrus.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-selenium</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
 
       <!-- Cucumber -->
       <dependency>

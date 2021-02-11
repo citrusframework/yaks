@@ -40,5 +40,6 @@
     <module>yaks-standard</module>
     <module>yaks-openapi</module>
     <module>yaks-groovy</module>
+    <module>yaks-selenium</module>
   </modules>
 </project>
