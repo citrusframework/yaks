@@ -500,3 +500,30 @@ timeout will fail the test. You can adjust this event consumer timeout.
 ----
 Given Knative event consumer timeout is {time} milliseconds
 ----
+
+[[knative-resources]]
+=== Manage Knative resources
+
+The described steps are able to create Knative resources on the current Kubernetes namespace.
+By default these resources get removed automatically after the test scenario.
+
+The auto removal of Knative resources can be turned off with the following step.
+
+.@Given("^Disable auto removal of Knative resources$")
+[source,gherkin]
+----
+Given Disable auto removal of Knative resources
+----
+
+Usually this step is a `Background` step for all scenarios in a feature file. This way multiple scenarios can work on
+the very same Knative resources and share integrations.
+
+There is also a separate step to explicitly enable the auto removal.
+
+.@Given("^Enable auto removal of Knative resources$")
+[source,gherkin]
+----
+Given Enable auto removal of Knative resources
+----
+
+By default, all Knative resources are automatically removed after each scenario.

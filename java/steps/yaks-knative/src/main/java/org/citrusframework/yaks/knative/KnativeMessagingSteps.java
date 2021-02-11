@@ -55,7 +55,7 @@ public class KnativeMessagingSteps {
         runner.given(knative().client(k8sClient)
                 .createChannel(channelName));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteChannel(channelName)));
         }
@@ -68,7 +68,7 @@ public class KnativeMessagingSteps {
                 .onChannel(channelName)
                 .service(serviceName));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteSubscription(serviceName + "subscription")));
         }

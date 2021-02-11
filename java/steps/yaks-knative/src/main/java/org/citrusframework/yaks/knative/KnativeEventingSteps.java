@@ -70,7 +70,7 @@ public class KnativeEventingSteps {
 
         runner.given(knative().client(k8sClient).createBroker(brokerName));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteBroker(brokerName)));
         }
@@ -90,7 +90,7 @@ public class KnativeEventingSteps {
                 .createTrigger(triggerName)
                 .onService(serviceName));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
         }
@@ -103,7 +103,7 @@ public class KnativeEventingSteps {
                 .onService(serviceName)
                 .filter(filterAttributes.asMap(String.class, String.class)));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
         }
@@ -115,7 +115,7 @@ public class KnativeEventingSteps {
                 .createTrigger(triggerName)
                 .onChannel(channelName));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
         }
@@ -128,7 +128,7 @@ public class KnativeEventingSteps {
                 .onChannel(channelName)
                 .filter(filterAttributes.asMap(String.class, String.class)));
 
-        if (KnativeSettings.isAutoRemoveResources()) {
+        if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
                     .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
         }

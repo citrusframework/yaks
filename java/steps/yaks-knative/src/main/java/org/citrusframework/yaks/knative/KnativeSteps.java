@@ -44,6 +44,8 @@ public class KnativeSteps {
 
     private KubernetesClient k8sClient;
 
+    protected static boolean autoRemoveResources = KnativeSettings.isAutoRemoveResources();
+
     @Before
     public void before(Scenario scenario) {
         // Use given namespace by initializing a test variable in the test runner. Other test actions and steps
@@ -53,6 +55,16 @@ public class KnativeSteps {
         if (k8sClient == null) {
             k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
+    }
+
+    @Given("^Disable auto removal of Knative resources$")
+    public void disableAutoRemove() {
+        autoRemoveResources = false;
+    }
+
+    @Given("^Enable auto removal of Knative resources$")
+    public void enableAutoRemove() {
+        autoRemoveResources = true;
     }
 
     @Given("^Knative namespace ([^\\s]+)$")
