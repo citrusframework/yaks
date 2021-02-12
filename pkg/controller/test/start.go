@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -136,6 +137,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 							TerminationMessagePolicy: "FallbackToLogsOnError",
 							TerminationMessagePath:   "/dev/termination-log",
 							ImagePullPolicy:          v1.PullIfNotPresent,
+							TTY: true,
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tests",
@@ -220,11 +222,15 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		Value: test.Status.TestID,
 	})
 
-	if err := action.bindSecrets(ctx, test, &job); err != nil {
+	if err := action.bindSecrets(test, &job); err != nil {
 		return nil, err
 	}
 
 	if err := action.injectSnap(ctx, &job); err != nil {
+		return nil, err
+	}
+
+	if err := action.addSelenium(test, &job); err != nil {
 		return nil, err
 	}
 
@@ -244,11 +250,10 @@ func getMavenArgLine() []string {
 	argLine = append(argLine, "-s", "/deployments/artifacts/settings.xml")
 
 	// add test goal
-	argLine = append(argLine, "test")
+	argLine = append(argLine, "verify")
 
 	// add system property settings
 	argLine = append(argLine, "-Dremoteresources.skip=true", "-Dmaven.repo.local=/deployments/artifacts/m2")
-
 
 	return argLine
 }
@@ -312,7 +317,53 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	return err
 }
 
-func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, job *batchv1.Job) error {
+func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) error {
+	if test.Spec.Selenium.Image != "" {
+		shareProcessNamespace := true
+		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
+
+		// set explicit non-root user for all containers - required for killing the supervisord process later
+		uid := int64(1000)
+		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
+			RunAsUser: &uid,
+		}
+
+		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, v1.Container{
+			Name:                     "selenium",
+			Image:                    test.Spec.Selenium.Image,
+			ImagePullPolicy:          v1.PullIfNotPresent,
+			VolumeMounts: []v1.VolumeMount{
+				{
+					Name:      "dshm",
+					MountPath: "/dev/shm",
+				},
+			},
+		})
+
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: "dshm",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{
+					Medium: v1.StorageMediumMemory,
+					SizeLimit: resource.NewScaledQuantity(2, resource.Giga),
+				},
+			},
+		})
+
+		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
+			Capabilities: &v1.Capabilities{
+				Add: []v1.Capability{ "SYS_PTRACE" },
+			},
+		}
+
+		// Add selenium profile that will shutdown the selenium container when test is finished
+		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pselenium")
+	}
+
+	return nil
+}
+
+func (action *startAction) bindSecrets(test *v1alpha1.Test, job *batchv1.Job) error {
 	var options = metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", TestLabel, test.Name),
 	}

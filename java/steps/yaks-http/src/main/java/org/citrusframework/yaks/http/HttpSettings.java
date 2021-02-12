@@ -22,7 +22,7 @@ package org.citrusframework.yaks.http;
  */
 public class HttpSettings {
 
-    private static final String HTTP_PROPERTY_PREFIX = "yaks.kubernetes.";
+    private static final String HTTP_PROPERTY_PREFIX = "yaks.http.";
     private static final String HTTP_ENV_PREFIX = "YAKS_HTTP_";
 
     private static final String TIMEOUT_PROPERTY = HTTP_PROPERTY_PREFIX + ".timeout";

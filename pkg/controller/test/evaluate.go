@@ -88,29 +88,44 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 }
 
 func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1.Test) error {
-	var reportJson = []byte(status.ContainerStatuses[0].State.Terminated.Message)
-	if err := json.Unmarshal(reportJson, &test.Status.Results); err != nil {
-		return err
-	}
+	containerStatus := getTestContainerStatus(status.ContainerStatuses)
 
-	errors := make([]string, 0)
-	for _, result := range test.Status.Results.Tests {
-		if result.ErrorType != "" {
-			_, className := path.Split(result.ClassName)
-			errors = append(errors, fmt.Sprintf("'%s' (%s) failed with '%s'",
-				result.Name, className, result.ErrorMessage))
-		}
-	}
+	if containerStatus.State.Terminated != nil && len(containerStatus.State.Terminated.Message) > 0 {
+		reportJson := []byte(containerStatus.State.Terminated.Message)
 
-	if len(errors) > 0 {
-		bytes, err := json.Marshal(errors)
-		if err != nil {
+		if err := json.Unmarshal(reportJson, &test.Status.Results); err != nil {
 			return err
 		}
-		test.Status.Errors = string(bytes);
+
+		errors := make([]string, 0)
+		for _, result := range test.Status.Results.Tests {
+			if result.ErrorType != "" {
+				_, className := path.Split(result.ClassName)
+				errors = append(errors, fmt.Sprintf("'%s' (%s) failed with '%s'",
+					result.Name, className, result.ErrorMessage))
+			}
+		}
+
+		if len(errors) > 0 {
+			bytes, err := json.Marshal(errors)
+			if err != nil {
+				return err
+			}
+			test.Status.Errors = string(bytes);
+		}
 	}
 
 	return nil
+}
+
+func getTestContainerStatus(statusList []v1.ContainerStatus) v1.ContainerStatus {
+	for _, status := range statusList {
+		if status.Name == "test" {
+			return status
+		}
+	}
+
+	return v1.ContainerStatus{}
 }
 
 func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {

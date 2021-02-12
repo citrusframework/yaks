@@ -30,7 +30,6 @@ import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.container.Wait;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpClientActionBuilder;
 import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
@@ -56,6 +55,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
+import static com.consol.citrus.container.Wait.Builder.waitFor;
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
 
@@ -169,7 +169,7 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^wait for (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
     public void waitForHttpStatus(String urlOrPath, Integer statusCode) {
-        runner.given(Wait.Builder.waitFor().http()
+        runner.given(waitFor().http()
                 .milliseconds(timeout)
                 .interval(timeout / 10)
                 .status(statusCode)
@@ -178,7 +178,7 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
     public void waitForHttpStatusUsingMethod(String method, String urlOrPath, Integer statusCode) {
-        runner.given(Wait.Builder.waitFor().http()
+        runner.given(waitFor().http()
                 .milliseconds(timeout)
                 .method(method)
                 .interval(timeout / 10)

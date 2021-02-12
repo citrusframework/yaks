@@ -468,6 +468,12 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		test.Spec.Secret = runConfig.Config.Runtime.Secret;
 	}
 
+	if runConfig.Config.Runtime.Selenium.Image != "" {
+		test.Spec.Selenium = v1alpha1.SeleniumSpec{
+			Image: runConfig.Config.Runtime.Selenium.Image,
+		};
+	}
+
 	switch o.DumpFormat {
 		case "":
 			// continue..

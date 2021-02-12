@@ -67,7 +67,6 @@ public class KnativeSettings {
 
     private static final String SERVICE_PORT_PROPERTY = KNATIVE_PROPERTY_PREFIX + "service.port";
     private static final String SERVICE_PORT_ENV = KNATIVE_ENV_PREFIX + "SERVICE_PORT";
-    private static final String SERVICE_PORT_DEFAULT = "8080";
 
     private static final String AUTO_REMOVE_RESOURCES_PROPERTY = KNATIVE_PROPERTY_PREFIX + "auto.remove.resources";
     private static final String AUTO_REMOVE_RESOURCES_ENV = KNATIVE_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
