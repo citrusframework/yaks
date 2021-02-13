@@ -132,7 +132,6 @@ func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 }
 
 func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
-	var err error
 	source := args[0]
 
 	results := v1alpha1.TestResults{}
@@ -142,29 +141,29 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	}
 
 	if isDir(source) {
-		err = o.runTestGroup(source, &results)
+		o.runTestGroup(source, &results)
 	} else {
-		err = o.runTest(source, &results)
+		o.runTest(source, &results)
 	}
 
-	if err != nil {
-		results.Errors = append(results.Errors, err.Error())
-	} else if len(results.Errors) > 0 {
-		err = errors.New("There are test failures!")
+	if HasErrors(&results) {
+		return errors.New("There are test failures!")
 	}
 
-	return err
+	return nil
 }
 
-func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) error {
+func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return handleTestError("", source, results, err)
+		handleTestError("", source, results, err)
+		return
 	}
 
 	var runConfig *config.RunConfig
 	if runConfig, err = o.getRunConfig(source); err != nil {
-		return handleTestError("", source, results, err)
+		handleTestError("", source, results, err)
+		return
 	}
 
 	if runConfig.Config.Namespace.Temporary {
@@ -174,100 +173,118 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) e
 			}
 
 			if err != nil {
-				return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+				handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+				return
 			}
 		} else if err != nil {
-			return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+			handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+			return
 		}
 	}
 
 	if err = o.uploadArtifacts(runConfig); err != nil {
-		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		return
 	}
 
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
 	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
-		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		return
 	}
 
+	suite := v1alpha1.TestSuite{}
 	var test *v1alpha1.Test
 	test, err = o.createAndRunTest(c, source, runConfig)
-	handleTestResult(test, results);
-	return err
+	if test != nil {
+		handleTestResult(test, &suite);
+		results.Suites = append(results.Suites, suite)
+
+		if err != nil {
+			suite.Errors = append(suite.Errors, err.Error())
+		}
+	} else if err != nil {
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+	}
 }
 
-func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResults) error {
+func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return handleTestError("", source, results, err)
+		handleTestError("", source, results, err)
+		return
 	}
 
 	var runConfig *config.RunConfig
 	if runConfig, err = o.getRunConfig(source); err != nil {
-		return handleTestError("", source, results, err)
+		handleTestError("", source, results, err)
+		return
 	}
 
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
-			return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+			handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+			return
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
 
 	if err = o.uploadArtifacts(runConfig); err != nil {
-		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		return
 	}
 
 	var files []os.FileInfo
 	if files, err = ioutil.ReadDir(source); err != nil {
-		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		return
 	}
 
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
 	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
-		return handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+		return
 	}
 
-	suiteErrors := make([]string, 0)
 	for _, f := range files {
 		name := path.Join(source, f.Name())
 		if f.IsDir() && runConfig.Config.Recursive {
-			groupError := o.runTestGroup(name, results)
-			if groupError != nil {
-				suiteErrors = append(suiteErrors, groupError.Error())
-			}
+			o.runTestGroup(name, results)
 		} else if strings.HasSuffix(f.Name(), FileSuffix) {
+			suite := v1alpha1.TestSuite{}
 			var test *v1alpha1.Test
-			var testError error
-			test, testError = o.createAndRunTest(c, name, runConfig)
-			handleTestResult(test, results);
+			test, err = o.createAndRunTest(c, name, runConfig)
+			if test != nil {
+				handleTestResult(test, &suite);
+				results.Suites = append(results.Suites, suite)
 
-			if testError != nil {
-				suiteErrors = append(suiteErrors, testError.Error())
+				if err != nil {
+					suite.Errors = append(suite.Errors, err.Error())
+				}
+			} else if err != nil {
+				handleTestError(runConfig.Config.Namespace.Name, name, results, err)
 			}
 		}
 	}
+}
 
-	if len(suiteErrors) > 0 {
-		results.Errors = append(results.Errors, suiteErrors...)
+func handleTestError(namespace string, source string, results *v1alpha1.TestResults, err error) {
+	suite := v1alpha1.TestSuite{
+		Errors: []string{
+			err.Error(),
+		},
 	}
 
-	return nil
+	handleTestResult(report.GetErrorResult(namespace, source, err), &suite)
+	results.Suites = append(results.Suites, suite)
 }
 
-func handleTestError(namespace string, source string, results *v1alpha1.TestResults, err error) error {
-	handleTestResult(report.GetErrorResult(namespace, source, err), results)
-	return err;
-}
+func handleTestResult(test *v1alpha1.Test, suite *v1alpha1.TestSuite) {
+	report.AppendTestResults(suite, test.Status.Results)
 
-func handleTestResult(test *v1alpha1.Test, results *v1alpha1.TestResults) {
-	if test != nil {
-		report.AppendTestResults(results, test.Status.Results)
-
-		if saveErr := report.SaveTestResults(test); saveErr != nil {
-			fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
-		}
+	if saveErr := report.SaveTestResults(test); saveErr != nil {
+		fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
 	}
 }
 

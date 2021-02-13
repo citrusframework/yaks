@@ -45,6 +45,7 @@ public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
                 List<String> lines = Files.readAllLines(TestReporter.getTerminationLog());
                 Assert.assertEquals(1L, lines.size());
                 Assert.assertEquals("{" +
+                            "\"suiteName\":\"Test reporter\"," +
                             "\"summary\":" +
                                 "{\"passed\":1,\"failed\":0,\"skipped\":0,\"pending\":0,\"undefined\":0,\"total\":1}," +
                             "\"tests\":[" +

@@ -31,13 +31,23 @@ import org.slf4j.LoggerFactory;
  */
 class TestResults {
     /** Logger */
-    private static Logger LOG = LoggerFactory.getLogger(TestResults.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestResults.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    private String suiteName = "yaks-test-suite";
 
     private final TestSummary summary = new TestSummary();
 
     private final List<TestResult> tests = new ArrayList<>();
+
+    public void setSuiteName(String suiteName) {
+        this.suiteName = suiteName;
+    }
+
+    public String getSuiteName() {
+        return suiteName;
+    }
 
     public List<TestResult> getTests() {
         return tests;

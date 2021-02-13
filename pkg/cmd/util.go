@@ -20,6 +20,7 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
@@ -239,3 +240,12 @@ func getDefaultOperatorNamespace(c client.Client, runConfig *config.RunConfig) (
 	}
 }
 
+func HasErrors(results *v1alpha1.TestResults) bool {
+	for _, suite := range results.Suites {
+		if len(suite.Errors) > 0 {
+			return true
+		}
+	}
+
+	return false
+}
