@@ -21,9 +21,11 @@ import com.consol.citrus.camel.endpoint.CamelSyncEndpoint;
 import com.consol.citrus.camel.endpoint.CamelSyncEndpointConfiguration;
 import com.consol.citrus.endpoint.direct.DirectEndpoint;
 import com.consol.citrus.endpoint.direct.DirectEndpoints;
+import com.consol.citrus.message.DefaultMessage;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.SpringCamelContext;
+import org.citrusframework.yaks.message.MessageCreator;
 import org.citrusframework.yaks.report.SystemOutTestReporter;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.ApplicationContext;
@@ -38,6 +40,11 @@ import org.springframework.context.annotation.DependsOn;
 public class EndpointConfiguration {
 
     private CamelContext camelContext;
+
+    @Bean
+    public MessageCreator fooMessage() {
+        return () -> new DefaultMessage("Hello from Foo!");
+    }
 
     @Bean
     public DirectEndpoint fooEndpoint() {
