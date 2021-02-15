@@ -73,3 +73,20 @@ func createIfNotExists(dir string) error {
 
 	return nil
 }
+
+func writeReport(report string, fileName string, outputDir string) error {
+	if err := createIfNotExists(outputDir); err != nil {
+		return err
+	}
+
+	reportFile, err := os.Create(path.Join(outputDir, fileName))
+	if err != nil {
+		return err
+	}
+
+	if _, err := reportFile.Write([]byte(report)); err != nil {
+		return err
+	}
+
+	return nil
+}

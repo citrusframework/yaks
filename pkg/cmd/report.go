@@ -98,10 +98,29 @@ func (o *reportCmdOptions) FetchResults() (*v1alpha1.TestResults, error) {
 	}
 
 	for _, test := range testList.Items {
-		report.AppendTestResults(&results, test.Status.Results)
+		suite := v1alpha1.TestSuite{}
+
+		isNew := true
+		for _, existing := range results.Suites {
+			if existing.Name == test.Status.Results.Name {
+				suite = existing
+				isNew = false
+				break
+			}
+		}
+
+		report.AppendTestResults(&suite, test.Status.Results)
+
+		if isNew {
+			results.Suites = append(results.Suites, suite)
+		}
 		if err := report.SaveTestResults(&test); err != nil {
 			fmt.Printf("Failed to save test results: %s", err.Error())
 		}
+	}
+
+	for _, suite := range results.Suites {
+		report.AppendSummary(&results.Summary, &suite.Summary)
 	}
 
 	return &results, nil

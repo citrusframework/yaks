@@ -83,7 +83,7 @@ type TestStatus struct {
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
 	Phase   TestPhase   `json:"phase,omitempty"`
-	Results TestResults `json:"results,omitempty"`
+	Results TestSuite   `json:"results,omitempty"`
 	Errors	string      `json:"errors,omitempty"`
 	TestID  string      `json:"testID,omitempty"`
 	Digest  string      `json:"digest,omitempty"`
@@ -121,6 +121,12 @@ type TestList struct {
 }
 
 type TestResults struct {
+	Summary TestSummary  `json:"summary,omitempty"`
+	Suites  []TestSuite  `json:"suites,omitempty"`
+}
+
+type TestSuite struct {
+	Name    string     `json:"suiteName,omitempty"`
 	Summary TestSummary  `json:"summary,omitempty"`
 	Tests	[]TestResult `json:"tests,omitempty"`
 	Errors 	[]string 	 `json:"errors,omitempty"`

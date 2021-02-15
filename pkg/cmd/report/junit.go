@@ -20,16 +20,15 @@ package report
 import (
 	"encoding/xml"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"os"
-	"path"
 )
 
 const (
+	JunitReportFile = "junit-reports.xml"
 	XmlProcessingInstruction = `<?xml version="1.0" encoding="UTF-8"?>`
 )
 
 type JUnitReport struct {
-	Suite TestSuite `xml:"testsuite"`
+	Suite []TestSuite `xml:"testsuite"`
 }
 
 type TestSuite struct {
@@ -67,30 +66,36 @@ type Error struct {
 
 func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
 	var report = JUnitReport {
-		Suite: TestSuite {
-			Name: "org.citrusframework.yaks.JUnitReport",
-			Failures: results.Summary.Failed,
-			Skipped: results.Summary.Skipped,
-			Tests: results.Summary.Total,
-			Errors: results.Summary.Errors,
-		},
+		Suite: []TestSuite {},
 	}
 
-	for _, result := range results.Tests {
-		testCase := TestCase{
-			Name: result.Name,
-			ClassName: result.ClassName,
+	for _, testSuite := range results.Suites {
+		var suite = TestSuite {
+			Name:     testSuite.Name,
+			Failures: testSuite.Summary.Failed,
+			Skipped:  testSuite.Summary.Skipped,
+			Tests:    testSuite.Summary.Total,
+			Errors:   testSuite.Summary.Errors,
 		}
 
-		if len(result.ErrorMessage) > 0 {
-			testCase.Failure = &Failure{
-				Message:    result.ErrorMessage,
-				Type:       result.ErrorType,
-				Stacktrace: "",
+		for _, test := range testSuite.Tests {
+			testCase := TestCase{
+				Name: test.Name,
+				ClassName: test.ClassName,
 			}
+
+			if len(test.ErrorMessage) > 0 {
+				testCase.Failure = &Failure{
+					Message:    test.ErrorMessage,
+					Type:       test.ErrorType,
+					Stacktrace: "",
+				}
+			}
+
+			suite.TestCase = append(suite.TestCase, testCase)
 		}
 
-		report.Suite.TestCase = append(report.Suite.TestCase, testCase)
+		report.Suite = append(report.Suite, suite)
 	}
 
 	// need to workaround marshalling in order to overwrite local element name of root element
@@ -98,22 +103,16 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 		JUnitReport
 		XMLName struct{} `xml:"testsuites"`
 	}{JUnitReport: report}
-	if bytes, err := xml.MarshalIndent(tmp,"", "  "); err == nil {
-		junitReport := XmlProcessingInstruction + string(bytes)
 
-		if err := createIfNotExists(outputDir); err != nil {
-			return "", nil
+	if bytes, err := xml.MarshalIndent(tmp, "", "  "); err == nil {
+		report := XmlProcessingInstruction + string(bytes)
+
+		fileError := writeReport(report, JunitReportFile, outputDir)
+		if fileError != nil {
+			return "", fileError
 		}
 
-		reportFile, err := os.Create(path.Join(outputDir, "junit-reports.xml"))
-		if err != nil {
-			return "", err
-		}
-
-		if _, err := reportFile.Write([]byte(junitReport)); err != nil {
-			return "", err
-		}
-		return junitReport, nil
+		return report, nil
 	} else {
 		return "", err
 	}

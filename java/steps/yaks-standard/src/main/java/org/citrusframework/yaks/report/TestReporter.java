@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.consol.citrus.cucumber.CitrusReporter;
 import io.cucumber.java.PendingException;
@@ -33,6 +35,7 @@ import io.cucumber.plugin.event.Status;
 import io.cucumber.plugin.event.TestCaseFinished;
 import io.cucumber.plugin.event.TestCaseStarted;
 import io.cucumber.plugin.event.TestRunFinished;
+import io.cucumber.plugin.event.TestSourceRead;
 import io.cucumber.plugin.event.TestStepFinished;
 import org.citrusframework.yaks.util.CucumberUtils;
 import org.slf4j.Logger;
@@ -53,13 +56,16 @@ public class TestReporter extends CitrusReporter {
     private static final String TERMINATION_LOG_PROPERTY = "yaks.termination.log";
     private static final String TERMINATION_LOG_ENV = "YAKS_TERMINATION_LOG";
 
-    private TestResults testResults = new TestResults();
+    private final Pattern featureNamePattern = Pattern.compile("^Feature:(.+)$", Pattern.MULTILINE);
+
+    private final TestResults testResults = new TestResults();
 
     @Override
     public void setEventPublisher(EventPublisher publisher) {
         publisher.registerHandlerFor(TestCaseFinished.class, this::saveTestResult);
         publisher.registerHandlerFor(TestCaseStarted.class, this::addTestDetail);
         publisher.registerHandlerFor(TestStepFinished.class, this::checkStepErrors);
+        publisher.registerHandlerFor(TestSourceRead.class, this::setSuiteName);
         publisher.registerHandlerFor(TestRunFinished.class, this::printReports);
         super.setEventPublisher(publisher);
     }
@@ -99,6 +105,19 @@ public class TestReporter extends CitrusReporter {
                 testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
                         CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine(), cause));
             }
+        }
+    }
+
+    /**
+     * Sets the suite name either from feature name extracted from source or from source file path.
+     * @param event
+     */
+    private void setSuiteName(TestSourceRead event) {
+        Matcher featureNameMatcher = featureNamePattern.matcher(event.getSource());
+        if (featureNameMatcher.find()) {
+            testResults.setSuiteName(featureNameMatcher.group(1).trim());
+        } else if (event.getUri().getSchemeSpecificPart() != null) {
+            testResults.setSuiteName(event.getUri().getSchemeSpecificPart());
         }
     }
 

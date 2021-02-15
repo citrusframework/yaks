@@ -57,44 +57,50 @@ const (
 )
 
 func GenerateReport(results *v1alpha1.TestResults, output OutputFormat) (string, error) {
-	switch output {
-		case JUnitOutput:
-			outputDir, err := createInWorkingDir(OutputDir)
-			if err != nil {
-				return "", err
-			}
+	outputDir, err := createInWorkingDir(OutputDir)
+	if err != nil {
+		return "", err
+	}
 
+	switch output {
+		case SummaryOutput, DefaultOutput:
+			summaryReport := GetSummaryReport(results)
+			return summaryReport, nil
+		case JUnitOutput:
 			if junitReport, err := createJUnitReport(results, outputDir); err != nil {
 				return "", err
 			} else {
 				return junitReport, nil
 			}
-		case SummaryOutput, DefaultOutput:
-			summaryReport := GetSummaryReport(results)
-			return summaryReport, nil
 		case JsonOutput:
-			if bytes, err := json.MarshalIndent(results, "", "  "); err != nil {
+			if jsonReport, err := createJsonReport(results, outputDir); err != nil {
 				return "", err
 			} else {
-				return string(bytes), nil
+				return jsonReport, nil
 			}
 		default:
 			return "", errors.New(fmt.Sprintf("Unsupported report output format '%s'. Please use one of 'summary', 'json', 'junit'", output))
 	}
 }
 
-func AppendTestResults(results *v1alpha1.TestResults, result v1alpha1.TestResults) {
-	results.Summary.Errors += result.Summary.Errors
-	results.Summary.Passed += result.Summary.Passed
-	results.Summary.Failed += result.Summary.Failed
-	results.Summary.Skipped += result.Summary.Skipped
-	results.Summary.Undefined += result.Summary.Undefined
-	results.Summary.Pending += result.Summary.Pending
-	results.Summary.Total += result.Summary.Total
+func AppendTestResults(suites *v1alpha1.TestSuite, suite v1alpha1.TestSuite) {
+	suites.Name = suite.Name
 
-	for _, result := range result.Tests {
-		results.Tests = append(results.Tests, result)
+	AppendSummary(&suites.Summary, &suite.Summary)
+
+	for _, test := range suite.Tests {
+		suites.Tests = append(suites.Tests, test)
 	}
+}
+
+func AppendSummary(overall *v1alpha1.TestSummary, summary *v1alpha1.TestSummary) {
+	overall.Errors += summary.Errors
+	overall.Passed += summary.Passed
+	overall.Failed += summary.Failed
+	overall.Skipped += summary.Skipped
+	overall.Undefined += summary.Undefined
+	overall.Pending += summary.Pending
+	overall.Total += summary.Total
 }
 
 func SaveTestResults(test *v1alpha1.Test) error {
@@ -136,7 +142,7 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 	}
 
 	for _, file := range files {
-		if path.Ext(file.Name()) != ".json" {
+		if path.Ext(file.Name()) != ".json" || file.Name() == JsonReportFile {
 			continue
 		}
 
@@ -145,13 +151,28 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 			return &results, err
 		}
 
-		var result v1alpha1.TestResults
-		err = json.Unmarshal(content, &result)
+		var suite v1alpha1.TestSuite
+		err = json.Unmarshal(content, &suite)
 		if err != nil {
 			return &results, err
 		}
 
-		AppendTestResults(&results, result)
+		isNew := true
+		for _, existing := range results.Suites {
+			if existing.Name == suite.Name {
+				AppendTestResults(&existing, suite)
+				isNew = false
+				break
+			}
+		}
+
+		if isNew {
+			results.Suites = append(results.Suites, suite)
+		}
+	}
+
+	for _, suite := range results.Suites {
+		AppendSummary(&results.Summary, &suite.Summary)
 	}
 
 	return &results, nil
@@ -162,10 +183,18 @@ func PrintSummaryReport(results *v1alpha1.TestResults) {
 }
 
 func GetSummaryReport(results *v1alpha1.TestResults) string {
-	summary := fmt.Sprintf("Test results: Total: %d, Passed: %d, Failed: %d, Errors: %d, Skipped: %d\n",
-		results.Summary.Total, results.Summary.Passed, results.Summary.Failed, len(results.Errors), results.Summary.Skipped)
+	overall := v1alpha1.TestSuite{}
 
-	for _, test := range results.Tests {
+	for _, suite := range results.Suites {
+		AppendTestResults(&overall, suite)
+	}
+
+	overall.Name = "All tests"
+
+	summary := fmt.Sprintf("Test results: Total: %d, Passed: %d, Failed: %d, Errors: %d, Skipped: %d\n",
+		overall.Summary.Total, overall.Summary.Passed, overall.Summary.Failed, len(overall.Errors), overall.Summary.Skipped)
+
+	for _, test := range overall.Tests {
 		result := "Passed"
 		if len(test.ErrorMessage) > 0 {
 			result = fmt.Sprintf("Failure caused by %s - %s", test.ErrorType, test.ErrorMessage)
@@ -174,9 +203,9 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 		summary += fmt.Sprintf("\t%s (%s): %s\n", test.Name, className, result)
 	}
 
-	if len(results.Errors) > 0 {
-		if prettyPrint, err := json.MarshalIndent(results.Errors, "", "  "); err == nil {
-			summary += fmt.Sprintf("\nErrors: %d\n%s", len(results.Errors), string(prettyPrint))
+	if len(overall.Errors) > 0 {
+		if prettyPrint, err := json.MarshalIndent(overall.Errors, "", "  "); err == nil {
+			summary += fmt.Sprintf("\nErrors: %d\n%s", len(overall.Errors), string(prettyPrint))
 		} else {
 			fmt.Printf("Failed to read error details from test results: %s", err.Error())
 		}
@@ -196,7 +225,8 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 		},
 		Status: v1alpha1.TestStatus{
 			Errors: err.Error(),
-			Results: v1alpha1.TestResults{
+			Results: v1alpha1.TestSuite{
+				Name: source,
 				Tests: []v1alpha1.TestResult{
 					{
 						Name: kubernetes.SanitizeName(source),

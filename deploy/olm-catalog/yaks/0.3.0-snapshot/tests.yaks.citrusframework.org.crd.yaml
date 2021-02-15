@@ -101,6 +101,12 @@ spec:
               type: array
             secret:
               type: string
+            selenium:
+              description: SeleniumSpec--
+              properties:
+                image:
+                  type: string
+              type: object
             source:
               description: SourceSpec--
               properties:
@@ -128,8 +134,12 @@ spec:
                   items:
                     type: string
                   type: array
+                suiteName:
+                  type: string
                 summary:
                   properties:
+                    errors:
+                      type: integer
                     failed:
                       type: integer
                     passed:
@@ -143,6 +153,7 @@ spec:
                     undefined:
                       type: integer
                   required:
+                  - errors
                   - failed
                   - passed
                   - pending
