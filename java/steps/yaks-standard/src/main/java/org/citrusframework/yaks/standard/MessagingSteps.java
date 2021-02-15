@@ -20,17 +20,21 @@ package org.citrusframework.yaks.standard;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.consol.citrus.Citrus;
 import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.message.DefaultMessage;
 import com.consol.citrus.message.Message;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.citrusframework.yaks.message.MessageCreator;
+import org.citrusframework.yaks.message.MessageCreators;
 
 import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
 import static com.consol.citrus.actions.SendMessageAction.Builder.send;
@@ -43,12 +47,33 @@ public class MessagingSteps {
     @CitrusResource
     private TestCaseRunner runner;
 
+    @CitrusFramework
+    private Citrus citrus;
+
+    /** Available message creator POJO objects */
+    private MessageCreators messageCreators;
+
     /** Messages defined by id */
     private Map<String, Message> messages;
 
     @Before
     public void before() {
+        messageCreators = new MessageCreators();
+
+        citrus.getCitrusContext().getReferenceResolver().resolveAll(MessageCreator.class)
+                .forEach(messageCreators::add);
+
         messages = new HashMap<>();
+    }
+
+    @Given("^message creator type ([^\\s]+)$")
+    public void messageCreator(String type) {
+        messageCreators.addType(type);
+    }
+
+    @Given("^message creator types$")
+    public void messageCreators(DataTable types) {
+        types.asList().forEach(messageCreators::addType);
     }
 
     @Given("^(?:create|new) message ([^\\s]+)$")
@@ -64,7 +89,9 @@ public class MessagingSteps {
                     .endpoint(endpoint)
                     .message(new DefaultMessage(messages.get(messageId))));
         } else {
-            throw new CitrusRuntimeException(String.format("Unable to find message for id '%s'", messageId));
+            Message message = messageCreators.createMessage(messageId);
+            runner.when(send().endpoint(endpoint)
+                    .message(message));
         }
     }
 
@@ -92,7 +119,10 @@ public class MessagingSteps {
                     .message(new DefaultMessage(messages.get(messageId))
                                     .setType(type)));
         } else {
-            throw new CitrusRuntimeException(String.format("Unable to find message for id '%s'", messageId));
+            Message message = messageCreators.createMessage(messageId);
+            runner.when(receive().endpoint(endpoint)
+                    .message(message)
+                    .type(type));
         }
     }
 
