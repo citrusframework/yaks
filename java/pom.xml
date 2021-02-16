@@ -65,6 +65,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <project.docs.version>${project.version}</project.docs.version>
     <slf4j.version>1.7.30</slf4j.version>
     <log4j2.version>2.14.0</log4j2.version>
     <groovy.version>2.5.14</groovy.version>
@@ -461,7 +462,7 @@
             <attributes>
               <icons>font</icons>
               <pagenums/>
-              <version>${project.version}</version>
+              <version>${project.docs.version}</version>
               <plugindir>${project.basedir}/plugin</plugindir>
               <idprefix/>
               <idseparator>-</idseparator>

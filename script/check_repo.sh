@@ -16,23 +16,8 @@
 # limitations under the License.
 
 location=$(dirname $0)
-rootdir=$location/../
+rootdir=$(realpath ${location}/../)
 
-# Checks if git subtree has changes in given top directory
-check_git_clean() {
-    local working_dir="$1"
-
-    cd $working_dir
-    echo "==== Checking for clean Git Repo"
-    set +e
-    git diff-index --quiet HEAD --
-    local git_uncommitted=$?
-    set -e
-    if [ $git_uncommitted != 0 ]; then
-       git status
-       echo "Untracked or changed files exist. Please run release on a clean repo"
-       exit 1
-    fi
-}
+source "$location/util/git_funcs"
 
 check_git_clean $rootdir

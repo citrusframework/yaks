@@ -110,6 +110,18 @@ release-snapshot: prepare-release
 release-nightly: prepare-release
 	./script/release.sh --snapshot-release --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --no-git-push
 
+generate-docs:
+	./script/docs.sh docs --release-version $(VERSION) --local --html-only
+
+release-docs:
+	./script/docs.sh docs --release-version $(VERSION)
+
+release-docs-major:
+	./script/docs.sh docs --release-version $(VERSION) --major-release
+
+release-docs-dry-run:
+	./script/docs.sh docs --release-version $(VERSION) --dry-run
+
 package-artifacts-no-test:
 	./script/package_maven_artifacts.sh --release-version $(VERSION) --local-release --skip-tests
 
@@ -122,4 +134,4 @@ snapshot-version:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-resources generate-docs release-docs release-docs-dry-run release-docs-major update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
