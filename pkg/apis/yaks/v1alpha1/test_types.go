@@ -133,13 +133,13 @@ type TestSuite struct {
 }
 
 type TestSummary struct {
-	Total  		int   	  `json:"total"`
-	Errors 		int   	  `json:"errors"`
-	Passed 		int   	  `json:"passed"`
-	Failed 		int   	  `json:"failed"`
-	Skipped 	int   	  `json:"skipped"`
-	Pending 	int   	  `json:"pending"`
-	Undefined 	int   	  `json:"undefined"`
+	Total  		int   	  `json:"total,omitempty"`
+	Errors 		int   	  `json:"errors,omitempty"`
+	Passed 		int   	  `json:"passed,omitempty"`
+	Failed 		int   	  `json:"failed,omitempty"`
+	Skipped 	int   	  `json:"skipped,omitempty"`
+	Pending 	int   	  `json:"pending,omitempty"`
+	Undefined 	int   	  `json:"undefined,omitempty"`
 }
 
 type TestResult struct {

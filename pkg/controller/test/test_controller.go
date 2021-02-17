@@ -19,12 +19,14 @@ package test
 
 import (
 	"context"
+	"github.com/citrusframework/yaks/pkg/util/digest"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -36,7 +38,6 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
-	"github.com/citrusframework/yaks/pkg/util/log"
 )
 
 /**
@@ -163,10 +164,10 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 
 	actions := []Action{
 		NewInitializeAction(),
+		NewNoopAction(),
 		NewStartAction(),
 		NewEvaluateAction(),
 		NewMonitorAction(),
-		NewNoopAction(),
 	}
 
 	for _, a := range actions {
@@ -183,8 +184,22 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 			}
 
 			if newTarget != nil {
-				if r, err := r.update(ctx, targetLog, newTarget); err != nil {
-					return r, err
+				if dgst, err := digest.ComputeForTest(newTarget); err != nil {
+					return reconcile.Result{}, err
+				} else {
+					newTarget.Status.Digest = dgst
+				}
+
+				if err := r.client.Status().Patch(ctx, newTarget, k8sclient.MergeFrom(&instance)); err != nil {
+					if k8serrors.IsConflict(err) {
+						targetLog.Error(err, "conflict in updating test to status " + string(target.Status.Phase))
+
+						return reconcile.Result{
+							Requeue: true,
+						}, nil
+					} else {
+						return reconcile.Result{}, err
+					}
 				}
 
 				if newTarget.Status.Phase != target.Status.Phase {
@@ -203,20 +218,4 @@ func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconci
 	}
 
 	return reconcile.Result{}, nil
-}
-
-// Update --
-func (r *ReconcileIntegrationTest) update(ctx context.Context, log log.Logger, target *v1alpha1.Test) (reconcile.Result, error) {
-	err := r.client.Status().Update(ctx, target)
-	if err != nil {
-		if k8serrors.IsConflict(err) {
-			log.Error(err, "conflict in updating test to status " + string(target.Status.Phase))
-
-			return reconcile.Result{
-				Requeue: true,
-			}, nil
-		}
-	}
-
-	return reconcile.Result{}, err
 }

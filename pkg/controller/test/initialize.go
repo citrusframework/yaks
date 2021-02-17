@@ -22,7 +22,6 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/defaults"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/util/digest"
 	"github.com/rs/xid"
 )
 
@@ -48,14 +47,8 @@ func (action *initializeAction) CanHandle(build *v1alpha1.Test) bool {
 
 // Handle handles the test
 func (action *initializeAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
-	testDigest, err := digest.ComputeForTest(test)
-	if err != nil {
-		return nil, err
-	}
-
 	test.Status.Phase = v1alpha1.TestPhasePending
 	test.Status.TestID = xid.New().String()
-	test.Status.Digest = testDigest
 	test.Status.Version = defaults.Version
 	return test, nil
 }

@@ -152,14 +152,6 @@ spec:
                       type: integer
                     undefined:
                       type: integer
-                  required:
-                  - errors
-                  - failed
-                  - passed
-                  - pending
-                  - skipped
-                  - total
-                  - undefined
                   type: object
                 tests:
                   items:
