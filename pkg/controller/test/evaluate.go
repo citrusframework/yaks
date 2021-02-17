@@ -54,7 +54,7 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 	jobStatus, err := action.getTestJobStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
 		test.Status.Phase = v1alpha1.TestPhaseError
-		test.Status.Errors = "Missing pod status for test " + test.Name
+		test.Status.Errors = "Missing job status for test " + test.Name
 		return test, nil
 	} else if err != nil {
 		return nil, err
@@ -68,6 +68,8 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 		test.Status.Phase = v1alpha1.TestPhaseFailed
 	} else if jobStatus.Succeeded > 0 {
 		test.Status.Phase = v1alpha1.TestPhasePassed
+	} else {
+		return test, nil
 	}
 
 	status, err := action.getTestPodStatus(ctx, test)

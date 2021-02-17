@@ -47,7 +47,7 @@ public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
                 Assert.assertEquals("{" +
                             "\"suiteName\":\"Test reporter\"," +
                             "\"summary\":" +
-                                "{\"passed\":1,\"failed\":0,\"skipped\":0,\"pending\":0,\"undefined\":0,\"total\":1}," +
+                                "{\"passed\":1,\"failed\":0,\"errors\":0,\"skipped\":0,\"pending\":0,\"undefined\":0,\"total\":1}," +
                             "\"tests\":[" +
                                 "{\"name\":\"Success test\",\"classname\":\"report.feature:3\"}" +
                             "]" +

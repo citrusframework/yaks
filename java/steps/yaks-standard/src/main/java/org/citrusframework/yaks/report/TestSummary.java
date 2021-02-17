@@ -26,6 +26,7 @@ public class TestSummary {
 
     int passed = 0;
     int failed = 0;
+    int errors = 0;
     int skipped = 0;
     int pending = 0;
     int undefined = 0;
@@ -36,6 +37,10 @@ public class TestSummary {
 
     public int getFailed() {
         return failed;
+    }
+
+    public int getErrors() {
+        return errors;
     }
 
     public int getSkipped() {
