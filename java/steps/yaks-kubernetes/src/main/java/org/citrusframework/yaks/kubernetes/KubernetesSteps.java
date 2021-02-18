@@ -36,6 +36,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
 import org.springframework.http.HttpStatus;
 
 import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
@@ -269,49 +270,84 @@ public class KubernetesSteps {
                 .deleteSecret(secretName));
     }
 
+    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
+    public void resourceShouldMatchCondition(String condition, String name, String resourceType) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyCustomResource(name)
+                .type(resourceType)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .condition(condition));
+    }
+
+    @Given("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) is ready")
+    @Then("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) should be ready")
+    public void resourceShouldBeReady(String name, String resourceType) {
+        resourceShouldMatchCondition("Ready", name, resourceType);
+    }
+
+    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
+    public void resourceLabeledShouldMatchCondition(String condition, String resourceType, String label, String value) {
+        runner.run(kubernetes()
+                .client(k8sClient)
+                .verifyCustomResource(label, value)
+                .type(resourceType)
+                .maxAttempts(maxAttempts)
+                .delayBetweenAttempts(delayBetweenAttempts)
+                .condition(condition));
+    }
+
+    @Given("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) is ready")
+    @Then("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) should be ready")
+    public void resourceLabeledShouldBeReady(String resourceType, String label, String value) {
+        resourceLabeledShouldMatchCondition("Ready", resourceType, label, value);
+    }
+
     @Given("^wait for Kubernetes pod ([a-z0-9-]+)$")
-    @Given("^Kubernetes pod ([a-z0-9-]+) is running$")
-    @Then("^Kubernetes pod ([a-z0-9-]+) should be running$")
-    public void podShouldBeRunning(String name) {
-        runner.run(kubernetes()
+    public void waitForRunningPod(String name) {
+        podShouldBeInPhase(name, "running");
+    }
+
+    @Given("^Kubernetes pod ([a-z0-9-]+) is (running|stopped)$")
+    @Then("^Kubernetes pod ([a-z0-9-]+) should be (running|stopped)$")
+    public void podShouldBeInPhase(String name, String status) {
+        VerifyPodAction.Builder action = kubernetes()
                 .client(k8sClient)
                 .verifyPod(name)
                 .maxAttempts(maxAttempts)
-                .delayBetweenAttempts(delayBetweenAttempts)
-                .isRunning());
+                .delayBetweenAttempts(delayBetweenAttempts);
+
+        if (status.equals("running")) {
+            action.isRunning();
+        } else {
+            action.isStopped();
+        }
+
+        runner.run(action);
     }
 
-    @Given("^Kubernetes pod ([a-z0-9-]+) is stopped")
-    @Then("^Kubernetes pod ([a-z0-9-]+) should be stopped")
-    public void podShouldBeStopped(String name) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyPod(name)
-                .maxAttempts(maxAttempts)
-                .delayBetweenAttempts(delayBetweenAttempts)
-                .isStopped());
+    @Given("^wait for Kubernetes pod labeled with ([^\\s]+)=([^\\s]+)$")
+    public void waitForRunningPod(String label, String value) {
+        podByLabelShouldBeInPhase(label, value, "running");
     }
 
-    @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is running$")
-    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be running$")
-    public void podByLabelShouldBeRunning(String label, String value) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyPod(label, value)
-                .maxAttempts(maxAttempts)
-                .delayBetweenAttempts(delayBetweenAttempts)
-                .isRunning());
-    }
-
-    @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is stopped")
-    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be stopped")
-    public void podByLabelShouldBeStopped(String label, String value) {
-        runner.run(kubernetes()
+    @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is (running|stopped)$")
+    @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be (running|stopped)$")
+    public void podByLabelShouldBeInPhase(String label, String value, String status) {
+        VerifyPodAction.Builder action = kubernetes()
                 .client(k8sClient)
                 .verifyPod(label, value)
                 .maxAttempts(maxAttempts)
-                .delayBetweenAttempts(delayBetweenAttempts)
-                .isStopped());
+                .delayBetweenAttempts(delayBetweenAttempts);
+
+        if (status.equals("running")) {
+            action.isRunning();
+        } else {
+            action.isStopped();
+        }
+
+        runner.run(action);
     }
 
     @Then("^Kubernetes pod ([a-z0-9-]+) should print (.*)$")

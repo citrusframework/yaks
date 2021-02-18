@@ -28,7 +28,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  */
 public class DeleteCustomResourceAction extends AbstractKubernetesAction {
 
-    private final String name;
+    private final String resourceName;
     private final String type;
     private final String version;
     private final String kind;
@@ -37,7 +37,7 @@ public class DeleteCustomResourceAction extends AbstractKubernetesAction {
     public DeleteCustomResourceAction(Builder builder) {
         super("delete-custom-resource", builder);
 
-        this.name = builder.name;
+        this.resourceName = builder.resourceName;
         this.type = builder.type;
         this.group = builder.group;
         this.version = builder.version;
@@ -46,12 +46,17 @@ public class DeleteCustomResourceAction extends AbstractKubernetesAction {
 
     @Override
     public void doExecute(TestContext context) {
-        String resourceName = context.replaceDynamicContentInString(name);
+        String resolvedName = context.replaceDynamicContentInString(resourceName);
         try {
-            getKubernetesClient().customResource(KubernetesSupport.crdContext(type, group, kind, version))
-                                 .delete(namespace(context), resourceName);
+            getKubernetesClient().customResource(
+                    KubernetesSupport.crdContext(
+                        context.replaceDynamicContentInString(type),
+                        context.replaceDynamicContentInString(group),
+                        context.replaceDynamicContentInString(kind),
+                        context.replaceDynamicContentInString(version)))
+                    .delete(namespace(context), resolvedName);
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to delete custom resource '%s'", resourceName), e);
+            throw new CitrusRuntimeException(String.format("Failed to delete custom resource '%s'", resolvedName), e);
         }
     }
 
@@ -60,14 +65,14 @@ public class DeleteCustomResourceAction extends AbstractKubernetesAction {
      */
     public static class Builder extends AbstractKubernetesAction.Builder<DeleteCustomResourceAction, Builder> {
 
+        private String resourceName;
         private String type;
-        private String name;
         private String version;
         private String kind;
         private String group;
 
-        public Builder name(String name) {
-            this.name = name;
+        public Builder resourceName(String name) {
+            this.resourceName = name;
             return this;
         }
 

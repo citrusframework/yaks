@@ -119,7 +119,7 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
     public DeleteCustomResourceAction.Builder deleteCustomResource(String name) {
         DeleteCustomResourceAction.Builder builder = new DeleteCustomResourceAction.Builder()
                 .client(kubernetesClient)
-                .name(name);
+                .resourceName(name);
         this.delegate = builder;
         return builder;
     }
@@ -155,8 +155,7 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
     public VerifyPodAction.Builder verifyPod(String podName) {
         VerifyPodAction.Builder builder = new VerifyPodAction.Builder()
                 .client(kubernetesClient)
-                .podName(podName)
-                .isRunning();
+                .podName(podName);
         this.delegate = builder;
         return builder;
     }
@@ -169,8 +168,32 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
     public VerifyPodAction.Builder verifyPod(String label, String value) {
         VerifyPodAction.Builder builder = new VerifyPodAction.Builder()
                 .client(kubernetesClient)
-                .label(label, value)
-                .isRunning();
+                .label(label, value);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Verify that given custom resource matches a condition.
+     * @param name the name of the custom resource.
+     */
+    public VerifyCustomResourceAction.Builder verifyCustomResource(String name) {
+        VerifyCustomResourceAction.Builder builder = new VerifyCustomResourceAction.Builder()
+                .client(kubernetesClient)
+                .resourceName(name);
+        this.delegate = builder;
+        return builder;
+    }
+
+    /**
+     * Verify that given custom resource matches a condition.
+     * @param label the label to filter results.
+     * @param value the value of the label.
+     */
+    public VerifyCustomResourceAction.Builder verifyCustomResource(String label, String value) {
+        VerifyCustomResourceAction.Builder builder = new VerifyCustomResourceAction.Builder()
+                .client(kubernetesClient)
+                .label(label, value);
         this.delegate = builder;
         return builder;
     }

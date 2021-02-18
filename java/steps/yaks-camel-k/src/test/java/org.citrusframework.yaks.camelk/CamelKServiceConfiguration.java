@@ -34,7 +34,7 @@ import org.springframework.context.annotation.DependsOn;
 @Configuration
 public class CamelKServiceConfiguration {
 
-    private KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
+    private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), true);
 
     @Bean(initMethod = "init", destroyMethod = "destroy")

@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.kubernetes;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
@@ -88,6 +89,16 @@ public final class KubernetesSupport {
         return OBJECT_MAPPER;
     }
 
+    public static Map<String, Object> getResource(KubernetesClient k8sClient, String namespace,
+                                                  CustomResourceDefinitionContext context, String resourceName) {
+        return k8sClient.customResource(context).get(namespace, resourceName);
+    }
+
+    public static Map<String, Object> getResources(KubernetesClient k8sClient, String namespace,
+                                                  CustomResourceDefinitionContext context) {
+        return k8sClient.customResource(context).list(namespace);
+    }
+
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, T resource) {
         createResource(k8sClient, namespace, context, yaml().dump(resource));
@@ -115,6 +126,7 @@ public final class KubernetesSupport {
         return new CustomResourceDefinitionContext.Builder()
                 .withName(resourceType.contains(".") ? resourceType : String.format("%s.%s", resourceType, group))
                 .withGroup(group)
+                .withKind(kind)
                 .withVersion(version)
                 .withPlural(resourceType.contains(".") ? resourceType.substring(0, resourceType.indexOf(".")) : resourceType)
                 .withScope("Namespaced")
