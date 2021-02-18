@@ -19,6 +19,7 @@ package org.citrusframework.yaks.knative.actions;
 
 import com.consol.citrus.TestAction;
 import com.consol.citrus.context.TestContext;
+import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeVariableNames;
@@ -37,6 +38,12 @@ public interface KnativeAction extends TestAction {
      * @return
      */
     KubernetesClient getKubernetesClient();
+
+    /**
+     * Gets the Knative client.
+     * @return
+     */
+    KnativeClient getKnativeClient();
 
     /**
      * Resolves namespace name from given test context using the stored test variable.

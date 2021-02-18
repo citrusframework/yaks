@@ -20,11 +20,9 @@ package org.citrusframework.yaks.camelk.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -33,29 +31,13 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  * @author Christoph Deppisch
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec", "status"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
-public class KameletBinding extends CustomResource {
+@Group(CamelKSupport.CAMELK_CRD_GROUP)
+@Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
+public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBindingStatus> {
 
-    @JsonProperty("spec")
-    private KameletBindingSpec spec = new KameletBindingSpec();
-
-    @JsonProperty("status")
-    private KameletBindingStatus status;
-
-    @Override
-    public String getApiVersion() {
-        return CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion();
-    }
-
-    public KameletBindingSpec getSpec() {
-        return spec;
-    }
-
-    public void setSpec(KameletBindingSpec spec) {
-        this.spec = spec;
+    public KameletBinding() {
+        super();
+        this.status = null;
     }
 
     /**

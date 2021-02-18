@@ -21,6 +21,8 @@ import java.util.Collections;
 
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
@@ -46,22 +48,25 @@ public class CreateServiceAction extends AbstractKubernetesAction {
 
     @Override
     public void doExecute(TestContext context) {
-        getKubernetesClient().services().inNamespace(namespace(context)).createOrReplaceWithNew()
+        Service service = new ServiceBuilder()
                 .withNewMetadata()
-                    .withNamespace(namespace(context))
-                    .withName(context.replaceDynamicContentInString(serviceName))
-                    .withLabels(KubernetesSettings.getDefaultLabels())
+                .withNamespace(namespace(context))
+                .withName(context.replaceDynamicContentInString(serviceName))
+                .withLabels(KubernetesSettings.getDefaultLabels())
                 .endMetadata()
                 .withNewSpec()
-                    // add selector to the very specific Pod that is running the test right now. This way the service will route all traffic to the test
-                    .withSelector(Collections.singletonMap("yaks.citrusframework.org/test-id", YaksSettings.getTestId()))
-                    .withPorts(new ServicePortBuilder()
-                            .withProtocol(context.replaceDynamicContentInString(protocol))
-                            .withPort(Integer.parseInt(context.replaceDynamicContentInString(port)))
-                            .withTargetPort(new IntOrString(Integer.parseInt(context.replaceDynamicContentInString(targetPort))))
-                            .build())
+                // add selector to the very specific Pod that is running the test right now. This way the service will route all traffic to the test
+                .withSelector(Collections.singletonMap("yaks.citrusframework.org/test-id", YaksSettings.getTestId()))
+                .withPorts(new ServicePortBuilder()
+                        .withProtocol(context.replaceDynamicContentInString(protocol))
+                        .withPort(Integer.parseInt(context.replaceDynamicContentInString(port)))
+                        .withTargetPort(new IntOrString(Integer.parseInt(context.replaceDynamicContentInString(targetPort))))
+                        .build())
                 .endSpec()
-                .done();
+                .build();
+
+        getKubernetesClient().services().inNamespace(namespace(context))
+                .createOrReplace(service);
     }
 
     /**

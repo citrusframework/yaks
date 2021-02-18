@@ -19,6 +19,7 @@ package org.citrusframework.yaks.knative.actions;
 
 import com.consol.citrus.AbstractTestActionBuilder;
 import com.consol.citrus.actions.AbstractTestAction;
+import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,13 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
     /** Logger */
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
+    private final KnativeClient knativeClient;
     private final KubernetesClient kubernetesClient;
 
     public AbstractKnativeAction(String name, Builder<?, ?> builder) {
         super("knative:" + name, builder);
 
+        this.knativeClient = builder.knativeClient;
         this.kubernetesClient = builder.kubernetesClient;
     }
 
@@ -44,11 +47,17 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
         return kubernetesClient;
     }
 
+    @Override
+    public KnativeClient getKnativeClient() {
+        return knativeClient;
+    }
+
     /**
      * Action builder.
      */
     public static abstract class Builder<T extends KnativeAction, B extends Builder<T, B>> extends AbstractTestActionBuilder<T, B> {
 
+        private KnativeClient knativeClient;
         private KubernetesClient kubernetesClient;
 
         /**
@@ -56,6 +65,14 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
          */
         public B client(KubernetesClient kubernetesClient) {
             this.kubernetesClient = kubernetesClient;
+            return self;
+        }
+
+        /**
+         * Use a custom Knative client.
+         */
+        public B client(KnativeClient knativeClient) {
+            this.knativeClient = knativeClient;
             return self;
         }
 

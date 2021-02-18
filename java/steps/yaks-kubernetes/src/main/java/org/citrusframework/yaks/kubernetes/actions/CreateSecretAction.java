@@ -27,6 +27,8 @@ import java.util.Properties;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 
 /**
  * @author Christoph Deppisch
@@ -60,16 +62,18 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
             }
         }
 
-        getKubernetesClient().secrets()
-                .inNamespace(namespace(context))
-                .createOrReplaceWithNew()
+        Secret secret = new SecretBuilder()
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(secretName))
                 .endMetadata()
                 .withType("generic")
                 .withData(context.resolveDynamicValuesInMap(secrets))
-            .done();
+                .build();
+
+        getKubernetesClient().secrets()
+                .inNamespace(namespace(context))
+                .createOrReplace(secret);
     }
 
     /**

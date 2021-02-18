@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
-import org.citrusframework.yaks.camelk.model.DoneableKamelet;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
@@ -130,7 +129,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
         }
 
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
-        getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class, DoneableKamelet.class)
+        getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .createOrReplace(kamelet);
 

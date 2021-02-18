@@ -47,7 +47,7 @@ public class KnativeSettings {
 
     private static final String API_VERSION_PROPERTY = KNATIVE_PROPERTY_PREFIX + "api.version";
     private static final String API_VERSION_ENV = KNATIVE_ENV_PREFIX + "API_VERSION";
-    private static final String API_VERSION_DEFAULT = "v1beta1";
+    private static final String API_VERSION_DEFAULT = "v1";
 
     private static final String BROKER_HOST_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.host";
     private static final String BROKER_HOST_ENV = KNATIVE_ENV_PREFIX + "BROKER_HOST";

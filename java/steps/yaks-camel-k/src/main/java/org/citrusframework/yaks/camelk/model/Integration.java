@@ -22,46 +22,25 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec", "status"})
-@JsonDeserialize(
-		using = JsonDeserializer.None.class
-)
-public class Integration extends CustomResource {
+@Group(CamelKSupport.CAMELK_CRD_GROUP)
+@Version(CamelKSettings.API_VERSION_DEFAULT)
+public class Integration extends CustomResource<IntegrationSpec, IntegrationStatus> {
 
-	@JsonProperty("spec")
-	private IntegrationSpec spec = new IntegrationSpec();
-
-	@JsonProperty("status")
-	private IntegrationStatus status;
+	public Integration() {
+		super();
+		this.status = null;
+	}
 
 	@Override
 	public String getApiVersion() {
 		return CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getApiVersion();
-	}
-
-	public IntegrationSpec getSpec() {
-		return spec;
-	}
-
-	public void setSpec(IntegrationSpec spec) {
-		this.spec = spec;
-	}
-
-	public IntegrationStatus getStatus() {
-		return status;
-	}
-
-	public void setStatus(IntegrationStatus status) {
-		this.status = status;
 	}
 
 	/**

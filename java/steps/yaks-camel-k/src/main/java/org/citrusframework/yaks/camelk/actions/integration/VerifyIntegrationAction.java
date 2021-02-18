@@ -20,7 +20,6 @@ package org.citrusframework.yaks.camelk.actions.integration;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;
@@ -100,7 +99,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * @return
      */
     private String getIntegrationPodLogs(Pod pod) {
-        PodResource<Pod, DoneablePod> podRes = getKubernetesClient().pods()
+        PodResource<Pod> podRes = getKubernetesClient().pods()
                 .inNamespace(CamelKSettings.getNamespace())
                 .withName(pod.getMetadata().getName());
 

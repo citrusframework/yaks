@@ -21,8 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.consol.citrus.context.TestContext;
-import io.fabric8.knative.eventing.v1alpha1.TriggerBuilder;
-import io.fabric8.knative.eventing.v1alpha1.TriggerSpecBuilder;
+import io.fabric8.knative.eventing.v1.Trigger;
+import io.fabric8.knative.eventing.v1.TriggerBuilder;
+import io.fabric8.knative.eventing.v1.TriggerSpecBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
@@ -57,17 +58,19 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         addChannelSubscriber(triggerSpec, context);
         addFilterOnAttributes(triggerSpec, context);
 
-        TriggerBuilder triggerBuilder = new TriggerBuilder()
-                .withApiVersion(String.format("eventing.knative.dev/%s", KnativeSupport.knativeApiVersion()))
+        Trigger trigger = new TriggerBuilder()
+                .withApiVersion(KnativeSupport.knativeApiVersion())
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(triggerName))
                     .withLabels(KnativeSettings.getDefaultLabels())
                 .endMetadata()
-                .withSpec(triggerSpec.build());
+                .withSpec(triggerSpec.build())
+                .build();
 
-        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.eventingCRDContext("triggers", KnativeSupport.knativeApiVersion()), triggerBuilder.build());
+        getKnativeClient().triggers()
+                .inNamespace(namespace(context))
+                .createOrReplace(trigger);
     }
 
     private void addFilterOnAttributes(TriggerSpecBuilder triggerSpec, TestContext context) {
@@ -82,7 +85,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         if (channelName != null) {
             triggerSpec.withNewSubscriber()
                     .withNewRef()
-                        .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
+                        .withApiVersion(KnativeSupport.knativeApiVersion())
                         .withKind("InMemoryChannel")
                         .withName(context.replaceDynamicContentInString(channelName))
                     .endRef()
