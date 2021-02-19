@@ -15,16 +15,17 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-name: nightly
+name: snapshot-release
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches:
+      - snapshot-release
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
+    if: github.repository == 'citrusframework/yaks'
 
     steps:
     - name: Set Up Java
