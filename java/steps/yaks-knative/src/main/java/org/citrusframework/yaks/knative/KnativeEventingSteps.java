@@ -68,11 +68,15 @@ public class KnativeEventingSteps {
     public void createBroker(String brokerName) {
         setBrokerName(brokerName);
 
-        runner.given(knative().client(k8sClient).createBroker(brokerName));
+        runner.given(knative().client(k8sClient)
+                .brokers()
+                .create(brokerName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteBroker(brokerName)));
+                    .actions(knative().client(k8sClient)
+                            .brokers()
+                            .delete(brokerName)));
         }
     }
 
@@ -81,56 +85,70 @@ public class KnativeEventingSteps {
         runner.then(repeatOnError()
             .autoSleep(500)
             .until((i, context) -> i == 10)
-            .actions(knative().client(k8sClient).verifyBroker(brokerName)));
+            .actions(knative().client(k8sClient)
+                    .brokers()
+                    .verify(brokerName)));
     }
 
     @Given("^create Knative trigger ([^\\s]+) on service ([^\\s]+)$")
     public void createTriggerOnService(String triggerName, String serviceName) {
         runner.given(knative().client(k8sClient)
-                .createTrigger(triggerName)
+                .trigger()
+                .create(triggerName)
                 .onService(serviceName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
+                    .actions(knative().client(k8sClient)
+                            .trigger()
+                            .delete(triggerName)));
         }
     }
 
     @Given("^create Knative trigger ([^\\s]+) on service ([^\\s]+) with filter on attributes$")
     public void createTriggerOnServiceFiltered(String triggerName, String serviceName, DataTable filterAttributes) {
         runner.given(knative().client(k8sClient)
-                .createTrigger(triggerName)
+                .trigger()
+                .create(triggerName)
                 .onService(serviceName)
                 .filter(filterAttributes.asMap(String.class, String.class)));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
+                    .actions(knative().client(k8sClient)
+                            .trigger()
+                            .delete(triggerName)));
         }
     }
 
     @Given("^create Knative trigger ([^\\s]+) on channel ([^\\s]+)$")
     public void createTriggerOnChannel(String triggerName, String channelName) {
         runner.given(knative().client(k8sClient)
-                .createTrigger(triggerName)
+                .trigger()
+                .create(triggerName)
                 .onChannel(channelName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
+                    .actions(knative().client(k8sClient)
+                            .trigger()
+                            .delete(triggerName)));
         }
     }
 
     @Given("^create Knative trigger ([^\\s]+) on channel ([^\\s]+) with filter on attributes$")
     public void createTriggerFiltered(String triggerName, String channelName, DataTable filterAttributes) {
         runner.given(knative().client(k8sClient)
-                .createTrigger(triggerName)
+                .trigger()
+                .create(triggerName)
                 .onChannel(channelName)
                 .filter(filterAttributes.asMap(String.class, String.class)));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteTrigger(triggerName)));
+                    .actions(knative().client(k8sClient)
+                            .trigger()
+                            .delete(triggerName)));
         }
     }
 

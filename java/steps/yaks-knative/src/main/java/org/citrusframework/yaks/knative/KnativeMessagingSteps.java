@@ -53,24 +53,30 @@ public class KnativeMessagingSteps {
     @Given("^create Knative channel ([^\\s]+)$")
     public void createChannel(String channelName) {
         runner.given(knative().client(k8sClient)
-                .createChannel(channelName));
+                .channels()
+                .create(channelName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteChannel(channelName)));
+                    .actions(knative().client(k8sClient)
+                            .channels()
+                            .delete(channelName)));
         }
     }
 
     @Given("^subscribe service ([^\\s]+) to Knative channel ([^\\s]+)$")
     public void createSubscription(String serviceName, String channelName) {
         runner.given(knative().client(k8sClient)
-                .createSubscription(serviceName + "subscription")
+                .subscriptions()
+                .create(serviceName + "subscription")
                 .onChannel(channelName)
                 .service(serviceName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient).deleteSubscription(serviceName + "subscription")));
+                    .actions(knative().client(k8sClient)
+                            .subscriptions()
+                            .delete(serviceName + "subscription")));
         }
     }
 }
