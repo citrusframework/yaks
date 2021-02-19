@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
-import org.citrusframework.yaks.camelk.model.DoneableKameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -51,7 +50,7 @@ public class VerifyKameletBindingAction extends AbstractCamelKAction {
     public void doExecute(TestContext context) {
         String bindingName = context.replaceDynamicContentInString(name);
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
-        KameletBinding binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class, DoneableKameletBinding.class)
+        KameletBinding binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .withName(bindingName)
                 .get();

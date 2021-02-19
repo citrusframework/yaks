@@ -46,7 +46,7 @@ public class KnativeServiceConfiguration {
 
     private static final int HTTP_PORT = 8080;
 
-    private KnativeMockServer knativeServer = new KnativeMockServer(new Context(), new MockWebServer(), new HashMap<>(), new KubernetesCrudDispatcher(), true);
+    private final KnativeMockServer knativeServer = new KnativeMockServer(new Context(), new MockWebServer(), new HashMap<>(), new KubernetesCrudDispatcher(), true);
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public KnativeMockServer knativeMockServer() {

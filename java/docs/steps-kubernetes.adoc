@@ -66,7 +66,7 @@ Given Kubernetes resource polling configuration
     | delayBetweenAttempts | 1000 |
 ----
 
-Instead of identifying the pod by its name you can also filter the pod by a lable expression. The expression
+Instead of identifying the pod by its name you can also filter the pod with a label expression. The expression
 is a label key and value that identifies the pod in the current namespace.
 
 .@Given("^Kubernetes pod labeled with {label}={value} is running/stopped$")
@@ -393,6 +393,72 @@ Then delete Kubernetes custom resource {file_path} in {crd}
 ----
 Then delete Kubernetes custom resource broker.yaml in brokers.eventing.knative.dev
 ----
+
+[[k8s-crd-condition]]
+=== Verify custom resource conditions
+
+Custom resources often define a status and describe multiple conditions (e.g. ready, available, completed).
+You can verify the condition on a custom resource.
+
+.@Given("^wait for condition={condition} on Kubernetes custom resource {name} in {type}$")
+[source,gherkin]
+----
+Given wait for condition={condition} on Kubernetes custom resource {name} in {type}
+----
+
+The step verifies that the given Kubernetes resource with name `{name}` describes a status condition `{condition}`. The step polls
+the state of the resource for a given amount of attempts with a given delay between attempts. You can adjust the polling settings with:
+
+.@Given Kubernetes resource polling configuration
+[source,gherkin]
+----
+Given Kubernetes resource polling configuration
+    | maxAttempts          | 10   |
+    | delayBetweenAttempts | 1000 |
+----
+
+Assume you have a custom resource like this:
+
+.foo-crd.yaml
+[source,yaml]
+----
+apiVersion: foo.dev/v1
+kind: Foo
+metadata:
+  name: my-foo-resource
+spec:
+  message: Hello
+status:
+  conditions:
+  - type: Initialized
+    status: true
+  - type: Ready
+    status: true
+----
+
+The custom resource defines a status with multiple conditions. You can wait for a condition in the test.
+
+.Wait for condition=Ready
+[source,gherkin]
+----
+Given wait for condition=Ready on Kubernetes custom resource foo/my-foo-resource in foos.foo.dev/v1
+----
+
+The expected condition is `Ready` for the resource named `my-foo-resource`. The resource name can use a prefix that represents
+the kind information `foo/`. The kind helps to identify the custom resource. Also the step defines the resource type `foos.foo.dev` and
+version `v1`. This is required to identify the custom resource on the cluster.
+
+Instead of identifying the resource by its name you can also filter the resources with a label expression. The expression
+is a label key and value that identifies the resource in the current namespace.
+
+.@Given("^wait for condition={condition} on Kubernetes custom resource in {type} labeled with {key}={value}$")
+[source,gherkin]
+----
+Given wait for condition={condition} on Kubernetes custom resource in {type} labeled with {key}={value}
+----
+
+This will get all resources of type `{type}` and filter by given label `{key}={value}`. Then the given condition is verified
+on the resource.
 
 [[k8s-autoremove]]
 === Cleanup Kubernetes resources

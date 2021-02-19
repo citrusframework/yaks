@@ -27,8 +27,9 @@ import com.consol.citrus.http.message.HttpMessage;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
-import io.fabric8.knative.eventing.v1alpha1.Trigger;
-import io.fabric8.knative.messaging.v1alpha1.SubscriptionList;
+import io.fabric8.knative.client.KnativeClient;
+import io.fabric8.knative.eventing.v1.Trigger;
+import io.fabric8.knative.messaging.v1.SubscriptionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.knative.actions.KnativeAction;
@@ -72,7 +73,7 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Assertions.assertThat(KnativeSupport.getKnativeClient(citrus)
+                Assertions.assertThat(getKnativeClient()
                         .triggers()
                         .inNamespace(namespace(context))
                         .withName(triggerName)
@@ -86,7 +87,7 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Trigger trigger = KnativeSupport.getKnativeClient(citrus)
+                Trigger trigger = getKnativeClient()
                         .triggers()
                         .inNamespace(namespace(context))
                         .withName(triggerName)
@@ -107,7 +108,7 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Assertions.assertThat(KnativeSupport.getKnativeClient(citrus)
+                Assertions.assertThat(getKnativeClient()
                         .channels()
                         .inNamespace(namespace(context))
                         .withName(channelName)
@@ -121,7 +122,7 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                SubscriptionList subscriptions = KnativeSupport.getKnativeClient(citrus)
+                SubscriptionList subscriptions = getKnativeClient()
                         .subscriptions()
                         .inNamespace(namespace(context))
                         .list();
@@ -140,6 +141,11 @@ public class KnativeTestSteps {
         @Override
         public KubernetesClient getKubernetesClient() {
             return KubernetesSupport.getKubernetesClient(citrus);
+        }
+
+        @Override
+        public KnativeClient getKnativeClient() {
+            return KnativeSupport.getKnativeClient(citrus);
         }
     }
 }

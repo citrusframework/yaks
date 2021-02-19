@@ -18,12 +18,11 @@
 package org.citrusframework.yaks.knative.actions.messaging;
 
 import com.consol.citrus.context.TestContext;
-import io.fabric8.knative.messaging.v1alpha1.Channel;
-import io.fabric8.knative.messaging.v1alpha1.ChannelBuilder;
+import io.fabric8.knative.messaging.v1.Channel;
+import io.fabric8.knative.messaging.v1.ChannelBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -41,16 +40,17 @@ public class CreateChannelAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Channel channel = new ChannelBuilder()
-            .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
-                .withNewMetadata()
-                    .withNamespace(namespace(context))
-                    .withName(context.replaceDynamicContentInString(channelName))
-                    .withLabels(KnativeSettings.getDefaultLabels())
-                .endMetadata()
+            .withApiVersion(KnativeSupport.knativeApiVersion())
+            .withNewMetadata()
+                .withNamespace(namespace(context))
+                .withName(context.replaceDynamicContentInString(channelName))
+                .withLabels(KnativeSettings.getDefaultLabels())
+            .endMetadata()
             .build();
 
-        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.messagingCRDContext("channels", KnativeSupport.knativeApiVersion()), channel);
+        getKnativeClient().channels()
+                .inNamespace(namespace(context))
+                .createOrReplace(channel);
     }
 
     /**

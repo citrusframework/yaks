@@ -22,7 +22,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
-import org.citrusframework.yaks.camelk.model.DoneableIntegration;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
 
@@ -42,7 +41,7 @@ public class DeleteIntegrationAction extends AbstractCamelKAction {
     @Override
     public void doExecute(TestContext context) {
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class, DoneableIntegration.class)
+        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class)
                 .inNamespace(CamelKSettings.getNamespace())
                 .withName(integrationName)
                 .delete();

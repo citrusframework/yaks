@@ -20,7 +20,6 @@ package org.citrusframework.yaks.kubernetes.actions;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;
@@ -103,7 +102,7 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * @return
      */
     private String getPodLogs(Pod pod) {
-        PodResource<Pod, DoneablePod> podRes = getKubernetesClient().pods()
+        PodResource<Pod> podRes = getKubernetesClient().pods()
                 .inNamespace(KubernetesSettings.getNamespace())
                 .withName(pod.getMetadata().getName());
 

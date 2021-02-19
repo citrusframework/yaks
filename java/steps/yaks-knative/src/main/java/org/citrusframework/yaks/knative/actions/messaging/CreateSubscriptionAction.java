@@ -18,8 +18,8 @@
 package org.citrusframework.yaks.knative.actions.messaging;
 
 import com.consol.citrus.context.TestContext;
-import io.fabric8.knative.messaging.v1alpha1.Subscription;
-import io.fabric8.knative.messaging.v1alpha1.SubscriptionBuilder;
+import io.fabric8.knative.messaging.v1.Subscription;
+import io.fabric8.knative.messaging.v1.SubscriptionBuilder;
 import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
@@ -46,7 +46,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Subscription subscription = new SubscriptionBuilder()
-                .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
+                .withApiVersion(KnativeSupport.knativeApiVersion())
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(subscriptionName))
@@ -68,8 +68,9 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                 .endSpec()
                 .build();
 
-        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.messagingCRDContext("subscriptions", KnativeSupport.knativeApiVersion()), subscription);
+        getKnativeClient().subscriptions()
+                .inNamespace(namespace(context))
+                .createOrReplace(subscription);
     }
 
     /**

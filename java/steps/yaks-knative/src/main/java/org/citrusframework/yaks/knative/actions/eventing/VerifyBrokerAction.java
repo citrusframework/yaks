@@ -17,16 +17,11 @@
 
 package org.citrusframework.yaks.knative.actions.eventing;
 
-import java.util.Map;
-
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.knative.eventing.v1alpha1.Broker;
+import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -44,14 +39,10 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         try {
-            Map<String, Object> resources = getKubernetesClient()
-                    .customResource(KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()))
-                    .get(namespace(context), brokerName);
-
-            Broker broker = KubernetesSupport.json()
-                    .reader()
-                    .forType(Broker.class)
-                    .readValue(KubernetesSupport.json().writeValueAsString(resources));
+            Broker broker = getKnativeClient().brokers()
+                    .inNamespace(namespace(context))
+                    .withName(brokerName)
+                    .get();
 
             if (broker.getStatus() != null &&
                     broker.getStatus().getConditions() != null &&
@@ -61,8 +52,6 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
             } else {
                 throw new ValidationException(String.format("Knative broker '%s' is not ready", brokerName));
             }
-        } catch (JsonProcessingException e) {
-            throw new ValidationException(String.format("Failed to validate Knative broker '%s' state", brokerName), e);
         } catch (KubernetesClientException e) {
             throw new ValidationException(String.format("Failed to validate Knative broker '%s' - " +
                     "not found in namespace '%s'", brokerName, namespace(context)), e);

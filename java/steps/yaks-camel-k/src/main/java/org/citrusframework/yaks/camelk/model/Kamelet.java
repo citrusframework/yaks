@@ -24,11 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -38,29 +36,18 @@ import org.springframework.util.StringUtils;
  * @author Christoph Deppisch
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "spec", "status"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
-public class Kamelet extends CustomResource {
+@Group(CamelKSupport.CAMELK_CRD_GROUP)
+@Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
+public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
 
-    @JsonProperty("spec")
-    private KameletSpec spec = new KameletSpec();
-
-    @JsonProperty("status")
-    private KameletStatus status;
+    public Kamelet() {
+        super();
+        this.status = null;
+    }
 
     @Override
     public String getApiVersion() {
         return CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion();
-    }
-
-    public KameletSpec getSpec() {
-        return spec;
-    }
-
-    public void setSpec(KameletSpec spec) {
-        this.spec = spec;
     }
 
     /**

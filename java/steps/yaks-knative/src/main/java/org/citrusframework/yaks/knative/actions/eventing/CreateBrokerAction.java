@@ -18,12 +18,11 @@
 package org.citrusframework.yaks.knative.actions.eventing;
 
 import com.consol.citrus.context.TestContext;
-import io.fabric8.knative.eventing.v1alpha1.Broker;
-import io.fabric8.knative.eventing.v1alpha1.BrokerBuilder;
+import io.fabric8.knative.eventing.v1.Broker;
+import io.fabric8.knative.eventing.v1.BrokerBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -41,16 +40,17 @@ public class CreateBrokerAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Broker broker = new BrokerBuilder()
-                .withApiVersion(String.format("eventing.knative.dev/%s", KnativeSupport.knativeApiVersion()))
+                .withApiVersion(KnativeSupport.knativeApiVersion())
                 .withNewMetadata()
-                .withNamespace(namespace(context))
-                .withName(context.replaceDynamicContentInString(brokerName))
-                .withLabels(KnativeSettings.getDefaultLabels())
+                    .withNamespace(namespace(context))
+                    .withName(context.replaceDynamicContentInString(brokerName))
+                    .withLabels(KnativeSettings.getDefaultLabels())
                 .endMetadata()
                 .build();
 
-        KubernetesSupport.createResource(getKubernetesClient(), namespace(context),
-                KnativeSupport.eventingCRDContext("brokers", KnativeSupport.knativeApiVersion()), broker);
+        getKnativeClient().brokers()
+                .inNamespace(namespace(context))
+                .createOrReplace(broker);
     }
 
     /**
