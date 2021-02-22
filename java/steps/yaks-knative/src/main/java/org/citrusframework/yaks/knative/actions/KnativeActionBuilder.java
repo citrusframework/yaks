@@ -54,119 +54,35 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
     }
 
     /**
-     * Create channel instance.
-     * @param channelName the name of the Knative channel.
+     * Performs action on Knative channels.
+     * @return
      */
-    public CreateChannelAction.Builder createChannel(String channelName) {
-        CreateChannelAction.Builder builder = new CreateChannelAction.Builder()
-                .client(kubernetesClient)
-                .name(channelName);
-        this.delegate = builder;
-        return builder;
+    public ChannelActionBuilder channels() {
+        return new ChannelActionBuilder();
     }
 
     /**
-     * Delete channel instance.
-     * @param channelName the name of the Knative channel.
+     * Performs action on Knative subscriptions.
+     * @return
      */
-    public DeleteKnativeResourceAction.Builder deleteChannel(String channelName) {
-        DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
-                .client(kubernetesClient)
-                .component("messaging")
-                .kind("channels")
-                .name(channelName);
-        this.delegate = builder;
-        return builder;
+    public SubscriptionActionBuilder subscriptions() {
+        return new SubscriptionActionBuilder();
     }
 
     /**
-     * Create subscription instance.
-     * @param subscriptionName the name of the Knative subscription.
+     * Performs action on Knative trigger.
+     * @return
      */
-    public CreateSubscriptionAction.Builder createSubscription(String subscriptionName) {
-        CreateSubscriptionAction.Builder builder = new CreateSubscriptionAction.Builder()
-                .client(kubernetesClient)
-                .name(subscriptionName);
-        this.delegate = builder;
-        return builder;
+    public TriggerActionBuilder trigger() {
+        return new TriggerActionBuilder();
     }
 
     /**
-     * Delete subscription instance.
-     * @param subscriptionName the name of the Knative subscription.
+     * Performs action on Knative brokers.
+     * @return
      */
-    public DeleteKnativeResourceAction.Builder deleteSubscription(String subscriptionName) {
-        DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
-                .client(kubernetesClient)
-                .component("messaging")
-                .kind("subscriptions")
-                .name(subscriptionName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Create trigger instance.
-     * @param triggerName the name of the Knative trigger.
-     */
-    public CreateTriggerAction.Builder createTrigger(String triggerName) {
-        CreateTriggerAction.Builder builder = new CreateTriggerAction.Builder()
-                .client(kubernetesClient)
-                .name(triggerName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Delete trigger instance.
-     * @param triggerName the name of the Knative trigger.
-     */
-    public DeleteKnativeResourceAction.Builder deleteTrigger(String triggerName) {
-        DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
-                .client(kubernetesClient)
-                .component("eventing")
-                .kind("triggers")
-                .name(triggerName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Create broker instance.
-     * @param brokerName the name of the Knative broker.
-     */
-    public CreateBrokerAction.Builder createBroker(String brokerName) {
-        CreateBrokerAction.Builder builder = new CreateBrokerAction.Builder()
-                .client(kubernetesClient)
-                .name(brokerName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Delete broker instance.
-     * @param brokerName the name of the Knative broker.
-     */
-    public DeleteKnativeResourceAction.Builder deleteBroker(String brokerName) {
-        DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
-                .client(kubernetesClient)
-                .component("eventing")
-                .kind("brokers")
-                .name(brokerName);
-        this.delegate = builder;
-        return builder;
-    }
-
-    /**
-     * Verify given broker instance is running.
-     * @param brokerName the name of the Knative broker.
-     */
-    public VerifyBrokerAction.Builder verifyBroker(String brokerName) {
-        VerifyBrokerAction.Builder builder = new VerifyBrokerAction.Builder()
-                .client(kubernetesClient)
-                .name(brokerName);
-        this.delegate = builder;
-        return builder;
+    public BrokerActionBuilder brokers() {
+        return new BrokerActionBuilder();
     }
 
     @Override
@@ -181,5 +97,129 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
     @Override
     public TestActionBuilder<?> getDelegate() {
         return delegate;
+    }
+
+    public class ChannelActionBuilder {
+        /**
+         * Create channel instance.
+         * @param channelName the name of the Knative channel.
+         */
+        public CreateChannelAction.Builder create(String channelName) {
+            CreateChannelAction.Builder builder = new CreateChannelAction.Builder()
+                    .client(kubernetesClient)
+                    .name(channelName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Delete channel instance.
+         * @param channelName the name of the Knative channel.
+         */
+        public DeleteKnativeResourceAction.Builder delete(String channelName) {
+            DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
+                    .client(kubernetesClient)
+                    .component("messaging")
+                    .kind("channels")
+                    .name(channelName);
+            delegate = builder;
+            return builder;
+        }
+    }
+
+    public class SubscriptionActionBuilder {
+        /**
+         * Create subscription instance.
+         * @param subscriptionName the name of the Knative subscription.
+         */
+        public CreateSubscriptionAction.Builder create(String subscriptionName) {
+            CreateSubscriptionAction.Builder builder = new CreateSubscriptionAction.Builder()
+                    .client(kubernetesClient)
+                    .name(subscriptionName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Delete subscription instance.
+         * @param subscriptionName the name of the Knative subscription.
+         */
+        public DeleteKnativeResourceAction.Builder delete(String subscriptionName) {
+            DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
+                    .client(kubernetesClient)
+                    .component("messaging")
+                    .kind("subscriptions")
+                    .name(subscriptionName);
+            delegate = builder;
+            return builder;
+        }
+    }
+
+    public class TriggerActionBuilder {
+        /**
+         * Create trigger instance.
+         * @param triggerName the name of the Knative trigger.
+         */
+        public CreateTriggerAction.Builder create(String triggerName) {
+            CreateTriggerAction.Builder builder = new CreateTriggerAction.Builder()
+                    .client(kubernetesClient)
+                    .name(triggerName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Delete trigger instance.
+         * @param triggerName the name of the Knative trigger.
+         */
+        public DeleteKnativeResourceAction.Builder delete(String triggerName) {
+            DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
+                    .client(kubernetesClient)
+                    .component("eventing")
+                    .kind("triggers")
+                    .name(triggerName);
+            delegate = builder;
+            return builder;
+        }
+    }
+
+    public class BrokerActionBuilder {
+        /**
+         * Create broker instance.
+         * @param brokerName the name of the Knative broker.
+         */
+        public CreateBrokerAction.Builder create(String brokerName) {
+            CreateBrokerAction.Builder builder = new CreateBrokerAction.Builder()
+                    .client(kubernetesClient)
+                    .name(brokerName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Delete broker instance.
+         * @param brokerName the name of the Knative broker.
+         */
+        public DeleteKnativeResourceAction.Builder delete(String brokerName) {
+            DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
+                    .client(kubernetesClient)
+                    .component("eventing")
+                    .kind("brokers")
+                    .name(brokerName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Verify given broker instance is running.
+         * @param brokerName the name of the Knative broker.
+         */
+        public VerifyBrokerAction.Builder verify(String brokerName) {
+            VerifyBrokerAction.Builder builder = new VerifyBrokerAction.Builder()
+                    .client(kubernetesClient)
+                    .name(brokerName);
+            delegate = builder;
+            return builder;
+        }
     }
 }

@@ -134,7 +134,9 @@ public class KubernetesSteps {
     public void createCustomResource(String resourceType, String yaml) {
         KubernetesResource resource = KubernetesSupport.yaml().loadAs(yaml, KubernetesResource.class);
 
-        runner.run(kubernetes().client(k8sClient).createCustomResource()
+        runner.run(kubernetes().client(k8sClient)
+                .customResources()
+                .create()
                 .type(resourceType)
                 .kind(resource.getKind())
                 .apiVersion(resource.getApiVersion())
@@ -143,7 +145,8 @@ public class KubernetesSteps {
         if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(kubernetes().client(k8sClient)
-                            .deleteCustomResource(resource.getMetadata().getName())
+                            .customResources()
+                            .delete(resource.getMetadata().getName())
                             .type(resourceType)
                             .kind(resource.getKind())
                             .apiVersion(resource.getApiVersion())));
@@ -164,7 +167,8 @@ public class KubernetesSteps {
         KubernetesResource resource = KubernetesSupport.yaml().loadAs(yaml, KubernetesResource.class);
 
         runner.run(kubernetes().client(k8sClient)
-                        .deleteCustomResource(resource.getMetadata().getName())
+                        .customResources()
+                        .delete(resource.getMetadata().getName())
                         .type(resourceType)
                         .kind(resource.getKind())
                         .apiVersion(resource.getApiVersion()));
@@ -181,13 +185,16 @@ public class KubernetesSteps {
 
     @Given("^create Kubernetes resource$")
     public void createResource(String content) {
-        runner.run(kubernetes().client(k8sClient).createResource()
+        runner.run(kubernetes().client(k8sClient)
+                .resources()
+                .create()
                 .content(content));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(kubernetes().client(k8sClient)
-                            .deleteResource(content)));
+                            .resources()
+                            .delete(content)));
         }
     }
 
@@ -203,7 +210,8 @@ public class KubernetesSteps {
     @Given("^delete Kubernetes resource$")
     public void deleteResource(String yaml) {
         runner.run(kubernetes().client(k8sClient)
-                .deleteResource(yaml));
+                .resources()
+                .delete(yaml));
     }
 
     @Given("^delete Kubernetes resource ([^\\s]+)$")
@@ -217,21 +225,31 @@ public class KubernetesSteps {
 
     @Given("^create Kubernetes secret ([^\\s]+)$")
     public void createSecret(String name, Map<String, String> properties) {
-        runner.run(kubernetes().client(k8sClient).createSecret(name).properties(properties));
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .create(name)
+                .properties(properties));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(kubernetes().client(k8sClient).deleteSecret(name)));
+                    .actions(kubernetes().client(k8sClient)
+                            .secrets()
+                            .delete(name)));
         }
     }
 
     @Given("^load Kubernetes secret from file ([^\\s]+).properties$")
     public void createSecret(String fileName) {
-        runner.run(kubernetes().client(k8sClient).createSecret(fileName).fromFile(fileName + ".properties"));
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .create(fileName)
+                .fromFile(fileName + ".properties"));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(kubernetes().client(k8sClient).deleteSecret(fileName)));
+                    .actions(kubernetes().client(k8sClient)
+                            .secrets()
+                            .delete(fileName)));
         }
     }
 
@@ -248,11 +266,16 @@ public class KubernetesSteps {
             httpServer.start();
         }
 
-        runner.given(kubernetes().client(k8sClient).createService(serviceName).targetPort(targetPort));
+        runner.given(kubernetes().client(k8sClient)
+                .services()
+                .create(serviceName)
+                .targetPort(targetPort));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(kubernetes().client(k8sClient).deleteService(serviceName)));
+                    .actions(kubernetes().client(k8sClient)
+                            .services()
+                            .delete(serviceName)));
         }
     }
 
@@ -260,21 +283,22 @@ public class KubernetesSteps {
     public void deleteService(String serviceName) {
         runner.run(kubernetes()
                 .client(k8sClient)
-                .deleteService(serviceName));
+                .services()
+                .delete(serviceName));
     }
 
     @Given("^delete Kubernetes secret ([^\\s]+)$")
     public void deleteSecret(String secretName) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .deleteSecret(secretName));
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .delete(secretName));
     }
 
     @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
     public void resourceShouldMatchCondition(String condition, String name, String resourceType) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyCustomResource(name)
+        runner.run(kubernetes().client(k8sClient)
+                .customResources()
+                .verify(name)
                 .type(resourceType)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
@@ -289,9 +313,9 @@ public class KubernetesSteps {
 
     @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
     public void resourceLabeledShouldMatchCondition(String condition, String resourceType, String label, String value) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyCustomResource(label, value)
+        runner.run(kubernetes().client(k8sClient)
+                .customResources()
+                .verify(label, value)
                 .type(resourceType)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
@@ -312,9 +336,9 @@ public class KubernetesSteps {
     @Given("^Kubernetes pod ([a-z0-9-]+) is (running|stopped)$")
     @Then("^Kubernetes pod ([a-z0-9-]+) should be (running|stopped)$")
     public void podShouldBeInPhase(String name, String status) {
-        VerifyPodAction.Builder action = kubernetes()
-                .client(k8sClient)
-                .verifyPod(name)
+        VerifyPodAction.Builder action = kubernetes().client(k8sClient)
+                .pods()
+                .verify(name)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts);
 
@@ -335,9 +359,9 @@ public class KubernetesSteps {
     @Given("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) is (running|stopped)$")
     @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should be (running|stopped)$")
     public void podByLabelShouldBeInPhase(String label, String value, String status) {
-        VerifyPodAction.Builder action = kubernetes()
-                .client(k8sClient)
-                .verifyPod(label, value)
+        VerifyPodAction.Builder action = kubernetes().client(k8sClient)
+                .pods()
+                .verify(label, value)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts);
 
@@ -352,9 +376,9 @@ public class KubernetesSteps {
 
     @Then("^Kubernetes pod ([a-z0-9-]+) should print (.*)$")
     public void podShouldPrint(String name, String message) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyPod(name)
+        runner.run(kubernetes().client(k8sClient)
+                .pods()
+                .verify(name)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
@@ -364,9 +388,9 @@ public class KubernetesSteps {
     public void podShouldNotPrint(String name, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)
-                .when(kubernetes()
-                        .client(k8sClient)
-                        .verifyPod(name)
+                .when(kubernetes().client(k8sClient)
+                        .pods()
+                        .verify(name)
                         .maxAttempts(maxAttempts)
                         .delayBetweenAttempts(delayBetweenAttempts)
                         .waitForLogMessage(message)));
@@ -374,9 +398,9 @@ public class KubernetesSteps {
 
     @Then("^Kubernetes pod labeled with ([^\\s]+)=([^\\s]+) should print (.*)$")
     public void podByLabelShouldPrint(String label, String value, String message) {
-        runner.run(kubernetes()
-                .client(k8sClient)
-                .verifyPod(label, value)
+        runner.run(kubernetes().client(k8sClient)
+                .pods()
+                .verify(label, value)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
@@ -386,9 +410,9 @@ public class KubernetesSteps {
     public void podByLabelShouldNotPrint(String label, String value, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)
-                .when(kubernetes()
-                        .client(k8sClient)
-                        .verifyPod(label, value)
+                .when(kubernetes().client(k8sClient)
+                        .pods()
+                        .verify(label, value)
                         .maxAttempts(maxAttempts)
                         .delayBetweenAttempts(delayBetweenAttempts)
                         .waitForLogMessage(message)));
