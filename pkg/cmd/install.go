@@ -55,8 +55,8 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdO
 
 	cmd.Flags().Bool("cluster-setup", false, "Execute cluster-wide operations only (may require admin rights)")
 	cmd.Flags().String("cluster-type", "", "Set explicitly the cluster type to Kubernetes or OpenShift")
-	cmd.Flags().Bool("skip-operator-setup", false, "Do not install the operator in the namespace (in case there's a global one)")
-	cmd.Flags().Bool("skip-cluster-setup", false, "Skip the cluster-setup phase")
+	cmd.Flags().Bool("no-operator-setup", false, "Do not install the operator in the namespace (in case there's a global one)")
+	cmd.Flags().Bool("no-cluster-setup", false, "Skip the cluster-setup phase")
 	cmd.Flags().Bool("global", true, "Configure the operator to watch all namespaces")
 	cmd.Flags().Bool("force", false, "Force replacement of configuration resources when already present.")
 	cmd.Flags().String("operator-image", "", "Set the operator Image used for the operator deployment")
@@ -81,8 +81,8 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdO
 type installCmdOptions struct {
 	*RootCmdOptions
 	ClusterSetupOnly        bool     `mapstructure:"cluster-setup"`
-	SkipOperatorSetup       bool     `mapstructure:"skip-operator-setup"`
-	SkipClusterSetup        bool     `mapstructure:"skip-cluster-setup"`
+	SkipOperatorSetup       bool     `mapstructure:"no-operator-setup"`
+	SkipClusterSetup        bool     `mapstructure:"no-cluster-setup"`
 	OperatorImage           string   `mapstructure:"operator-image"`
 	OperatorImagePullPolicy string   `mapstructure:"operator-image-pull-policy"`
 	Global                  bool     `mapstructure:"global"`
@@ -126,7 +126,7 @@ func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		if installViaOLM {
+		if installViaOLM && !o.ClusterSetupOnly {
 			fmt.Fprintln(cobraCmd.OutOrStdout(), "OLM is available in the cluster")
 			var installed bool
 			if installed, err = olm.Install(o.Context, olmClient, o.Namespace, o.Global, o.olmOptions, collection); err != nil {
@@ -142,7 +142,7 @@ func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if !o.SkipClusterSetup && !installViaOLM {
+	if o.ClusterSetupOnly || (!o.SkipClusterSetup && !installViaOLM) {
 		err := setupCluster(o.Context, clientProvider, collection)
 		if err != nil {
 			return err

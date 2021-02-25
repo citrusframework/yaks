@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"strconv"
 	"time"
 
@@ -45,8 +46,13 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 		return err
 	}
 
+	// Install CRD for Instance (if needed)
+	if err := installCRD(ctx, c, v1alpha1.InstanceKind, v1alpha1.SchemeGroupVersion.Version, "crd-instance.yaml", collection); err != nil {
+		return err
+	}
+
 	// Install CRD for Test (if needed)
-	if err := installCRD(ctx, c, "Test", "v1alpha1", "crd-test.yaml", collection); err != nil {
+	if err := installCRD(ctx, c, v1alpha1.TestKind, v1alpha1.SchemeGroupVersion.Version, "crd-test.yaml", collection); err != nil {
 		return err
 	}
 

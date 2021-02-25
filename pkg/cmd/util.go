@@ -228,12 +228,9 @@ func getDefaultOperatorNamespace(c client.Client, runConfig *config.RunConfig) (
 		return runConfig.Config.Operator.Namespace, nil
 	}
 
-	isOpenShift, err := openshift.IsOpenShift(c)
-	if err != nil {
+	if isOpenShift, err := openshift.IsOpenShift(c); err != nil {
 		return "", err
-	}
-
-	if isOpenShift {
+	} else if isOpenShift {
 		return config.OperatorNamespaceOpenShift, nil
 	} else {
 		return config.OperatorNamespaceKubernetes, nil

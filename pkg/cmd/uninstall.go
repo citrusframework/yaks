@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 
 	"github.com/spf13/viper"
 
@@ -154,6 +155,21 @@ func (o *uninstallCmdOptions) uninstallOperator(c client.Client) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	instance := v1alpha1.Instance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.InstanceKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: o.Namespace,
+			Name:      "yaks",
+		},
+	}
+
+	if err := c.Delete(o.Context, &instance); err != nil && !k8serrors.IsNotFound(err){
+		return err
 	}
 
 	return nil

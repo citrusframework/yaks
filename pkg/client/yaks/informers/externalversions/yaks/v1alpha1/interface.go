@@ -25,6 +25,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// Instances returns a InstanceInformer.
+	Instances() InstanceInformer
 	// Tests returns a TestInformer.
 	Tests() TestInformer
 }
@@ -38,6 +40,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// Instances returns a InstanceInformer.
+func (v *version) Instances() InstanceInformer {
+	return &instanceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Tests returns a TestInformer.

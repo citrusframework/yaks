@@ -29,6 +29,10 @@ type FakeYaksV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeYaksV1alpha1) Instances(namespace string) v1alpha1.InstanceInterface {
+	return &FakeInstances{c, namespace}
+}
+
 func (c *FakeYaksV1alpha1) Tests(namespace string) v1alpha1.TestInterface {
 	return &FakeTests{c, namespace}
 }

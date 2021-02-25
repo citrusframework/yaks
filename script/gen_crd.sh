@@ -63,6 +63,6 @@ deploy_crd() {
     ./deploy/olm-catalog/yaks/$version/$plural.yaks.citrusframework.org.crd.yaml
 }
 
-deploy_crd test tests
+deploy_crd instance instances test tests
 
 rm -r ./deploy/crds

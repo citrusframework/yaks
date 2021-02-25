@@ -162,6 +162,7 @@ func Install(ctx context.Context, client client.Client, namespace string, global
 			InstallPlanApproval:    olmv1alpha1.ApprovalAutomatic,
 		},
 	}
+
 	if collection != nil {
 		collection.Add(&sub)
 	} else if err := client.Create(ctx, &sub); err != nil {

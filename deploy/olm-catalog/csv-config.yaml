@@ -17,6 +17,7 @@
 
 operator-path: deploy/operator-deployment.yaml
 crd-cr-paths:
+  - deploy/crd-instance.yaml
   - deploy/crd-test.yaml
 role-paths:
   - deploy/operator-role-olm.yaml
