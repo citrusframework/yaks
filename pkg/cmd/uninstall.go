@@ -20,6 +20,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"io"
 
 	"github.com/spf13/viper"
 
@@ -64,7 +65,7 @@ func newCmdUninstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *uninstall
 	cmd.Flags().String("olm-package", olm.DefaultPackage, "Name of the YAKS package in the OLM source or marketplace")
 	cmd.Flags().String("olm-global-namespace", olm.DefaultGlobalNamespace, "A namespace containing an OperatorGroup that defines "+
 		"global scope for the operator (used in combination with the --global flag)")
-	cmd.Flags().Bool("all", false, "Do uninstall all YAKS resources")
+	cmd.Flags().Bool("all", false, "Do uninstall all YAKS resources in all namespaces")
 
 	return &cmd, &options
 }
@@ -117,41 +118,57 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if err = o.uninstallNamespaceResources(c); err != nil {
-		return err
+	var namespaces []string
+	if o.UninstallAll {
+		instances := v1alpha1.InstanceList{}
+		if err = c.List(o.Context, &instances); err != nil {
+			return err
+		}
+
+		for _, instance := range instances.Items {
+			if instance.Spec.Operator.Namespace != o.Namespace {
+				namespaces = append(namespaces, instance.Spec.Operator.Namespace)
+			}
+		}
 	}
 
-	if !uninstallViaOLM {
-		if !o.SkipOperator {
-			if err = o.uninstallOperator(c); err != nil {
+	namespaces = append(namespaces, o.Namespace)
+
+	for _, namespace := range namespaces {
+		if err = o.uninstallNamespaceResources(c, namespace); err != nil {
+			return err
+		}
+
+		if !uninstallViaOLM {
+			if !o.SkipOperator {
+				if err = o.uninstallOperator(c, cmd.OutOrStdout(), namespace); err != nil {
+					return err
+				}
+			}
+
+			if err = o.uninstallNamespaceRoles(c, namespace); err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), "YAKS Operator removed from namespace %s\n", o.Namespace)
-		}
 
-		if err = o.uninstallNamespaceRoles(c); err != nil {
-			return err
+			if err = o.uninstallClusterWideResources(c); err != nil {
+				return err
+			}
 		}
-
-		if err = o.uninstallClusterWideResources(c); err != nil {
-			return err
-		}
-
 	}
 
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallOperator(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallOperator(c client.Client, writer io.Writer, namespace string) error {
 	api := c.AppsV1()
 
-	deployments, err := api.Deployments(o.Namespace).List(defaultListOptions)
+	deployments, err := api.Deployments(namespace).List(defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, deployment := range deployments.Items {
-		err := api.Deployments(o.Namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
+		err := api.Deployments(namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -163,7 +180,7 @@ func (o *uninstallCmdOptions) uninstallOperator(c client.Client) error {
 			APIVersion: v1alpha1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: o.Namespace,
+			Namespace: namespace,
 			Name:      "yaks",
 		},
 	}
@@ -171,6 +188,8 @@ func (o *uninstallCmdOptions) uninstallOperator(c client.Client) error {
 	if err := c.Delete(o.Context, &instance); err != nil && !k8serrors.IsNotFound(err){
 		return err
 	}
+
+	fmt.Fprintf(writer, "YAKS Operator removed from namespace %s\n", namespace)
 
 	return nil
 }
@@ -209,37 +228,37 @@ func (o *uninstallCmdOptions) uninstallClusterWideResources(c client.Client) err
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallNamespaceRoles(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallNamespaceRoles(c client.Client, namespace string) error {
 	if !o.SkipRoleBindings {
-		if err := o.uninstallRoleBindings(c); err != nil {
+		if err := o.uninstallRoleBindings(c, namespace); err != nil {
 			return err
 		}
-		fmt.Printf("YAKS Role Bindings removed from namespace %s\n", o.Namespace)
+		fmt.Printf("YAKS Role Bindings removed from namespace %s\n", namespace)
 	}
 
 	if !o.SkipRoles {
-		if err := o.uninstallRoles(c); err != nil {
+		if err := o.uninstallRoles(c, namespace); err != nil {
 			return err
 		}
-		fmt.Printf("YAKS Roles removed from namespace %s\n", o.Namespace)
+		fmt.Printf("YAKS Roles removed from namespace %s\n", namespace)
 	}
 
 	if !o.SkipServiceAccounts {
-		if err := o.uninstallServiceAccounts(c); err != nil {
+		if err := o.uninstallServiceAccounts(c, namespace); err != nil {
 			return err
 		}
-		fmt.Printf("YAKS Service Accounts removed from namespace %s\n", o.Namespace)
+		fmt.Printf("YAKS Service Accounts removed from namespace %s\n", namespace)
 	}
 
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallNamespaceResources(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallNamespaceResources(c client.Client, namespace string) error {
 	if !o.SkipConfigMaps {
-		if err := o.uninstallConfigMaps(c); err != nil {
+		if err := o.uninstallConfigMaps(c, namespace); err != nil {
 			return err
 		}
-		fmt.Printf("YAKS Config Maps removed from namespace %s\n", o.Namespace)
+		fmt.Printf("YAKS Config Maps removed from namespace %s\n", namespace)
 	}
 
 	return nil
@@ -264,16 +283,16 @@ func (o *uninstallCmdOptions) uninstallCrd(c kubernetes.Interface) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallRoles(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallRoles(c client.Client, namespace string) error {
 	api := c.RbacV1()
 
-	roleBindings, err := api.Roles(o.Namespace).List(defaultListOptions)
+	roleBindings, err := api.Roles(namespace).List(defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, roleBinding := range roleBindings.Items {
-		err := api.Roles(o.Namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
+		err := api.Roles(namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -282,16 +301,16 @@ func (o *uninstallCmdOptions) uninstallRoles(c client.Client) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallRoleBindings(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallRoleBindings(c client.Client, namespace string) error {
 	api := c.RbacV1()
 
-	roleBindings, err := api.RoleBindings(o.Namespace).List(defaultListOptions)
+	roleBindings, err := api.RoleBindings(namespace).List(defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, roleBinding := range roleBindings.Items {
-		err := api.RoleBindings(o.Namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
+		err := api.RoleBindings(namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -336,16 +355,16 @@ func (o *uninstallCmdOptions) uninstallClusterRoleBindings(c client.Client) erro
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallServiceAccounts(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallServiceAccounts(c client.Client, namespace string) error {
 	api := c.CoreV1()
 
-	serviceAccountList, err := api.ServiceAccounts(o.Namespace).List(defaultListOptions)
+	serviceAccountList, err := api.ServiceAccounts(namespace).List(defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, serviceAccount := range serviceAccountList.Items {
-		err := api.ServiceAccounts(o.Namespace).Delete(serviceAccount.Name, &metav1.DeleteOptions{})
+		err := api.ServiceAccounts(namespace).Delete(serviceAccount.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -354,16 +373,16 @@ func (o *uninstallCmdOptions) uninstallServiceAccounts(c client.Client) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallConfigMaps(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallConfigMaps(c client.Client, namespace string) error {
 	api := c.CoreV1()
 
-	configMapsList, err := api.ConfigMaps(o.Namespace).List(defaultListOptions)
+	configMapsList, err := api.ConfigMaps(namespace).List(defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, configMap := range configMapsList.Items {
-		err := api.ConfigMaps(o.Namespace).Delete(configMap.Name, &metav1.DeleteOptions{})
+		err := api.ConfigMaps(namespace).Delete(configMap.Name, &metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
