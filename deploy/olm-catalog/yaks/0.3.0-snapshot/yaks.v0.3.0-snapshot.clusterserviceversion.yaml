@@ -47,36 +47,15 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: A YAKS instance
+      displayName: Instance
+      kind: Instance
+      name: instances.yaks.citrusframework.org
+      version: v1alpha1
     - description: A YAKS test
       displayName: Test
       kind: Test
       name: tests.yaks.citrusframework.org
-      specDescriptors:
-      - description: The test source
-        displayName: Source
-        path: source
-      - description: The name of the test source
-        displayName: Name
-        path: source.name
-      - description: The language of the test source
-        displayName: Language
-        path: source.language
-      - description: The content of the test source
-        displayName: Content
-        path: source.content
-      statusDescriptors:
-      - description: The phase that the test is currently in
-        displayName: Phase
-        path: phase
-      - description: The test results
-        displayName: Test Results
-        path: results
-      - description: The unique ID of the test
-        displayName: Test ID
-        path: testID
-      - description: The version of YAKS which ran the test
-        displayName: Version
-        path: version
       version: v1alpha1
   description: |
     YAKS
@@ -343,7 +322,7 @@ spec:
   minKubeVersion: 1.11.0
   provider:
     name: Citrus Framework
-  replaces: yaks-operator.v0.1.0
+  replaces: yaks-operator.v0.2.0
   selector:
     matchLabels:
       name: yaks-operator
