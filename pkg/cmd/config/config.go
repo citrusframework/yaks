@@ -25,8 +25,6 @@ import (
 )
 
 const (
-    OperatorNamespaceOpenShift  = "openshift-operators"
-    OperatorNamespaceKubernetes = "kube-operators"
     DefaultTimeout = "30m"
 )
 

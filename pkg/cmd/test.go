@@ -272,7 +272,7 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 func handleTestError(namespace string, source string, results *v1alpha1.TestResults, err error) {
 	suite := v1alpha1.TestSuite{
 		Errors: []string{
-			err.Error(),
+			fmt.Sprintf("%s - %s", k8serrors.ReasonForError(err), err.Error()),
 		},
 	}
 
@@ -342,26 +342,28 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	}
 	runConfig.Config.Namespace.Name = namespaceName
 
-	// looking for existing operator in current namespace
-	operator, err := o.findOperator(c, o.Namespace)
+	// looking for existing operator instance in current namespace
+	instance, err := o.findInstance(c, o.Namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
-		// looking for operator in cluster-wide operator namespace
-		if operatorNamespace, namespaceErr := getDefaultOperatorNamespace(c, runConfig); namespaceErr == nil {
-			operator, err = o.findOperator(c, operatorNamespace)
-			if err != nil && k8serrors.IsNotFound(err) {
-				fmt.Println("Unable to find existing YAKS operator - " +
+		// looking for operator instances in other namespaces
+		if instanceList, err := o.listInstances(c); err == nil {
+			for _, instance := range instanceList.Items {
+				if instance.Spec.Operator.Global {
+					// Using global operator to manage temporary namespaces, no action required
+					return namespace, nil
+				}
+			}
+
+			if len(instanceList.Items) == 0 {
+				fmt.Println("Unable to find existing YAKS instance - " +
 					"adding new operator instance to temporary namespace by default")
-			} else {
-				return namespace, err
 			}
 		} else {
-			return namespace, namespaceErr
+			return namespace, err
 		}
 	} else if err != nil {
 		return namespace, err
-	}
-
-	if operator != nil && isOperatorGlobal(operator) {
+	} else if instance != nil && v1alpha1.IsGlobal(instance) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
 	}
@@ -731,6 +733,38 @@ func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *
 		return err
 	}
 	return nil
+}
+
+func (o *testCmdOptions) findInstance(c client.Client, namespace string) (*v1alpha1.Instance, error) {
+	yaks := v1alpha1.Instance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.InstanceKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      "yaks",
+		},
+	}
+	key := k8sclient.ObjectKey{
+		Namespace: namespace,
+		Name:      "yaks",
+	}
+
+	err := c.Get(o.Context, key, &yaks)
+	return &yaks, err
+}
+
+func (o *testCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, error) {
+	instanceList := v1alpha1.InstanceList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.InstanceKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+	}
+
+	err := c.List(o.Context, &instanceList)
+	return instanceList, err
 }
 
 func isRemoteFile(fileName string) bool {
