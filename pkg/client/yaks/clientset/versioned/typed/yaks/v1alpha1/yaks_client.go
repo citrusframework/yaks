@@ -27,12 +27,17 @@ import (
 
 type YaksV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	InstancesGetter
 	TestsGetter
 }
 
 // YaksV1alpha1Client is used to interact with features provided by the yaks.citrusframework.org group.
 type YaksV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *YaksV1alpha1Client) Instances(namespace string) InstanceInterface {
+	return newInstances(c, namespace)
 }
 
 func (c *YaksV1alpha1Client) Tests(namespace string) TestInterface {

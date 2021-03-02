@@ -153,6 +153,8 @@ type TestResult struct {
 type TestPhase string
 
 const (
+	// InstanceKind
+	InstanceKind string = "Instance"
 	// TestKind
 	TestKind string = "Test"
 

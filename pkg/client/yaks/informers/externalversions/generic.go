@@ -54,6 +54,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=yaks.citrusframework.org, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("instances"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Yaks().V1alpha1().Instances().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("tests"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Yaks().V1alpha1().Tests().Informer()}, nil
 

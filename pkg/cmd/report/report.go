@@ -24,6 +24,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"io/ioutil"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path"
@@ -192,7 +193,7 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 	overall.Name = "All tests"
 
 	summary := fmt.Sprintf("Test results: Total: %d, Passed: %d, Failed: %d, Errors: %d, Skipped: %d\n",
-		overall.Summary.Total, overall.Summary.Passed, overall.Summary.Failed, len(overall.Errors), overall.Summary.Skipped)
+		overall.Summary.Total, overall.Summary.Passed, overall.Summary.Failed, overall.Summary.Errors, overall.Summary.Skipped)
 
 	for _, test := range overall.Tests {
 		result := "Passed"
@@ -231,15 +232,24 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 					{
 						Name: kubernetes.SanitizeName(source),
 						ClassName: source,
-						ErrorType: "InitializationError",
+						ErrorType: GetErrorType(err),
 						ErrorMessage: err.Error(),
 					},
 				},
 				Summary: v1alpha1.TestSummary{
 					Errors: 1,
 				},
-				Errors: []string{ err.Error() },
+				Errors: []string{ fmt.Sprintf("%s - %s", GetErrorType(err), err.Error()) },
 			},
 		},
+	}
+}
+
+func GetErrorType(err error) string {
+	errReason := k8serrors.ReasonForError(err)
+	if  errReason == metav1.StatusReasonUnknown {
+		return "InitializationError"
+	} else {
+		return string(errReason)
 	}
 }

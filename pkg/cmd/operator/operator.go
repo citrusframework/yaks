@@ -21,15 +21,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/defaults"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/operator-framework/operator-sdk/pkg/ready"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
 	"math/rand"
 	"os"
 	"runtime"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"time"
 
@@ -45,6 +49,11 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+)
+
+const (
+	NamespaceEnvVar = "NAMESPACE"
+	PodNameEnvVar = "POD_NAME"
 )
 
 var log = logf.Log.WithName("cmd")
@@ -75,7 +84,7 @@ func Run() {
 
 	printVersion()
 
-	namespace, err := k8sutil.GetWatchNamespace()
+	watchNamespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
 		log.Error(err, "failed to get watch namespace")
 		os.Exit(1)
@@ -113,19 +122,19 @@ func Run() {
 	// Configure event broadcaster
 	var eventBroadcaster record.EventBroadcaster
 	// nolint: gocritic
-	if ok, err := kubernetes.CheckPermission(c, corev1.GroupName, "events", namespace, "", "create"); err != nil {
+	if ok, err := kubernetes.CheckPermission(c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil {
 		log.Error(err, "cannot check permissions for configuring event broadcaster")
 	} else if !ok {
 		log.Info("Event broadcasting to Kubernetes is disabled because of missing permissions to create events")
 	} else {
 		eventBroadcaster = record.NewBroadcaster()
 		//eventBroadcaster.StartLogging(camellog.WithName("events").Infof)
-		eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: c.CoreV1().Events(namespace)})
+		eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: c.CoreV1().Events(watchNamespace)})
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
-		Namespace:        namespace,
+		Namespace:        watchNamespace,
 		EventBroadcaster: eventBroadcaster,
 	})
 	if err != nil {
@@ -146,6 +155,11 @@ func Run() {
 	defer installCancel()
 	install.OperatorStartupOptionalTools(installCtx, c, log)
 
+	if err:= installInstance(installCtx, c, watchNamespace == "", defaults.Version); err != nil {
+		log.Error(err, "failed to install yaks custom resource")
+		os.Exit(1)
+	}
+
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Error(err, "")
@@ -159,4 +173,83 @@ func Run() {
 		log.Error(err, "manager exited non-zero")
 		os.Exit(1)
 	}
+}
+
+func installInstance(ctx context.Context, c client.Client, global bool, version string) error {
+	operatorNamespace, err := getOperatorNamespace()
+	if err != nil {
+		return err
+	}
+
+	operatorPodName, err := getOperatorPodName()
+	if err != nil {
+		return err
+	}
+
+	yaks := v1alpha1.Instance{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.InstanceKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: operatorNamespace,
+			Name:      "yaks",
+		},
+		Spec: v1alpha1.InstanceSpec{
+			Operator: v1alpha1.OperatorSpec{
+				Global: global,
+				Pod: operatorPodName,
+				Namespace: operatorNamespace,
+			},
+		},
+	}
+
+	if err := c.Create(ctx, &yaks); err != nil && k8serrors.IsAlreadyExists(err) {
+		clone := yaks.DeepCopy()
+		var key k8sclient.ObjectKey
+		key, err = k8sclient.ObjectKeyFromObject(clone)
+		if err != nil {
+			return err
+		}
+		err = c.Get(ctx, key, clone)
+		if err != nil {
+			return err
+		}
+		// Update the custom resource
+		yaks.ResourceVersion = clone.ResourceVersion
+		err = c.Update(ctx, &yaks)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	yaks.Status = v1alpha1.InstanceStatus{
+		Version: version,
+	}
+
+	//Update the status
+	err = c.Status().Update(ctx, &yaks)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getOperatorPodName() (string, error) {
+	ns, found := os.LookupEnv(PodNameEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s env must be set", PodNameEnvVar)
+	}
+	return ns, nil
+}
+
+func getOperatorNamespace() (string, error) {
+	ns, found := os.LookupEnv(NamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s env must be set", NamespaceEnvVar)
+	}
+	return ns, nil
 }

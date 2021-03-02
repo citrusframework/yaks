@@ -19,4 +19,6 @@ limitations under the License.
 
 package v1alpha1
 
+type InstanceExpansion interface{}
+
 type TestExpansion interface{}
