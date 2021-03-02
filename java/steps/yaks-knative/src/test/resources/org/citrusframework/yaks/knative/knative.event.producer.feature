@@ -12,6 +12,7 @@ Feature: Knative event producer
       | source          | https://github.com/citrusframework/yaks |
       | subject         | hello |
       | id              | say-hello |
+      | time            | citrus:currentDate('yyyy-MM-dd'T'HH:mm:ss') |
       | datacontenttype | application/json |
       | data            | {"msg": "Hello Knative!"} |
 
@@ -31,6 +32,7 @@ Feature: Knative event producer
       | Ce-Source          | https://github.com/citrusframework/yaks |
       | Ce-Subject         | hello |
       | Ce-Id              | say-hello |
+      | Ce-Time            | citrus:currentDate('yyyy-MM-dd'T'HH:mm:ss') |
       | Content-Type       | application/json |
 
   Scenario: Send multiline event data
@@ -53,6 +55,7 @@ Feature: Knative event producer
       "source" : "https://github.com/citrusframework/yaks",
       "subject" : "hello",
       "id" : "say-hello",
+      "time" : "citrus:currentDate('yyyy-MM-dd'T'HH:mm:ss')",
       "datacontenttype" : "application/json",
       "data" : "{\"msg\": \"Hello Knative!\"}"
     }

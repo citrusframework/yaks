@@ -25,6 +25,7 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
@@ -45,6 +46,7 @@ public class KnativeEventingSteps {
     private Citrus citrus;
 
     private KubernetesClient k8sClient;
+    private KnativeClient knativeClient;
 
     private String brokerName = KnativeSettings.getBrokerName();
 
@@ -57,6 +59,10 @@ public class KnativeEventingSteps {
         if (k8sClient == null) {
             k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
+
+        if (knativeClient == null) {
+            knativeClient = KnativeSupport.getKnativeClient(citrus);
+        }
     }
 
     @Given("^Knative broker ([^\\s]+)$")
@@ -68,13 +74,13 @@ public class KnativeEventingSteps {
     public void createBroker(String brokerName) {
         setBrokerName(brokerName);
 
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .brokers()
                 .create(brokerName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .brokers()
                             .delete(brokerName)));
         }
@@ -85,21 +91,21 @@ public class KnativeEventingSteps {
         runner.then(repeatOnError()
             .autoSleep(500)
             .until((i, context) -> i == 10)
-            .actions(knative().client(k8sClient)
+            .actions(knative().client(k8sClient).client(knativeClient)
                     .brokers()
                     .verify(brokerName)));
     }
 
     @Given("^create Knative trigger ([^\\s]+) on service ([^\\s]+)$")
     public void createTriggerOnService(String triggerName, String serviceName) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .trigger()
                 .create(triggerName)
                 .onService(serviceName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .trigger()
                             .delete(triggerName)));
         }
@@ -107,7 +113,7 @@ public class KnativeEventingSteps {
 
     @Given("^create Knative trigger ([^\\s]+) on service ([^\\s]+) with filter on attributes$")
     public void createTriggerOnServiceFiltered(String triggerName, String serviceName, DataTable filterAttributes) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .trigger()
                 .create(triggerName)
                 .onService(serviceName)
@@ -115,7 +121,7 @@ public class KnativeEventingSteps {
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .trigger()
                             .delete(triggerName)));
         }
@@ -123,14 +129,14 @@ public class KnativeEventingSteps {
 
     @Given("^create Knative trigger ([^\\s]+) on channel ([^\\s]+)$")
     public void createTriggerOnChannel(String triggerName, String channelName) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .trigger()
                 .create(triggerName)
                 .onChannel(channelName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .trigger()
                             .delete(triggerName)));
         }
@@ -138,7 +144,7 @@ public class KnativeEventingSteps {
 
     @Given("^create Knative trigger ([^\\s]+) on channel ([^\\s]+) with filter on attributes$")
     public void createTriggerFiltered(String triggerName, String channelName, DataTable filterAttributes) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .trigger()
                 .create(triggerName)
                 .onChannel(channelName)
@@ -146,7 +152,7 @@ public class KnativeEventingSteps {
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .trigger()
                             .delete(triggerName)));
         }

@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.knative.actions;
 
 import com.consol.citrus.TestActionBuilder;
+import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.knative.actions.eventing.CreateBrokerAction;
 import org.citrusframework.yaks.knative.actions.eventing.CreateTriggerAction;
@@ -33,6 +34,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
 
     /** Kubernetes client */
     private KubernetesClient kubernetesClient;
+    private KnativeClient knativeClient;
 
     private AbstractKnativeAction.Builder<? extends KnativeAction, ?> delegate;
 
@@ -50,6 +52,15 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
      */
     public KnativeActionBuilder client(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
+        return this;
+    }
+
+    /**
+     * Use a custom Knative client.
+     * @param knativeClient
+     */
+    public KnativeActionBuilder client(KnativeClient knativeClient) {
+        this.knativeClient = knativeClient;
         return this;
     }
 
@@ -91,6 +102,10 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         if (kubernetesClient != null) {
             delegate.client(kubernetesClient);
         }
+
+        if (knativeClient != null) {
+            delegate.client(knativeClient);
+        }
         return delegate.build();
     }
 
@@ -107,6 +122,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public CreateChannelAction.Builder create(String channelName) {
             CreateChannelAction.Builder builder = new CreateChannelAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .name(channelName);
             delegate = builder;
             return builder;
@@ -119,6 +135,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public DeleteKnativeResourceAction.Builder delete(String channelName) {
             DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .component("messaging")
                     .kind("channels")
                     .name(channelName);
@@ -135,6 +152,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public CreateSubscriptionAction.Builder create(String subscriptionName) {
             CreateSubscriptionAction.Builder builder = new CreateSubscriptionAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .name(subscriptionName);
             delegate = builder;
             return builder;
@@ -147,6 +165,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public DeleteKnativeResourceAction.Builder delete(String subscriptionName) {
             DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .component("messaging")
                     .kind("subscriptions")
                     .name(subscriptionName);
@@ -163,6 +182,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public CreateTriggerAction.Builder create(String triggerName) {
             CreateTriggerAction.Builder builder = new CreateTriggerAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .name(triggerName);
             delegate = builder;
             return builder;
@@ -175,6 +195,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public DeleteKnativeResourceAction.Builder delete(String triggerName) {
             DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .component("eventing")
                     .kind("triggers")
                     .name(triggerName);
@@ -191,6 +212,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public CreateBrokerAction.Builder create(String brokerName) {
             CreateBrokerAction.Builder builder = new CreateBrokerAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .name(brokerName);
             delegate = builder;
             return builder;
@@ -203,6 +225,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public DeleteKnativeResourceAction.Builder delete(String brokerName) {
             DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .component("eventing")
                     .kind("brokers")
                     .name(brokerName);
@@ -217,6 +240,7 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
         public VerifyBrokerAction.Builder verify(String brokerName) {
             VerifyBrokerAction.Builder builder = new VerifyBrokerAction.Builder()
                     .client(kubernetesClient)
+                    .client(knativeClient)
                     .name(brokerName);
             delegate = builder;
             return builder;

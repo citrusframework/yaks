@@ -84,8 +84,7 @@ public class KnativeServiceConfiguration {
                 Assertions.assertThat(message.getHeader("Ce-Subject")).isEqualTo("hello");
                 Assertions.assertThat(message.getHeader("Ce-Type")).isEqualTo("greeting");
                 Assertions.assertThat(message.getHeader("Ce-Source")).isEqualTo("https://github.com/citrusframework/yaks");
-                Assertions.assertThat(message.getHeader("Ce-Time")).isNotNull();
-                Assertions.assertThat(message.getHeader("Content-Type").toString()).isEqualTo(MediaType.APPLICATION_JSON_VALUE);
+                Assertions.assertThat(message.getHeader("Content-Type").toString()).isEqualTo(MediaType.APPLICATION_JSON_UTF8_VALUE);
                 Assertions.assertThat(message.getPayload(String.class)).isEqualTo("{\"msg\": \"Hello Knative!\"}");
 
                 return new HttpMessage().status(HttpStatus.ACCEPTED);

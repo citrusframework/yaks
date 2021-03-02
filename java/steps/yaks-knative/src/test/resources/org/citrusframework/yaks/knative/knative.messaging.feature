@@ -1,6 +1,7 @@
 Feature: Knative messaging
 
   Background:
+    Given Disable auto removal of Knative resources
     Given Knative namespace event-example
 
   Scenario: Create channel
