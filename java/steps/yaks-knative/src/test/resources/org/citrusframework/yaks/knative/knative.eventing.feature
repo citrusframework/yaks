@@ -1,11 +1,13 @@
 Feature: Knative eventing
 
   Background:
+    Given Disable auto removal of Knative resources
     Given Knative namespace event-example
     And Knative broker my-broker
 
   Scenario: Create broker
     Given create Knative broker my-broker
+    When activate Knative broker my-broker
     Then Knative broker my-broker is running
 
   Scenario: Create service and trigger

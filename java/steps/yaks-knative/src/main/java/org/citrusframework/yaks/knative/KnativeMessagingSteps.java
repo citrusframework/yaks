@@ -24,6 +24,7 @@ import com.consol.citrus.annotations.CitrusResource;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
@@ -42,23 +43,28 @@ public class KnativeMessagingSteps {
     private Citrus citrus;
 
     private KubernetesClient k8sClient;
+    private KnativeClient knativeClient;
 
     @Before
     public void before(Scenario scenario) {
         if (k8sClient == null) {
             k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
+
+        if (knativeClient == null) {
+            knativeClient = KnativeSupport.getKnativeClient(citrus);
+        }
     }
 
     @Given("^create Knative channel ([^\\s]+)$")
     public void createChannel(String channelName) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .channels()
                 .create(channelName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .channels()
                             .delete(channelName)));
         }
@@ -66,17 +72,17 @@ public class KnativeMessagingSteps {
 
     @Given("^subscribe service ([^\\s]+) to Knative channel ([^\\s]+)$")
     public void createSubscription(String serviceName, String channelName) {
-        runner.given(knative().client(k8sClient)
+        runner.given(knative().client(k8sClient).client(knativeClient)
                 .subscriptions()
-                .create(serviceName + "subscription")
+                .create(serviceName + "-subscription")
                 .onChannel(channelName)
                 .service(serviceName));
 
         if (KnativeSteps.autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(knative().client(k8sClient)
+                    .actions(knative().client(k8sClient).client(knativeClient)
                             .subscriptions()
-                            .delete(serviceName + "subscription")));
+                            .delete(serviceName + "-subscription")));
         }
     }
 }

@@ -123,6 +123,12 @@
         <groupId>io.fabric8</groupId>
         <artifactId>knative-mock</artifactId>
         <version>${knative-client.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+          </exclusion>
+        </exclusions>
         <scope>test</scope>
       </dependency>
 
@@ -395,9 +401,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
-          <configuration>
-            <failIfNoTests>false</failIfNoTests>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-remote-resources-plugin</artifactId>

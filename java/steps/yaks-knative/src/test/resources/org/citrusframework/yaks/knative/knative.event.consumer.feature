@@ -5,6 +5,7 @@ Feature: Knative event consumer
     And Knative service port 8181
     And Knative service "hello-service"
     And Knative event consumer timeout is 5000 ms
+    And create Knative event consumer service hello-service
     And variable id is "citrus:randomNumber(4)"
     And create test event
     """
@@ -15,6 +16,7 @@ Feature: Knative event consumer
       "subject" : "hello",
       "id" : "say-hello-${id}",
       "datacontenttype" : "application/json",
+      "time": "citrus:currentDate('yyyy-MM-dd'T'HH:mm:ss')",
       "data" : "{\"msg\": \"Hello Knative!\"}"
     }
     """
@@ -26,6 +28,7 @@ Feature: Knative event consumer
       | source          | https://github.com/citrusframework/yaks |
       | subject         | hello |
       | id              | say-hello-${id} |
+      | time            | @matchesDatePattern('yyyy-MM-dd'T'HH:mm:ss')@ |
       | datacontenttype | application/json;charset=UTF-8 |
       | data            | {"msg": "Hello Knative!"} |
     Then verify test event accepted
@@ -47,6 +50,7 @@ Feature: Knative event consumer
       | Ce-Source          | https://github.com/citrusframework/yaks |
       | Ce-Subject         | hello |
       | Ce-Id              | say-hello-${id} |
+      | Ce-Time            | @matchesDatePattern('yyyy-MM-dd'T'HH:mm:ss')@ |
       | Content-Type       | application/json;charset=UTF-8 |
     Then verify test event accepted
 

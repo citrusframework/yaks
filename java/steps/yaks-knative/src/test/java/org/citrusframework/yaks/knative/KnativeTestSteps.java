@@ -28,7 +28,10 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.knative.client.KnativeClient;
-import io.fabric8.knative.eventing.v1.Trigger;
+import io.fabric8.knative.eventing.v1.Broker;
+import io.fabric8.knative.eventing.v1.BrokerStatus;
+import io.fabric8.knative.eventing.v1.TriggerList;
+import io.fabric8.knative.internal.pkg.apis.Condition;
 import io.fabric8.knative.messaging.v1.SubscriptionList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.assertj.core.api.Assertions;
@@ -61,6 +64,34 @@ public class KnativeTestSteps {
                         .message(eventRequest));
     }
 
+    @Given("^activate Knative broker ([^\\s]+)$")
+    public void activateBroker(String brokerName) {
+        runner.run(new KnativeTestAction() {
+            @Override
+            public void doExecute(TestContext context) {
+                Broker broker = getKnativeClient()
+                        .brokers()
+                        .inNamespace(namespace(context))
+                        .withName(brokerName)
+                        .get();
+
+                Assertions.assertThat(broker).isNotNull();
+
+                BrokerStatus status = new BrokerStatus();
+                Condition ready = new Condition();
+                ready.setType("Ready");
+                ready.setStatus("True");
+                status.getConditions().add(ready);
+                broker.setStatus(status);
+
+                getKnativeClient()
+                        .brokers()
+                        .inNamespace(namespace(context))
+                        .updateStatus(broker);
+            }
+        });
+    }
+
     @Then("^verify test event accepted$")
     public void verifyEventAccepted() {
         runner.run(http().client("http://localhost:${knativeServicePort}/")
@@ -73,11 +104,15 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Assertions.assertThat(getKnativeClient()
+                TriggerList triggers = getKnativeClient()
                         .triggers()
                         .inNamespace(namespace(context))
-                        .withName(triggerName)
-                        .get()).isNotNull();
+                        .list();
+
+                Assertions.assertThat(triggers).isNotNull();
+                Assertions.assertThat(triggers.getItems()).isNotEmpty();
+                Assertions.assertThat(triggers.getItems().size()).isEqualTo(1);
+                Assertions.assertThat(triggers.getItems().get(0).getMetadata().getName()).isEqualTo(triggerName);
             }
         });
     }
@@ -87,17 +122,19 @@ public class KnativeTestSteps {
         runner.run(new KnativeTestAction() {
             @Override
             public void doExecute(TestContext context) {
-                Trigger trigger = getKnativeClient()
+                TriggerList triggers = getKnativeClient()
                         .triggers()
                         .inNamespace(namespace(context))
-                        .withName(triggerName)
-                        .get();
+                        .list();
 
-                Assertions.assertThat(trigger).isNotNull();
-                Assertions.assertThat(trigger.getSpec().getFilter().getAttributes().size()).isEqualTo(filter.height());
+                Assertions.assertThat(triggers).isNotNull();
+                Assertions.assertThat(triggers.getItems()).isNotEmpty();
+                Assertions.assertThat(triggers.getItems().size()).isEqualTo(1);
+                Assertions.assertThat(triggers.getItems().get(0).getMetadata().getName()).isEqualTo(triggerName);
+                Assertions.assertThat(triggers.getItems().get(0).getSpec().getFilter().getAttributes().size()).isEqualTo(filter.height());
                 filter.asMap(String.class, String.class).forEach((key, value) -> {
-                    Assertions.assertThat(trigger.getSpec().getFilter().getAttributes()).containsKey(key.toString());
-                    Assertions.assertThat(trigger.getSpec().getFilter().getAttributes().get(key.toString())).isEqualTo(value);
+                    Assertions.assertThat(triggers.getItems().get(0).getSpec().getFilter().getAttributes()).containsKey(key.toString());
+                    Assertions.assertThat(triggers.getItems().get(0).getSpec().getFilter().getAttributes().get(key.toString())).isEqualTo(value);
                 });
             }
         });

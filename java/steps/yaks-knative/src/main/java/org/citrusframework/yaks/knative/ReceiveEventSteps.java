@@ -56,6 +56,7 @@ public class ReceiveEventSteps {
     public void before(Scenario scenario) {
         kubernetesSteps = new KubernetesSteps();
         CitrusAnnotations.injectAll(kubernetesSteps, citrus, context);
+        CitrusAnnotations.injectTestRunner(kubernetesSteps, runner);
         kubernetesSteps.before(scenario);
         kubernetesSteps.configureTimeout(KnativeSettings.getEventConsumerTimeout());
         kubernetesSteps.setServiceName(KnativeSettings.getServiceName());

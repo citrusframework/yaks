@@ -47,7 +47,8 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
             if (broker.getStatus() != null &&
                     broker.getStatus().getConditions() != null &&
                     broker.getStatus().getConditions().stream()
-                            .anyMatch(condition -> condition.getType().equals("Ready") && condition.getStatus().equals("True"))) {
+                            .anyMatch(condition -> condition.getType().equals("Ready") &&
+                                    condition.getStatus().equalsIgnoreCase("True"))) {
                 LOG.info(String.format("Knative broker %s is ready", brokerName));
             } else {
                 throw new ValidationException(String.format("Knative broker '%s' is not ready", brokerName));
