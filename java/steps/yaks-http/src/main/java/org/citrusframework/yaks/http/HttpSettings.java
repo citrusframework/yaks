@@ -47,7 +47,7 @@ public class HttpSettings {
 
     private static final String SECURE_KEYSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.path";
     private static final String SECURE_KEYSTORE_PATH_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PATH";
-    private static final String SECURE_KEYSTORE_PATH_DEFAULT = "classpath:keystore/http-server.jks";
+    static final String SECURE_KEYSTORE_PATH_DEFAULT = "classpath:keystore/http-server.jks";
 
     private static final String SECURE_KEYSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.password";
     private static final String SECURE_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PASSWORD";
