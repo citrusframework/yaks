@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.kafka;
+package org.citrusframework.yaks.kubernetes;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
 import org.junit.runner.RunWith;
 
+/**
+ * @author Christoph Deppisch
+ */
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class KafkaFeatureTest {
+public class KubernetesFeature_IT {
 }

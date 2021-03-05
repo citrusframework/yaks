@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.knative;
+package org.citrusframework.yaks.camelk;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -29,5 +29,5 @@ import org.junit.runner.RunWith;
         extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class KnativeFeatureTest {
+public class CamelKFeature_IT {
 }

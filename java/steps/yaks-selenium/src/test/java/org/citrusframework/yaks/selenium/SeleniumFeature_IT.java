@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.groovy;
+package org.citrusframework.yaks.selenium;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -32,5 +32,5 @@ import org.junit.runner.RunWith;
         },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class GroovyFeatureTest {
+public class SeleniumFeature_IT {
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.selenium;
+package org.citrusframework.yaks.standard;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -26,11 +26,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        extraGlue = {
-            "org.citrusframework.yaks.standard",
-            "org.citrusframework.yaks.http"
-        },
-        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+        extraGlue = { "org.citrusframework.yaks.hooks" },
+        plugin = { "pretty", "org.citrusframework.yaks.report.TestReporter" }
 )
-public class SeleniumFeatureTest {
+public class StandardFeature_IT {
 }

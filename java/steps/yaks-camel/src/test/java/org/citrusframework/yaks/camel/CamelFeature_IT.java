@@ -15,16 +15,19 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.jms;
+package org.citrusframework.yaks.camel;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
 import org.junit.runner.RunWith;
 
+/**
+ * @author Christoph Deppisch
+ */
 @RunWith(Cucumber.class)
 @CucumberOptions(
         extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class JmsFeatureTest {
+public class CamelFeature_IT {
 }

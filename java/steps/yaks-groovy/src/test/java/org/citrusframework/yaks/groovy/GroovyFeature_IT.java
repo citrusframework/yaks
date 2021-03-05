@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk;
+package org.citrusframework.yaks.groovy;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -26,8 +26,11 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        extraGlue = { "org.citrusframework.yaks.standard" },
+        extraGlue = {
+            "org.citrusframework.yaks.standard",
+            "org.citrusframework.yaks.http"
+        },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class CamelKFeatureTest {
+public class GroovyFeature_IT {
 }
