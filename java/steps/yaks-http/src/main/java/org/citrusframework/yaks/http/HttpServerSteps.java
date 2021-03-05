@@ -17,7 +17,11 @@
 
 package org.citrusframework.yaks.http;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -428,11 +432,24 @@ public class HttpServerSteps implements HttpSteps {
     private SslContextFactory sslContextFactory() {
         try {
             SslContextFactory.Server contextFactory = new SslContextFactory.Server();
-            contextFactory.setKeyStorePath(FileUtils.getFileResource(sslKeyStorePath).getURL().getFile());
+            contextFactory.setKeyStorePath(getKeyStorePathPath());
             contextFactory.setKeyStorePassword(sslKeyStorePassword);
             return contextFactory;
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read keystore file in path: " + sslKeyStorePath);
+        }
+    }
+
+    private String getKeyStorePathPath() throws IOException {
+        if (sslKeyStorePath.equals(HttpSettings.SECURE_KEYSTORE_PATH_DEFAULT)) {
+            File tmpKeyStore = File.createTempFile("http-server", ".jks");
+
+            try (InputStream in = FileUtils.getFileResource(sslKeyStorePath).getInputStream()) {
+                Files.copy(in, tmpKeyStore.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                return tmpKeyStore.getPath();
+            }
+        } else {
+            return FileUtils.getFileResource(sslKeyStorePath).getURL().getFile();
         }
     }
 }

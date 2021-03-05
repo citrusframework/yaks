@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.kubernetes;
+package org.citrusframework.yaks.http;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -26,7 +26,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
+        extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class KubernetesFeatureTest {
+public class HttpFeature_IT {
 }

@@ -15,34 +15,22 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.jdbc;
+package org.citrusframework.yaks.openapi;
 
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
-import org.junit.ClassRule;
 import org.junit.runner.RunWith;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
  * @author Christoph Deppisch
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        extraGlue = { "org.citrusframework.yaks.standard" },
+        extraGlue = {
+                "org.citrusframework.yaks.standard",
+                "org.citrusframework.yaks.http"
+        },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
-public class JdbcStepsTest {
-
-    @ClassRule
-    public static PostgreSQLContainer<?> testdbContainer = new PostgreSQLContainer<>()
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("secret")
-            .withInitScript("test-db-init.sql")
-            .withCreateContainerCmdModifier(modifier -> modifier.withPortBindings(
-                    new PortBinding(Ports.Binding.bindPort(PostgreSQLContainer.POSTGRESQL_PORT),
-                    new ExposedPort(PostgreSQLContainer.POSTGRESQL_PORT))));
+public class OpenApiFeature_IT {
 }
