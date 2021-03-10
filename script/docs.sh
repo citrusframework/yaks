@@ -48,6 +48,11 @@ generate_docs() {
     check_error $next_version
 
     if [ ! $(hasflag --local) ]; then
+        if [ ! $(hasflag --dry-run -n) ]; then
+            # Verify that there are no modified file in git repo
+            check_git_clean "$working_dir"
+        fi
+
         set_docs_version "$working_dir" "$release_version" "$snapshot_version"
     fi
 
@@ -67,9 +72,6 @@ generate_docs() {
         echo "==== Generate and release dry-run"
         ./mvnw ${maven_opts} package -Dproject.docs.version=${release_version}
     else
-        # Verify that there are no modified file in git repo
-        check_git_clean "$working_dir"
-
         echo "==== Generate and release to GitHub pages"
         ./mvnw ${maven_opts} verify -Dproject.docs.version=${release_version}
     fi
