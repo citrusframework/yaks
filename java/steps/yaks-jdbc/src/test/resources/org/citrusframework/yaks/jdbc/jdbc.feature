@@ -1,10 +1,11 @@
 Feature: JDBC steps
 
   Background:
+    Given load variables secrets.properties
     Given Database connection
-      | url       | jdbc:postgresql://localhost:5432/testdb |
-      | username  | test |
-      | password  | secret |
+      | url       | ${database.url} |
+      | username  | ${database.user} |
+      | password  | ${database.password} |
 
   Scenario: SQL update
     Given variables

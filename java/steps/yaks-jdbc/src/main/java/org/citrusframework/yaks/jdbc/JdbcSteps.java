@@ -27,6 +27,7 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.actions.ExecuteSQLQueryAction;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
@@ -46,6 +47,9 @@ public class JdbcSteps {
 
     @CitrusResource
     private TestCaseRunner runner;
+
+    @CitrusResource
+    private TestContext context;
 
     @CitrusFramework
     private Citrus citrus;
@@ -79,8 +83,11 @@ public class JdbcSteps {
         String password = connectionProps.getOrDefault("password", "test");
         boolean suppressClose = Boolean.parseBoolean(connectionProps.getOrDefault("suppressClose", Boolean.TRUE.toString()));
 
-        SingleConnectionDataSource singleConnectionDataSource = new SingleConnectionDataSource(url, username, password, suppressClose);
-        singleConnectionDataSource.setDriverClassName(driver);
+        SingleConnectionDataSource singleConnectionDataSource = new SingleConnectionDataSource(
+                context.replaceDynamicContentInString(url),
+                context.replaceDynamicContentInString(username),
+                context.replaceDynamicContentInString(password), suppressClose);
+        singleConnectionDataSource.setDriverClassName(context.replaceDynamicContentInString(driver));
         this.dataSource = singleConnectionDataSource;
     }
 
