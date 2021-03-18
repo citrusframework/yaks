@@ -32,11 +32,11 @@ public class GroovyTestSteps {
 
     @Then("^verify endpoint ([^\"\\s]+)$")
     public void verifyEndpointResolvable(String endpoint) {
-        Assertions.assertThat(citrus.getCitrusContext().getReferenceResolver().isResolvable(endpoint));
+        Assertions.assertThat(citrus.getCitrusContext().getReferenceResolver().isResolvable(endpoint)).isTrue();
     }
 
     @Then("^verify bean ([^\"\\s]+)$")
     public void verifyBeanResolvable(String name) {
-        Assertions.assertThat(citrus.getCitrusContext().getReferenceResolver().isResolvable(name));
+        Assertions.assertThat(citrus.getCitrusContext().getReferenceResolver().isResolvable(name)).isTrue();
     }
 }

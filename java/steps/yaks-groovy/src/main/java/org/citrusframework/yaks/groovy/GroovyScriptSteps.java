@@ -65,7 +65,9 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) configuration$")
     public void createConfiguration(String config) {
-        GroovyShellUtils.run(new ImportCustomizer(), new ConfigurationScript(citrus), config);
+        GroovyShellUtils.run(new ImportCustomizer(),
+                new ConfigurationScript(citrus),
+                context.replaceDynamicContentInString(config));
     }
 
     @Given("^load configuration ([^\"\\s]+)\\.groovy$")
@@ -77,7 +79,9 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) endpoint ([^\"\\s]+)\\.groovy$")
     public void createEndpoint(String name, String configurationScript) {
-        EndpointBuilder<?> builder = GroovyShellUtils.run(new ImportCustomizer(), new EndpointConfigurationScript(), configurationScript);
+        EndpointBuilder<?> builder = GroovyShellUtils.run(new ImportCustomizer(),
+                new EndpointConfigurationScript(),
+                context.replaceDynamicContentInString(configurationScript));
         Endpoint endpoint = builder.build();
 
         if (endpoint instanceof InitializingPhase) {
@@ -91,7 +95,13 @@ public class GroovyScriptSteps {
     public void loadEndpoint(String filePath) throws IOException {
         Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
         String script = FileUtils.readToString(scriptFile);
-        createEndpoint(scriptFile.getFilename(), script);
+        final String fileName = scriptFile.getFilename();
+        final String baseName = Optional.ofNullable(fileName)
+                .map(f -> f.lastIndexOf("."))
+                .filter(index -> index >= 0)
+                .map(index -> fileName.substring(0, index))
+                .orElse(fileName);
+        createEndpoint(baseName, script);
     }
 
     @Given("^(?:create|new) actions ([^\"\\s]+)\\.groovy$")

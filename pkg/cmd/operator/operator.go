@@ -181,10 +181,7 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 		return err
 	}
 
-	operatorPodName, err := getOperatorPodName()
-	if err != nil {
-		return err
-	}
+	operatorPodName := getOperatorPodName()
 
 	yaks := v1alpha1.Instance{
 		TypeMeta: metav1.TypeMeta{
@@ -238,12 +235,9 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 	return nil
 }
 
-func getOperatorPodName() (string, error) {
-	ns, found := os.LookupEnv(PodNameEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s env must be set", PodNameEnvVar)
-	}
-	return ns, nil
+func getOperatorPodName() (string) {
+	podName, _ := os.LookupEnv(PodNameEnvVar)
+	return podName
 }
 
 func getOperatorNamespace() (string, error) {

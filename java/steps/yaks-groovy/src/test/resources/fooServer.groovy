@@ -15,7 +15,9 @@
  * limitations under the License.
  */
 
+def serverPort = ${basePort}${randomPort}
+
 http()
     .server()
-    .port(18088)
+    .port(serverPort)
     .autoStart(true)
