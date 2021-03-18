@@ -24,7 +24,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
+    if: github.ref == 'refs/heads/main' && github.repository == 'citrusframework/yaks'
 
     steps:
     - name: Set Up Java
