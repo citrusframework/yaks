@@ -1,19 +1,24 @@
 Feature: Endpoint script config
 
+  Background:
+    Given variable basePort is "1"
+
   Scenario: Load endpoint
-    Given URL: http://localhost:18088
+    Given variable randomPort is "citrus:randomNumber(4)"
+    Given URL: http://localhost:${basePort}${randomPort}
     Given load endpoint fooServer.groovy
     When verify endpoint fooServer
     Then send GET /hello
     And receive HTTP 200 OK
 
   Scenario: Create Http endpoint
-    Given URL: http://localhost:18081
+    Given variable randomPort is "citrus:randomNumber(4)"
+    Given URL: http://localhost:${basePort}${randomPort}
     Given create endpoint helloServer.groovy
     """
     http()
       .server()
-      .port(18081)
+      .port(${basePort}${randomPort})
       .autoStart(true)
     """
     When verify endpoint helloServer
