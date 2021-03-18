@@ -20,7 +20,7 @@ name: build
 on:
   pull_request:
     branches:
-      - master
+      - main
     paths-ignore:
       - '**.adoc'
       - 'KEYS'
@@ -28,7 +28,7 @@ on:
       - 'NOTICE'
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - '**.adoc'
       - 'KEYS'
@@ -146,7 +146,7 @@ jobs:
     needs:
     - build
     - test
-    if: github.ref == 'refs/heads/master' && github.repository == 'citrusframework/yaks'
+    if: github.ref == 'refs/heads/main' && github.repository == 'citrusframework/yaks'
 
     steps:
     - name: Set Up Java
