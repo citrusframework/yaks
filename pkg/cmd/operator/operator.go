@@ -21,12 +21,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/client"
-	"github.com/citrusframework/yaks/pkg/install"
-	"github.com/citrusframework/yaks/pkg/util/defaults"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-	"github.com/operator-framework/operator-sdk/pkg/ready"
+
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -38,20 +33,25 @@ import (
 	"time"
 
 	"github.com/citrusframework/yaks/pkg/apis"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/controller"
+	"github.com/citrusframework/yaks/pkg/event"
+	"github.com/citrusframework/yaks/pkg/install"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	"github.com/operator-framework/operator-sdk/pkg/leader"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/operator-framework/operator-lib/leader"
 	corev1 "k8s.io/api/core/v1"
-	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
 const (
+	OperatorLockName = "yaks-lock"
+	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
 	NamespaceEnvVar = "NAMESPACE"
 	PodNameEnvVar = "POD_NAME"
 )
@@ -64,11 +64,11 @@ var GitCommit string
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Operator SDK Version: %v", sdkVersion.Version))
 	log.Info(fmt.Sprintf("YAKS Operator Version: %v", defaults.Version))
 	log.Info(fmt.Sprintf("YAKS Git Commit: %v", GitCommit))
 }
 
+// Run starts the YAKS operator
 func Run() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -84,13 +84,13 @@ func Run() {
 
 	printVersion()
 
-	watchNamespace, err := k8sutil.GetWatchNamespace()
+	watchNamespace, err := getWatchNamespace()
 	if err != nil {
 		log.Error(err, "failed to get watch namespace")
 		os.Exit(1)
 	}
 
-	// Get a config to talk to the apiserver
+	// Get a config to talk to the API server
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Error(err, "")
@@ -98,19 +98,15 @@ func Run() {
 	}
 
 	// Become the leader before proceeding
-	err = leader.Become(context.TODO(), "yaks-lock")
+	err = leader.Become(context.TODO(), OperatorLockName)
 	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
+		if err == leader.ErrNoNamespace {
+			log.Info("Local run detected, leader election is disabled")
+		} else {
+			log.Error(err, "")
+			os.Exit(1)
+		}
 	}
-
-	r := ready.NewFileReady()
-	err = r.Set()
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-	defer r.Unset() // nolint: errcheck
 
 	// Configure an event broadcaster
 	c, err := client.NewClient(false)
@@ -119,23 +115,26 @@ func Run() {
 		os.Exit(1)
 	}
 
-	// Configure event broadcaster
-	var eventBroadcaster record.EventBroadcaster
+	// We do not rely on the event broadcaster managed by controller runtime,
+	// so that we can check the operator has been granted permission to create
+	// Events. This is required for the operator to be installable by standard
+	// admin users, that are not granted create permission on Events by default.
+	broadcaster := record.NewBroadcaster()
 	// nolint: gocritic
-	if ok, err := kubernetes.CheckPermission(c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil {
-		log.Error(err, "cannot check permissions for configuring event broadcaster")
-	} else if !ok {
-		log.Info("Event broadcasting to Kubernetes is disabled because of missing permissions to create events")
-	} else {
-		eventBroadcaster = record.NewBroadcaster()
-		//eventBroadcaster.StartLogging(camellog.WithName("events").Infof)
-		eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: c.CoreV1().Events(watchNamespace)})
+	if ok, err := kubernetes.CheckPermission(context.TODO(), c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil || !ok {
+		// Do not sink Events to the server as they'll be rejected
+		broadcaster = event.NewSinkLessBroadcaster(broadcaster)
+		if err != nil {
+			log.Error(err, "cannot check permissions for configuring event broadcaster")
+		} else if !ok {
+			log.Info("Event broadcasting to Kubernetes is disabled because of missing permissions to create events")
+		}
 	}
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Namespace:        watchNamespace,
-		EventBroadcaster: eventBroadcaster,
+		EventBroadcaster: broadcaster,
 	})
 	if err != nil {
 		log.Error(err, "")
@@ -168,11 +167,12 @@ func Run() {
 
 	log.Info("Starting the Cmd.")
 
-	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "manager exited non-zero")
 		os.Exit(1)
 	}
+
+	broadcaster.Shutdown()
 }
 
 func installInstance(ctx context.Context, c client.Client, global bool, version string) error {
@@ -204,10 +204,8 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 	if err := c.Create(ctx, &yaks); err != nil && k8serrors.IsAlreadyExists(err) {
 		clone := yaks.DeepCopy()
 		var key k8sclient.ObjectKey
-		key, err = k8sclient.ObjectKeyFromObject(clone)
-		if err != nil {
-			return err
-		}
+		key = k8sclient.ObjectKeyFromObject(clone)
+
 		err = c.Get(ctx, key, clone)
 		if err != nil {
 			return err
@@ -235,15 +233,29 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 	return nil
 }
 
+// getOperatorPodName returns the name the operator pod
 func getOperatorPodName() (string) {
 	podName, _ := os.LookupEnv(PodNameEnvVar)
 	return podName
 }
 
+// getOperatorNamespace returns the Namespace the operator is installed
 func getOperatorNamespace() (string, error) {
 	ns, found := os.LookupEnv(NamespaceEnvVar)
 	if !found {
 		return "", fmt.Errorf("%s env must be set", NamespaceEnvVar)
+	}
+	return ns, nil
+}
+
+// getWatchNamespace returns the Namespace the operator should be watching for changes
+func getWatchNamespace() (string, error) {
+	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	ns, found := os.LookupEnv(WatchNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", WatchNamespaceEnvVar)
 	}
 	return ns, nil
 }

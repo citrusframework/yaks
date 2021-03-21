@@ -153,6 +153,10 @@ type TestResult struct {
 type TestPhase string
 
 const (
+	TestLabel = "yaks.citrusframework.org/test"
+	TestIdLabel = "yaks.citrusframework.org/test-id"
+	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
+
 	// InstanceKind
 	InstanceKind string = "Instance"
 	// TestKind

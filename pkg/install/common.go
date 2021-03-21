@@ -25,14 +25,14 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ResourceCustomizer can be used to inject code that changes the objects before they are created
-type ResourceCustomizer func(object runtime.Object) runtime.Object
+type ResourceCustomizer func(object ctrl.Object) ctrl.Object
 
 // IdentityResourceCustomizer is a ResourceCustomizer that does nothing
-var IdentityResourceCustomizer = func(object runtime.Object) runtime.Object {
+var IdentityResourceCustomizer = func(object ctrl.Object) ctrl.Object {
 	return object
 }
 
@@ -69,12 +69,12 @@ func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, c
 }
 
 // RuntimeObject installs a single runtime object
-func RuntimeObject(ctx context.Context, c client.Client, namespace string, force bool, obj runtime.Object) error {
+func RuntimeObject(ctx context.Context, c client.Client, namespace string, force bool, obj ctrl.Object) error {
 	return RuntimeObjectOrCollect(ctx, c, namespace, nil, force, obj)
 }
 
 // RuntimeObjectOrCollect --
-func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, force bool, obj runtime.Object) error {
+func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, force bool, obj ctrl.Object) error {
 	if collection != nil {
 		// Adding to the collection before setting the namespace
 		collection.Add(obj)

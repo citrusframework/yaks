@@ -20,6 +20,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -40,7 +42,7 @@ var testsResource = schema.GroupVersionResource{Group: "yaks.citrusframework.org
 var testsKind = schema.GroupVersionKind{Group: "yaks.citrusframework.org", Version: "v1alpha1", Kind: "Test"}
 
 // Get takes name of the test, and returns the corresponding test object, and an error if there is any.
-func (c *FakeTests) Get(name string, options v1.GetOptions) (result *v1alpha1.Test, err error) {
+func (c *FakeTests) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Test, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(testsResource, c.ns, name), &v1alpha1.Test{})
 
@@ -51,7 +53,7 @@ func (c *FakeTests) Get(name string, options v1.GetOptions) (result *v1alpha1.Te
 }
 
 // List takes label and field selectors, and returns the list of Tests that match those selectors.
-func (c *FakeTests) List(opts v1.ListOptions) (result *v1alpha1.TestList, err error) {
+func (c *FakeTests) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.TestList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(testsResource, testsKind, c.ns, opts), &v1alpha1.TestList{})
 
@@ -73,14 +75,14 @@ func (c *FakeTests) List(opts v1.ListOptions) (result *v1alpha1.TestList, err er
 }
 
 // Watch returns a watch.Interface that watches the requested tests.
-func (c *FakeTests) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeTests) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(testsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a test and creates it.  Returns the server's representation of the test, and an error, if there is any.
-func (c *FakeTests) Create(test *v1alpha1.Test) (result *v1alpha1.Test, err error) {
+func (c *FakeTests) Create(ctx context.Context, test *v1alpha1.Test, opts v1.CreateOptions) (result *v1alpha1.Test, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(testsResource, c.ns, test), &v1alpha1.Test{})
 
@@ -91,7 +93,7 @@ func (c *FakeTests) Create(test *v1alpha1.Test) (result *v1alpha1.Test, err erro
 }
 
 // Update takes the representation of a test and updates it. Returns the server's representation of the test, and an error, if there is any.
-func (c *FakeTests) Update(test *v1alpha1.Test) (result *v1alpha1.Test, err error) {
+func (c *FakeTests) Update(ctx context.Context, test *v1alpha1.Test, opts v1.UpdateOptions) (result *v1alpha1.Test, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(testsResource, c.ns, test), &v1alpha1.Test{})
 
@@ -103,7 +105,7 @@ func (c *FakeTests) Update(test *v1alpha1.Test) (result *v1alpha1.Test, err erro
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeTests) UpdateStatus(test *v1alpha1.Test) (*v1alpha1.Test, error) {
+func (c *FakeTests) UpdateStatus(ctx context.Context, test *v1alpha1.Test, opts v1.UpdateOptions) (*v1alpha1.Test, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(testsResource, "status", c.ns, test), &v1alpha1.Test{})
 
@@ -114,7 +116,7 @@ func (c *FakeTests) UpdateStatus(test *v1alpha1.Test) (*v1alpha1.Test, error) {
 }
 
 // Delete takes name of the test and deletes it. Returns an error if one occurs.
-func (c *FakeTests) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeTests) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(testsResource, c.ns, name), &v1alpha1.Test{})
 
@@ -122,15 +124,15 @@ func (c *FakeTests) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeTests) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(testsResource, c.ns, listOptions)
+func (c *FakeTests) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(testsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.TestList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched test.
-func (c *FakeTests) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Test, err error) {
+func (c *FakeTests) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Test, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(testsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Test{})
 

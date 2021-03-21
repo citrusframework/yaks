@@ -20,11 +20,11 @@ package install
 import (
 	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"reflect"
 
 	"github.com/Masterminds/semver"
 
-	authorization "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -59,7 +59,7 @@ var (
 func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 	// Check the ConsoleCLIDownload CRD is present, which should be starting OpenShift version 4.2.
 	// That check is also enough to exclude Kubernetes clusters.
-	ok, err := isAPIResourceInstalled(c, "console.openshift.io/v1", reflect.TypeOf(console.ConsoleCLIDownload{}).Name())
+	ok, err := kubernetes.IsAPIResourceInstalled(c, "console.openshift.io/v1", reflect.TypeOf(console.ConsoleCLIDownload{}).Name())
 	if err != nil {
 		return err
 	} else if !ok {
@@ -67,25 +67,12 @@ func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 	}
 
 	// Check for permission to create the ConsoleCLIDownload resource
-	sar := &authorization.SelfSubjectAccessReview{
-		Spec: authorization.SelfSubjectAccessReviewSpec{
-			ResourceAttributes: &authorization.ResourceAttributes{
-				Group:    "console.openshift.io",
-				Resource: "consoleclidownloads",
-				Name:     YaksCLIDownloadName,
-				Verb:     "create",
-			},
-		},
-	}
-
-	sar, err = c.AuthorizationV1().SelfSubjectAccessReviews().Create(sar)
+	ok, err = kubernetes.CheckPermission(ctx, c, console.GroupName, "consoleclidownloads", "", YaksCLIDownloadName, "create")
 	if err != nil {
-		if errors.IsForbidden(err) {
-			// Let's just skip the ConsoleCLIDownload resource creation
-			return nil
-		}
 		return err
-	} else if !sar.Status.Allowed {
+	}
+	if !ok {
+		// Let's just skip the ConsoleCLIDownload resource creation
 		return nil
 	}
 
@@ -139,15 +126,15 @@ func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 			Description: YaksCLIDownloadDescription,
 			Links: []console.Link{
 				{
-					Text: "Download the yaks binary for Linux",
+					Text: "Download the kamel binary for Linux",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "linux"),
 				},
 				{
-					Text: "Download the yaks binary for Mac",
+					Text: "Download the kamel binary for Mac",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "mac"),
 				},
 				{
-					Text: "Download the yaks binary for Windows",
+					Text: "Download the kamel binary for Windows",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "windows"),
 				},
 			},
@@ -160,22 +147,4 @@ func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 	}
 
 	return nil
-}
-
-func isAPIResourceInstalled(c client.Client, groupVersion string, kind string) (bool, error) {
-	resources, err := c.Discovery().ServerResourcesForGroupVersion(groupVersion)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	for _, resource := range resources.APIResources {
-		if resource.Kind == kind {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

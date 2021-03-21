@@ -27,14 +27,9 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	r "runtime"
 	"strings"
-	"text/template"
 	"time"
-
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
@@ -42,16 +37,16 @@ import (
 	"github.com/citrusframework/yaks/pkg/cmd/report"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
-	"github.com/fatih/color"
+	k8slog "github.com/citrusframework/yaks/pkg/util/kubernetes/log"
 	"github.com/google/uuid"
 	projectv1 "github.com/openshift/api/project/v1"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/wercker/stern/stern"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
+
 )
 
 const (
@@ -131,7 +126,7 @@ func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
+func (o *testCmdOptions) run(cmd *cobra.Command, args []string) error {
 	source := args[0]
 
 	results := v1alpha1.TestResults{}
@@ -141,9 +136,9 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	}
 
 	if isDir(source) {
-		o.runTestGroup(source, &results)
+		o.runTestGroup(cmd, source, &results)
 	} else {
-		o.runTest(source, &results)
+		o.runTest(cmd, source, &results)
 	}
 
 	if HasErrors(&results) {
@@ -153,7 +148,7 @@ func (o *testCmdOptions) run(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) {
+func (o *testCmdOptions) runTest(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		handleTestError("", source, results, err)
@@ -195,7 +190,7 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) {
 
 	suite := v1alpha1.TestSuite{}
 	var test *v1alpha1.Test
-	test, err = o.createAndRunTest(c, source, runConfig)
+	test, err = o.createAndRunTest(cmd, c, source, runConfig)
 	if test != nil {
 		handleTestResult(test, &suite);
 		results.Suites = append(results.Suites, suite)
@@ -208,7 +203,7 @@ func (o *testCmdOptions) runTest(source string, results *v1alpha1.TestResults) {
 	}
 }
 
-func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResults) {
+func (o *testCmdOptions) runTestGroup(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		handleTestError("", source, results, err)
@@ -250,11 +245,11 @@ func (o *testCmdOptions) runTestGroup(source string, results *v1alpha1.TestResul
 	for _, f := range files {
 		name := path.Join(source, f.Name())
 		if f.IsDir() && runConfig.Config.Recursive {
-			o.runTestGroup(name, results)
+			o.runTestGroup(cmd, name, results)
 		} else if strings.HasSuffix(f.Name(), FileSuffix) {
 			suite := v1alpha1.TestSuite{}
 			var test *v1alpha1.Test
-			test, err = o.createAndRunTest(c, name, runConfig)
+			test, err = o.createAndRunTest(cmd, c, name, runConfig)
 			if test != nil {
 				handleTestResult(test, &suite);
 				results.Suites = append(results.Suites, suite)
@@ -405,7 +400,7 @@ func (o *testCmdOptions) setupOperator(c client.Client, namespace string) error 
 	return err
 }
 
-func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
+func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
 	namespace := runConfig.Config.Namespace.Name
 	fileName := kubernetes.SanitizeFileName(rawName)
 	name := kubernetes.SanitizeName(rawName)
@@ -521,11 +516,8 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 	if err != nil && k8serrors.IsAlreadyExists(err) {
 		existed = true
 		clone := test.DeepCopy()
-		var key k8sclient.ObjectKey
-		key, err = k8sclient.ObjectKeyFromObject(clone)
-		if err != nil {
-			return nil, err
-		}
+		var key ctrl.ObjectKey
+		key = ctrl.ObjectKeyFromObject(clone)
 		err = c.Get(o.Context, key, clone)
 		if err != nil {
 			return nil, err
@@ -594,9 +586,12 @@ func (o *testCmdOptions) createAndRunTest(c client.Client, rawName string, runCo
 		cancel()
 	}()
 
-	if err := o.printLogs(ctx, name, runConfig); err != nil {
+	if err := k8slog.Print(ctx, c, namespace, name, cmd.OutOrStdout()); err != nil {
 		return nil, err
 	}
+
+	// Let's add a Wait point, otherwise the script terminates
+	<-ctx.Done()
 
 	fmt.Println(fmt.Sprintf("Test %s finished with status: %s", name, string(status)))
 	return &test, status.AsError(name)
@@ -704,37 +699,6 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 	return nil, nil
 }
 
-func (o *testCmdOptions) printLogs(ctx context.Context, name string, runConfig *config.RunConfig) error {
-	t := "{{color .PodColor .PodName}} {{color .ContainerColor .ContainerName}} {{.Message}}"
-	funcs := map[string]interface{}{
-		"color": func(color color.Color, text string) string {
-			return color.SprintFunc()(text)
-		},
-	}
-	templ, err := template.New("log").Funcs(funcs).Parse(t)
-	if err != nil {
-		return err
-	}
-
-	//tail := int64(100)
-	conf := stern.Config{
-		Namespace:  runConfig.Config.Namespace.Name,
-		PodQuery:   regexp.MustCompile(".*"),
-		KubeConfig: client.GetValidKubeConfig(o.KubeConfig),
-		//TailLines: &tail,
-		ContainerQuery: regexp.MustCompile(".*"),
-		LabelSelector:  labels.SelectorFromSet(labels.Set{"yaks.citrusframework.org/test": name}),
-		//LabelSelector: labels.SelectorFromSet(labels.Set{"name": "yaks"}),
-		ContainerState: stern.ContainerState(stern.RUNNING),
-		Since:          172800000000000,
-		Template:       templ,
-	}
-	if err := stern.Run(ctx, &conf); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (o *testCmdOptions) findInstance(c client.Client, namespace string) (*v1alpha1.Instance, error) {
 	yaks := v1alpha1.Instance{
 		TypeMeta: metav1.TypeMeta{
@@ -746,7 +710,7 @@ func (o *testCmdOptions) findInstance(c client.Client, namespace string) (*v1alp
 			Name:      "yaks",
 		},
 	}
-	key := k8sclient.ObjectKey{
+	key := ctrl.ObjectKey{
 		Namespace: namespace,
 		Name:      "yaks",
 	}
@@ -871,7 +835,7 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 }
 
 func initializeTempNamespace(name string, c client.Client, context context.Context) (metav1.Object, error) {
-	var obj runtime.Object
+	var obj ctrl.Object
 
 	if oc, err := openshift.IsOpenShift(c); err != nil {
 		panic(err)
@@ -918,7 +882,7 @@ func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Cont
 			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
 		}
 	} else {
-		if err = c.Delete(context, ns.(runtime.Object)); err != nil {
+		if err = c.Delete(context, ns.(ctrl.Object)); err != nil {
 			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
 		}
 	}

@@ -28,11 +28,11 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ReplaceResources allows to completely replace a list of resources on Kubernetes, taking care of immutable fields and resource versions
-func ReplaceResources(ctx context.Context, c client.Client, objects []runtime.Object) error {
+func ReplaceResources(ctx context.Context, c client.Client, objects []ctrl.Object) error {
 	for _, object := range objects {
 		err := ReplaceResource(ctx, c, object)
 		if err != nil {
@@ -43,16 +43,11 @@ func ReplaceResources(ctx context.Context, c client.Client, objects []runtime.Ob
 }
 
 // ReplaceResource allows to completely replace a resource on Kubernetes, taking care of immutable fields and resource versions
-func ReplaceResource(ctx context.Context, c client.Client, res runtime.Object) error {
+func ReplaceResource(ctx context.Context, c client.Client, res ctrl.Object) error {
 	err := c.Create(ctx, res)
 	if err != nil && k8serrors.IsAlreadyExists(err) {
-		existing := res.DeepCopyObject()
-		var key k8sclient.ObjectKey
-		key, err = k8sclient.ObjectKeyFromObject(existing)
-		if err != nil {
-			return err
-		}
-		err = c.Get(ctx, key, existing)
+		existing := res.DeepCopyObject().(ctrl.Object)
+		err = c.Get(ctx, ctrl.ObjectKeyFromObject(existing), existing)
 		if err != nil {
 			return err
 		}

@@ -15,35 +15,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package monitoring
+package kubernetes
 
 import (
-	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/citrusframework/yaks/pkg/client"
 )
 
-type registerFunction func(*runtime.Scheme) error
-
-// AddToScheme adds monitoring types to the scheme
-func AddToScheme(scheme *runtime.Scheme) error {
-	var err error
-
-	err = doAdd(monitoringv1.AddToScheme, scheme, err)
-
-	return err
-}
-
-func doAdd(addToScheme registerFunction, scheme *runtime.Scheme, err error) error {
-	callErr := addToScheme(scheme)
-	if callErr != nil {
-		logrus.Error("Error while registering monitoring types", callErr)
+func IsAPIResourceInstalled(c client.Client, groupVersion string, kind string) (bool, error) {
+	resources, err := c.Discovery().ServerResourcesForGroupVersion(groupVersion)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
 	}
 
-	if err == nil {
-		return callErr
+	for _, resource := range resources.APIResources {
+		if resource.Kind == kind {
+			return true, nil
+		}
 	}
-	return err
+
+	return false, nil
 }

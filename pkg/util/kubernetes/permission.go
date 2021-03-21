@@ -18,9 +18,13 @@ limitations under the License.
 package kubernetes
 
 import (
-	"github.com/citrusframework/yaks/pkg/client"
+	"context"
+
 	authorizationv1 "k8s.io/api/authorization/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/citrusframework/yaks/pkg/client"
 )
 
 // CheckPermission can be used to check if the current user/service-account is allowed to execute a given operation
@@ -28,7 +32,7 @@ import (
 // E.g. checkPermission(client, olmv1alpha1.GroupName, "clusterserviceversions", namespace, "yaks", "get")
 //
 // nolint:unparam
-func CheckPermission(client client.Client, group, resource, namespace, name, verb string) (bool, error) {
+func CheckPermission(ctx context.Context, client client.Client, group, resource, namespace, name, verb string) (bool, error) {
 	sarReview := &authorizationv1.SelfSubjectAccessReview{
 		Spec: authorizationv1.SelfSubjectAccessReviewSpec{
 			ResourceAttributes: &authorizationv1.ResourceAttributes{
@@ -41,14 +45,13 @@ func CheckPermission(client client.Client, group, resource, namespace, name, ver
 		},
 	}
 
-	sar, err := client.AuthorizationV1().SelfSubjectAccessReviews().Create(sarReview)
+	sar, err := client.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, sarReview, metav1.CreateOptions{})
 	if err != nil {
 		if k8serrors.IsForbidden(err) {
 			return false, nil
 		}
 		return false, err
-	} else if !sar.Status.Allowed {
-		return false, nil
+	} else {
+		return sar.Status.Allowed, nil
 	}
-	return true, nil
 }

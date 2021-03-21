@@ -34,14 +34,7 @@ import (
 	"k8s.io/api/rbac/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	TestLabel = "yaks.citrusframework.org/test"
-	TestIdLabel = "yaks.citrusframework.org/test-id"
-	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewStartAction creates a new start action
@@ -77,7 +70,7 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 		test.Status.Errors = err.Error()
 		return nil, err
 	}
-	resources := []runtime.Object{configMap, job}
+	resources := []ctrl.Object{configMap, job}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = err.Error()
@@ -102,8 +95,8 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 			Name:      TestJobNameFor(test),
 			Labels: map[string]string{
 				"app":       "yaks",
-				TestLabel:   test.Name,
-				TestIdLabel: test.Status.TestID,
+				v1alpha1.TestLabel:   test.Name,
+				v1alpha1.TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -123,8 +116,8 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 					Namespace: test.Namespace,
 					Labels: map[string]string{
 						"app":       "yaks",
-						TestLabel:   test.Name,
-						TestIdLabel: test.Status.TestID,
+						v1alpha1.TestLabel:   test.Name,
+						v1alpha1.TestIdLabel: test.Status.TestID,
 					},
 				},
 				Spec: v1.PodSpec{
@@ -222,7 +215,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		Value: test.Status.TestID,
 	})
 
-	if err := action.bindSecrets(test, &job); err != nil {
+	if err := action.bindSecrets(ctx, test, &job); err != nil {
 		return nil, err
 	}
 
@@ -283,8 +276,8 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
 				"app":       "yaks",
-				TestLabel:   test.Name,
-				TestIdLabel: test.Status.TestID,
+				v1alpha1.TestLabel:   test.Name,
+				v1alpha1.TestIdLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -304,7 +297,7 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 
 func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namespace string) error {
 	rb := v1beta1.RoleBinding{}
-	rbKey := client.ObjectKey{
+	rbKey := ctrl.ObjectKey{
 		Name:      "yaks-viewer",
 		Namespace: namespace,
 	}
@@ -363,23 +356,23 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) er
 	return nil
 }
 
-func (action *startAction) bindSecrets(test *v1alpha1.Test, job *batchv1.Job) error {
+func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, job *batchv1.Job) error {
 	var options = metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", TestLabel, test.Name),
+		LabelSelector: fmt.Sprintf("%s=%s", v1alpha1.TestLabel, test.Name),
 	}
 	if test.Spec.Secret != "" {
 		options.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
-			TestLabel, test.Name,
-			TestConfigurationLabel, test.Spec.Secret)
+			v1alpha1.TestLabel, test.Name,
+			v1alpha1.TestConfigurationLabel, test.Spec.Secret)
 	}
-	secrets, err := action.client.CoreV1().Secrets(test.Namespace).List(options)
+	secrets, err := action.client.CoreV1().Secrets(test.Namespace).List(ctx, options)
 	if err != nil {
 		return err
 	}
 
 	var found bool
 	for _, item := range secrets.Items {
-		if item.Labels != nil && item.Labels[TestConfigurationLabel] != test.Spec.Secret {
+		if item.Labels != nil && item.Labels[v1alpha1.TestConfigurationLabel] != test.Spec.Secret {
 			continue
 		}
 
