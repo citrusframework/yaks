@@ -283,19 +283,6 @@ func handleTestResult(test *v1alpha1.Test, suite *v1alpha1.TestSuite) {
 	}
 }
 
-func getBaseDir(source string) string {
-	if isRemoteFile(source) {
-		return ""
-	}
-
-	if isDir(source) {
-		return source
-	} else {
-		dir, _ := path.Split(source)
-		return dir
-	}
-}
-
 func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 	var configFile string
 	var runConfig *config.RunConfig
@@ -433,7 +420,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 	}
 
 	for _, resource := range runConfig.Config.Runtime.Resources {
-		data, err := o.loadData(path.Join(runConfig.BaseDir, resource))
+		data, err := o.loadData(resolvePath(runConfig, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -445,7 +432,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 	}
 
 	for _, resource := range o.Resources {
-		data, err := o.loadData(path.Join(runConfig.BaseDir, resource))
+		data, err := o.loadData(resolvePath(runConfig, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -457,7 +444,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 	}
 
 	for _, propertyFile := range o.PropertyFiles {
-		data, err := o.loadData(path.Join(runConfig.BaseDir, propertyFile))
+		data, err := o.loadData(resolvePath(runConfig, propertyFile))
 		if err != nil {
 			return nil, err
 		}
@@ -599,7 +586,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 
 func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 	for _, lib := range o.Uploads {
-		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, lib, runConfig.Config.Namespace.Name)
+		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, resolvePath(runConfig, lib), runConfig.Config.Namespace.Name)
 		if err != nil {
 			return err
 		}
@@ -665,7 +652,7 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
 	if o.Settings != "" {
 		rawName := o.Settings
-		configData, err := o.loadData(path.Join(runConfig.BaseDir, rawName))
+		configData, err := o.loadData(resolvePath(runConfig, rawName))
 
 		if err != nil {
 			return nil, err
@@ -729,22 +716,6 @@ func (o *testCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, 
 
 	err := c.List(o.Context, &instanceList)
 	return instanceList, err
-}
-
-func isRemoteFile(fileName string) bool {
-	return strings.HasPrefix(fileName, "http://") || strings.HasPrefix(fileName, "https://")
-}
-
-func isDir(fileName string) bool {
-	if isRemoteFile(fileName) {
-		return false
-	}
-
-	if info, err := os.Stat(fileName); err == nil {
-		return info.IsDir()
-	}
-
-	return false
 }
 
 func runSteps(steps []config.StepConfig, namespace, baseDir string) error {

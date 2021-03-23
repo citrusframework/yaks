@@ -94,16 +94,18 @@ func (s *SelectorScraper) periodicSynchronize(ctx context.Context, out *bufio.Wr
 }
 
 func (s *SelectorScraper) synchronize(ctx context.Context, out *bufio.Writer) error {
-	list, err := s.listPods(ctx)
+	pods, err := s.listPods(ctx)
 	if err != nil {
 		return err
 	}
 
 	present := make(map[string]bool)
-	for _, pod := range list.Items {
-		present[pod.Name] = true
-		if _, ok := s.podScrapers.Load(pod.Name); !ok {
-			s.addPodScraper(ctx, pod.Name, out)
+	for _, pod := range pods.Items {
+		if pod.Status.Phase == corev1.PodRunning || pod.Status.Phase == corev1.PodPending {
+			present[pod.Name] = true
+			if _, ok := s.podScrapers.Load(pod.Name); !ok {
+				s.addPodScraper(ctx, pod.Name, out)
+			}
 		}
 	}
 

@@ -21,10 +21,14 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"log"
+	"os"
+	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -176,6 +180,43 @@ func cmdOnly(cmd *cobra.Command, options interface{}) *cobra.Command {
 
 func isOfflineCommand(cmd *cobra.Command) bool {
 	return cmd.Annotations[offlineCommandLabel] == "true"
+}
+
+func isRemoteFile(fileName string) bool {
+	return strings.HasPrefix(fileName, "http://") || strings.HasPrefix(fileName, "https://")
+}
+
+func isDir(fileName string) bool {
+	if isRemoteFile(fileName) {
+		return false
+	}
+
+	if info, err := os.Stat(fileName); err == nil {
+		return info.IsDir()
+	}
+
+	return false
+}
+
+func getBaseDir(source string) string {
+	if isRemoteFile(source) {
+		return ""
+	}
+
+	if isDir(source) {
+		return source
+	} else {
+		dir, _ := path.Split(source)
+		return dir
+	}
+}
+
+func resolvePath(runConfig *config.RunConfig, resource string) string {
+	if filepath.IsAbs(resource) || isRemoteFile(resource) {
+		return resource
+	}
+
+	return path.Join(runConfig.BaseDir, resource)
 }
 
 func HasErrors(results *v1alpha1.TestResults) bool {

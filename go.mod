@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/container-tools/snap v0.0.7
+	github.com/container-tools/snap v0.0.8
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-logr/logr v0.4.0
 	github.com/google/uuid v1.2.0
