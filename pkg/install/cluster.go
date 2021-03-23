@@ -159,7 +159,7 @@ func installCRD(ctx context.Context, c client.Client, kind string, version strin
 		Post().
 		Body(crdJSON).
 		Resource("customresourcedefinitions").
-		Do()
+		Do(ctx)
 	// Check result
 	if result.Error() != nil && !k8serrors.IsAlreadyExists(result.Error()) {
 		return result.Error()
@@ -179,11 +179,8 @@ func IsClusterRoleInstalled(ctx context.Context, c client.Client) (bool, error) 
 			Name: "yaks:edit",
 		},
 	}
-	key, err := k8sclient.ObjectKeyFromObject(&clusterRole)
-	if err != nil {
-		return false, err
-	}
-	err = c.Get(ctx, key, &clusterRole)
+	key := k8sclient.ObjectKeyFromObject(&clusterRole)
+	err := c.Get(ctx, key, &clusterRole)
 	if err != nil && k8serrors.IsNotFound(err) {
 		return false, nil
 	} else if err != nil {

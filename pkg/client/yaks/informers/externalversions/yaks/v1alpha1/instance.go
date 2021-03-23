@@ -20,6 +20,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
 	time "time"
 
 	yaksv1alpha1 "github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -62,13 +63,13 @@ func NewFilteredInstanceInformer(client versioned.Interface, namespace string, r
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.YaksV1alpha1().Instances(namespace).List(options)
+				return client.YaksV1alpha1().Instances(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.YaksV1alpha1().Instances(namespace).Watch(options)
+				return client.YaksV1alpha1().Instances(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&yaksv1alpha1.Instance{},

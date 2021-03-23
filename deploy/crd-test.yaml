@@ -21,7 +21,7 @@ metadata:
   labels:
     app: "yaks"
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.8
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   name: tests.yaks.citrusframework.org
 spec:

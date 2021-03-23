@@ -18,6 +18,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"io"
@@ -135,22 +136,22 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 	namespaces = append(namespaces, o.Namespace)
 
 	for _, namespace := range namespaces {
-		if err = o.uninstallNamespaceResources(c, namespace); err != nil {
+		if err = o.uninstallNamespaceResources(o.Context, c, namespace); err != nil {
 			return err
 		}
 
 		if !uninstallViaOLM {
 			if !o.SkipOperator {
-				if err = o.uninstallOperator(c, cmd.OutOrStdout(), namespace); err != nil {
+				if err = o.uninstallOperator(o.Context, c, cmd.OutOrStdout(), namespace); err != nil {
 					return err
 				}
 			}
 
-			if err = o.uninstallNamespaceRoles(c, namespace); err != nil {
+			if err = o.uninstallNamespaceRoles(o.Context, c, namespace); err != nil {
 				return err
 			}
 
-			if err = o.uninstallClusterWideResources(c); err != nil {
+			if err = o.uninstallClusterWideResources(o.Context, c); err != nil {
 				return err
 			}
 		}
@@ -159,16 +160,16 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallOperator(c client.Client, writer io.Writer, namespace string) error {
+func (o *uninstallCmdOptions) uninstallOperator(ctx context.Context, c client.Client, writer io.Writer, namespace string) error {
 	api := c.AppsV1()
 
-	deployments, err := api.Deployments(namespace).List(defaultListOptions)
+	deployments, err := api.Deployments(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, deployment := range deployments.Items {
-		err := api.Deployments(namespace).Delete(deployment.Name, &metav1.DeleteOptions{})
+		err := api.Deployments(namespace).Delete(ctx, deployment.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -194,9 +195,9 @@ func (o *uninstallCmdOptions) uninstallOperator(c client.Client, writer io.Write
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallClusterWideResources(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallClusterWideResources(ctx context.Context, c client.Client) error {
 	if !o.SkipCrd || o.UninstallAll {
-		if err := o.uninstallCrd(c); err != nil {
+		if err := o.uninstallCrd(ctx, c); err != nil {
 			if k8serrors.IsForbidden(err) {
 				return createActionNotAuthorizedError()
 			}
@@ -206,7 +207,7 @@ func (o *uninstallCmdOptions) uninstallClusterWideResources(c client.Client) err
 	}
 
 	if !o.SkipClusterRoleBindings || o.UninstallAll {
-		if err := o.uninstallClusterRoleBindings(c); err != nil {
+		if err := o.uninstallClusterRoleBindings(ctx, c); err != nil {
 			if k8serrors.IsForbidden(err) {
 				return createActionNotAuthorizedError()
 			}
@@ -216,7 +217,7 @@ func (o *uninstallCmdOptions) uninstallClusterWideResources(c client.Client) err
 	}
 
 	if !o.SkipClusterRoles || o.UninstallAll {
-		if err := o.uninstallClusterRoles(c); err != nil {
+		if err := o.uninstallClusterRoles(ctx, c); err != nil {
 			if k8serrors.IsForbidden(err) {
 				return createActionNotAuthorizedError()
 			}
@@ -228,23 +229,23 @@ func (o *uninstallCmdOptions) uninstallClusterWideResources(c client.Client) err
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallNamespaceRoles(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallNamespaceRoles(ctx context.Context, c client.Client, namespace string) error {
 	if !o.SkipRoleBindings {
-		if err := o.uninstallRoleBindings(c, namespace); err != nil {
+		if err := o.uninstallRoleBindings(ctx, c, namespace); err != nil {
 			return err
 		}
 		fmt.Printf("YAKS Role Bindings removed from namespace %s\n", namespace)
 	}
 
 	if !o.SkipRoles {
-		if err := o.uninstallRoles(c, namespace); err != nil {
+		if err := o.uninstallRoles(ctx, c, namespace); err != nil {
 			return err
 		}
 		fmt.Printf("YAKS Roles removed from namespace %s\n", namespace)
 	}
 
 	if !o.SkipServiceAccounts {
-		if err := o.uninstallServiceAccounts(c, namespace); err != nil {
+		if err := o.uninstallServiceAccounts(ctx, c, namespace); err != nil {
 			return err
 		}
 		fmt.Printf("YAKS Service Accounts removed from namespace %s\n", namespace)
@@ -253,9 +254,9 @@ func (o *uninstallCmdOptions) uninstallNamespaceRoles(c client.Client, namespace
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallNamespaceResources(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallNamespaceResources(ctx context.Context, c client.Client, namespace string) error {
 	if !o.SkipConfigMaps {
-		if err := o.uninstallConfigMaps(c, namespace); err != nil {
+		if err := o.uninstallConfigMaps(ctx, c, namespace); err != nil {
 			return err
 		}
 		fmt.Printf("YAKS Config Maps removed from namespace %s\n", namespace)
@@ -264,7 +265,7 @@ func (o *uninstallCmdOptions) uninstallNamespaceResources(c client.Client, names
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallCrd(c kubernetes.Interface) error {
+func (o *uninstallCmdOptions) uninstallCrd(ctx context.Context, c kubernetes.Interface) error {
 	restClient, err := customclient.GetClientFor(c, "apiextensions.k8s.io", "v1beta1")
 	if err != nil {
 		return err
@@ -274,7 +275,7 @@ func (o *uninstallCmdOptions) uninstallCrd(c kubernetes.Interface) error {
 		Delete().
 		Param("labelSelector", DefaultLabel).
 		Resource("customresourcedefinitions").
-		Do()
+		Do(ctx)
 
 	if result.Error() != nil {
 		return result.Error()
@@ -283,16 +284,16 @@ func (o *uninstallCmdOptions) uninstallCrd(c kubernetes.Interface) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallRoles(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallRoles(ctx context.Context, c client.Client, namespace string) error {
 	api := c.RbacV1()
 
-	roleBindings, err := api.Roles(namespace).List(defaultListOptions)
+	roleBindings, err := api.Roles(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, roleBinding := range roleBindings.Items {
-		err := api.Roles(namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
+		err := api.Roles(namespace).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -301,16 +302,16 @@ func (o *uninstallCmdOptions) uninstallRoles(c client.Client, namespace string) 
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallRoleBindings(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallRoleBindings(ctx context.Context, c client.Client, namespace string) error {
 	api := c.RbacV1()
 
-	roleBindings, err := api.RoleBindings(namespace).List(defaultListOptions)
+	roleBindings, err := api.RoleBindings(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, roleBinding := range roleBindings.Items {
-		err := api.RoleBindings(namespace).Delete(roleBinding.Name, &metav1.DeleteOptions{})
+		err := api.RoleBindings(namespace).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -319,16 +320,16 @@ func (o *uninstallCmdOptions) uninstallRoleBindings(c client.Client, namespace s
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallClusterRoles(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallClusterRoles(ctx context.Context, c client.Client) error {
 	api := c.RbacV1()
 
-	clusterRoles, err := api.ClusterRoles().List(defaultListOptions)
+	clusterRoles, err := api.ClusterRoles().List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, clusterRole := range clusterRoles.Items {
-		err := api.ClusterRoles().Delete(clusterRole.Name, &metav1.DeleteOptions{})
+		err := api.ClusterRoles().Delete(ctx, clusterRole.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -337,16 +338,16 @@ func (o *uninstallCmdOptions) uninstallClusterRoles(c client.Client) error {
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallClusterRoleBindings(c client.Client) error {
+func (o *uninstallCmdOptions) uninstallClusterRoleBindings(ctx context.Context, c client.Client) error {
 	api := c.RbacV1()
 
-	clusterRoleBindings, err := api.ClusterRoleBindings().List(defaultListOptions)
+	clusterRoleBindings, err := api.ClusterRoleBindings().List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, clusterRoleBinding := range clusterRoleBindings.Items {
-		err := api.ClusterRoleBindings().Delete(clusterRoleBinding.Name, &metav1.DeleteOptions{})
+		err := api.ClusterRoleBindings().Delete(ctx, clusterRoleBinding.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -355,16 +356,16 @@ func (o *uninstallCmdOptions) uninstallClusterRoleBindings(c client.Client) erro
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallServiceAccounts(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallServiceAccounts(ctx context.Context, c client.Client, namespace string) error {
 	api := c.CoreV1()
 
-	serviceAccountList, err := api.ServiceAccounts(namespace).List(defaultListOptions)
+	serviceAccountList, err := api.ServiceAccounts(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, serviceAccount := range serviceAccountList.Items {
-		err := api.ServiceAccounts(namespace).Delete(serviceAccount.Name, &metav1.DeleteOptions{})
+		err := api.ServiceAccounts(namespace).Delete(ctx, serviceAccount.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
@@ -373,16 +374,16 @@ func (o *uninstallCmdOptions) uninstallServiceAccounts(c client.Client, namespac
 	return nil
 }
 
-func (o *uninstallCmdOptions) uninstallConfigMaps(c client.Client, namespace string) error {
+func (o *uninstallCmdOptions) uninstallConfigMaps(ctx context.Context, c client.Client, namespace string) error {
 	api := c.CoreV1()
 
-	configMapsList, err := api.ConfigMaps(namespace).List(defaultListOptions)
+	configMapsList, err := api.ConfigMaps(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
 	for _, configMap := range configMapsList.Items {
-		err := api.ConfigMaps(namespace).Delete(configMap.Name, &metav1.DeleteOptions{})
+		err := api.ConfigMaps(namespace).Delete(ctx, configMap.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

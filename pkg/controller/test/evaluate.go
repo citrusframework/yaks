@@ -131,9 +131,8 @@ func getTestContainerStatus(statusList []v1.ContainerStatus) v1.ContainerStatus 
 }
 
 func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {
-	pods := &v1.PodList{};
-	err := action.client.List(ctx, pods, client.InNamespace(test.Namespace), client.MatchingLabels{
-		TestIdLabel: test.Status.TestID,
+	pods, err := action.client.CoreV1().Pods(test.Namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: v1alpha1.TestIdLabel + "=" + test.Status.TestID,
 	})
 	if err != nil {
 		return v1.PodStatus{}, err

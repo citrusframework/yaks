@@ -31,7 +31,7 @@ import (
 	v1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
@@ -51,7 +51,7 @@ func Operator(ctx context.Context, c client.Client, cfg OperatorConfiguration, f
 
 // OperatorOrCollect installs the operator resources or adds them to the collector if present
 func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
-	customizer := func(o runtime.Object) runtime.Object {
+	customizer := func(o ctrl.Object) ctrl.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
 				if d.Labels["yaks.citrusframework.org/component"] == "operator" {

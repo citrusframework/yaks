@@ -93,9 +93,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for related Jobs changing
-	err = c.Watch(&source.Kind{Type: &batchv1.Job{}}, &handler.EnqueueRequestsFromMapFunc{
-		ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
-			job := a.Object.(*batchv1.Job)
+	err = c.Watch(&source.Kind{Type: &batchv1.Job{}},
+		handler.EnqueueRequestsFromMapFunc(func(a k8sclient.Object) []reconcile.Request {
+			job := a.(*batchv1.Job)
 			var requests []reconcile.Request
 
 			if testName, ok := job.Labels["yaks.citrusframework.org/test"]; ok {
@@ -109,7 +109,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 			return requests
 		}),
-	})
+	)
 
 	if err != nil {
 		return err
@@ -134,11 +134,9 @@ type ReconcileIntegrationTest struct {
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileIntegrationTest) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileIntegrationTest) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	rlog := Log.WithValues("request-namespace", request.Namespace, "request-name", request.Name)
 	rlog.Info("Reconciling Test")
-
-	ctx := context.TODO()
 
 	// Fetch the Test instance
 	var instance v1alpha1.Test

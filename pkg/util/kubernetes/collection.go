@@ -23,20 +23,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // A Collection is a container of Kubernetes resources
 type Collection struct {
-	items []runtime.Object
+	items []ctrl.Object
 }
 
 // NewCollection creates a new empty collection
-func NewCollection(objcts ...runtime.Object) *Collection {
+func NewCollection(objects ...ctrl.Object) *Collection {
 	collection := Collection{
-		items: make([]runtime.Object, 0, len(objcts)),
+		items: make([]ctrl.Object, 0, len(objects)),
 	}
 
-	collection.items = append(collection.items, objcts...)
+	collection.items = append(collection.items, objects...)
 
 	return &collection
 }
@@ -47,7 +48,7 @@ func (c *Collection) Size() int {
 }
 
 // Items returns all resources belonging to the collection
-func (c *Collection) Items() []runtime.Object {
+func (c *Collection) Items() []ctrl.Object {
 	return c.items
 }
 
@@ -70,18 +71,18 @@ func (c *Collection) AsKubernetesList() *corev1.List {
 }
 
 // Add adds a resource to the collection
-func (c *Collection) Add(resource runtime.Object) {
+func (c *Collection) Add(resource ctrl.Object) {
 	c.items = append(c.items, resource)
 }
 
 // AddAll adds all resources to the collection
-func (c *Collection) AddAll(resource []runtime.Object) {
+func (c *Collection) AddAll(resource []ctrl.Object) {
 	c.items = append(c.items, resource...)
 }
 
 // VisitDeployment executes the visitor function on all Deployment resources
 func (c *Collection) VisitDeployment(visitor func(*appsv1.Deployment)) {
-	c.Visit(func(res runtime.Object) {
+	c.Visit(func(res ctrl.Object) {
 		if conv, ok := res.(*appsv1.Deployment); ok {
 			visitor(conv)
 		}
@@ -106,7 +107,7 @@ func (c *Collection) HasDeployment(filter func(*appsv1.Deployment) bool) bool {
 
 // RemoveDeployment removes and returns a Deployment that matches the given function
 func (c *Collection) RemoveDeployment(filter func(*appsv1.Deployment) bool) *appsv1.Deployment {
-	res := c.Remove(func(res runtime.Object) bool {
+	res := c.Remove(func(res ctrl.Object) bool {
 		if conv, ok := res.(*appsv1.Deployment); ok {
 			return filter(conv)
 		}
@@ -120,7 +121,7 @@ func (c *Collection) RemoveDeployment(filter func(*appsv1.Deployment) bool) *app
 
 // VisitConfigMap executes the visitor function on all ConfigMap resources
 func (c *Collection) VisitConfigMap(visitor func(*corev1.ConfigMap)) {
-	c.Visit(func(res runtime.Object) {
+	c.Visit(func(res ctrl.Object) {
 		if conv, ok := res.(*corev1.ConfigMap); ok {
 			visitor(conv)
 		}
@@ -140,7 +141,7 @@ func (c *Collection) GetConfigMap(filter func(*corev1.ConfigMap) bool) *corev1.C
 
 // RemoveConfigMap removes and returns a ConfigMap that matches the given function
 func (c *Collection) RemoveConfigMap(filter func(*corev1.ConfigMap) bool) *corev1.ConfigMap {
-	res := c.Remove(func(res runtime.Object) bool {
+	res := c.Remove(func(res ctrl.Object) bool {
 		if conv, ok := res.(*corev1.ConfigMap); ok {
 			return filter(conv)
 		}
@@ -154,7 +155,7 @@ func (c *Collection) RemoveConfigMap(filter func(*corev1.ConfigMap) bool) *corev
 
 // VisitService executes the visitor function on all Service resources
 func (c *Collection) VisitService(visitor func(*corev1.Service)) {
-	c.Visit(func(res runtime.Object) {
+	c.Visit(func(res ctrl.Object) {
 		if conv, ok := res.(*corev1.Service); ok {
 			visitor(conv)
 		}
@@ -184,7 +185,7 @@ func (c *Collection) VisitContainer(visitor func(container *corev1.Container)) {
 
 // VisitMetaObject executes the visitor function on all meta.Object resources
 func (c *Collection) VisitMetaObject(visitor func(metav1.Object)) {
-	c.Visit(func(res runtime.Object) {
+	c.Visit(func(res ctrl.Object) {
 		if conv, ok := res.(metav1.Object); ok {
 			visitor(conv)
 		}
@@ -192,14 +193,14 @@ func (c *Collection) VisitMetaObject(visitor func(metav1.Object)) {
 }
 
 // Visit executes the visitor function on all resources
-func (c *Collection) Visit(visitor func(runtime.Object)) {
+func (c *Collection) Visit(visitor func(ctrl.Object)) {
 	for _, res := range c.items {
 		visitor(res)
 	}
 }
 
 // Remove removes the given element from the collection and returns it
-func (c *Collection) Remove(selector func(runtime.Object) bool) runtime.Object {
+func (c *Collection) Remove(selector func(ctrl.Object) bool) ctrl.Object {
 	for idx, res := range c.items {
 		if selector(res) {
 			c.items = append(c.items[0:idx], c.items[idx+1:]...)
