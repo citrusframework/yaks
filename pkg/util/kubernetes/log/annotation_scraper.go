@@ -135,7 +135,7 @@ func (s *SelectorScraper) addPodScraper(ctx context.Context, podName string, out
 	podScraper := NewPodScraper(s.client, s.namespace, podName, s.defaultContainerName)
 	podCtx, podCancel := context.WithCancel(ctx)
 	id := atomic.AddUint64(&s.counter, 1)
-	prefix := fmt.Sprintf("[%s-%s] ", s.defaultContainerName, strconv.FormatUint(id, 10))
+	prefix := fmt.Sprintf("[%s %s-%s] ", podName, s.defaultContainerName, strconv.FormatUint(id, 10))
 	podReader := podScraper.Start(podCtx)
 	s.podScrapers.Store(podName, podCancel)
 	go func() {

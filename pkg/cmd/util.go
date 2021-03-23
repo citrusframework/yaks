@@ -219,9 +219,9 @@ func resolvePath(runConfig *config.RunConfig, resource string) string {
 	return path.Join(runConfig.BaseDir, resource)
 }
 
-func HasErrors(results *v1alpha1.TestResults) bool {
+func hasErrors(results *v1alpha1.TestResults) bool {
 	for _, suite := range results.Suites {
-		if len(suite.Errors) > 0 {
+		if len(suite.Errors) > 0 || suite.Summary.Errors > 0 || suite.Summary.Failed > 0 {
 			return true
 		}
 	}

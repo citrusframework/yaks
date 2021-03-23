@@ -141,7 +141,7 @@ func (o *testCmdOptions) run(cmd *cobra.Command, args []string) error {
 		o.runTest(cmd, source, &results)
 	}
 
-	if HasErrors(&results) {
+	if hasErrors(&results) {
 		return errors.New("There are test failures!")
 	}
 
