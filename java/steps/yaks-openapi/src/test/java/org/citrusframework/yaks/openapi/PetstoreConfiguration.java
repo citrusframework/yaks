@@ -46,12 +46,18 @@ import org.springframework.http.MediaType;
 @Configuration
 public class PetstoreConfiguration {
 
-    private static final int HTTP_PORT = 8080;
+    @Bean(name = "yaks-http-server")
+    public HttpServer yaksHttpServer() {
+        return new HttpServerBuilder()
+                              .port(8088)
+                              .autoStart(true)
+                              .build();
+    }
 
     @Bean
     public HttpServer petstoreServer(TestContextFactory contextFactory) {
         return new HttpServerBuilder()
-                              .port(HTTP_PORT)
+                              .port(8080)
                               .autoStart(true)
                               .endpointAdapter(staticResponseAdapter(contextFactory))
                               .build();

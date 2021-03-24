@@ -57,9 +57,10 @@ all operations are ready to be used.
 [[openapi-invoke-operations]]
 === Invoke operations
 
-You can invoke operations by referencing its name/id in the specification. YAKS will automatically generate proper request/response data for you.
+You can invoke operations as a client by referencing the operation name given in the specification. YAKS loads the operation from
+the specification and automatically generates proper request/response data for you.
 
-The rules in the OpenAPI specification help to generate proper request/response data with randomized values.
+The rules in the OpenAPI specification define how to generate proper test data with randomized values.
 
 .@When("^(?:I|i)nvoke operation: {id}$")
 [source,gherkin]
@@ -67,11 +68,11 @@ The rules in the OpenAPI specification help to generate proper request/response 
 When invoke operation: {id}
 ----
 
-The step obtains the operation with the given `{id}` and invokes it on the Http URL that is given in the specification. In case not server URL
-is given in the specification the step uses the base URL of the OpenAPI endpoint where the document has been loaded from.
+The step obtains the operation with the given `{id}` and invokes it on the Http URL that is given in the specification. In case the server URL
+is missing in the specification the step uses the base URL of the OpenAPI endpoint where the document has been loaded from.
 
 The step uses the specification rules for the operation to generate a proper request for you. Request parameters, headers and body content are
-automatically generated. In case the operation defines a body the step will generate it with randomized values.
+automatically generated. In case the operation defines a request body the step will also generate it with randomized values.
 
 .Generated body example with randomized values
 [source,json]
@@ -98,9 +99,9 @@ automatically generated. In case the operation defines a body the step will gene
 
 The generated request should be valid according to the rules in the OpenAPI specification. You can overwrite the
 randomized values with test variables and xref:openapi-dictionaries[inbound/outbound data dictionaries] in order to have
-more human readable test data.
+more human-readable test data.
 
-Now that the test has sent the request you can verify the operation result.
+Now that the test has sent the request you can verify the operation result in a next step.
 
 [[openapi-verify-result]]
 === Verify operation result
@@ -143,22 +144,116 @@ should not be empty `@notEmpty()@` and enumeration values are checked with `@mat
 
 The received response must match all these validation matchers. In addition to that a Json schema validation is performed on the response.
 
-[[openapit-fork-mode]]
-=== Request fork mode
+[[openapi-verify-request]]
+=== Verify operation requests
 
-When the OpenAPI steps fire requests to the server the step synchronously waits for the response. All other steps are in the feature are blocked
-by the synchronous communication. In some cases this is a problem because you might want to run some steps in parallel to the synchronous communication.
+On the server side your test is able to verify incoming requests based on the rules in the specification. The test references a given operation
+by its name in the specification and generates proper verification steps on the request content. Based on the specification the
+incoming request must follow the rules and schemas attached to the OpenAPI operation.
 
-In these cases you can make use of the form mode when sending Http client requests.
-
-.@Given("^OpenAPI request fork mode is (enabled|disabled)$")
+.@Then("^(?:receive|expect|verify) operation: {id}$")
 [source,gherkin]
 ----
-Given OpenAPI request fork mode is enabled
+Then expect operation {id}
 ----
 
-With this in place the step will not block other steps while waiting for the synchronous response from the server. The feature will continue with
-the next steps when fork mode is enabled. At a later point in time you may verify the response as usual with the separate verification step.
+The step expects a request matching the operation with the given `{id}`. The step loads the operation from the specification and autoamtically
+verifies that the incoming request matches the specified request.
+
+In fact the step generates a request body (if any is specified on the operation) with validation expressions and compares the
+incoming request with the generated template. In case the incoming request does not match the generated validation rules
+the test will fail accordingly.
+
+.Generated request body example with validations
+[source,json]
+----
+{
+  "id": "@isNumber()@",
+  "name": "@notEmpty()@",
+  "photoUrls": "@ignore@",
+  "category": {
+    "id": "@isNumber()@",
+    "name": "@notEmpty()@"
+  },
+  "tags": "@ignore@",
+  "status": "@matches(available|pending|sold)@"
+}
+----
+
+The generated request uses Citrus validation matchers based on the rules in the OpenAPI specification. Identifiers are validated with `@isNumber()@`, String values
+should not be empty `@notEmpty()@` and enumeration values are checked with `@matches(value_1|value_2|...|value_x)@`.
+
+This way you can make sure that the incoming request matches the rules defined in the OpenAPI specification. In addition to the
+message request body verification the step will automatically verify `Content-Type` headers, path parameters, query parameters and the general
+request path used.
+
+[[openapi-send-response]]
+=== Send operation response
+
+When the OpenAPI step has received and verified a request it is time to respond with proper message content. The given operation
+in the OpenAPI specification is able to define multiple response messages that are valid. In the test the user picks one of
+these response messages and the step generates the message content based on the specification.
+
+The step will generate proper test data with randomized values as response body.
+
+.@Then("^send operation result: {status} {reason_phrase}$")
+[source,gherkin]
+----
+Then send operation result: 201 CREATED
+----
+
+The step obtains the operation response with the status `201` and generates the response data. The response is able to define `Content-Type` headers
+and response body content.
+
+.Generated response body example with randomized values
+[source,json]
+----
+{
+  "id": 26866048,
+  "name": "mGNTgkfxgg",
+  "photoUrls": [
+    "XHAGIyFcyh"
+  ],
+  "category": {
+    "name": "konwOUYwMo",
+    "id": 18676332
+  },
+  "tags": [
+    {
+      "name": "KDnoWCfUBn",
+      "id": 31444049
+    }
+  ],
+  "status": "sold"
+}
+----
+
+The generated response should be valid according to the rules in the OpenAPI specification. You can overwrite the
+randomized values with test variables and xref:openapi-dictionaries[inbound/outbound data dictionaries] in order to have
+more human-readable test data.
+
+[[openapi-test-data]]
+=== Generate test data
+
+The YAKS OpenAPI steps use the information in the specification to generate proper message content for requests and responses. The generated test
+data follows the schemas attached to the operations and response definitions. By default, the steps include optional fields when generating
+and validating message contents.
+
+You can disable the optional fields in generation and validation accordingly:
+
+.@Given("^Disable OpenAPI generate optional fields$")
+[source,gherkin]
+----
+Given Disable OpenAPI generate optional fields
+----
+
+.@Given("^Disable OpenAPI validate optional fields$")
+[source,gherkin]
+----
+Given Disable OpenAPI validate optional fields
+----
+
+With this setting the OpenAPI steps will exclude optional fields from both test data generation and message content validation.
 
 [[openapi-dictionaries]]
 === Inbound/outbound data dictionaries
@@ -170,10 +265,10 @@ on the specifications in the OpenAPI document. You can overwrite the basic gener
 
 Outbound dictionaries are used to customize generated client requests.
 
-.@Given("^outbound dictionary$")
+.@Given("^OpenAPI outbound dictionary$")
 [source,gherkin]
 ----
-Given outbound dictionary
+Given OpenAPI outbound dictionary
 | {expression} | {value} |
 ----
 
@@ -185,17 +280,17 @@ YAKS evaluates the given expressions on the generated request body before the re
 .Outbound dictionary sample
 [source,gherkin]
 ----
-Given outbound dictionary
+Given OpenAPI outbound dictionary
   | $.name          | citrus:randomEnumValue('hasso','cutie','fluffy') |
   | $.category.name | citrus:randomEnumValue('dog', 'cat', 'fish') |
 ----
 
 You can also load the dictionary rules from an external file resource.
 
-.@Given("^load outbound dictionary {file_path}$")
+.@Given("^load OpenAPI outbound dictionary {file_path}$")
 [source,gherkin]
 ----
-Given load outbound dictionary {file_path}
+Given load OpenAPI outbound dictionary {file_path}
 ----
 
 With this outbound data dictionary in place a generated request can look like follows:
@@ -232,19 +327,19 @@ data structure coming from the OpenAPI specification.
 
 Inbound dictionaries adjust the generated expected responses which verify incoming messages with expected validation statements.
 
-.@Given("^inbound dictionary$")
+.@Given("^OpenAPI inbound dictionary$")
 [source,gherkin]
 ----
-Given inbound dictionary
+Given OpenAPI inbound dictionary
 | {expression} | {value} |
 ----
 
 You can also load the dictionary rules from an external file resource.
 
-.@Given("^load inbound dictionary {file_path}$")
+.@Given("^load OpenAPI inbound dictionary {file_path}$")
 [source,gherkin]
 ----
-Given load inbound dictionary {file_path}
+Given load OpenAPI inbound dictionary {file_path}
 ----
 
 The inbound dictionary holds a list of expressions that overwrite values in the generated response body.
@@ -256,7 +351,7 @@ structure before the validation takes place.
 .Inbound dictionary sample
 [source,gherkin]
 ----
-Given inbound dictionary
+Given OpenAPI inbound dictionary
   | $.name          | @assertThat(anyOf(is(hasso),is(cutie),is(fluffy)))@ |
   | $.category.name | @assertThat(anyOf(is(dog),is(cat),is(fish)))@ |
 ----
@@ -284,3 +379,20 @@ meets our expectations in the dictionary.
 
 In case you need to have a more specific response validation where each field gets validated with an expected value please
 consider using the xref:steps-http[Http steps] in YAKS. Here you can provide a complete expected Http response with body and headers.
+
+[[openapi-fork-mode]]
+=== Request fork mode
+
+When the OpenAPI steps fire requests to the server the step synchronously waits for the response. All other steps are in the feature are blocked
+by the synchronous communication. In some cases this is a problem because you might want to run some steps in parallel to the synchronous communication.
+
+In these cases you can make use of the form mode when sending Http client requests.
+
+.@Given("^OpenAPI request fork mode is (enabled|disabled)$")
+[source,gherkin]
+----
+Given OpenAPI request fork mode is enabled
+----
+
+With this in place the step will not block other steps while waiting for the synchronous response from the server. The feature will continue with
+the next steps when fork mode is enabled. At a later point in time you may verify the response as usual with the separate verification step.

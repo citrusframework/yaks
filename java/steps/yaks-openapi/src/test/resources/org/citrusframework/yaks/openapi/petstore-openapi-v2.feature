@@ -3,10 +3,10 @@ Feature: Petstore API V2
   Background:
     Given OpenAPI specification: http://localhost:8080/petstore/v2/openapi.json
     Given variable petId is "citrus:randomNumber(5)"
-    Given inbound dictionary
+    Given OpenAPI inbound dictionary
       | $.name          | @assertThat(anyOf(is(hasso),is(cutie),is(fluffy)))@ |
       | $.category.name | @assertThat(anyOf(is(dog),is(cat),is(fish)))@ |
-    Given outbound dictionary
+    Given OpenAPI outbound dictionary
       | $.name          | citrus:randomEnumValue('hasso','cutie','fluffy') |
       | $.category.name | citrus:randomEnumValue('dog', 'cat', 'fish') |
 

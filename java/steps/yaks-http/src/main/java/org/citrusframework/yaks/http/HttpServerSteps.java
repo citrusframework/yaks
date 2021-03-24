@@ -35,10 +35,12 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpServerActionBuilder;
 import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
+import com.consol.citrus.http.actions.HttpServerResponseActionBuilder;
 import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.http.server.HttpServer;
 import com.consol.citrus.http.server.HttpServerBuilder;
 import com.consol.citrus.util.FileUtils;
+import com.consol.citrus.variable.dictionary.DataDictionary;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -83,6 +85,9 @@ public class HttpServerSteps implements HttpSteps {
     private String requestBody;
     private String responseBody;
 
+    private DataDictionary<?> outboundDictionary;
+    private DataDictionary<?> inboundDictionary;
+
     private int securePort = HttpSettings.getSecurePort();
     private int serverPort = HttpSettings.getServerPort();
     private String serverName = HttpSettings.getServerName();
@@ -116,6 +121,8 @@ public class HttpServerSteps implements HttpSteps {
         requestBody = null;
         responseBody = null;
         bodyValidationExpressions = new HashMap<>();
+        outboundDictionary = null;
+        inboundDictionary = null;
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\"$")
@@ -358,6 +365,10 @@ public class HttpServerSteps implements HttpSteps {
                 .timeout(timeout)
                 .type(requestMessageType);
 
+        if (inboundDictionary != null) {
+            requestBuilder.dictionary(inboundDictionary);
+        }
+
         runner.run(requestBuilder);
     }
 
@@ -407,9 +418,19 @@ public class HttpServerSteps implements HttpSteps {
             httpServer.start();
         }
 
-        runner.run(http().server(httpServer).send()
+        response.setType(responseMessageType);
+
+        HttpServerResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().server(httpServer)
+                .send()
                 .response(response.getStatusCode())
-                .message(response.setType(responseMessageType)));
+                .message(response);
+
+        if (outboundDictionary != null) {
+            responseBuilder.dictionary(outboundDictionary);
+        }
+
+
+        runner.run(responseBuilder);
     }
 
     private ServerConnector sslConnector() {
@@ -451,5 +472,23 @@ public class HttpServerSteps implements HttpSteps {
         } else {
             return FileUtils.getFileResource(sslKeyStorePath).getURL().getFile();
         }
+    }
+
+    /**
+     * Specifies the inboundDictionary.
+     *
+     * @param inboundDictionary
+     */
+    public void setInboundDictionary(DataDictionary<?> inboundDictionary) {
+        this.inboundDictionary = inboundDictionary;
+    }
+
+    /**
+     * Specifies the outboundDictionary.
+     *
+     * @param outboundDictionary
+     */
+    public void setOutboundDictionary(DataDictionary<?> outboundDictionary) {
+        this.outboundDictionary = outboundDictionary;
     }
 }
