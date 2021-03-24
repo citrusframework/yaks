@@ -52,11 +52,13 @@ public class OpenApiTestDataGenerator {
 
             if (schema.properties != null) {
                 for (Map.Entry<String, OasSchema> entry : schema.properties.entrySet()) {
-                    payload.append("\"")
-                            .append(entry.getKey())
-                            .append("\": ")
-                            .append(createRandomValueExpression(entry.getValue(), definitions, true))
-                            .append(",");
+                    if (OpenApiSteps.generateOptionalFields || isRequired(schema, entry.getKey())) {
+                        payload.append("\"")
+                                .append(entry.getKey())
+                                .append("\": ")
+                                .append(createRandomValueExpression(entry.getValue(), definitions, true))
+                                .append(",");
+                    }
                 }
             }
 
@@ -143,7 +145,13 @@ public class OpenApiTestDataGenerator {
 
             if (schema.properties != null) {
                 for (Map.Entry<String, OasSchema> entry : schema.properties.entrySet()) {
-                    payload.append("\"").append(entry.getKey()).append("\": ").append(createValidationExpression(entry.getValue(), definitions, true)).append(",");
+                    if (OpenApiSteps.validateOptionalFields || isRequired(schema, entry.getKey())) {
+                        payload.append("\"")
+                                .append(entry.getKey())
+                                .append("\": ")
+                                .append(createValidationExpression(entry.getValue(), definitions, true))
+                                .append(",");
+                    }
                 }
             }
 
@@ -161,6 +169,20 @@ public class OpenApiTestDataGenerator {
         }
 
         return payload.toString();
+    }
+
+    /**
+     * Checks if given field name is in list of required fields for this schema.
+     * @param schema
+     * @param field
+     * @return
+     */
+    private static boolean isRequired(OasSchema schema, String field) {
+        if (schema.required == null) {
+            return true;
+        }
+
+        return schema.required.contains(field);
     }
 
     /**
@@ -182,7 +204,13 @@ public class OpenApiTestDataGenerator {
 
             if (schema.properties != null) {
                 for (Map.Entry<String, OasSchema> entry : schema.properties.entrySet()) {
-                    payload.append("\"").append(entry.getKey()).append("\": ").append(createValidationExpression(entry.getValue(), definitions, quotes)).append(",");
+                    if (OpenApiSteps.validateOptionalFields || isRequired(schema, entry.getKey())) {
+                        payload.append("\"")
+                                .append(entry.getKey())
+                                .append("\": ")
+                                .append(createValidationExpression(entry.getValue(), definitions, quotes))
+                                .append(",");
+                    }
                 }
             }
 

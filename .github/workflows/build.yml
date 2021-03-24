@@ -134,6 +134,7 @@ jobs:
         yaks test examples/logging
         yaks test examples/namespace
         yaks test examples/openapi
+        yaks test examples/openapi-server
         yaks test examples/run-scripts
         #yaks test examples/secrets
         yaks test examples/settings

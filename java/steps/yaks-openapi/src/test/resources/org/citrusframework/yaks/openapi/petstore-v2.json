@@ -211,8 +211,9 @@
     "Pet": {
       "type": "object",
       "required": [
+        "category",
         "name",
-        "photoUrls"
+        "status"
       ],
       "properties": {
         "id": {
