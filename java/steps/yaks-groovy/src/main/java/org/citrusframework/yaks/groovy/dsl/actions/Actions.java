@@ -24,10 +24,20 @@ import java.util.Arrays;
 import com.consol.citrus.TestActionBuilder;
 import com.consol.citrus.actions.CreateVariablesAction;
 import com.consol.citrus.actions.EchoAction;
+import com.consol.citrus.actions.ExecutePLSQLAction;
+import com.consol.citrus.actions.ExecuteSQLAction;
+import com.consol.citrus.actions.ExecuteSQLQueryAction;
 import com.consol.citrus.actions.FailAction;
 import com.consol.citrus.actions.ReceiveMessageAction;
 import com.consol.citrus.actions.SendMessageAction;
 import com.consol.citrus.actions.SleepAction;
+import com.consol.citrus.container.FinallySequence;
+import com.consol.citrus.container.Iterate;
+import com.consol.citrus.container.Parallel;
+import com.consol.citrus.container.RepeatOnErrorUntilTrue;
+import com.consol.citrus.container.RepeatUntilTrue;
+import com.consol.citrus.container.Sequence;
+import com.consol.citrus.container.Timer;
 import groovy.lang.GroovyRuntimeException;
 import org.springframework.util.ReflectionUtils;
 
@@ -39,10 +49,21 @@ public enum Actions {
 
     ECHO("echo", EchoAction.Builder.class),
     SLEEP("sleep", SleepAction.Builder.class),
+    SQL("sql", ExecuteSQLAction.Builder.class),
+    PLSQL("plsql", ExecutePLSQLAction.Builder.class),
+    QUERY("query", ExecuteSQLQueryAction.Builder.class),
+    CREATE_VARIABLE("createVariable", CreateVariablesAction.Builder.class),
     CREATE_VARIABLES("createVariables", CreateVariablesAction.Builder.class),
     SEND("send",SendMessageAction.Builder.class),
     RECEIVE("receive", ReceiveMessageAction.Builder.class),
-    FAIL("fail", FailAction.Builder.class);
+    FAIL("fail", FailAction.Builder.class),
+    SEQUENCE("sequence", Sequence.Builder.class),
+    ITERATE("iterate", Iterate.Builder.class),
+    PARALLEL("parallel", Parallel.Builder.class),
+    REPEAT("repeat", RepeatUntilTrue.Builder.class),
+    REPEAT_ON_ERROR("repeatOnError", RepeatOnErrorUntilTrue.Builder.class),
+    TIMER("timer", Timer.Builder.class),
+    DO_FINALLY("doFinally", FinallySequence.Builder.class);
 
     private final String id;
     private final Class<? extends TestActionBuilder<?>> builderType;

@@ -136,4 +136,15 @@ public class GroovyScriptSteps {
                 .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to find action script %s.groovy", scriptName)))
                 .execute(runner);
     }
+
+    @Then("^apply script: (.+)$")
+    @Then("^\\$\\((.+)\\)$")
+    public void runAction(String script) {
+        new ActionScript(script).execute(runner);
+    }
+
+    @Then("^apply script$")
+    public void runActionMultiline(String script) {
+        new ActionScript(script).execute(runner);
+    }
 }

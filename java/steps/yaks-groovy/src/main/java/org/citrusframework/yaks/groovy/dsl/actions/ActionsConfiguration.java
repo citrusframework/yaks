@@ -17,12 +17,11 @@
 
 package org.citrusframework.yaks.groovy.dsl.actions;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
+import com.consol.citrus.TestAction;
 import com.consol.citrus.TestActionBuilder;
 import com.consol.citrus.TestActionRunner;
 import com.consol.citrus.actions.SleepAction;
+import com.consol.citrus.container.Wait;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GroovyObjectSupport;
@@ -45,30 +44,39 @@ public class ActionsConfiguration {
         callable.setResolveStrategy(Closure.DELEGATE_FIRST);
         callable.setDelegate(builder);
         callable.call();
-
-        builder.reconcile();
-        builder.actions.forEach(runner::run);
     }
 
-    public static class ActionsBuilder extends GroovyObjectSupport {
-        private final Set<TestActionBuilder<?>> actions = new LinkedHashSet<>();
+    public class ActionsBuilder extends GroovyObjectSupport {
 
-        private static SleepAction.Builder sleep;
+        /**
+         * Short hand method running given test action builder.
+         * @param builder
+         * @param <T>
+         * @return
+         */
+        public <T extends TestAction> T $(TestActionBuilder<T> builder) {
+            return runner.run(builder);
+        }
 
         /**
          * Workaround method selection errors because Object classes do also use sleep method
-         * signatures and Groovy may not know which one of them to invoke. With this explicit static method we do
-         * not run into the selection errors.
+         * signatures and Groovy may not know which one of them to invoke.
          * @return
          */
-        public static SleepAction.Builder sleep() {
-            sleep = new SleepAction.Builder();
-            return sleep;
+        public SleepAction.Builder delay() {
+            return new SleepAction.Builder();
+        }
+
+        /**
+         * Workaround method selection errors because Object classes do also use wait method
+         * signatures and Groovy may not know which one of them to invoke.
+         * @return
+         */
+        public Wait.Builder waitFor() {
+            return new Wait.Builder();
         }
 
         public Object methodMissing(String name, Object argLine) {
-            reconcile();
-
             if (argLine == null) {
                 throw new MissingMethodException(name, EndpointsConfiguration.class, null);
             }
@@ -79,7 +87,6 @@ public class ActionsConfiguration {
                 throw new MissingMethodException(name, EndpointsConfiguration.class, args);
             }
 
-            actions.add(actionBuilder);
             return actionBuilder;
         }
 
@@ -88,17 +95,6 @@ public class ActionsConfiguration {
                 return Actions.fromId(id).getActionBuilder();
             }
             return Actions.fromId(id).getActionBuilder(args);
-        }
-
-        /**
-         * Reconcile actions and maybe add sleep action if present. The sleep action builder may have been added via
-         * static method workaround before.
-         */
-        public void reconcile() {
-            if (sleep != null) {
-                actions.add(sleep);
-                sleep = null;
-            }
         }
     }
 }

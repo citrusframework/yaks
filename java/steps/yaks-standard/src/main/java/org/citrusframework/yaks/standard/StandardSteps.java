@@ -47,8 +47,13 @@ public class StandardSteps {
         print("YAKS rocks!");
     }
 
-    @Given("^variable ([^\\s]+) is \"([^\"]*)\"$")
+    @Given("^variable ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
     public void variable(String name, String value) {
+        runner.variable(name, value);
+    }
+
+    @Given("^variable ([^\\s]+) (?:is|=)$")
+    public void variableMultiline(String name, String value) {
         runner.variable(name, value);
     }
 

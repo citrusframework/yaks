@@ -1,11 +1,19 @@
 Feature: Standard steps
 
   Scenario: Create variables
+    Given variable random = "citrus:randomString(10)"
     Given variable text is "YAKS rocks!"
+    Given variable multiline is
+    """
+    I say
+    YAKS rocks!
+    """
     Given variables
     | name     | Christoph |
     | greeting | Hello |
     Then log '${greeting} ${name}: ${text}'
+    And print '${multiline}'
+    And log '${random}'
 
   Scenario: Load variables from properties
     Given load variables variables.properties
