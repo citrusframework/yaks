@@ -29,7 +29,13 @@ public class ActionScript {
     private final String code;
 
     public ActionScript(String code) {
-        this.code = code;
+        if (code.contains("actions {")) {
+            this.code = code;
+        } else if (code.trim().startsWith("$(")) {
+            this.code = String.format("actions { %s }", code);
+        } else {
+            this.code = String.format("actions { $(%s) }", code);
+        }
     }
 
     public void execute(TestActionRunner runner) {

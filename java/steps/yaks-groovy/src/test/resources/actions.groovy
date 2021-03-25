@@ -16,11 +16,19 @@
  */
 
 actions {
-    echo('Hello from Groovy script')
-    sleep().seconds(1)
+    $(doFinally().actions(
+        echo('${greeting} in finally!')
+    ))
 
-    createVariables()
-            .variable('foo', 'bar')
+    $(echo('Hello from Groovy script'))
+    $(delay().seconds(1))
 
-    echo('Variable foo=${foo}')
+    $(createVariables()
+            .variable('foo', 'bar'))
+
+    $(echo('Variable foo=${foo}'))
+
+    $(iterate().condition("i lt 5").actions(
+            echo('Index is ${i}')
+    ))
 }
