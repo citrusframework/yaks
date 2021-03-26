@@ -17,6 +17,9 @@
 
 package org.citrusframework.yaks.groovy.dsl.actions;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import com.consol.citrus.TestActionRunner;
 import org.citrusframework.yaks.groovy.GroovyShellUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
@@ -26,24 +29,35 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
  */
 public class ActionScript {
 
-    private final String code;
+    private static final Pattern COMMENTS = Pattern.compile("^(?:\\s*//|/\\*|\\s+\\*).*$", Pattern.MULTILINE);
 
-    public ActionScript(String code) {
-        if (code.contains("actions {")) {
-            this.code = code;
-        } else if (code.trim().startsWith("$(")) {
-            this.code = String.format("actions { %s }", code);
-        } else {
-            this.code = String.format("actions { $(%s) }", code);
-        }
+    private final String script;
+
+    public ActionScript(String script) {
+        this.script = script;
     }
 
     public void execute(TestActionRunner runner) {
         ImportCustomizer ic = new ImportCustomizer();
-        // need to workaround the static sleep test action method because this causes method selection error with
-        // too many static methods using this signature
-        ic.addStaticImport(ActionsConfiguration.ActionsBuilder.class.getName(), "sleep");
+        GroovyShellUtils.run(ic, new ActionsConfiguration(runner), normalize(script));
+    }
 
-        GroovyShellUtils.run(ic, new ActionsConfiguration(runner), code);
+    private String normalize(String script) {
+        Matcher matcher = COMMENTS.matcher(script);
+        String normalized;
+        if (matcher.find()) {
+            normalized = matcher.replaceAll("").trim();
+        } else {
+            normalized = script.trim();
+        }
+
+        if (normalized.startsWith("$actions {") ||
+                normalized.startsWith("$finally {")) {
+            return normalized;
+        } else if (normalized.startsWith("$(")) {
+            return String.format("$actions { %s }", normalized);
+        } else {
+            return String.format("$actions { $(%s) }", normalized);
+        }
     }
 }

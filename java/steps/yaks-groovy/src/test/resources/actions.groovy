@@ -15,16 +15,19 @@
  * limitations under the License.
  */
 
-actions {
+// some comment
+$actions {
     $(doFinally().actions(
         echo('${greeting} in finally!')
     ))
 
+    // another comment
     $(echo('Hello from Groovy script'))
     $(delay().seconds(1))
 
-    $(createVariables()
-            .variable('foo', 'bar'))
+    /* another comment */
+    $(createVariables() /* inline comment */
+            .variable('foo', 'bar')) // inline comment
 
     $(echo('Variable foo=${foo}'))
 
