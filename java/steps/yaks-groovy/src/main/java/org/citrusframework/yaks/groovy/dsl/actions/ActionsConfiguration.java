@@ -17,11 +17,15 @@
 
 package org.citrusframework.yaks.groovy.dsl.actions;
 
+import java.util.function.Supplier;
+
 import com.consol.citrus.TestAction;
 import com.consol.citrus.TestActionBuilder;
 import com.consol.citrus.TestActionRunner;
 import com.consol.citrus.actions.SleepAction;
+import com.consol.citrus.container.FinallySequence;
 import com.consol.citrus.container.Wait;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GroovyObjectSupport;
@@ -39,11 +43,57 @@ public class ActionsConfiguration {
         this.runner = runner;
     }
 
-    public void actions(@DelegatesTo(ActionsBuilder.class) Closure<?> callable) {
+    public void $actions(@DelegatesTo(ActionsBuilder.class) Closure<?> callable) {
         ActionsBuilder builder = new ActionsBuilder();
         callable.setResolveStrategy(Closure.DELEGATE_FIRST);
         callable.setDelegate(builder);
         callable.call();
+    }
+
+    public void $finally(@DelegatesTo(FinallyActionsBuilder.class) Closure<?> callable) {
+        FinallyActionsBuilder builder = new FinallyActionsBuilder();
+        callable.setResolveStrategy(Closure.DELEGATE_FIRST);
+        callable.setDelegate(builder);
+        callable.call();
+
+        runner.run(builder.get());
+    }
+
+    public class FinallyActionsBuilder extends ActionsBuilder implements Supplier<FinallySequence.Builder> {
+
+        private final FinallySequence.Builder builder = new FinallySequence.Builder();
+
+        @Override
+        public Wait.Builder waitFor() {
+            Wait.Builder waitFor = super.waitFor();
+            builder.actions(waitFor);
+            return waitFor;
+        }
+
+        @Override
+        public SleepAction.Builder delay() {
+            SleepAction.Builder delay = super.delay();
+            builder.actions(delay);
+            return delay;
+        }
+
+        @Override
+        public <T extends TestAction> T $(TestActionBuilder<T> builder) {
+            throw new CitrusRuntimeException("Nested test action should not use run shortcut '$()' " +
+                    "please just use the test action builder method");
+        }
+
+        @Override
+        public Object methodMissing(String name, Object argLine) {
+            TestActionBuilder<?> actionBuilder = (TestActionBuilder<?>) super.methodMissing(name, argLine);
+            builder.actions(actionBuilder);
+            return actionBuilder;
+        }
+
+        @Override
+        public FinallySequence.Builder get() {
+            return builder;
+        }
     }
 
     public class ActionsBuilder extends GroovyObjectSupport {
@@ -74,6 +124,10 @@ public class ActionsConfiguration {
          */
         public Wait.Builder waitFor() {
             return new Wait.Builder();
+        }
+
+        public void $finally(@DelegatesTo(FinallyActionsBuilder.class) Closure<?> callable) {
+            ActionsConfiguration.this.$finally(callable);
         }
 
         public Object methodMissing(String name, Object argLine) {

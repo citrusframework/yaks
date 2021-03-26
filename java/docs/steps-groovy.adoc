@@ -5,6 +5,10 @@ The Groovy support in YAKS adds ways to configure the framework with bean config
 Groovy script snippets. In particular, you can add customized endpoints that send/receive data over various
 messaging transports.
 
+The Groovy script support is there to cover specific use cases where you hit limitations with the predefined
+conventional BDD steps. Of course the syntax and handling of the Groovy scripts are less human readable and more
+developer coherent.
+
 [[groovy-configuration-script]]
 === Framework configuration
 
@@ -198,14 +202,14 @@ apply the defined actions. When applied to the test the defined actions are exec
 Scenario: Custom test actions
   Given create actions basic.groovy
   """
-  actions {
-    echo('Hello from Groovy script')
-    sleep().seconds(1)
+  $actions {
+    $(echo('Hello from Groovy script'))
+    $(delay().seconds(1))
 
-    createVariables()
-        .variable('foo', 'bar')
+    $(createVariables()
+        .variable('foo', 'bar'))
 
-    echo('Variable foo=${foo}')
+    $(echo('Variable foo=${foo}'))
   }
   """
   Then apply basic.groovy
@@ -231,12 +235,12 @@ send/receive operations as shown in the next sample.
 Scenario: Messaging actions
   Given create actions messaging.groovy
   """
-  actions {
-    send('direct:myQueue')
-      .payload('Hello from Groovy script!')
+  $actions {
+    $(send('direct:myQueue')
+      .payload('Hello from Groovy script!'))
 
-    receive('direct:myQueue')
-      .payload('Hello from Groovy script!')
+    $(receive('direct:myQueue')
+      .payload('Hello from Groovy script!'))
   }
   """
   Then apply messaging.groovy
@@ -253,7 +257,72 @@ Given load actions {file_name}.groovy$")
 
 The file name is the name of the action script. So you can use the file name to apply the script in the test for execution.
 
+.Apply Groovy script
 [source,gherkin]
 ----
 Then apply {file_name}.groovy
 ----
+
+You can also use a shortcut syntax to directly call a test action.
+
+.@Then("^${{action_code})$")
+[source,gherkin]
+----
+Then $(echo('Hello from Groovy script!'))
+----
+
+This will add a new `echo` test action and run the action. The action code uses a Groovy script that defines the test action
+by using the common Citrus test action domain specific language.
+
+You can apply multiline scripts directly, too.
+
+.@Given("^apply script$")
+[source,gherkin]
+----
+Given apply script
+    """
+    $actions {
+        $(delay().seconds(1))
+
+        $(echo('Hello from Groovy script!'))
+    }
+    """
+----
+
+[[groovy-finally-actions]]
+=== Finally actions
+
+Sometimes it is mandatory to cleanup test data after a scenario. It would be good to have a set of test actions that
+get executed in a guaranteed way - even in case the test scenario failed with errors before.
+
+The Citrus framework provides a concept of `finally block` actions. These actions will be run after the test in all
+circumstances (success and failure).
+
+.Finally block actions
+[source,gherkin]
+----
+Given apply script
+    """
+    $finally {
+        echo('${greeting} in finally!')
+    }
+    """
+----
+
+As an alternative syntax you can add a 'doFinally()' test action to your script.
+
+.Finally test action
+[source,gherkin]
+----
+Given apply script
+    """
+    $actions {
+        $(doFinally().actions(
+            echo('${greeting} in finally!')
+        ))
+    }
+    """
+----
+
+This is how you can define test actions in Groovy that get executed after the test.
+

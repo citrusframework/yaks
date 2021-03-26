@@ -8,7 +8,7 @@ Feature: Run script actions
   Scenario: Inline actions
     Given create actions basic.groovy
     """
-    actions {
+    $actions {
       $(doFinally().actions(
           echo('${greeting} in finally!')
       ))
@@ -28,7 +28,7 @@ Feature: Run script actions
   Scenario: Messaging actions
     Given create actions messaging.groovy
     """
-    actions {
+    $actions {
       $(send('direct:myQueue')
         .message()
         .body('Hello from Groovy script!'))
