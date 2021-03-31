@@ -39,9 +39,11 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 		Use:     "delete [test1] [test2] ...",
 		Short:   "Delete tests",
 		Long:    "Delete tests by name from given namespace.",
-		Args:    options.validateArgs,
 		PreRunE: decode(&options),
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(command *cobra.Command, args []string) error {
+			if err := options.validateArgs(command, args); err != nil {
+				return err
+			}
 			if err := options.run(args); err != nil {
 				fmt.Println(err.Error())
 			}
@@ -50,7 +52,7 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 		},
 	}
 
-	cmd.Flags().Bool("all", false, "Delete all tests")
+	cmd.Flags().BoolP("all", "a", false, "Delete all tests")
 
 	return &cmd, &options
 }
