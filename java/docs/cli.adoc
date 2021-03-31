@@ -82,6 +82,7 @@ Available Commands:
   help        Help about any command
   install     Installs YAKS on a Kubernetes cluster
   list        List tests
+  log         Print the logs of given test
   report      Generate test report from last test run
   run         Run tests
   uninstall   Uninstall YAKS from a Kubernetes cluster
@@ -122,6 +123,11 @@ TODO
 
 [[cli-delete]]
 == delete
+
+TODO
+
+[[cli-logs]]
+== log
 
 TODO
 

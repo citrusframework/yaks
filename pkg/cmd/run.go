@@ -95,6 +95,8 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	cmd.Flags().String("dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
 	cmd.Flags().StringP("report", "r", "junit", "Create test report in given output format")
 	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
+	cmd.Flags().BoolP("wait", "w", true, "Wait for the test to be complete")
+	cmd.Flags().Bool("logs", true, "Print test logs")
 
 	return &cmd, &options
 }
@@ -116,6 +118,8 @@ type runCmdOptions struct {
 	DumpFormat    string              `mapstructure:"dump"`
 	ReportFormat  report.OutputFormat `mapstructure:"report"`
 	Timeout       string              `mapstructure:"timeout"`
+	Wait          bool                `mapstructure:"wait"`
+	Logs          bool                `mapstructure:"logs"`
 }
 
 func (o *runCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -130,9 +134,11 @@ func (o *runCmdOptions) run(cmd *cobra.Command, args []string) error {
 	source := args[0]
 
 	results := v1alpha1.TestResults{}
-	defer report.PrintSummaryReport(&results)
-	if o.ReportFormat != report.DefaultOutput && o.ReportFormat != report.SummaryOutput {
-		defer report.GenerateReport(&results, o.ReportFormat)
+	if o.Wait {
+		defer report.PrintSummaryReport(&results)
+		if o.ReportFormat != report.DefaultOutput && o.ReportFormat != report.SummaryOutput {
+			defer report.GenerateReport(&results, o.ReportFormat)
+		}
 	}
 
 	if isDir(source) {
@@ -163,7 +169,7 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, c); namespace != nil {
-			if runConfig.Config.Namespace.AutoRemove {
+			if runConfig.Config.Namespace.AutoRemove && o.Wait {
 				defer deleteTempNamespace(namespace, c, o.Context)
 			}
 
@@ -220,7 +226,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
 			handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 			return
-		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove {
+		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove && o.Wait {
 			defer deleteTempNamespace(namespace, c, o.Context)
 		}
 	}
@@ -531,9 +537,9 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	if !existed {
-		fmt.Println(fmt.Sprintf("test \"%s\" created", name))
+		fmt.Println(fmt.Sprintf("Test '%s' created", name))
 	} else {
-		fmt.Println(fmt.Sprintf("test \"%s\" updated", name))
+		fmt.Println(fmt.Sprintf("Test '%s' updated", name))
 	}
 
 	ctx, cancel := context.WithCancel(o.Context)
@@ -550,7 +556,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 
 		waitTimeout, parseErr := time.ParseDuration(timeout)
 		if parseErr != nil {
-			fmt.Println(fmt.Sprintf("failed to parse test timeout setting - %s", parseErr.Error()))
+			fmt.Println(fmt.Sprintf("Failed to parse test timeout setting - %s", parseErr.Error()))
 			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout)
 		}
 
@@ -573,14 +579,21 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		cancel()
 	}()
 
-	if err := k8slog.Print(ctx, c, namespace, name, cmd.OutOrStdout()); err != nil {
-		return nil, err
+	if o.Logs && o.Wait {
+		if err := k8slog.Print(ctx, c, namespace, name, cmd.OutOrStdout()); err != nil {
+			return nil, err
+		}
 	}
 
-	// Let's add a Wait point, otherwise the script terminates
-	<-ctx.Done()
+	if o.Wait {
+		// Let's add a Wait point, otherwise the script terminates
+		<-ctx.Done()
 
-	fmt.Println(fmt.Sprintf("Test %s finished with status: %s", name, string(status)))
+		fmt.Println(fmt.Sprintf("Test '%s' finished with status: %s", name, string(status)))
+	} else {
+		fmt.Println(fmt.Sprintf("Test '%s' started", name))
+	}
+
 	return &test, status.AsError(name)
 }
 
