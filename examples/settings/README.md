@@ -113,5 +113,5 @@ config:
 With this configuration in place you can just run the test and the settings file will be added automatically.
 
 ```shell script
-$ yaks test camel-route.feature
+$ yaks run camel-route.feature
 ```

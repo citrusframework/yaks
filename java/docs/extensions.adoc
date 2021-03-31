@@ -50,14 +50,14 @@ With that you are all set and can run the test as usual:
 
 [source,shell script]
 ----
-$ yaks test extension.feature
+$ yaks run extension.feature
 ----
 
 You can also use the upload as part of the test command:
 
 [source,shell script]
 ----
-$ yaks test extension.feature --upload steps
+$ yaks run extension.feature --upload steps
 ----
 
 The `--upload` option builds and uploads the custom Maven module automatically before the test.
@@ -111,7 +111,7 @@ With that you are all set and can run the test as usual:
 
 [source,shell script]
 ----
-$ yaks test jitpack.feature
+$ yaks run jitpack.feature
 ----
 
 In the logs you will see that Jitpack automatically loads the additional dependency before the test.

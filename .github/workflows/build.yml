@@ -119,28 +119,28 @@ jobs:
         yaks install --operator-image $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
     - name: E2E Tests
       run: |
-        # Eventually `yaks test examples` should work
+        # Eventually `yaks run examples` should work
 
         # For now:
-        yaks test examples/camel
-        yaks test examples/camel-k
-        #yaks test examples/extension
-        yaks test examples/http
-        #yaks test examples/jdbc
-        yaks test examples/jitpack
-        #yaks test examples/kamelets
-        #yaks test examples/knative
-        yaks test examples/kubernetes
-        yaks test examples/logging
-        yaks test examples/namespace
-        yaks test examples/openapi
-        yaks test examples/openapi-server
-        yaks test examples/run-scripts
-        #yaks test examples/secrets
-        yaks test examples/settings
-        yaks test examples/test-group
-        yaks test examples/helloworld.feature
-        yaks test examples/selenium
+        yaks run examples/camel
+        yaks run examples/camel-k
+        #yaks run examples/extension
+        yaks run examples/http
+        #yaks run examples/jdbc
+        yaks run examples/jitpack
+        #yaks run examples/kamelets
+        #yaks run examples/knative
+        yaks run examples/kubernetes
+        yaks run examples/logging
+        yaks run examples/namespace
+        yaks run examples/openapi
+        yaks run examples/openapi-server
+        yaks run examples/run-scripts
+        #yaks run examples/secrets
+        yaks run examples/settings
+        yaks run examples/test-group
+        yaks run examples/helloworld.feature
+        yaks run examples/selenium
 
   snapshot:
     runs-on: ubuntu-latest

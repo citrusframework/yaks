@@ -42,7 +42,7 @@ Feature: Hello
 You can then execute the following command using the [YAKS CLI tool](https://github.com/citrusframework/yaks/releases/):
 
 ```bash
-yaks test helloworld.feature
+yaks run helloworld.feature
 ```
 
 This runs the test immediately on the current namespace in your connected Kubernetes cluster.

@@ -31,24 +31,24 @@ func newCmdReport(rootCmdOptions *RootCmdOptions) (*cobra.Command, *reportCmdOpt
 	}
 
 	cmd := cobra.Command{
-		Use:               "report [options]",
-		Short:             "Generate test report from last test run",
-		Long:              `Generate test report from last test run. Test results are fetched from cluster and/or collected from local test output.`,
-		PreRunE:           decode(&options),
-		RunE:              options.run,
+		Use:     "report [options]",
+		Short:   "Generate test report from last test run",
+		Long:    `Generate test report holding results from last test run. Fetch results from cluster and/or collect from local test output.`,
+		PreRunE: decode(&options),
+		RunE:    options.run,
 	}
 
 	cmd.Flags().Bool("fetch", false, "Fetch latest test results from cluster.")
-	cmd.Flags().StringP( "output", "o", "summary", "The report output format, one of 'summary', 'json', 'junit'")
-	cmd.Flags().BoolP( "clean", "c", false,"Clean the report output folder before fetching results")
+	cmd.Flags().StringP("output", "o", "summary", "The report output format, one of 'summary', 'json', 'junit'")
+	cmd.Flags().BoolP("clean", "c", false, "Clean the report output folder before fetching results")
 
 	return &cmd, &options
 }
 
 type reportCmdOptions struct {
 	*RootCmdOptions
-	Clean 		 bool	`mapstructure:"clean"`
-	Fetch 		 bool	`mapstructure:"fetch"`
+	Clean        bool                `mapstructure:"clean"`
+	Fetch        bool                `mapstructure:"fetch"`
 	OutputFormat report.OutputFormat `mapstructure:"output"`
 }
 
@@ -81,7 +81,7 @@ func (o *reportCmdOptions) run(cmd *cobra.Command, _ []string) error {
 func (o *reportCmdOptions) FetchResults() (*v1alpha1.TestResults, error) {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return nil, err;
+		return nil, err
 	}
 
 	if o.Clean {

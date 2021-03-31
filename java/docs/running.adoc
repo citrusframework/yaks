@@ -36,7 +36,7 @@ You just need this single file to run the test on the cluster.
 
 [source,shell script]
 ----
-yaks test helloworld.feature
+yaks run helloworld.feature
 ----
 
 You will be provided with the log output of the test and see the results:
@@ -88,7 +88,7 @@ with the command line option `--logger`.
 
 [source,shell script]
 ----
-yaks test helloworld.feature --logger root=INFO
+yaks run helloworld.feature --logger root=INFO
 ----
 
 The link:#logging[logging configuration] section in thi guide gives you some more details on this topic.

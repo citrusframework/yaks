@@ -36,8 +36,8 @@ import (
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/cmd/report"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-	"github.com/citrusframework/yaks/pkg/util/openshift"
 	k8slog "github.com/citrusframework/yaks/pkg/util/kubernetes/log"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"github.com/google/uuid"
 	projectv1 "github.com/openshift/api/project/v1"
 	"github.com/pkg/errors"
@@ -46,7 +46,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
-
 )
 
 const (
@@ -55,10 +54,10 @@ const (
 )
 
 const (
-	NamespaceEnv       = "YAKS_NAMESPACE"
-	RepositoriesEnv    = "YAKS_REPOSITORIES"
-	DependenciesEnv    = "YAKS_DEPENDENCIES"
-	LoggersEnv         = "YAKS_LOGGERS"
+	NamespaceEnv    = "YAKS_NAMESPACE"
+	RepositoriesEnv = "YAKS_REPOSITORIES"
+	DependenciesEnv = "YAKS_DEPENDENCIES"
+	LoggersEnv      = "YAKS_LOGGERS"
 
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
@@ -66,18 +65,19 @@ const (
 	CucumberFilterTags = "CUCUMBER_FILTER_TAGS"
 )
 
-func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions) {
-	options := testCmdOptions{
+func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) {
+	options := runCmdOptions{
 		RootCmdOptions: rootCmdOptions,
 	}
 
 	cmd := cobra.Command{
-		Use:             "test [options] [test file to execute]",
-		Short:           "Execute a test on Kubernetes",
-		Long:            `Deploys and executes a test on Kubernetes.`,
-		Args:            options.validateArgs,
-		PreRunE:         decode(&options),
-		RunE:            options.run,
+		Use:     "run [options] [test file to execute]",
+		Short:   "Run tests",
+		Long:    `Deploys and executes a test on given namespace.`,
+		Args:    options.validateArgs,
+		Aliases: []string{"test"},
+		PreRunE: decode(&options),
+		RunE:    options.run,
 	}
 
 	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
@@ -99,7 +99,7 @@ func newCmdTest(rootCmdOptions *RootCmdOptions) (*cobra.Command, *testCmdOptions
 	return &cmd, &options
 }
 
-type testCmdOptions struct {
+type runCmdOptions struct {
 	*RootCmdOptions
 	Repositories  []string            `mapstructure:"maven-repository"`
 	Dependencies  []string            `mapstructure:"dependency"`
@@ -118,7 +118,7 @@ type testCmdOptions struct {
 	Timeout       string              `mapstructure:"timeout"`
 }
 
-func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
+func (o *runCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New(fmt.Sprintf("accepts exactly 1 test name to execute, received %d", len(args)))
 	}
@@ -126,7 +126,7 @@ func (o *testCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *testCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (o *runCmdOptions) run(cmd *cobra.Command, args []string) error {
 	source := args[0]
 
 	results := v1alpha1.TestResults{}
@@ -148,7 +148,7 @@ func (o *testCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *testCmdOptions) runTest(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
+func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		handleTestError("", source, results, err)
@@ -192,7 +192,7 @@ func (o *testCmdOptions) runTest(cmd *cobra.Command, source string, results *v1a
 	var test *v1alpha1.Test
 	test, err = o.createAndRunTest(cmd, c, source, runConfig)
 	if test != nil {
-		handleTestResult(test, &suite);
+		handleTestResult(test, &suite)
 		results.Suites = append(results.Suites, suite)
 
 		if err != nil {
@@ -203,7 +203,7 @@ func (o *testCmdOptions) runTest(cmd *cobra.Command, source string, results *v1a
 	}
 }
 
-func (o *testCmdOptions) runTestGroup(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
+func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results *v1alpha1.TestResults) {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		handleTestError("", source, results, err)
@@ -251,7 +251,7 @@ func (o *testCmdOptions) runTestGroup(cmd *cobra.Command, source string, results
 			var test *v1alpha1.Test
 			test, err = o.createAndRunTest(cmd, c, name, runConfig)
 			if test != nil {
-				handleTestResult(test, &suite);
+				handleTestResult(test, &suite)
 				results.Suites = append(results.Suites, suite)
 
 				if err != nil {
@@ -283,7 +283,7 @@ func handleTestResult(test *v1alpha1.Test, suite *v1alpha1.TestSuite) {
 	}
 }
 
-func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
+func (o *runCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 	var configFile string
 	var runConfig *config.RunConfig
 
@@ -316,7 +316,7 @@ func (o *testCmdOptions) getRunConfig(source string) (*config.RunConfig, error) 
 	return runConfig, nil
 }
 
-func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c client.Client) (metav1.Object, error) {
+func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c client.Client) (metav1.Object, error) {
 	namespaceName := "yaks-" + uuid.New().String()
 	namespace, err := initializeTempNamespace(namespaceName, c, o.Context)
 	if err != nil {
@@ -365,10 +365,10 @@ func (o *testCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clie
 	return namespace, nil
 }
 
-func (o *testCmdOptions) setupOperator(c client.Client, namespace string) error {
+func (o *runCmdOptions) setupOperator(c client.Client, namespace string) error {
 	var cluster v1alpha1.ClusterType
 	if isOpenshift, err := openshift.IsOpenShift(c); err != nil {
-		return err;
+		return err
 	} else if isOpenshift {
 		cluster = v1alpha1.ClusterTypeKubernetes
 	} else {
@@ -387,7 +387,7 @@ func (o *testCmdOptions) setupOperator(c client.Client, namespace string) error 
 	return err
 }
 
-func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
+func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
 	namespace := runConfig.Config.Namespace.Name
 	fileName := kubernetes.SanitizeFileName(rawName)
 	name := kubernetes.SanitizeName(rawName)
@@ -466,36 +466,36 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 	}
 
 	if runConfig.Config.Runtime.Secret != "" {
-		test.Spec.Secret = runConfig.Config.Runtime.Secret;
+		test.Spec.Secret = runConfig.Config.Runtime.Secret
 	}
 
 	if runConfig.Config.Runtime.Selenium.Image != "" {
 		test.Spec.Selenium = v1alpha1.SeleniumSpec{
 			Image: runConfig.Config.Runtime.Selenium.Image,
-		};
+		}
 	}
 
 	switch o.DumpFormat {
-		case "":
-			// continue..
-		case "yaml":
-			data, err := kubernetes.ToYAML(&test)
-			if err != nil {
-				return nil, err
-			}
-			fmt.Print(string(data))
-			return nil, nil
+	case "":
+		// continue..
+	case "yaml":
+		data, err := kubernetes.ToYAML(&test)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Print(string(data))
+		return nil, nil
 
-		case "json":
-			data, err := kubernetes.ToJSON(&test)
-			if err != nil {
-				return nil, err
-			}
-			fmt.Print(string(data))
-			return nil, nil
+	case "json":
+		data, err := kubernetes.ToJSON(&test)
+		if err != nil {
+			return nil, err
+		}
+		fmt.Print(string(data))
+		return nil, nil
 
-		default:
-			return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.DumpFormat)
+	default:
+		return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.DumpFormat)
 	}
 
 	existed := false
@@ -551,7 +551,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 		waitTimeout, parseErr := time.ParseDuration(timeout)
 		if parseErr != nil {
 			fmt.Println(fmt.Sprintf("failed to parse test timeout setting - %s", parseErr.Error()))
-			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout);
+			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout)
 		}
 
 		err = kubernetes.WaitCondition(o.Context, c, &test, func(obj interface{}) (bool, error) {
@@ -584,7 +584,7 @@ func (o *testCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, r
 	return &test, status.AsError(name)
 }
 
-func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
+func (o *runCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 	for _, lib := range o.Uploads {
 		additionalDep, err := uploadLocalArtifact(o.RootCmdOptions, resolvePath(runConfig, lib), runConfig.Config.Namespace.Name)
 		if err != nil {
@@ -595,7 +595,7 @@ func (o *testCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 	return nil
 }
 
-func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) error {
+func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) error {
 	env := make([]string, 0)
 
 	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
@@ -649,7 +649,7 @@ func (o *testCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config
 	return nil
 }
 
-func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
+func (o *runCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
 	if o.Settings != "" {
 		rawName := o.Settings
 		configData, err := o.loadData(resolvePath(runConfig, rawName))
@@ -658,7 +658,7 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 			return nil, err
 		}
 
-		settings := v1alpha1.SettingsSpec {
+		settings := v1alpha1.SettingsSpec{
 			Name:    kubernetes.SanitizeFileName(rawName),
 			Content: configData,
 		}
@@ -675,7 +675,7 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 			return nil, err
 		}
 
-		settings := v1alpha1.SettingsSpec {
+		settings := v1alpha1.SettingsSpec{
 			Name:    "yaks.settings.yaml",
 			Content: string(configData),
 		}
@@ -686,7 +686,7 @@ func (o *testCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Set
 	return nil, nil
 }
 
-func (o *testCmdOptions) findInstance(c client.Client, namespace string) (*v1alpha1.Instance, error) {
+func (o *runCmdOptions) findInstance(c client.Client, namespace string) (*v1alpha1.Instance, error) {
 	yaks := v1alpha1.Instance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.InstanceKind,
@@ -706,7 +706,7 @@ func (o *testCmdOptions) findInstance(c client.Client, namespace string) (*v1alp
 	return &yaks, err
 }
 
-func (o *testCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, error) {
+func (o *runCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, error) {
 	instanceList := v1alpha1.InstanceList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.InstanceKind,
@@ -860,7 +860,7 @@ func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Cont
 	fmt.Println(fmt.Sprintf("AutoRemove namespace %s", ns.GetName()))
 }
 
-func (*testCmdOptions) loadData(fileName string) (string, error) {
+func (*runCmdOptions) loadData(fileName string) (string, error) {
 	var content []byte
 	var err error
 
