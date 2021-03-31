@@ -23,7 +23,7 @@ Please use the `--all` flag if you need to wipe out these, too.
 
 [source,shell script]
 ----
-yaks uninstall -n kube-operators --all
+yaks uninstall --all
 ----
 
 The `--all` option removes the operator and all related resources such as https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources[CustomResourceDefinitions (CRD)] and

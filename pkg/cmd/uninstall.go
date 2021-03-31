@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"io"
+	"k8s.io/apimachinery/pkg/api/meta"
 
 	"github.com/spf13/viper"
 
@@ -107,7 +108,7 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 		}
 
 		if uninstallViaOLM {
-			fmt.Fprintln(cmd.OutOrStdout(), "OLM is available in the cluster")
+			fmt.Println(cmd.OutOrStdout(), "OLM is available in the cluster")
 			if err = olm.Uninstall(o.Context, c, o.Namespace, o.Global, o.OlmOptions); err != nil {
 				return err
 			}
@@ -123,7 +124,12 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 	if o.UninstallAll {
 		instances := v1alpha1.InstanceList{}
 		if err = c.List(o.Context, &instances); err != nil {
-			return err
+			if meta.IsNoMatchError(err) {
+				fmt.Fprintf(cmd.OutOrStdout(), "Unable to locate operator instances in other namespaces - "+
+					"continue to uninstall from namespace '%s'\n", o.Namespace)
+			} else {
+				return err
+			}
 		}
 
 		for _, instance := range instances.Items {
@@ -150,11 +156,11 @@ func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 			if err = o.uninstallNamespaceRoles(o.Context, c, namespace); err != nil {
 				return err
 			}
-
-			if err = o.uninstallClusterWideResources(o.Context, c); err != nil {
-				return err
-			}
 		}
+	}
+
+	if err = o.uninstallClusterWideResources(o.Context, c); err != nil {
+		return err
 	}
 
 	return nil
@@ -186,7 +192,7 @@ func (o *uninstallCmdOptions) uninstallOperator(ctx context.Context, c client.Cl
 		},
 	}
 
-	if err := c.Delete(o.Context, &instance); err != nil && !k8serrors.IsNotFound(err){
+	if err := c.Delete(o.Context, &instance); err != nil && !k8serrors.IsNotFound(err) && !meta.IsNoMatchError(err) {
 		return err
 	}
 

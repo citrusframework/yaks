@@ -131,6 +131,11 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 		}
 	}
 
+	// Make sure that instance CR installed in operator namespace can be used by others
+	if err := installInstanceViewerRole(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		return err
+	}
+
 	// Additionally, install Knative resources (roles and bindings)
 	isKnative, err := knative.IsInstalled(ctx, c)
 	if err != nil {
@@ -199,5 +204,13 @@ func installServiceMonitors(ctx context.Context, c client.Client, namespace stri
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"operator-role-servicemonitors.yaml",
 		"operator-role-binding-servicemonitors.yaml",
+	)
+}
+
+// installs the role that allows any user ro access to instances in all namespaces
+func installInstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+		"user-global-instance-viewer-role.yaml",
+		"user-global-instance-viewer-role-binding.yaml",
 	)
 }
