@@ -33,7 +33,7 @@ const (
 	ConfigPathEnv = "YAKS_CONFIG_PATH"
 
 	commandShortDescription = `YAKS is a client tool for running tests natively on Kubernetes`
-	commandLongDescription = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
+	commandLongDescription  = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
 )
 
 // RootCmdOptions --
@@ -59,10 +59,10 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	var cmd = cobra.Command{
 		BashCompletionFunction: bashCompletionFunction,
 		PersistentPreRunE:      options.preRun,
-		Use:   "yaks",
-		Short: commandShortDescription,
-		Long:  commandLongDescription,
-		SilenceUsage: true,
+		Use:                    "yaks",
+		Short:                  commandShortDescription,
+		Long:                   commandLongDescription,
+		SilenceUsage:           true,
 	}
 
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")
@@ -70,7 +70,10 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 
 	cmd.AddCommand(newCmdCompletion(&cmd))
 	cmd.AddCommand(newCmdVersion())
-	cmd.AddCommand(cmdOnly(newCmdTest(&options)))
+	cmd.AddCommand(cmdOnly(newCmdRun(&options)))
+	cmd.AddCommand(cmdOnly(newCmdDelete(&options)))
+	cmd.AddCommand(cmdOnly(newCmdList(&options)))
+	cmd.AddCommand(cmdOnly(newCmdLog(&options)))
 	cmd.AddCommand(cmdOnly(newCmdInstall(&options)))
 	cmd.AddCommand(cmdOnly(newCmdUninstall(&options)))
 	cmd.AddCommand(newCmdOperator())

@@ -45,7 +45,7 @@ Maven repository makes sure the library gets resolved at runtime.
 With that you are all set and can run the test as usual:
 
 ```shell script
-$ yaks test jitpack.feature
+$ yaks run jitpack.feature
 ```
 
 In the logs you will see that Jitpack automatically loads the additional dependency before the test.

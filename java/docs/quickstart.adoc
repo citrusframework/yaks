@@ -17,7 +17,7 @@ You can then execute the following command using the https://github.com/citrusfr
 
 [source,shell script]
 ----
-yaks test helloworld.feature
+yaks run helloworld.feature
 ----
 
 This runs the test immediately on the current namespace in your connected Kubernetes cluster.

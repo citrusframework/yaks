@@ -43,13 +43,13 @@ The additional glue code should match the package name where to find the custom 
 With that you are all set and can run the test as usual:
 
 ```shell script
-$ yaks test extension.feature
+$ yaks run extension.feature
 ```
 
 You can also use the upload as part of the test command:
 
 ```shell script
-$ yaks test extension.feature --upload steps
+$ yaks run extension.feature --upload steps
 ```                                         
 
 The `--upload` option builds and uploads the custom Maven module automatically before the test.

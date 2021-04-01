@@ -13,7 +13,7 @@ To run the example:
 
 [source]
 ----
-yaks test extension.feature -u steps/
+yaks run extension.feature -u steps/
 ----
 
 The `-u` flag stands for "upload". The steps project is built before running the test and the artifacts are uploaded to a

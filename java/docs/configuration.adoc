@@ -33,7 +33,7 @@ Also we can make use of command line options when using the `yaks` binary.
 
 [source,shell script]
 ----
-yaks test hello-world.feature --tag @regression --glue org.citrusframework.yaks
+yaks run hello-world.feature --tag @regression --glue org.citrusframework.yaks
 ----
 
 [[configuration-dependencies]]
@@ -96,7 +96,7 @@ You can add dependencies also by specifying the dependencies as command line par
 
 [source,shell script]
 ----
-yaks test --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
+yaks run --dependency org.apache.camel:camel-groovy:@camel.version@ camel-route.feature
 ----
 
 This will add a environment setting in the YAKS runtime container and the dependency will be loaded automatically
@@ -119,7 +119,7 @@ You can add the property file when running the test via `yaks` CLI like follows:
 
 [source,shell script]
 ----
-yaks test --settings yaks.properties camel-route.feature
+yaks run --settings yaks.properties camel-route.feature
 ----
 
 [[configuration-file]]
@@ -162,7 +162,7 @@ You can add the configuration file when running the test via `yaks` CLI like fol
 
 [source,shell script]
 ----
-yaks test --settings yaks.settings.yaml camel-route.feature
+yaks run --settings yaks.settings.yaml camel-route.feature
 ----
 
 [[configuration-repositories]]
@@ -180,7 +180,7 @@ You can add repositories also by specifying the repositories as command line par
 
 [source,shell script]
 ----
-yaks test --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
+yaks run --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
 ----
 
 This will add a environment setting in the YAKS runtime container and the repository will be added to the Maven runtime project model.
@@ -202,7 +202,7 @@ You can add the property file when running the test via `yaks` CLI like follows:
 
 [source,shell script]
 ----
-yaks test --settings yaks.properties my.feature
+yaks run --settings yaks.properties my.feature
 ----
 
 [[configuration-repository-config]]
@@ -259,7 +259,7 @@ You can add the configuration file when running the test via `yaks` CLI like fol
 
 [source,shell script]
 ----
-yaks test --settings yaks.settings.yaml my.feature
+yaks run --settings yaks.settings.yaml my.feature
 ----
 
 [[configuration-secrets]]

@@ -30,12 +30,20 @@ Some of the most used commands are:
 |Install YAKS operator and setup cluster (roles, CRDs)
 |`yaks install`
 
-|test
-|Run a test on Kubernetes
-|`yaks test helloworld.feature`
+|list
+|List the results of all tests on given namespace
+|`yaks list`
+
+|run
+|Deploys and executes a test on given namespace
+|`yaks run helloworld.feature`
+
+|delete
+|Delete tests by name from given namespace
+|`yaks delete helloworld.feature`
 
 |report
-|Fetches and generates reports from test results
+|Fetch and generate reports from test results
 |`yaks report --fetch -o junit`
 
 |upload
@@ -70,10 +78,13 @@ Usage:
 
 Available Commands:
   completion  Generates completion scripts
+  delete      Delete tests
   help        Help about any command
   install     Installs YAKS on a Kubernetes cluster
+  list        List tests
+  log         Print the logs of given test
   report      Generate test report from last test run
-  test        Execute a test on Kubernetes
+  run         Run tests
   uninstall   Uninstall YAKS from a Kubernetes cluster
   upload      Upload a local test artifact to the cluster
   version     Display version information
@@ -89,7 +100,7 @@ Use "yaks [command] --help" for more information about a command.
 .Command help
 [source, shell script]
 ----
-yaks test --help
+yaks run --help
 ----
 
 [[cli-install]]
@@ -100,17 +111,42 @@ The command `install` performs the YAKS installation on a target cluster. The co
 . Setup cluster resources (CRDs, roles, rolebindings)
 . Install YAKS operator to current namespace (or to the provided namespace in settings)
 
-[[cli-test]]
-== test
+[[cli-list]]
+== list
+
+TODO
+
+[[cli-run]]
+== run
+
+TODO
+
+[[cli-delete]]
+== delete
+
+TODO
+
+[[cli-logs]]
+== log
+
+TODO
 
 [[cli-report]]
 == report
 
+TODO
+
 [[cli-upload]]
 == upload
+
+TODO
 
 [[cli-uninstall]]
 == uninstall
 
+TODO
+
 [[cli-version]]
 == version
+
+TODO
