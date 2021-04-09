@@ -40,7 +40,7 @@ public class CreateChannelAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Channel channel = new ChannelBuilder()
-            .withApiVersion(KnativeSupport.knativeApiVersion())
+            .withApiVersion(String.format("%s/%s", KnativeSupport.knativeMessagingGroup(), KnativeSupport.knativeApiVersion()))
             .withNewMetadata()
                 .withNamespace(namespace(context))
                 .withName(context.replaceDynamicContentInString(channelName))

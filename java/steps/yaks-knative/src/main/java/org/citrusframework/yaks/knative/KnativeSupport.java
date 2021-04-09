@@ -60,4 +60,12 @@ public final class KnativeSupport {
     public static String knativeApiVersion() {
         return KnativeSettings.getApiVersion();
     }
+
+    public static String knativeMessagingGroup() {
+        return KnativeSettings.getKnativeMessagingGroup();
+    }
+
+    public static String knativeEventingGroup() {
+        return KnativeSettings.getKnativeEventingGroup();
+    }
 }

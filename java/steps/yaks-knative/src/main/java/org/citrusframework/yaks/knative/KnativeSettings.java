@@ -194,4 +194,13 @@ public class KnativeSettings {
         return Boolean.parseBoolean(System.getProperty(AUTO_REMOVE_RESOURCES_PROPERTY,
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
     }
+
+    public static String getKnativeMessagingGroup() {
+        return "messaging.knative.dev";
+    }
+
+    public static String getKnativeEventingGroup() {
+        return "eventing.knative.dev";
+    }
+
 }

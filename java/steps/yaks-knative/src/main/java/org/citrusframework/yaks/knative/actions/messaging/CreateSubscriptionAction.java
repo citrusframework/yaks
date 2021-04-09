@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -46,7 +45,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Subscription subscription = new SubscriptionBuilder()
-                .withApiVersion(KnativeSupport.knativeApiVersion())
+                .withApiVersion(String.format("%s/%s", KnativeSupport.knativeMessagingGroup(), KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(subscriptionName))
@@ -54,13 +53,13 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                 .endMetadata()
                 .withNewSpec()
                     .withChannel(new ObjectReferenceBuilder()
-                            .withApiVersion(String.format("messaging.knative.dev/%s", KnativeSupport.knativeApiVersion()))
+                            .withApiVersion(String.format("%s/%s", KnativeSupport.knativeMessagingGroup(), KnativeSupport.knativeApiVersion()))
                             .withKind("InMemoryChannel")
                             .withName(context.replaceDynamicContentInString(channelName))
                             .build())
                     .withNewSubscriber()
                         .withNewRef()
-                            .withApiVersion(KubernetesSupport.kubernetesApiVersion())
+                            .withApiVersion("v1")
                             .withKind("Service")
                             .withName(context.replaceDynamicContentInString(serviceName))
                         .endRef()

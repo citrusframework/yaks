@@ -40,7 +40,7 @@ public class CreateBrokerAction extends AbstractKnativeAction {
     @Override
     public void doExecute(TestContext context) {
         Broker broker = new BrokerBuilder()
-                .withApiVersion(KnativeSupport.knativeApiVersion())
+                .withApiVersion(String.format("%s/%s", KnativeSupport.knativeEventingGroup(), KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(brokerName))
