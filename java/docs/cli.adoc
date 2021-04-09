@@ -30,6 +30,10 @@ Some of the most used commands are:
 |Install YAKS operator and setup cluster (roles, CRDs)
 |`yaks install`
 
+|role
+|Add roles and role bindings to the YAKS operator in order to manage additional custom resources
+|`yaks role --add role-foo.yaml`
+
 |list
 |List the results of all tests on given namespace
 |`yaks list`
@@ -84,6 +88,7 @@ Available Commands:
   list        List tests
   log         Print the logs of given test
   report      Generate test report from last test run
+  role        Manage YAKS operator roles and role bindings
   run         Run tests
   uninstall   Uninstall YAKS from a Kubernetes cluster
   upload      Upload a local test artifact to the cluster
@@ -110,6 +115,11 @@ The command `install` performs the YAKS installation on a target cluster. The co
 
 . Setup cluster resources (CRDs, roles, rolebindings)
 . Install YAKS operator to current namespace (or to the provided namespace in settings)
+
+[[cli-role]]
+== role
+
+TODO
 
 [[cli-list]]
 == list

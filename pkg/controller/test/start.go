@@ -20,6 +20,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"strings"
@@ -31,7 +32,7 @@ import (
 	snap "github.com/container-tools/snap/pkg/api"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/rbac/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -94,7 +95,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 			Namespace: test.Namespace,
 			Name:      TestJobNameFor(test),
 			Labels: map[string]string{
-				"app":       "yaks",
+				"app":                "yaks",
 				v1alpha1.TestLabel:   test.Name,
 				v1alpha1.TestIdLabel: test.Status.TestID,
 			},
@@ -115,13 +116,13 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: test.Namespace,
 					Labels: map[string]string{
-						"app":       "yaks",
+						"app":                "yaks",
 						v1alpha1.TestLabel:   test.Name,
 						v1alpha1.TestIdLabel: test.Status.TestID,
 					},
 				},
 				Spec: v1.PodSpec{
-					ServiceAccountName: "yaks-viewer",
+					ServiceAccountName: config.ViewerServiceAccount,
 					Containers: []v1.Container{
 						{
 							Name:                     "test",
@@ -130,7 +131,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 							TerminationMessagePolicy: "FallbackToLogsOnError",
 							TerminationMessagePath:   "/dev/termination-log",
 							ImagePullPolicy:          v1.PullIfNotPresent,
-							TTY: true,
+							TTY:                      true,
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tests",
@@ -262,8 +263,8 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 		sources[test.Spec.Settings.Name] = test.Spec.Settings.Content
 	}
 
-	for _, resource := range test.Spec.Resources {
-		sources[resource.Name] = resource.Content
+	for _, testResource := range test.Spec.Resources {
+		sources[testResource.Name] = testResource.Content
 	}
 
 	cm := v1.ConfigMap{
@@ -275,7 +276,7 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 			Namespace: test.Namespace,
 			Name:      TestResourceNameFor(test),
 			Labels: map[string]string{
-				"app":       "yaks",
+				"app":                "yaks",
 				v1alpha1.TestLabel:   test.Name,
 				v1alpha1.TestIdLabel: test.Status.TestID,
 			},
@@ -296,9 +297,9 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 }
 
 func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namespace string) error {
-	rb := v1beta1.RoleBinding{}
+	rb := rbacv1.RoleBinding{}
 	rbKey := ctrl.ObjectKey{
-		Name:      "yaks-viewer",
+		Name:      config.ViewerServiceAccount,
 		Namespace: namespace,
 	}
 
@@ -306,8 +307,120 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	if err != nil && k8serrors.IsNotFound(err) {
 		// Create proper service account and roles
 		return install.ViewerServiceAccountRoles(ctx, action.client, namespace)
+	} else if err != nil {
+		return err
 	}
-	return err
+
+	operatorNamespace, err := envvar.GetOperatorNamespace()
+	if err != nil {
+		return err
+	}
+
+	labelSelector := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", config.AppendToViewerLabel, "true"),
+	}
+
+	// Apply labeled YAKS operator roles to service account
+	roleList, err := action.client.RbacV1().Roles(operatorNamespace).List(ctx, labelSelector)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range roleList.Items {
+		role := r.DeepCopy()
+		role.Name = strings.ReplaceAll(role.Name, config.OperatorServiceAccount, config.ViewerServiceAccount)
+
+		_, err := action.client.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+		if err != nil && k8serrors.IsAlreadyExists(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// Apply labeled cluster roles to service account
+	crList, err := action.client.RbacV1().ClusterRoles().List(ctx, labelSelector)
+	if err != nil {
+		return err
+	}
+
+	for _, cr := range crList.Items {
+		role := &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace,
+				Name:      strings.ReplaceAll(cr.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+				Labels:    cr.Labels,
+			},
+			Rules: cr.Rules,
+		}
+
+		_, err := action.client.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+		if err != nil && k8serrors.IsAlreadyExists(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// Apply labeled YAKS operator role bindings to service account
+	rbList, err := action.client.RbacV1().RoleBindings(operatorNamespace).List(ctx, labelSelector)
+	if err != nil {
+		return err
+	}
+
+	for _, rb := range rbList.Items {
+		roleBinding := rb.DeepCopy()
+		roleBinding.Name = strings.ReplaceAll(roleBinding.Name, config.OperatorServiceAccount, config.ViewerServiceAccount)
+		for _, subject := range roleBinding.Subjects {
+			if subject.Kind == "ServiceAccount" && subject.Name == config.OperatorServiceAccount {
+				subject.Name = config.ViewerServiceAccount
+			}
+		}
+
+		_, err := action.client.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+		if err != nil && k8serrors.IsAlreadyExists(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+	}
+
+	// Apply labeled cluster role bindings to service account
+	crbList, err := action.client.RbacV1().ClusterRoleBindings().List(ctx, labelSelector)
+	if err != nil {
+		return err
+	}
+
+	for _, crb := range crbList.Items {
+		roleBinding := &rbacv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace,
+				Name:      strings.ReplaceAll(crb.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+				Labels:    crb.Labels,
+			},
+			Subjects: []rbacv1.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Name:      config.ViewerServiceAccount,
+					Namespace: namespace,
+				},
+			},
+			RoleRef: rbacv1.RoleRef{
+				APIGroup: crb.RoleRef.APIGroup,
+				Kind:     "Role",
+				Name:     strings.ReplaceAll(crb.RoleRef.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+			},
+		}
+
+		_, err := action.client.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+		if err != nil && k8serrors.IsAlreadyExists(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) error {
@@ -322,9 +435,9 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) er
 		}
 
 		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, v1.Container{
-			Name:                     "selenium",
-			Image:                    test.Spec.Selenium.Image,
-			ImagePullPolicy:          v1.PullIfNotPresent,
+			Name:            "selenium",
+			Image:           test.Spec.Selenium.Image,
+			ImagePullPolicy: v1.PullIfNotPresent,
 			VolumeMounts: []v1.VolumeMount{
 				{
 					Name:      "dshm",
@@ -337,7 +450,7 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) er
 			Name: "dshm",
 			VolumeSource: v1.VolumeSource{
 				EmptyDir: &v1.EmptyDirVolumeSource{
-					Medium: v1.StorageMediumMemory,
+					Medium:    v1.StorageMediumMemory,
 					SizeLimit: resource.NewScaledQuantity(2, resource.Giga),
 				},
 			},
@@ -345,7 +458,7 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) er
 
 		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{
-				Add: []v1.Capability{ "SYS_PTRACE" },
+				Add: []v1.Capability{"SYS_PTRACE"},
 			},
 		}
 
@@ -377,12 +490,12 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 		}
 
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
-				Name: "secrets",
-				VolumeSource: v1.VolumeSource{
-					Secret: &v1.SecretVolumeSource{
-						SecretName: item.Name,
-					},
+			Name: "secrets",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: item.Name,
 				},
+			},
 		})
 		found = true
 		break
@@ -428,32 +541,32 @@ func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) err
 			Name:  "YAKS_S3_REPOSITORY_URL",
 			Value: url,
 		},
-		v1.EnvVar{
-			Name:  "YAKS_S3_REPOSITORY_BUCKET",
-			Value: bucket,
-		},
-		v1.EnvVar{
-			Name: "YAKS_S3_REPOSITORY_ACCESS_KEY",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: creds.SecretName,
+			v1.EnvVar{
+				Name:  "YAKS_S3_REPOSITORY_BUCKET",
+				Value: bucket,
+			},
+			v1.EnvVar{
+				Name: "YAKS_S3_REPOSITORY_ACCESS_KEY",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: creds.SecretName,
+						},
+						Key: creds.AccessKeyEntry,
 					},
-					Key: creds.AccessKeyEntry,
 				},
 			},
-		},
-		v1.EnvVar{
-			Name: "YAKS_S3_REPOSITORY_SECRET_KEY",
-			ValueFrom: &v1.EnvVarSource{
-				SecretKeyRef: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: creds.SecretName,
+			v1.EnvVar{
+				Name: "YAKS_S3_REPOSITORY_SECRET_KEY",
+				ValueFrom: &v1.EnvVarSource{
+					SecretKeyRef: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: creds.SecretName,
+						},
+						Key: creds.SecretKeyEntry,
 					},
-					Key: creds.SecretKeyEntry,
 				},
-			},
-		})
+			})
 	}
 	return nil
 }

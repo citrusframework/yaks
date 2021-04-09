@@ -29,12 +29,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type getCmdOptions struct {
+type listCmdOptions struct {
 	*RootCmdOptions
 }
 
-func newCmdList(rootCmdOptions *RootCmdOptions) (*cobra.Command, *getCmdOptions) {
-	options := getCmdOptions{
+func newCmdList(rootCmdOptions *RootCmdOptions) (*cobra.Command, *listCmdOptions) {
+	options := listCmdOptions{
 		RootCmdOptions: rootCmdOptions,
 	}
 	cmd := cobra.Command{
@@ -49,7 +49,7 @@ func newCmdList(rootCmdOptions *RootCmdOptions) (*cobra.Command, *getCmdOptions)
 	return &cmd, &options
 }
 
-func (o *getCmdOptions) run(cmd *cobra.Command, args []string) error {
+func (o *listCmdOptions) run(cmd *cobra.Command, args []string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
 		return err

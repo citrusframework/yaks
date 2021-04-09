@@ -1,0 +1,10 @@
+apiVersion: yaks.dev/v1alpha1
+kind: Foo
+metadata:
+  name: file-foo
+spec:
+  message: Hello
+status:
+  conditions:
+    - type: Ready
+      status: true

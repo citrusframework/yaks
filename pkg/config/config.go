@@ -23,6 +23,12 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/defaults"
 )
 
+const (
+	OperatorServiceAccount = "yaks-operator"
+	ViewerServiceAccount   = "yaks-viewer"
+	AppendToViewerLabel    = "yaks.citrusframework.org/append-to-viewer"
+)
+
 func GetTestBaseImage() string {
 	customEnv := os.Getenv("YAKS_TEST_BASE_IMAGE")
 	if customEnv != "" {

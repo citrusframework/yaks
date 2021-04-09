@@ -29,7 +29,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 /**
  * @author Christoph Deppisch
  */
-@Group("foo.dev")
+@Group("yaks.dev")
 @Version("v1")
 public class Foo extends CustomResource<Foo.FooSpec, Foo.FooStatus> {
 

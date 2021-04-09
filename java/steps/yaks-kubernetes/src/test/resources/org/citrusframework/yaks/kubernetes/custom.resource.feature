@@ -21,47 +21,53 @@ metadata:
     Then verify broker my-broker-resource exists
 
   Scenario: Wait for custom resource
-    Given create Kubernetes custom resource in foos.foo.dev
+    Given create Kubernetes custom resource in foos.yaks.dev
 """
-apiVersion: foo.dev/v1
+apiVersion: yaks.dev/v1
 kind: Foo
 metadata:
   name: test-resource
+spec:
+  message: Hello
 status:
   conditions:
   - type: Ready
     status: true
 """
-    Then wait for condition=Ready on Kubernetes custom resource foo/test-resource in foos.foo.dev/v1
-    Then Kubernetes custom resource foo/test-resource in foos.foo.dev/v1 should be ready
+    Then wait for condition=Ready on Kubernetes custom resource foo/test-resource in foos.yaks.dev/v1
+    Then Kubernetes custom resource foo/test-resource in foos.yaks.dev/v1 should be ready
 
   Scenario: Wait for labeled custom resource
-    Given create Kubernetes custom resource in foos.foo.dev
+    Given create Kubernetes custom resource in foos.yaks.dev
 """
-apiVersion: foo.dev/v1
+apiVersion: yaks.dev/v1
 kind: Foo
 metadata:
   name: bar-resource
   labels:
     app: foo-app
+spec:
+  message: Hello
 status:
   conditions:
   - type: Ready
     status: true
 """
-    Then wait for condition=Ready on Kubernetes custom resource in foos.foo.dev/v1 labeled with app=foo-app
-    Then Kubernetes custom resource in foos.foo.dev/v1 labeled with app=foo-app should be ready
+    Then wait for condition=Ready on Kubernetes custom resource in foos.yaks.dev/v1 labeled with app=foo-app
+    Then Kubernetes custom resource in foos.yaks.dev/v1 labeled with app=foo-app should be ready
 
   Scenario: Wait for completed custom resource
-    Given create Kubernetes custom resource in foos.foo.dev
+    Given create Kubernetes custom resource in foos.yaks.dev
 """
-apiVersion: foo.dev/v1
+apiVersion: yaks.dev/v1
 kind: Foo
 metadata:
   name: job-resource
+spec:
+  message: Hello
 status:
   conditions:
   - type: Completed
     status: true
 """
-    Then wait for condition=Completed on Kubernetes custom resource foo/job-resource in foos.foo.dev/v1
+    Then wait for condition=Completed on Kubernetes custom resource foo/job-resource in foos.yaks.dev/v1

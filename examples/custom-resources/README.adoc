@@ -1,0 +1,193 @@
+= Manage custom resources
+
+This example shows how to create custom resources as part of the test.
+Creating custom resources is a good way to prepare a proper infrastructure of the test.
+
+For instance the test can create a new Knative broker instance or a Strimzi Kafka cluster
+prior to using this infrastructure in the very same test.
+
+== Prepare CRDs
+
+Before you can manage custom resources from a test, you need to make sure that the custom resource definition (CRD) is
+available on the cluster.
+
+Assume that there is a CRD `foos.yaks.dev`:
+
+.crd-foo.yaml
+[source,yaml]
+----
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: "yaks"
+  creationTimestamp: null
+  name: foos.yaks.dev
+spec:
+  group: yaks.dev
+  names:
+    kind: Foo
+    listKind: FooList
+    plural: foos
+    singular: foo
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    subresources:
+      status: {}
+----
+
+You can create the CRD on the cluster like this:
+
+[source,bash]
+----
+kubectl apply -f crd-foo.yaml
+----
+
+IMPORTANT: You need admin rights on the cluster to install a CRD.
+
+The setup of the CRD is a once-per-cluster task that needs administrative rights on the cluster.
+You may need to ask your administrator to create the CRD for you.
+You can also use the pre/post script section in YAKS to create the CRD before the test is started.
+
+.yaks-config.yaml
+[source,bash]
+----
+pre:
+  - script: apply-crd.sh
+post:
+  - script: delete-crd.sh
+----
+
+The configuration adds pre/post scripts that create/delete the CRD.
+
+.apply-crd.yaml
+[source,bash]
+----
+# create crd
+kubectl apply -f crd-foo.yaml
+----
+
+.delete-crd.yaml
+[source,bash]
+----
+# delete crd
+kubectl delete crd foos.yaks.dev
+----
+
+== Prepare role permissions
+
+Prior to using the custom resource in a YAKS test you need to grant role permissions to the YAKS runtime.
+Otherwise, the test is not allowed to create the custom resource due to security constraints on the cluster.
+
+The YAKS runtime uses a service account `yaks-viewer` to run the test.
+The service account needs to have proper roles and permissions for managing the custom resource.
+
+The YAKS operator uses another service account `yaks-operator`.
+This service account needs to have the same permissions on the custom resource, too.
+This is because the operator manages the `yaks-viewer` service account in a specific namespace.
+When using temporary namespaces as a test runtime the YAKS operator will create the `yaks-viewer` service account and
+its roles and permissions on the fly.
+
+IMPORTANT: You should always grant roles and permissions to the `yaks-operator` service account.
+
+The role to manage the new CRD `foos.yaks.dev` would be:
+
+.role-foo.yaml
+[source,yaml]
+----
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-operator-foo
+  labels:
+    app: "yaks"
+    yaks.citrusframework.org/append-to-viewer: "true"
+rules:
+- apiGroups:
+    - yaks.dev
+  resources:
+    - foos
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - update
+----
+
+The role `yaks-operator-foo` is granted to create/delete/get/list/update custom resources of type `foos.yaks.dev`.
+
+You also need a role binding to the `yaks-operator` service account:
+
+.role-binding-foo.yaml
+[source,yaml]
+----
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-operator-foo
+  labels:
+    app: "yaks"
+    yaks.citrusframework.org/append-to-viewer: "true"
+subjects:
+- kind: ServiceAccount
+  name: yaks-operator
+roleRef:
+  kind: Role
+  name: yaks-operator-foo
+  apiGroup: rbac.authorization.k8s.io
+----
+
+NOTE: You can use the usual Kubernetes tools to create the role and role bindings.
+Please make sure to add the role to each operator instance in all namespaces, when using multiple YAKS operators on the cluster.
+Also, you may need to use cluster roles when using a global YAKS operator.
+All of this is already covered when using the `yaks role` command.
+
+You can use the YAKS command line tool to properly add the role and role binding on the YAKS operator:
+
+[source,bash]
+----
+yaks role –add role-foo.yaml
+yaks role –add role-binding-foo.yaml
+----
+
+The commands above create the role and role bindings on the `yaks-operator` service account.
+The command automatically coveres all available operator instances on the cluster.
+Also, the command will automatically convert the role to a cluster role when there is a global operator on the cluster.
+
+IMPORTANT: This role setup must be done by a cluster administrator.
+
+Both role resources use a specific label `yaks.citrusframework.org/append-to-viewer: "true"`.
+This makes sure that the YAKS operator adds the permissions also to the `yaks-viewer` account.
+This is done automatically when the operator starts a new test.
+
+As a naming convention the roles and role bindings targeting on the YAKS operator use the `yaks-operator-` name prefix.
+
+== Write the test
+
+With the preparations described in the previous sections you are ready to use the custom resource in your test.
+You can create the custom resource from YAML specification like this:
+
+.custom_resource.feature
+[source,gherkin]
+----
+Scenario: Create foo
+  Given create Kubernetes custom resource in foos.yaks.dev
+  """
+  apiVersion: yaks.dev/v1alpha1
+  kind: Foo
+  metadata:
+    name: inline-foo
+  status:
+    conditions:
+    - type: Ready
+      status: true
+  """
+----
+
+The step above create the custom resource in the current test namespace.
+The YAKS operator has applied the proper roles and permissions to the `yaks-viewer` service account.
+So you may not run into permission errors when creating this custom resource.
