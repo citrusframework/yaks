@@ -110,14 +110,6 @@ var (
 			},
 			Resource: "brokers",
 		},
-		{
-			GroupVersionKind: schema.GroupVersionKind{
-				Kind:    "Broker",
-				Group:   "eventing.knative.dev",
-				Version: "v1beta1",
-			},
-			Resource: "brokers",
-		},
 	}
 )
 

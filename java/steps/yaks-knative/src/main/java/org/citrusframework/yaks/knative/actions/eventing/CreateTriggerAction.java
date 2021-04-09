@@ -27,7 +27,6 @@ import io.fabric8.knative.eventing.v1.TriggerSpecBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -59,7 +58,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         addFilterOnAttributes(triggerSpec, context);
 
         Trigger trigger = new TriggerBuilder()
-                .withApiVersion(KnativeSupport.knativeApiVersion())
+                .withApiVersion(String.format("%s/%s", KnativeSupport.knativeEventingGroup(), KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
                     .withNamespace(namespace(context))
                     .withName(context.replaceDynamicContentInString(triggerName))
@@ -85,7 +84,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         if (channelName != null) {
             triggerSpec.withNewSubscriber()
                     .withNewRef()
-                        .withApiVersion(KnativeSupport.knativeApiVersion())
+                        .withApiVersion(String.format("%s/%s", KnativeSupport.knativeMessagingGroup(), KnativeSupport.knativeApiVersion()))
                         .withKind("InMemoryChannel")
                         .withName(context.replaceDynamicContentInString(channelName))
                     .endRef()
@@ -97,7 +96,7 @@ public class CreateTriggerAction extends AbstractKnativeAction {
         if (serviceName != null) {
             triggerSpec.withNewSubscriber()
                     .withNewRef()
-                        .withApiVersion(KubernetesSupport.kubernetesApiVersion())
+                        .withApiVersion("v1")
                         .withKind("Service")
                         .withName(context.replaceDynamicContentInString(serviceName))
                     .endRef()

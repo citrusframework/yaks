@@ -47,7 +47,7 @@ public interface KubernetesAction extends TestAction {
      */
     default String namespace(TestContext context) {
         if (context.getVariables().containsKey(KubernetesVariableNames.NAMESPACE.value())) {
-            context.getVariable(KubernetesVariableNames.NAMESPACE.value());
+            return context.getVariable(KubernetesVariableNames.NAMESPACE.value());
         }
 
         return KubernetesSettings.getNamespace();

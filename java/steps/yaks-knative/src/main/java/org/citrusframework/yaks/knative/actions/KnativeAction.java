@@ -54,7 +54,7 @@ public interface KnativeAction extends TestAction {
      */
     default String namespace(TestContext context) {
         if (context.getVariables().containsKey(KnativeVariableNames.NAMESPACE.value())) {
-            context.getVariable(KnativeVariableNames.NAMESPACE.value());
+            return context.getVariable(KnativeVariableNames.NAMESPACE.value());
         }
 
         return KnativeSettings.getNamespace();
