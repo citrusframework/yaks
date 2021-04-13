@@ -230,6 +230,14 @@ spec:
           - update
           - watch
         - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterroles
+          - clusterrolebindings
+          verbs:
+          - get
+          - list
+        - apiGroups:
           - ""
           resources:
           - events

@@ -25,7 +25,9 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -39,7 +41,7 @@ import (
 
 const (
 	OperatorWatchNamespaceEnv = "WATCH_NAMESPACE"
-	offlineCommandLabel = "yaks.citrusframework.org/cmd.offline"
+	offlineCommandLabel       = "yaks.citrusframework.org/cmd.offline"
 )
 
 func bindPFlagsHierarchy(cmd *cobra.Command) error {
@@ -227,4 +229,30 @@ func hasErrors(results *v1alpha1.TestResults) bool {
 	}
 
 	return false
+}
+
+func loadData(fileName string) (string, error) {
+	var content []byte
+	var err error
+
+	if isRemoteFile(fileName) {
+		/* #nosec */
+		resp, err := http.Get(fileName)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		content, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		content, err = ioutil.ReadFile(fileName)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return string(content), nil
 }

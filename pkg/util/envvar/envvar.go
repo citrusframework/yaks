@@ -17,7 +17,15 @@ limitations under the License.
 
 package envvar
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"fmt"
+	corev1 "k8s.io/api/core/v1"
+	"os"
+)
+
+const (
+	NamespaceEnvVar = "NAMESPACE"
+)
 
 // Get --
 func Get(vars []corev1.EnvVar, name string) *corev1.EnvVar {
@@ -96,4 +104,13 @@ func SetValFrom(vars *[]corev1.EnvVar, name string, path string) {
 			},
 		})
 	}
+}
+
+// GetOperatorNamespace returns the Namespace the operator is installed
+func GetOperatorNamespace() (string, error) {
+	ns, found := os.LookupEnv(NamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s env must be set", NamespaceEnvVar)
+	}
+	return ns, nil
 }

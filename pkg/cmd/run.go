@@ -23,7 +23,6 @@ import (
 	"github.com/citrusframework/yaks/pkg/install"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"path"
@@ -402,7 +401,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		return nil, errors.New("unable to determine test name")
 	}
 
-	data, err := o.loadData(rawName)
+	data, err := loadData(rawName)
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +425,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	for _, resource := range runConfig.Config.Runtime.Resources {
-		data, err := o.loadData(resolvePath(runConfig, resource))
+		data, err := loadData(resolvePath(runConfig, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -438,7 +437,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	for _, resource := range o.Resources {
-		data, err := o.loadData(resolvePath(runConfig, resource))
+		data, err := loadData(resolvePath(runConfig, resource))
 		if err != nil {
 			return nil, err
 		}
@@ -450,7 +449,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	for _, propertyFile := range o.PropertyFiles {
-		data, err := o.loadData(resolvePath(runConfig, propertyFile))
+		data, err := loadData(resolvePath(runConfig, propertyFile))
 		if err != nil {
 			return nil, err
 		}
@@ -665,7 +664,7 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 func (o *runCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
 	if o.Settings != "" {
 		rawName := o.Settings
-		configData, err := o.loadData(resolvePath(runConfig, rawName))
+		configData, err := loadData(resolvePath(runConfig, rawName))
 
 		if err != nil {
 			return nil, err
@@ -871,30 +870,4 @@ func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Cont
 		}
 	}
 	fmt.Println(fmt.Sprintf("AutoRemove namespace %s", ns.GetName()))
-}
-
-func (*runCmdOptions) loadData(fileName string) (string, error) {
-	var content []byte
-	var err error
-
-	if isRemoteFile(fileName) {
-		/* #nosec */
-		resp, err := http.Get(fileName)
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-
-		content, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		content, err = ioutil.ReadFile(fileName)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return string(content), nil
 }

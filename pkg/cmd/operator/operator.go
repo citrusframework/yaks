@@ -21,6 +21,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,10 +51,9 @@ import (
 )
 
 const (
-	OperatorLockName = "yaks-lock"
+	OperatorLockName     = "yaks-lock"
 	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
-	NamespaceEnvVar = "NAMESPACE"
-	PodNameEnvVar = "POD_NAME"
+	PodNameEnvVar        = "POD_NAME"
 )
 
 var log = logf.Log.WithName("cmd")
@@ -154,7 +154,7 @@ func Run() {
 	defer installCancel()
 	install.OperatorStartupOptionalTools(installCtx, c, log)
 
-	if err:= installInstance(installCtx, c, watchNamespace == "", defaults.Version); err != nil {
+	if err := installInstance(installCtx, c, watchNamespace == "", defaults.Version); err != nil {
 		log.Error(err, "failed to install yaks custom resource")
 		os.Exit(1)
 	}
@@ -176,7 +176,7 @@ func Run() {
 }
 
 func installInstance(ctx context.Context, c client.Client, global bool, version string) error {
-	operatorNamespace, err := getOperatorNamespace()
+	operatorNamespace, err := envvar.GetOperatorNamespace()
 	if err != nil {
 		return err
 	}
@@ -194,8 +194,8 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 		},
 		Spec: v1alpha1.InstanceSpec{
 			Operator: v1alpha1.OperatorSpec{
-				Global: global,
-				Pod: operatorPodName,
+				Global:    global,
+				Pod:       operatorPodName,
 				Namespace: operatorNamespace,
 			},
 		},
@@ -234,18 +234,9 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 }
 
 // getOperatorPodName returns the name the operator pod
-func getOperatorPodName() (string) {
+func getOperatorPodName() string {
 	podName, _ := os.LookupEnv(PodNameEnvVar)
 	return podName
-}
-
-// getOperatorNamespace returns the Namespace the operator is installed
-func getOperatorNamespace() (string, error) {
-	ns, found := os.LookupEnv(NamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s env must be set", NamespaceEnvVar)
-	}
-	return ns, nil
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes

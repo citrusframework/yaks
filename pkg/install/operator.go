@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/config"
 	"github.com/citrusframework/yaks/pkg/util/camelk"
 	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/knative"
@@ -51,7 +52,61 @@ func Operator(ctx context.Context, c client.Client, cfg OperatorConfiguration, f
 
 // OperatorOrCollect installs the operator resources or adds them to the collector if present
 func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
-	customizer := func(o ctrl.Object) ctrl.Object {
+	customizer := customizer(cfg)
+
+	isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType)
+	if err != nil {
+		return err
+	}
+	if isOpenShift {
+		if err := installOpenShift(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	} else {
+		if err := installKubernetes(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
+	// Make sure that instance CR installed in operator namespace can be used by others
+	if err := InstallInstanceViewerRole(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		return err
+	}
+
+	// Additionally, install Knative resources (roles and bindings)
+	isKnative, err := knative.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isKnative {
+		if err := InstallKnative(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Camel K resources (roles and bindings)
+	isCamelK, err := camelk.IsInstalled(ctx, c)
+	if err != nil {
+		return err
+	}
+	if isCamelK {
+		if err := InstallCamelK(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
+	if errmtr := InstallServiceMonitors(ctx, c, cfg.Namespace, customizer, collection, force); errmtr != nil {
+		if k8serrors.IsAlreadyExists(errmtr) {
+			return errmtr
+		}
+		fmt.Println("Warning: the operator will not be able to create servicemonitors for metrics. Try installing as cluster-admin to allow the creation of servicemonitors.")
+	}
+
+	return nil
+}
+
+func customizer(cfg OperatorConfiguration) func(o ctrl.Object) ctrl.Object {
+	return func(o ctrl.Object) ctrl.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
 				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
@@ -78,14 +133,12 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 
 			// Turn Role & RoleBinding into their equivalent cluster types
 			if r, ok := o.(*v1.Role); ok {
-				if strings.HasPrefix(r.Name, "yaks-operator") {
+				if strings.HasPrefix(r.Name, config.OperatorServiceAccount) {
 					o = &v1.ClusterRole{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: cfg.Namespace,
 							Name:      r.Name,
-							Labels: map[string]string{
-								"app": "yaks",
-							},
+							Labels:    r.Labels,
 						},
 						Rules: r.Rules,
 					}
@@ -93,16 +146,14 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 			}
 
 			if rb, ok := o.(*v1.RoleBinding); ok {
-				if strings.HasPrefix(rb.Name, "yaks-operator") {
+				if strings.HasPrefix(rb.Name, config.OperatorServiceAccount) {
 					rb.Subjects[0].Namespace = cfg.Namespace
 
 					o = &v1.ClusterRoleBinding{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: cfg.Namespace,
 							Name:      rb.Name,
-							Labels: map[string]string{
-								"app": "yaks",
-							},
+							Labels:    rb.Labels,
 						},
 						Subjects: rb.Subjects,
 						RoleRef: v1.RoleRef{
@@ -116,56 +167,6 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 		}
 		return o
 	}
-
-	isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType)
-	if err != nil {
-		return err
-	}
-	if isOpenShift {
-		if err := installOpenShift(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
-			return err
-		}
-	} else {
-		if err := installKubernetes(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
-			return err
-		}
-	}
-
-	// Make sure that instance CR installed in operator namespace can be used by others
-	if err := installInstanceViewerRole(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
-		return err
-	}
-
-	// Additionally, install Knative resources (roles and bindings)
-	isKnative, err := knative.IsInstalled(ctx, c)
-	if err != nil {
-		return err
-	}
-	if isKnative {
-		if err := installKnative(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
-			return err
-		}
-	}
-
-	// Additionally, install Camel K resources (roles and bindings)
-	isCamelK, err := camelk.IsInstalled(ctx, c)
-	if err != nil {
-		return err
-	}
-	if isCamelK {
-		if err := installCamelK(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
-			return err
-		}
-	}
-
-	if errmtr := installServiceMonitors(ctx, c, cfg.Namespace, customizer, collection, force); errmtr != nil {
-		if k8serrors.IsAlreadyExists(errmtr) {
-			return errmtr
-		}
-		fmt.Println("Warning: the operator will not be able to create servicemonitors for metrics. Try installing as cluster-admin to allow the creation of servicemonitors.")
-	}
-
-	return nil
 }
 
 func installOpenShift(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
@@ -186,21 +187,31 @@ func installKubernetes(ctx context.Context, c client.Client, namespace string, c
 	)
 }
 
-func installKnative(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
-	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+func InstallKnative(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"operator-role-knative.yaml",
 		"operator-role-binding-knative.yaml",
-	)
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added Knative addon to YAKS operator in namespace '%s'\n", namespace)
+	return nil
 }
 
-func installCamelK(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
-	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+func InstallCamelK(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"operator-role-camel-k.yaml",
 		"operator-role-binding-camel-k.yaml",
-	)
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added CamelK addon to YAKS operator in namespace '%s'\n", namespace)
+	return nil
 }
 
-func installServiceMonitors(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func InstallServiceMonitors(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"operator-role-servicemonitors.yaml",
 		"operator-role-binding-servicemonitors.yaml",
@@ -208,7 +219,7 @@ func installServiceMonitors(ctx context.Context, c client.Client, namespace stri
 }
 
 // installs the role that allows any user ro access to instances in all namespaces
-func installInstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func InstallInstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"user-global-instance-viewer-role.yaml",
 		"user-global-instance-viewer-role-binding.yaml",

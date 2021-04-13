@@ -39,7 +39,7 @@ public class KubernetesServiceConfiguration {
             new HashMap<>(), new KubernetesCrudDispatcher(), true);
 
     public KubernetesServiceConfiguration() {
-        KubernetesDeserializer.registerCustomKind("foo.dev/v1", "Foo", Foo.class);
+        KubernetesDeserializer.registerCustomKind("yaks.dev/v1", "Foo", Foo.class);
     }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
