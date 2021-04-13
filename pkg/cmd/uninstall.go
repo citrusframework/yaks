@@ -54,6 +54,7 @@ func newCmdUninstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *uninstall
 
 	cmd.Flags().Bool("skip-operator", false, "Do not uninstall the YAKS Operator in the current namespace")
 	cmd.Flags().Bool("skip-crd", true, "Do not uninstall the YAKS Custom Resource Definitions (CRD)")
+	cmd.Flags().Bool("skip-tests", false, "Do not uninstall the YAKS tests in the current namespace")
 	cmd.Flags().Bool("skip-role-bindings", false, "Do not uninstall the YAKS Role Bindings in the current namespace")
 	cmd.Flags().Bool("skip-roles", false, "Do not uninstall the YAKS Roles in the current namespace")
 	cmd.Flags().Bool("skip-cluster-role-bindings", true, "Do not uninstall the YAKS Cluster Role Bindings")
@@ -76,6 +77,7 @@ type uninstallCmdOptions struct {
 	*RootCmdOptions
 	SkipOperator            bool `mapstructure:"skip-operator"`
 	SkipCrd                 bool `mapstructure:"skip-crd"`
+	SkipTests               bool `mapstructure:"skip-tests"`
 	SkipRoleBindings        bool `mapstructure:"skip-role-bindings"`
 	SkipRoles               bool `mapstructure:"skip-roles"`
 	SkipClusterRoleBindings bool `mapstructure:"skip-cluster-role-bindings"`
@@ -261,6 +263,13 @@ func (o *uninstallCmdOptions) uninstallNamespaceRoles(ctx context.Context, c cli
 }
 
 func (o *uninstallCmdOptions) uninstallNamespaceResources(ctx context.Context, c client.Client, namespace string) error {
+	if !o.SkipTests {
+		if err := o.uninstallTests(ctx, c, namespace); err != nil {
+			return err
+		}
+		fmt.Printf("YAKS Tests removed from namespace %s\n", namespace)
+	}
+
 	if !o.SkipConfigMaps {
 		if err := o.uninstallConfigMaps(ctx, c, namespace); err != nil {
 			return err
@@ -378,6 +387,10 @@ func (o *uninstallCmdOptions) uninstallServiceAccounts(ctx context.Context, c cl
 	}
 
 	return nil
+}
+
+func (o *uninstallCmdOptions) uninstallTests(ctx context.Context, c client.Client, namespace string) error {
+	return deleteAllTests(ctx, c, namespace, false)
 }
 
 func (o *uninstallCmdOptions) uninstallConfigMaps(ctx context.Context, c client.Client, namespace string) error {

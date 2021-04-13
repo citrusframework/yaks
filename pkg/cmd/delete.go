@@ -18,12 +18,13 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"strconv"
 
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/spf13/cobra"
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,6 +54,7 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 	}
 
 	cmd.Flags().BoolP("all", "a", false, "Delete all tests")
+	cmd.Flags().BoolP("verbose", "v", false, "Print details while deleting tests")
 
 	return &cmd, &options
 }
@@ -60,6 +62,7 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 type deleteCmdOptions struct {
 	*RootCmdOptions
 	DeleteAll bool `mapstructure:"all"`
+	Verbose   bool `mapstructure:"verbose"`
 }
 
 func (o *deleteCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -86,52 +89,72 @@ func (o *deleteCmdOptions) run(args []string) error {
 		for _, arg := range args {
 			name := kubernetes.SanitizeName(arg)
 
-			test := v1alpha1.Test{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: v1alpha1.SchemeGroupVersion.String(),
-					Kind:       v1alpha1.TestKind,
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: namespace,
-					Name:      name,
-				},
-			}
-			err := c.Delete(o.Context, &test)
-			if err != nil {
-				if k8errors.IsNotFound(err) {
-					fmt.Println("Test " + name + " not found. Skipped.")
-				} else {
-					return err
-				}
-			} else {
-				fmt.Println("Test " + name + " deleted")
-			}
-		}
-	} else if o.DeleteAll {
-		testList := v1alpha1.TestList{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: v1alpha1.SchemeGroupVersion.String(),
-				Kind:       v1alpha1.TestKind,
-			},
-		}
-
-		//Looks like Operator SDK doesn't support deletion of all objects with one command
-		err := c.List(o.Context, &testList, k8sclient.InNamespace(namespace))
-		if err != nil {
-			return err
-		}
-		for _, test := range testList.Items {
-			test := test // pin
-			err := c.Delete(o.Context, &test)
-			if err != nil {
+			if err := deleteTest(o.Context, c, namespace, name); err != nil {
 				return err
 			}
 		}
-		if len(testList.Items) == 0 {
-			fmt.Printf("No tests found in %s namespace.\n", namespace)
-		} else {
-			fmt.Println(strconv.Itoa(len(testList.Items)) + " test(s) deleted")
+	} else if o.DeleteAll {
+		if err := deleteAllTests(o.Context, c, namespace, o.Verbose); err != nil {
+			return err
 		}
+	}
+
+	return nil
+}
+
+func deleteTest(ctx context.Context, c k8sclient.Client, namespace string, name string) error {
+	test := v1alpha1.Test{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+			Kind:       v1alpha1.TestKind,
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+	err := c.Delete(ctx, &test)
+	if err != nil {
+		if k8errors.IsNotFound(err) {
+			fmt.Println("Test " + name + " not found. Skipped.")
+		} else {
+			return err
+		}
+	} else {
+		fmt.Println("Test " + name + " deleted")
+	}
+
+	return nil
+}
+
+func deleteAllTests(ctx context.Context, c k8sclient.Client, namespace string, verbose bool) error {
+	testList := v1alpha1.TestList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+			Kind:       v1alpha1.TestKind,
+		},
+	}
+
+	//Looks like Operator SDK doesn't support deletion of all objects with one command
+	err := c.List(ctx, &testList, k8sclient.InNamespace(namespace))
+	if err != nil {
+		return err
+	}
+	for _, test := range testList.Items {
+		test := test // pin
+		err := c.Delete(ctx, &test)
+		if err != nil {
+			return err
+		}
+
+		if verbose {
+			fmt.Println("Test " + test.Name + " deleted")
+		}
+	}
+	if len(testList.Items) == 0 {
+		fmt.Printf("No tests found in namespace '%s'\n", namespace)
+	} else {
+		fmt.Println(strconv.Itoa(len(testList.Items)) + " test(s) deleted")
 	}
 
 	return nil
