@@ -26,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.19.8
+	k8s.io/apiextensions-apiserver v0.19.8
 	k8s.io/apimachinery v0.19.8
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.5.0

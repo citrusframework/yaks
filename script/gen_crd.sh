@@ -22,11 +22,12 @@ apidir=$location/../pkg/apis/yaks
 
 echo "Generating CRDs..."
 
-cd $apidir
-go run sigs.k8s.io/controller-tools/cmd/controller-gen crd paths=./... output:crd:artifacts:config=false output:crd:dir=../../../deploy/crds crd:crdVersions=v1beta1
+cd "$apidir"
+go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1
+go run sigs.k8s.io/controller-tools/cmd/controller-gen crd paths=./... output:crd:artifacts:config=false output:crd:dir=../../../deploy/crds crd:crdVersions=v1
 
-# cleanup
-rm -r ./config
+# cleanup working directory in $apidir
+rm -rf ./config
 
 # to root
 cd ../../../
@@ -63,6 +64,7 @@ deploy_crd() {
     ./deploy/olm-catalog/yaks/$version/$plural.yaks.citrusframework.org.crd.yaml
 }
 
-deploy_crd instance instances test tests
+deploy_crd instance instances
+deploy_crd test tests
 
 rm -r ./deploy/crds
