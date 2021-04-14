@@ -363,19 +363,20 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clien
 		return namespace, err
 	}
 
-	if err := o.setupOperator(c, namespaceName); err != nil {
+	if err := o.setupOperator(runConfig, c); err != nil {
 		return namespace, err
 	}
 
 	return namespace, nil
 }
 
-func (o *runCmdOptions) setupOperator(c client.Client, namespace string) error {
+func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, c client.Client) error {
+	namespace := runConfig.Config.Namespace.Name
 	var cluster v1alpha1.ClusterType
 	if isOpenshift, err := openshift.IsOpenShift(c); err != nil {
 		return err
 	} else if isOpenshift {
-		cluster = v1alpha1.ClusterTypeKubernetes
+		cluster = v1alpha1.ClusterTypeOpenShift
 	} else {
 		cluster = v1alpha1.ClusterTypeKubernetes
 	}
@@ -388,6 +389,13 @@ func (o *runCmdOptions) setupOperator(c client.Client, namespace string) error {
 		ClusterType:           string(cluster),
 	}
 	err := install.OperatorOrCollect(o.Context, c, cfg, nil, true)
+
+	for _, role := range runConfig.Config.Operator.Roles {
+		err = applyRole(o.Context, c, resolvePath(runConfig, role), namespace, install.IdentityResourceCustomizer)
+		if err != nil {
+			return err
+		}
+	}
 
 	return err
 }

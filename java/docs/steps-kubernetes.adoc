@@ -356,7 +356,7 @@ Given load Kubernetes custom resource broker.yaml in brokers.eventing.knative.de
 Once again the step needs to have the CRD type and the YAML specification as a file resource.
 
 IMPORTANT: You need to make sure that the YAKS runtime has proper permissions to manage the custom resource.
-The proper roles and role bindings need to apply to the YAKS operagtor service account `yaks-operator`.
+The proper roles and role bindings need to apply to the YAKS operator service account `yaks-operator`.
 
 Prior to using the custom resource in a YAKS test you need to grant role permissions to the YAKS runtime.
 Otherwise, the test is not allowed to create the custom resource due to security constraints on the cluster.
@@ -396,6 +396,54 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
+    schema:
+      openAPIV3Schema:
+        description: Foo resource schema
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: Spec defines the desired state of Test
+            properties:
+              message:
+                type: string
+            required:
+              - message
+            type: object
+          status:
+            description: Status defines the observed state of Foo
+            properties:
+              conditions:
+                items:
+                  description: Condition describes the state of a resource at a certain point.
+                  properties:
+                    message:
+                      description: A human readable message indicating details about the transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of condition.
+                      type: string
+                  required:
+                    - status
+                    - type
+                  type: object
+                type: array
+              version:
+                type: string
+            type: object
+        type: object
     subresources:
       status: {}
 ----
@@ -462,7 +510,7 @@ yaks role –add role-binding-foo.yaml
 ----
 
 The commands above create the role and role bindings on the `yaks-operator` service account.
-The command automatically coveres all available operator instances on the cluster.
+The command automatically covers all available operator instances on the cluster.
 Also, the command will automatically convert the role to a cluster role when there is a global operator on the cluster.
 
 IMPORTANT: This role setup must be done by a cluster administrator.
@@ -472,6 +520,31 @@ This makes sure that the YAKS operator adds the permissions also to the `yaks-vi
 This is done automatically when the operator starts a new test.
 
 As a naming convention the roles and role bindings targeting on the YAKS operator use the `yaks-operator-` name prefix.
+
+IMPORTANT: When using temporary namespaces in combination with a non-global YAKS operator, you need to add the roles explicitly
+in the runtime configuration in `yaks-config.yaml`. This is not required when using a global YAKS operator.
+
+In case you want to make use of temporary namespaces you need to add the roles to the runtime configuration of the test.
+This is because the operator for the temporary namespace will not be able to automatically apply the additional operator
+roles.
+
+Please add the roles to the `yaks-config.yaml` as follows.
+
+.yaks-config.yaml
+[source,yaml]
+----
+config:
+  operator:
+    roles:
+      - role-foo.yaml
+      - role-binding-foo.yaml
+  namespace:
+    temporary: true
+----
+
+This makes sure that the yaks command line tool installs the roles on the temporary namespace before the test is run.
+
+IMPORTANT: The approach requires the YAKS command line tool user to have sufficient permissions to manage roles on the cluster.
 
 In case you need to delete a custom resource from Kubernetes the user has to provide a minimal
 YAML specification that identifies the resource.

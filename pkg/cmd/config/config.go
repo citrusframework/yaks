@@ -18,121 +18,122 @@ limitations under the License.
 package config
 
 import (
-    "io/ioutil"
-    "os"
+	"io/ioutil"
+	"os"
 
-    "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 const (
-    DefaultTimeout = "30m"
+	DefaultTimeout = "30m"
 )
 
 type RunConfig struct {
-    BaseDir string       `yaml:"baseDir"`
-    Config  Config       `yaml:"config"`
-    Pre     []StepConfig `yaml:"pre"`
-    Post    []StepConfig `yaml:"post"`
+	BaseDir string       `yaml:"baseDir"`
+	Config  Config       `yaml:"config"`
+	Pre     []StepConfig `yaml:"pre"`
+	Post    []StepConfig `yaml:"post"`
 }
 
 type Config struct {
-    Recursive bool            `yaml:"recursive"`
-    Timeout   string          `yaml:"timeout"`
-    Namespace NamespaceConfig `yaml:"namespace"`
-    Operator  OperatorConfig  `yaml:"operator"`
-    Runtime   RuntimeConfig   `yaml:"runtime"`
+	Recursive bool            `yaml:"recursive"`
+	Timeout   string          `yaml:"timeout"`
+	Namespace NamespaceConfig `yaml:"namespace"`
+	Operator  OperatorConfig  `yaml:"operator"`
+	Runtime   RuntimeConfig   `yaml:"runtime"`
 }
 
 type StepConfig struct {
-    Run     string `yaml:"run"`
-    Script  string `yaml:"script"`
-    Name    string `yaml:"name"`
-    Timeout string `yaml:"timeout"`
+	Run     string `yaml:"run"`
+	Script  string `yaml:"script"`
+	Name    string `yaml:"name"`
+	Timeout string `yaml:"timeout"`
 }
 
 type RuntimeConfig struct {
-    Cucumber  CucumberConfig `yaml:"cucumber"`
-    Selenium  SeleniumConfig `yaml:"selenium"`
-    Resources []string 	     `yaml:"resources"`
-    Settings  SettingsConfig `yaml:"settings"`
-    Env 	  []EnvConfig 	 `yaml:"env"`
-    Secret    string 		 `yaml:"secret"`
+	Cucumber  CucumberConfig `yaml:"cucumber"`
+	Selenium  SeleniumConfig `yaml:"selenium"`
+	Resources []string       `yaml:"resources"`
+	Settings  SettingsConfig `yaml:"settings"`
+	Env       []EnvConfig    `yaml:"env"`
+	Secret    string         `yaml:"secret"`
 }
 
 type CucumberConfig struct {
-    Tags    []string `yaml:"tags"`
-    Glue    []string `yaml:"glue"`
-    Options string   `yaml:"options"`
+	Tags    []string `yaml:"tags"`
+	Glue    []string `yaml:"glue"`
+	Options string   `yaml:"options"`
 }
 
 type SeleniumConfig struct {
-    Image           string `yaml:"image"`
+	Image string `yaml:"image"`
 }
 
 type EnvConfig struct {
-    Name  string `yaml:"name"`
-    Value string `yaml:"value"`
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
 type SettingsConfig struct {
-    Repositories []RepositoryConfig `yaml:"repositories"`
-    Dependencies []DependencyConfig `yaml:"dependencies"`
-    Loggers 	 []LoggerConfig     `yaml:"loggers"`
+	Repositories []RepositoryConfig `yaml:"repositories"`
+	Dependencies []DependencyConfig `yaml:"dependencies"`
+	Loggers      []LoggerConfig     `yaml:"loggers"`
 }
 
 type RepositoryConfig struct {
-    Id        string `yaml:"id"`
-    Name      string `yaml:"name,omitempty"`
-    Url       string `yaml:"url"`
-    Layout    string `yaml:"layout,omitempty"`
-    Releases  PolicyConfig `yaml:"releases,omitempty"`
-    Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
+	Id        string       `yaml:"id"`
+	Name      string       `yaml:"name,omitempty"`
+	Url       string       `yaml:"url"`
+	Layout    string       `yaml:"layout,omitempty"`
+	Releases  PolicyConfig `yaml:"releases,omitempty"`
+	Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
 }
 
 type PolicyConfig struct {
-    Enabled      string `yaml:"enabled,omitempty"`
-    UpdatePolicy string `yaml:"updatePolicy,omitempty"`
+	Enabled      string `yaml:"enabled,omitempty"`
+	UpdatePolicy string `yaml:"updatePolicy,omitempty"`
 }
 
 type DependencyConfig struct {
-    GroupId    string `yaml:"groupId"`
-    ArtifactId string `yaml:"artifactId"`
-    Version    string `yaml:"version"`
+	GroupId    string `yaml:"groupId"`
+	ArtifactId string `yaml:"artifactId"`
+	Version    string `yaml:"version"`
 }
 
 type LoggerConfig struct {
-    Name  string `yaml:"name"`
-    Level string `yaml:"level"`
+	Name  string `yaml:"name"`
+	Level string `yaml:"level"`
 }
 
 type NamespaceConfig struct {
-    Name       string `yaml:"name"`
-    Temporary  bool   `yaml:"temporary"`
-    AutoRemove bool   `yaml:"autoRemove"`
+	Name       string `yaml:"name"`
+	Temporary  bool   `yaml:"temporary"`
+	AutoRemove bool   `yaml:"autoRemove"`
 }
 
 type OperatorConfig struct {
-    Namespace string `yaml:"namespace"`
+	Namespace string   `yaml:"namespace"`
+	Roles     []string `yaml:"roles"`
 }
 
 func NewWithDefaults() *RunConfig {
-    ns := NamespaceConfig {
-        AutoRemove: true,
-        Temporary:  false,
-    }
+	ns := NamespaceConfig{
+		AutoRemove: true,
+		Temporary:  false,
+	}
 
-    var config = Config {Recursive: true, Namespace: ns, Timeout: DefaultTimeout}
-    return &RunConfig {Config: config, BaseDir: ""}
+	var config = Config{Recursive: true, Namespace: ns, Timeout: DefaultTimeout}
+	return &RunConfig{Config: config, BaseDir: ""}
 }
 
 func LoadConfig(file string) (*RunConfig, error) {
-    config := NewWithDefaults()
-    data, err := ioutil.ReadFile(file)
-    if err != nil && os.IsNotExist(err) {
-        return config, nil
-    }
-    if err = yaml.Unmarshal(data, config); err != nil {
-        return nil, err
-    }
-    return config, nil
+	config := NewWithDefaults()
+	data, err := ioutil.ReadFile(file)
+	if err != nil && os.IsNotExist(err) {
+		return config, nil
+	}
+	if err = yaml.Unmarshal(data, config); err != nil {
+		return nil, err
+	}
+	return config, nil
 }
