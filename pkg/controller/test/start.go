@@ -306,7 +306,10 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	err := action.client.Get(ctx, rbKey, &rb)
 	if err != nil && k8serrors.IsNotFound(err) {
 		// Create proper service account and roles
-		return install.ViewerServiceAccountRoles(ctx, action.client, namespace)
+		err = install.ViewerServiceAccountRoles(ctx, action.client, namespace)
+		if err != nil {
+			return err
+		}
 	} else if err != nil {
 		return err
 	}
@@ -320,6 +323,26 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 		LabelSelector: fmt.Sprintf("%s=%s", config.AppendToViewerLabel, "true"),
 	}
 
+	if err := action.applyOperatorRoles(ctx, namespace, operatorNamespace, labelSelector); err != nil {
+		return err
+	}
+
+	instance, err := v1alpha1.GetInstance(ctx, action.client, operatorNamespace)
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return err
+	}
+
+	if v1alpha1.IsGlobal(instance) {
+		err := action.applyOperatorClusterRoles(ctx, namespace, labelSelector)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (action *startAction) applyOperatorRoles(ctx context.Context, namespace string, operatorNamespace string, labelSelector metav1.ListOptions) error {
 	// Apply labeled YAKS operator roles to service account
 	roleList, err := action.client.RbacV1().Roles(operatorNamespace).List(ctx, labelSelector)
 	if err != nil {
@@ -327,31 +350,15 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	}
 
 	for _, r := range roleList.Items {
-		role := r.DeepCopy()
-		role.Name = strings.ReplaceAll(role.Name, config.OperatorServiceAccount, config.ViewerServiceAccount)
-
-		_, err := action.client.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
-		if err != nil && k8serrors.IsAlreadyExists(err) {
-			continue
-		} else if err != nil {
-			return err
-		}
-	}
-
-	// Apply labeled cluster roles to service account
-	crList, err := action.client.RbacV1().ClusterRoles().List(ctx, labelSelector)
-	if err != nil {
-		return err
-	}
-
-	for _, cr := range crList.Items {
 		role := &rbacv1.Role{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
-				Name:      strings.ReplaceAll(cr.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
-				Labels:    cr.Labels,
+				Name:      strings.ReplaceAll(r.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+				Labels: map[string]string{
+					"app": "yaks",
+				},
 			},
-			Rules: cr.Rules,
+			Rules: r.Rules,
 		}
 
 		_, err := action.client.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
@@ -369,15 +376,59 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 	}
 
 	for _, rb := range rbList.Items {
-		roleBinding := rb.DeepCopy()
-		roleBinding.Name = strings.ReplaceAll(roleBinding.Name, config.OperatorServiceAccount, config.ViewerServiceAccount)
-		for _, subject := range roleBinding.Subjects {
-			if subject.Kind == "ServiceAccount" && subject.Name == config.OperatorServiceAccount {
-				subject.Name = config.ViewerServiceAccount
-			}
+		roleBinding := &rbacv1.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace,
+				Name:      strings.ReplaceAll(rb.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+				Labels: map[string]string{
+					"app": "yaks",
+				},
+			},
+			Subjects: []rbacv1.Subject{
+				{
+					Kind:      "ServiceAccount",
+					Name:      config.ViewerServiceAccount,
+					Namespace: namespace,
+				},
+			},
+			RoleRef: rbacv1.RoleRef{
+				APIGroup: rb.RoleRef.APIGroup,
+				Kind:     "Role",
+				Name:     strings.ReplaceAll(rb.RoleRef.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+			},
 		}
 
 		_, err := action.client.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+		if err != nil && k8serrors.IsAlreadyExists(err) {
+			continue
+		} else if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (action *startAction) applyOperatorClusterRoles(ctx context.Context, namespace string, labelSelector metav1.ListOptions) error {
+	// Apply labeled cluster roles to service account
+	crList, err := action.client.RbacV1().ClusterRoles().List(ctx, labelSelector)
+	if err != nil {
+		return err
+	}
+
+	for _, cr := range crList.Items {
+		role := &rbacv1.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: namespace,
+				Name:      strings.ReplaceAll(cr.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
+				Labels: map[string]string{
+					"app": "yaks",
+				},
+			},
+			Rules: cr.Rules,
+		}
+
+		_, err := action.client.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
 		if err != nil && k8serrors.IsAlreadyExists(err) {
 			continue
 		} else if err != nil {
@@ -396,7 +447,9 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      strings.ReplaceAll(crb.Name, config.OperatorServiceAccount, config.ViewerServiceAccount),
-				Labels:    crb.Labels,
+				Labels: map[string]string{
+					"app": "yaks",
+				},
 			},
 			Subjects: []rbacv1.Subject{
 				{

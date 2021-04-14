@@ -18,8 +18,10 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/config"
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
@@ -99,50 +101,59 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		customizer := o.customizer(namespace, global)
 
-		if o.Add == "knative" {
-			if err := install.InstallKnative(o.Context, c, namespace, customizer, nil, true); err != nil {
-				return err
-			}
-		} else if o.Add == "camelk" {
-			if err := install.InstallCamelK(o.Context, c, namespace, customizer, nil, true); err != nil {
-				return err
-			}
-		} else if strings.HasSuffix(o.Add, ".yaml") {
-			data, err := loadData(o.Add)
-			if err != nil {
-				return err
-			}
-
-			obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), data)
-			if err != nil {
-				return err
-			}
-
-			if r, ok := obj.(*v1.Role); ok {
-				if !strings.HasPrefix(r.Name, config.OperatorServiceAccount) {
-					return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.OperatorServiceAccount))
-				}
-			} else if rb, ok := obj.(*v1.RoleBinding); ok {
-				if !strings.HasPrefix(rb.Name, config.OperatorServiceAccount) {
-					return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.OperatorServiceAccount))
-				}
-			} else {
-				return errors.New("unsupported resource type - expected Role or RoleBinding")
-			}
-
-			if err := install.RuntimeObjectOrCollect(o.Context, c, namespace, nil, true, customizer(obj)); err != nil {
-				return err
-			}
-			fmt.Printf("Added role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(o.Add), namespace)
-		} else {
-			return errors.New("unsupported role definition - please use one of 'camelk', 'knative' or 'role.yaml'")
+		err = applyRole(o.Context, c, o.Add, namespace, customizer)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (o *roleCmdOptions) customizer(namespace string, global bool) func(o ctrl.Object) ctrl.Object {
+func applyRole(ctx context.Context, c client.Client, role string, namespace string, customizer install.ResourceCustomizer) error {
+	if role == "knative" {
+		if err := install.InstallKnative(ctx, c, namespace, customizer, nil, true); err != nil {
+			return err
+		}
+	} else if role == "camelk" {
+		if err := install.InstallCamelK(ctx, c, namespace, customizer, nil, true); err != nil {
+			return err
+		}
+	} else if strings.HasSuffix(role, ".yaml") {
+		data, err := loadData(role)
+		if err != nil {
+			return err
+		}
+
+		obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), data)
+		if err != nil {
+			return err
+		}
+
+		if r, ok := obj.(*v1.Role); ok {
+			if !strings.HasPrefix(r.Name, config.OperatorServiceAccount) {
+				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.OperatorServiceAccount))
+			}
+		} else if rb, ok := obj.(*v1.RoleBinding); ok {
+			if !strings.HasPrefix(rb.Name, config.OperatorServiceAccount) {
+				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.OperatorServiceAccount))
+			}
+		} else {
+			return errors.New("unsupported resource type - expected Role or RoleBinding")
+		}
+
+		if err := install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, customizer(obj)); err != nil {
+			return err
+		}
+		fmt.Printf("Added role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
+	} else {
+		return errors.New("unsupported role definition - please use one of 'camelk', 'knative' or 'role.yaml'")
+	}
+
+	return nil
+}
+
+func (o *roleCmdOptions) customizer(namespace string, global bool) install.ResourceCustomizer {
 	return func(o ctrl.Object) ctrl.Object {
 		if global {
 			// Turn Role & RoleBinding into their equivalent cluster types

@@ -105,7 +105,7 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 	return nil
 }
 
-func customizer(cfg OperatorConfiguration) func(o ctrl.Object) ctrl.Object {
+func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 	return func(o ctrl.Object) ctrl.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
