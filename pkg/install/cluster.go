@@ -21,21 +21,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"strconv"
 	"time"
 
 	"github.com/citrusframework/yaks/deploy"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes/customclient"
-
-	"k8s.io/apimachinery/pkg/util/yaml"
 
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // SetupClusterWideResourcesOrCollect --
@@ -46,13 +47,55 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 		return err
 	}
 
+	isApiExtensionsV1 := true
+	_, err = c.Discovery().ServerResourcesForGroupVersion("apiextensions.k8s.io/v1")
+	if err != nil && k8serrors.IsNotFound(err) {
+		isApiExtensionsV1 = false
+	} else if err != nil {
+		return err
+	}
+
+	// Convert the CRD to apiextensions.k8s.io/v1beta1 in case v1 is not available.
+	// This is mainly required to support OpenShift 3, and older versions of Kubernetes.
+	// It can be removed as soon as these versions are not supported anymore.
+	err = apiextensionsv1.AddToScheme(c.GetScheme())
+	if err != nil {
+		return err
+	}
+	if !isApiExtensionsV1 {
+		err = apiextensionsv1beta1.AddToScheme(c.GetScheme())
+		if err != nil {
+			return err
+		}
+	}
+	downgradeToCRDv1beta1 := func(object ctrl.Object) ctrl.Object {
+		if !isApiExtensionsV1 {
+			v1Crd := object.(*apiextensionsv1.CustomResourceDefinition)
+			v1beta1Crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+			crd := &apiextensions.CustomResourceDefinition{}
+
+			err := apiextensionsv1.Convert_v1_CustomResourceDefinition_To_apiextensions_CustomResourceDefinition(v1Crd, crd, nil)
+			if err != nil {
+				return nil
+			}
+
+			err = apiextensionsv1beta1.Convert_apiextensions_CustomResourceDefinition_To_v1beta1_CustomResourceDefinition(crd, v1beta1Crd, nil)
+			if err != nil {
+				return nil
+			}
+
+			return v1beta1Crd
+		}
+		return object
+	}
+
 	// Install CRD for Instance (if needed)
-	if err := installCRD(ctx, c, v1alpha1.InstanceKind, v1alpha1.SchemeGroupVersion.Version, "crd-instance.yaml", collection); err != nil {
+	if err := installCRD(ctx, c, v1alpha1.InstanceKind, v1alpha1.SchemeGroupVersion.Version, "crd-instance.yaml", downgradeToCRDv1beta1, collection); err != nil {
 		return err
 	}
 
 	// Install CRD for Test (if needed)
-	if err := installCRD(ctx, c, v1alpha1.TestKind, v1alpha1.SchemeGroupVersion.Version, "crd-test.yaml", collection); err != nil {
+	if err := installCRD(ctx, c, v1alpha1.TestKind, v1alpha1.SchemeGroupVersion.Version, "crd-test.yaml", downgradeToCRDv1beta1, collection); err != nil {
 		return err
 	}
 
@@ -62,12 +105,12 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 	}
 
 	// Installing ClusterRole
-	clusterRoleInstalled, err := IsClusterRoleInstalled(ctx, c)
+	ok, err := isClusterRoleInstalled(ctx, c, "yaks:edit")
 	if err != nil {
 		return err
 	}
-	if !clusterRoleInstalled || collection != nil {
-		err := installClusterRole(ctx, c, collection)
+	if !ok || collection != nil {
+		err := installResource(ctx, c, collection, "/user-cluster-role.yaml")
 		if err != nil {
 			return err
 		}
@@ -107,6 +150,11 @@ func WaitForAllCRDInstallation(ctx context.Context, clientProvider client.Provid
 
 // AreAllCRDInstalled check if all the required CRDs are installed
 func AreAllCRDInstalled(ctx context.Context, c client.Client) (bool, error) {
+	if ok, err := IsCRDInstalled(ctx, c, "Instance", "v1alpha1"); err != nil {
+		return ok, err
+	} else if !ok {
+		return false, nil
+	}
 	return IsCRDInstalled(ctx, c, "Test", "v1alpha1")
 }
 
@@ -126,18 +174,23 @@ func IsCRDInstalled(ctx context.Context, c client.Client, kind string, version s
 	return false, nil
 }
 
-func installCRD(ctx context.Context, c client.Client, kind string, version string, resourceName string, collection *kubernetes.Collection) error {
-	crd := deploy.Resource(resourceName)
+func installCRD(ctx context.Context, c client.Client, kind string, version string, resourceName string, converter ResourceCustomizer, collection *kubernetes.Collection) error {
+	crd, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(resourceName))
+	if err != nil {
+		return err
+	}
+
+	crd = converter(crd)
+	if crd == nil {
+		// The conversion has failed
+		return errors.New("cannot convert " + resourceName + " CRD to apiextensions.k8s.io/v1")
+	}
+
 	if collection != nil {
-		unstr, err := kubernetes.LoadRawResourceFromYaml(string(crd))
-		if err != nil {
-			return err
-		}
-		collection.Add(unstr)
+		collection.Add(crd)
 		return nil
 	}
 
-	// Installing Integration CRD
 	installed, err := IsCRDInstalled(ctx, c, kind, version)
 	if err != nil {
 		return err
@@ -146,41 +199,29 @@ func installCRD(ctx context.Context, c client.Client, kind string, version strin
 		return nil
 	}
 
-	crdJSON, err := yaml.ToJSON(crd)
-	if err != nil {
+	err = c.Create(ctx, crd)
+	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
-	}
-	restClient, err := customclient.GetClientFor(c, "apiextensions.k8s.io", "v1beta1")
-	if err != nil {
-		return err
-	}
-	// Post using dynamic client
-	result := restClient.
-		Post().
-		Body(crdJSON).
-		Resource("customresourcedefinitions").
-		Do(ctx)
-	// Check result
-	if result.Error() != nil && !k8serrors.IsAlreadyExists(result.Error()) {
-		return result.Error()
 	}
 
 	return nil
 }
 
-// IsClusterRoleInstalled check if cluster role yaks:edit is installed
-func IsClusterRoleInstalled(ctx context.Context, c client.Client) (bool, error) {
+func isClusterRoleInstalled(ctx context.Context, c client.Client, name string) (bool, error) {
 	clusterRole := rbacv1.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterRole",
 			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "yaks:edit",
+			Name: name,
 		},
 	}
-	key := k8sclient.ObjectKeyFromObject(&clusterRole)
-	err := c.Get(ctx, key, &clusterRole)
+	return isResourceInstalled(ctx, c, &clusterRole)
+}
+
+func isResourceInstalled(ctx context.Context, c client.Client, object ctrl.Object) (bool, error) {
+	err := c.Get(ctx, ctrl.ObjectKeyFromObject(object), object)
 	if err != nil && k8serrors.IsNotFound(err) {
 		return false, nil
 	} else if err != nil {
@@ -189,8 +230,8 @@ func IsClusterRoleInstalled(ctx context.Context, c client.Client) (bool, error) 
 	return true, nil
 }
 
-func installClusterRole(ctx context.Context, c client.Client, collection *kubernetes.Collection) error {
-	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString("/user-cluster-role.yaml"))
+func installResource(ctx context.Context, c client.Client, collection *kubernetes.Collection, resource string) error {
+	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(resource))
 	if err != nil {
 		return err
 	}

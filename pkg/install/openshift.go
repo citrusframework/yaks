@@ -126,15 +126,15 @@ func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 			Description: YaksCLIDownloadDescription,
 			Links: []console.Link{
 				{
-					Text: "Download the kamel binary for Linux",
+					Text: "Download the yaks binary for Linux",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "linux"),
 				},
 				{
-					Text: "Download the kamel binary for Mac",
+					Text: "Download the yaks binary for Mac",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "mac"),
 				},
 				{
-					Text: "Download the kamel binary for Windows",
+					Text: "Download the yaks binary for Windows",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "windows"),
 				},
 			},
