@@ -26,11 +26,13 @@ import (
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
 	"path"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
@@ -50,7 +52,7 @@ func newCmdRole(rootCmdOptions *RootCmdOptions) (*cobra.Command, *roleCmdOptions
 		RunE:    options.run,
 	}
 
-	cmd.Flags().StringP("add", "a", "", "Add given role permission")
+	cmd.Flags().StringArrayP("add", "a", nil, "Add given role permission")
 	cmd.Flags().Bool("all", true, "Add roles to all YAKS operators in all namespaces")
 
 	return &cmd, &options
@@ -58,8 +60,8 @@ func newCmdRole(rootCmdOptions *RootCmdOptions) (*cobra.Command, *roleCmdOptions
 
 type roleCmdOptions struct {
 	*RootCmdOptions
-	Add string `mapstructure:"add"`
-	All bool   `mapstructure:"all"`
+	Add []string `mapstructure:"add"`
+	All bool     `mapstructure:"all"`
 }
 
 func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
@@ -101,9 +103,22 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 		customizer := o.customizer(namespace, global)
 
-		err = applyRole(o.Context, c, o.Add, namespace, customizer)
-		if err != nil {
-			return err
+		for _, role := range o.Add {
+			if isDir(role) {
+				var files []os.FileInfo
+				if files, err = ioutil.ReadDir(role); err != nil {
+					return err
+				}
+
+				for _, f := range files {
+					err = applyRole(o.Context, c, path.Join(role, f.Name()), namespace, customizer)
+					if err != nil {
+						return err
+					}
+				}
+			} else if err := applyRole(o.Context, c, role, namespace, customizer); err != nil {
+				return err
+			}
 		}
 	}
 

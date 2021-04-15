@@ -83,8 +83,10 @@ generate_docs() {
             update_docs_version "$working_dir" "$release_version" "$snapshot_version"
         fi
 
-        # Commit overview.adoc for new version
-        git_commit "$working_dir" overview.adoc "Add docs version for $release_version"
+        if [[ "$release_version" != "$snapshot_version" ]]; then
+            # Commit overview.adoc for new version
+            git_commit "$working_dir" overview.adoc "Add docs version for $release_version"
+        fi
     fi
 }
 
