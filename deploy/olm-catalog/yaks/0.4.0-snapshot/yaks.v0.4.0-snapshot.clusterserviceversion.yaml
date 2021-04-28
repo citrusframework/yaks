@@ -297,6 +297,48 @@ spec:
           - patch
           - update
           - watch
+        - apiGroups:
+          - eventing.knative.dev
+          resources:
+          - brokers
+          - triggers
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - messaging.knative.dev
+          resources:
+          - channels
+          - inmemorychannels
+          - subscriptions
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - sources.knative.dev
+          resources:
+          - "*"
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
         serviceAccountName: yaks-operator
     strategy: deployment
   installModes:

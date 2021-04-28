@@ -116,9 +116,10 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: test.Namespace,
 					Labels: map[string]string{
-						"app":                "yaks",
-						v1alpha1.TestLabel:   test.Name,
-						v1alpha1.TestIdLabel: test.Status.TestID,
+						"app":                       "yaks",
+						v1alpha1.TestLabel:          test.Name,
+						v1alpha1.TestIdLabel:        test.Status.TestID,
+						"app.kubernetes.io/part-of": "yaks-tests",
 					},
 				},
 				Spec: v1.PodSpec{
