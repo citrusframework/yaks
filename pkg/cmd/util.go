@@ -18,13 +18,9 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/cmd/config"
-	"github.com/mitchellh/mapstructure"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,9 +30,17 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/spf13/cobra"
-
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
 	p "github.com/gertd/go-pluralize"
+	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -255,4 +259,20 @@ func loadData(fileName string) (string, error) {
 	}
 
 	return string(content), nil
+}
+
+func hasServiceAccount(ctx context.Context, c ctrl.Client, namespace string, serviceAccount string) (bool, error) {
+	sa := corev1.ServiceAccount{}
+	saKey := ctrl.ObjectKey{
+		Name:      serviceAccount,
+		Namespace: namespace,
+	}
+
+	err := c.Get(ctx, saKey, &sa)
+
+	if err != nil && k8serrors.IsNotFound(err) {
+		return false, nil
+	}
+
+	return !k8serrors.IsNotFound(err), err
 }

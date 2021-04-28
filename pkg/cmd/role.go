@@ -20,24 +20,24 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/config"
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/pkg/errors"
-	"io/ioutil"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/spf13/cobra"
+
 	v1 "k8s.io/api/rbac/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"path"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 
-	"github.com/spf13/cobra"
 )
 
 func newCmdRole(rootCmdOptions *RootCmdOptions) (*cobra.Command, *roleCmdOptions) {
@@ -88,36 +88,50 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 	}
 
 	for namespace, global := range namespaces {
-		sa := corev1.ServiceAccount{}
-		saKey := ctrl.ObjectKey{
-			Name:      config.OperatorServiceAccount,
-			Namespace: namespace,
-		}
 
-		err := c.Get(o.Context, saKey, &sa)
-		if err != nil && k8serrors.IsNotFound(err) {
-			continue
-		} else if err != nil {
+		if operatorSA, err := hasServiceAccount(o.Context, c, namespace, config.OperatorServiceAccount); err != nil {
 			return err
-		}
+		} else if operatorSA {
+			customizer := o.customizer(namespace, global)
 
-		customizer := o.customizer(namespace, global)
-
-		for _, role := range o.Add {
-			if isDir(role) {
-				var files []os.FileInfo
-				if files, err = ioutil.ReadDir(role); err != nil {
-					return err
-				}
-
-				for _, f := range files {
-					err = applyRole(o.Context, c, path.Join(role, f.Name()), namespace, customizer)
-					if err != nil {
+			for _, role := range o.Add {
+				if isDir(role) {
+					var files []os.FileInfo
+					if files, err = ioutil.ReadDir(role); err != nil {
 						return err
 					}
+
+					for _, f := range files {
+						err = applyOperatorRole(o.Context, c, path.Join(role, f.Name()), namespace, customizer)
+						if err != nil {
+							return err
+						}
+					}
+				} else if err := applyOperatorRole(o.Context, c, role, namespace, customizer); err != nil {
+					return err
 				}
-			} else if err := applyRole(o.Context, c, role, namespace, customizer); err != nil {
-				return err
+			}
+		}
+
+		if viewerSA, err := hasServiceAccount(o.Context, c, namespace, config.ViewerServiceAccount); err != nil {
+			return err
+		} else if viewerSA {
+			for _, role := range o.Add {
+				if isDir(role) {
+					var files []os.FileInfo
+					if files, err = ioutil.ReadDir(role); err != nil {
+						return err
+					}
+
+					for _, f := range files {
+						err = applyViewerRole(o.Context, c, path.Join(role, f.Name()), namespace)
+						if err != nil {
+							return err
+						}
+					}
+				} else if err := applyViewerRole(o.Context, c, role, namespace); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -125,12 +139,12 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func applyRole(ctx context.Context, c client.Client, role string, namespace string, customizer install.ResourceCustomizer) error {
-	if role == "knative" {
+func applyOperatorRole(ctx context.Context, c client.Client, role string, namespace string, customizer install.ResourceCustomizer) error {
+	if role == config.RoleKnative {
 		if err := install.InstallKnative(ctx, c, namespace, customizer, nil, true); err != nil {
 			return err
 		}
-	} else if role == "camelk" {
+	} else if role == config.RoleCamelK {
 		if err := install.InstallCamelK(ctx, c, namespace, customizer, nil, true); err != nil {
 			return err
 		}
@@ -162,7 +176,50 @@ func applyRole(ctx context.Context, c client.Client, role string, namespace stri
 		}
 		fmt.Printf("Added role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
 	} else {
-		return errors.New("unsupported role definition - please use one of 'camelk', 'knative' or 'role.yaml'")
+		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative))
+	}
+
+	return nil
+}
+
+func applyViewerRole(ctx context.Context, c client.Client, role string, namespace string) error {
+	if role == config.RoleKnative {
+		if err := install.InstallViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
+			return err
+		}
+	} else if role == config.RoleCamelK {
+		if err := install.InstallViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
+			return err
+		}
+	} else if strings.HasSuffix(role, ".yaml") {
+		data, err := loadData(role)
+		if err != nil {
+			return err
+		}
+
+		obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), data)
+		if err != nil {
+			return err
+		}
+
+		if r, ok := obj.(*v1.Role); ok {
+			if !strings.HasPrefix(r.Name, config.ViewerServiceAccount) {
+				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.OperatorServiceAccount))
+			}
+		} else if rb, ok := obj.(*v1.RoleBinding); ok {
+			if !strings.HasPrefix(rb.Name, config.ViewerServiceAccount) {
+				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.OperatorServiceAccount))
+			}
+		} else {
+			return errors.New("unsupported resource type - expected Role or RoleBinding")
+		}
+
+		if err := install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, obj); err != nil {
+			return err
+		}
+		fmt.Printf("Added role permission '%s' from file %s to YAKS viewer service account in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
+	} else {
+		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative))
 	}
 
 	return nil

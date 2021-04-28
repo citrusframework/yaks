@@ -19,11 +19,12 @@ package install
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/camelk"
 	"github.com/citrusframework/yaks/pkg/util/knative"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
-
-	"github.com/citrusframework/yaks/pkg/client"
 )
 
 // ViewerServiceAccountRoles installs the viewer service account and related roles in the given namespace
@@ -33,11 +34,11 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 		return err
 	}
 	if isOpenShift {
-		if err := installViewerServiceAccountRolesOpenShift(ctx, c, namespace); err != nil {
+		if err := InstallViewerServiceAccountRolesOpenShift(ctx, c, namespace); err != nil {
 			return err
 		}
 	} else {
-		if err := installViewerServiceAccountRolesKubernetes(ctx, c, namespace); err != nil {
+		if err := InstallViewerServiceAccountRolesKubernetes(ctx, c, namespace); err != nil {
 			return err
 		}
 	}
@@ -48,7 +49,7 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 		return err
 	}
 	if isKnative {
-		if err := installViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
+		if err := InstallViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
 			return err
 		}
 	}
@@ -59,7 +60,7 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 		return err
 	}
 	if isCamelK {
-		if err := installViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
+		if err := InstallViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
 			return err
 		}
 	}
@@ -67,7 +68,7 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 	return nil
 }
 
-func installViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Client, namespace string) error {
+func InstallViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Client, namespace string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
 		"viewer-service-account.yaml",
 		"viewer-role-openshift.yaml",
@@ -75,7 +76,7 @@ func installViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Cli
 	)
 }
 
-func installViewerServiceAccountRolesKubernetes(ctx context.Context, c client.Client, namespace string) error {
+func InstallViewerServiceAccountRolesKubernetes(ctx context.Context, c client.Client, namespace string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
 		"viewer-service-account.yaml",
 		"viewer-role-kubernetes.yaml",
@@ -83,16 +84,28 @@ func installViewerServiceAccountRolesKubernetes(ctx context.Context, c client.Cl
 	)
 }
 
-func installViewerServiceAccountRolesKnative(ctx context.Context, c client.Client, namespace string) error {
-	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+func InstallViewerServiceAccountRolesKnative(ctx context.Context, c client.Client, namespace string) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
 		"viewer-role-knative.yaml",
 		"viewer-role-binding-knative.yaml",
-	)
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added Knative addon to YAKS viewer service account in namespace '%s'\n", namespace)
+
+	return nil
 }
 
-func installViewerServiceAccountRolesCamelK(ctx context.Context, c client.Client, namespace string) error {
-	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+func InstallViewerServiceAccountRolesCamelK(ctx context.Context, c client.Client, namespace string) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
 		"viewer-role-camel-k.yaml",
 		"viewer-role-binding-camel-k.yaml",
-	)
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added CamelK addon to YAKS viewer service account in namespace '%s'\n", namespace)
+
+	return nil
 }

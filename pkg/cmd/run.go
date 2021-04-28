@@ -391,7 +391,7 @@ func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, c client.Clie
 	err := install.OperatorOrCollect(o.Context, c, cfg, nil, true)
 
 	for _, role := range runConfig.Config.Operator.Roles {
-		err = applyRole(o.Context, c, resolvePath(runConfig, role), namespace, install.IdentityResourceCustomizer)
+		err = applyOperatorRole(o.Context, c, resolvePath(runConfig, role), namespace, install.IdentityResourceCustomizer)
 		if err != nil {
 			return err
 		}
