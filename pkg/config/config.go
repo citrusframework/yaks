@@ -27,6 +27,8 @@ const (
 	OperatorServiceAccount = "yaks-operator"
 	ViewerServiceAccount   = "yaks-viewer"
 	AppendToViewerLabel    = "yaks.citrusframework.org/append-to-viewer"
+	RoleKnative            = "knative"
+	RoleCamelK             = "camelk"
 )
 
 func GetTestBaseImage() string {
