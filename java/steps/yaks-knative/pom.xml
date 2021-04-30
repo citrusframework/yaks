@@ -65,6 +65,11 @@
       <artifactId>knative-client</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+    </dependency>
+
     <!-- Test scope -->
     <dependency>
       <groupId>io.cucumber</groupId>
@@ -94,6 +99,11 @@
     <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>knative-mock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

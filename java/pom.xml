@@ -76,6 +76,7 @@
     <jackson.version>2.12.1</jackson.version>
     <junit.version>4.13.1</junit.version>
     <kubernetes-client.version>5.1.1</kubernetes-client.version>
+    <okhttp.version>3.12.12</okhttp.version>
     <knative-client.version>5.1.1</knative-client.version>
     <postgresql.version>9.4.1212</postgresql.version>
     <testcontainers.version>1.15.1</testcontainers.version>
@@ -130,6 +131,17 @@
           </exclusion>
         </exclusions>
         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${okhttp.version}</version>
       </dependency>
 
       <!-- Citrus -->
