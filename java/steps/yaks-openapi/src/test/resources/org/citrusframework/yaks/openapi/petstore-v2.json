@@ -119,6 +119,13 @@
             "required": true,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "verbose",
+            "in": "query",
+            "description": "Output details",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "responses": {

@@ -14,6 +14,11 @@ Feature: Petstore API V2
     When invoke operation: getPetById
     Then verify operation result: 200 OK
 
+  Scenario: getPet verbose
+    Given variable verbose is "true"
+    When invoke operation: getPetById
+    Then verify operation result: 200 OK
+
   Scenario: petNotFound
     Given variable petId is "0"
     When invoke operation: getPetById

@@ -98,7 +98,7 @@ public final class Oas20ModelHelper {
         return Optional.empty();
     }
 
-    public static Map<String, OasSchema> getRequiredHeaders(Oas20Response response) {
+    public static Map<String, OasSchema> getHeaders(Oas20Response response) {
         if (response.headers == null) {
             return Collections.emptyMap();
         }

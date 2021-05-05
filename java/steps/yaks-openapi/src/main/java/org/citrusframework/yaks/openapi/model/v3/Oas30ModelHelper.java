@@ -214,9 +214,23 @@ public final class Oas30ModelHelper {
     }
 
     public static Map<String, OasSchema> getRequiredHeaders(Oas30Response response) {
+        if (response.headers == null) {
+            return Collections.emptyMap();
+        }
+
+        return response.headers.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().required)
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().schema));
+    }
+
+    public static Map<String, OasSchema> getHeaders(Oas30Response response) {
+        if (response.headers == null) {
+            return Collections.emptyMap();
+        }
+
         return response.headers.entrySet()
                                 .stream()
-                                .filter(entry -> entry.getValue().required)
                                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().schema));
     }
 

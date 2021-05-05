@@ -165,7 +165,11 @@ public final class OasModelHelper {
     }
 
     public static Map<String, OasSchema> getRequiredHeaders(OasResponse response) {
-        return delegate(response, Oas20ModelHelper::getRequiredHeaders, Oas30ModelHelper::getRequiredHeaders);
+        return delegate(response, Oas20ModelHelper::getHeaders, Oas30ModelHelper::getRequiredHeaders);
+    }
+
+    public static Map<String, OasSchema> getHeaders(OasResponse response) {
+        return delegate(response, Oas20ModelHelper::getHeaders, Oas30ModelHelper::getHeaders);
     }
 
     public static Optional<String> getRequestContentType(OasOperation operation) {

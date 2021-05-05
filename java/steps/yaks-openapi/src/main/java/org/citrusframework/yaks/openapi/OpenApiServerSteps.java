@@ -117,13 +117,17 @@ public class OpenApiServerSteps {
         if (operation.parameters != null) {
             operation.parameters.stream()
                     .filter(param -> "header".equals(param.in))
-                    .filter(param -> param.required != null && param.required)
-                    .forEach(param -> serverSteps.addRequestHeader(param.getName(), OpenApiTestDataGenerator.createValidationExpression((OasSchema) param.schema, OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false)));
+                    .filter(param -> (param.required != null && param.required) || context.getVariables().containsKey(param.getName()))
+                    .forEach(param -> serverSteps.addRequestHeader(param.getName(),
+                            OpenApiTestDataGenerator.createValidationExpression(param.getName(), (OasSchema) param.schema,
+                                    OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context)));
 
             operation.parameters.stream()
                     .filter(param -> "query".equals(param.in))
-                    .filter(param -> param.required != null && param.required)
-                    .forEach(param -> serverSteps.addRequestQueryParam(param.getName(), OpenApiTestDataGenerator.createValidationExpression((OasSchema) param.schema, OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false)));
+                    .filter(param -> (param.required != null && param.required) || context.getVariables().containsKey(param.getName()))
+                    .forEach(param -> serverSteps.addRequestQueryParam(param.getName(),
+                            OpenApiTestDataGenerator.createValidationExpression(param.getName(), (OasSchema) param.schema,
+                                    OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context)));
         }
 
         Optional<OasSchema> body = OasModelHelper.getRequestBodySchema(OpenApiSteps.openApiDoc, operation);
@@ -173,10 +177,17 @@ public class OpenApiServerSteps {
                                         .orElse(operation.responses.default_);
 
             if (response != null) {
-                Map<String, OasSchema> headers = OasModelHelper.getRequiredHeaders(response);
-                if (headers != null) {
-                    for (Map.Entry<String, OasSchema> header : headers.entrySet()) {
-                        serverSteps.addResponseHeader(header.getKey(), OpenApiTestDataGenerator.createRandomValueExpression(header.getValue(), OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false));
+                Map<String, OasSchema> requiredHeaders = OasModelHelper.getRequiredHeaders(response);
+                for (Map.Entry<String, OasSchema> header : requiredHeaders.entrySet()) {
+                    serverSteps.addResponseHeader(header.getKey(),
+                            OpenApiTestDataGenerator.createRandomValueExpression(header.getKey(), header.getValue(),
+                                    OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context));
+                }
+
+                Map<String, OasSchema> headers = OasModelHelper.getHeaders(response);
+                for (Map.Entry<String, OasSchema> header : headers.entrySet()) {
+                    if (!requiredHeaders.containsKey(header.getKey()) && context.getVariables().containsKey(header.getKey())) {
+                        serverSteps.addResponseHeader(header.getKey(),CitrusSettings.VARIABLE_PREFIX + header.getKey() + CitrusSettings.VARIABLE_SUFFIX);
                     }
                 }
 
