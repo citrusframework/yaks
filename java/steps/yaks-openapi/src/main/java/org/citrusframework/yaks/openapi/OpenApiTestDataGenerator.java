@@ -20,6 +20,8 @@ package org.citrusframework.yaks.openapi;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.consol.citrus.CitrusSettings;
+import com.consol.citrus.context.TestContext;
 import io.apicurio.datamodels.openapi.models.OasSchema;
 import org.citrusframework.yaks.openapi.model.OasModelHelper;
 import org.springframework.util.CollectionUtils;
@@ -76,6 +78,21 @@ public class OpenApiTestDataGenerator {
         }
 
         return payload.toString();
+    }
+
+    /**
+     * Use test variable with given name if present or create value from schema with random values
+     * @param schema
+     * @param definitions
+     * @param quotes
+     * @return
+     */
+    public static String createRandomValueExpression(String name, OasSchema schema, Map<String, OasSchema> definitions, boolean quotes, TestContext context) {
+        if (context.getVariables().containsKey(name)) {
+            return CitrusSettings.VARIABLE_PREFIX + name + CitrusSettings.VARIABLE_SUFFIX;
+        }
+
+        return createRandomValueExpression(schema, definitions, quotes);
     }
 
     /**
@@ -186,6 +203,23 @@ public class OpenApiTestDataGenerator {
     }
 
     /**
+     * Use test variable with given name if present or create validation expression using functions according to schema type and format.
+     * @param name
+     * @param schema
+     * @param definitions
+     * @param quotes
+     * @param context
+     * @return
+     */
+    public static String createValidationExpression(String name, OasSchema schema, Map<String, OasSchema> definitions, boolean quotes, TestContext context) {
+        if (context.getVariables().containsKey(name)) {
+            return CitrusSettings.VARIABLE_PREFIX + name + CitrusSettings.VARIABLE_SUFFIX;
+        }
+
+        return createValidationExpression(schema, definitions, quotes);
+    }
+
+    /**
      * Create validation expression using functions according to schema type and format.
      * @param schema
      * @param definitions
@@ -261,6 +295,22 @@ public class OpenApiTestDataGenerator {
             default:
                 return "@ignore@";
         }
+    }
+
+    /**
+     * Use test variable with given name (if present) or create random value expression using functions according to
+     * schema type and format.
+     * @param name
+     * @param schema
+     * @param context
+     * @return
+     */
+    public static String createRandomValueExpression(String name, OasSchema schema, TestContext context) {
+        if (context.getVariables().containsKey(name)) {
+            return CitrusSettings.VARIABLE_PREFIX + name + CitrusSettings.VARIABLE_SUFFIX;
+        }
+
+        return createRandomValueExpression(schema);
     }
 
     /**

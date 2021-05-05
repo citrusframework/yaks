@@ -102,6 +102,15 @@
                         },
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "name": "verbose",
+                        "description": "Output details",
+                        "schema": {
+                            "type": "boolean"
+                        },
+                        "in": "query",
+                        "required": false
                     }
                 ],
                 "responses": {
