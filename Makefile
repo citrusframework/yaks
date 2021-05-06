@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION := 0.4.0-SNAPSHOT
-SNAPSHOT_VERSION := 0.4.0-SNAPSHOT
+VERSION := 0.5.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.5.0-SNAPSHOT
 LAST_RELEASED_VERSION := 0.2.0
 IMAGE_NAME := docker.io/citrusframework/yaks
 RELEASE_GIT_REMOTE := upstream
