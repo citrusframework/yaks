@@ -32,6 +32,7 @@ require (
 	k8s.io/klog/v2 v2.5.0
 	knative.dev/eventing v0.21.1
 	sigs.k8s.io/controller-runtime v0.7.2
+	sigs.k8s.io/controller-tools v0.4.1 // indirect
 )
 
 replace (
