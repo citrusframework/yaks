@@ -16,7 +16,7 @@
 # ---------------------------------------------------------------------------
 
 channels:
-- currentCSV: yaks.v0.4.0-SNAPSHOT
+- currentCSV: yaks.v0.4.0
   name: alpha
 defaultChannel: alpha
 packageName: yaks
