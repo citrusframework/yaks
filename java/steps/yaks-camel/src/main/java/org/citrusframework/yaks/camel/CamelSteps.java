@@ -75,9 +75,9 @@ public class CamelSteps {
 
     private CamelContext camelContext;
 
-    private String contextName = CamelSettings.getContextName();
+    private final String contextName = CamelSettings.getContextName();
 
-    private Map<String, CamelEndpoint> endpoints = new HashMap<>();
+    private final Map<String, CamelEndpoint> endpoints = new HashMap<>();
 
     private Map<String, Object> headers = new HashMap<>();
     private String body;

@@ -98,14 +98,14 @@ public final class TestHelper {
     }
 
     public static void verifyDefaultLoggingConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
-        String log4j2 = "<?xml version=\"1.0\" ?>" + System.lineSeparator() +
-            "<Configuration>" + System.lineSeparator() +
-            "  <Appenders>" + System.lineSeparator() +
-            "    <Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" + System.lineSeparator() +
-            "      <PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" + System.lineSeparator() +
-            "    </Console>" + System.lineSeparator() +
-            "  </Appenders>" + System.lineSeparator() +
-            "</Configuration>" + System.lineSeparator();
+        String log4j2 = "<?xml version=\"1.0\" ?>" +
+            "<Configuration>" +
+            "<Appenders>" +
+                "<Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" +
+                    "<PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" +
+                "</Console>" +
+            "</Appenders>" +
+            "</Configuration>";
 
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         try {
@@ -117,22 +117,22 @@ public final class TestHelper {
     }
 
     public static void verifyLoggingConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
-        String log4j2 = "<?xml version=\"1.0\" ?>" + System.lineSeparator() +
-            "<Configuration>" + System.lineSeparator() +
-            "  <Appenders>" + System.lineSeparator() +
-            "    <Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" + System.lineSeparator() +
-            "      <PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" + System.lineSeparator() +
-            "    </Console>" + System.lineSeparator() +
-            "  </Appenders>" + System.lineSeparator() +
-            "  <Loggers>" + System.lineSeparator() +
-            "    <Logger name=\"org.foo\" level=\"DEBUG\" additivity=\"false\">" + System.lineSeparator() +
-            "      <AppenderRef ref=\"STDOUT\"/>" + System.lineSeparator() +
-            "    </Logger>" + System.lineSeparator() +
-            "    <Logger name=\"org.bar\" level=\"WARN\" additivity=\"false\">" + System.lineSeparator() +
-            "      <AppenderRef ref=\"STDOUT\"/>" + System.lineSeparator() +
-            "    </Logger>" + System.lineSeparator() +
-            "  </Loggers>" + System.lineSeparator() +
-            "</Configuration>" + System.lineSeparator();
+        String log4j2 = "<?xml version=\"1.0\" ?>" +
+            "<Configuration>" +
+            "<Appenders>" +
+                "<Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" +
+                    "<PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" +
+                "</Console>" +
+            "</Appenders>" +
+            "<Loggers>" +
+                "<Logger name=\"org.foo\" level=\"DEBUG\" additivity=\"false\">" +
+                    "<AppenderRef ref=\"STDOUT\"/>" +
+                "</Logger>" +
+                "<Logger name=\"org.bar\" level=\"WARN\" additivity=\"false\">" +
+                    "<AppenderRef ref=\"STDOUT\"/>" +
+                "</Logger>" +
+            "</Loggers>" +
+            "</Configuration>";
 
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         try {
