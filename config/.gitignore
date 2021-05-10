@@ -1,0 +1,6 @@
+**/*.gen.tmpl
+**/*.gen.yaml
+**/*.gen.json
+
+release/*-installer*
+bundle/**

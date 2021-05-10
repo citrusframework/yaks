@@ -38,7 +38,7 @@ func OperatorStartupOptionalTools(ctx context.Context, c client.Client, log logr
 		log.Info("Cannot detect user cluster role: skipping.")
 		log.V(8).Info("Error while getting user cluster role", "error", err)
 	} else if !clusterRoleInstalled {
-		if err := installResource(ctx, c, nil, "/user-cluster-role.yaml"); err != nil {
+		if err := installResource(ctx, c, nil, "/rbac-kubernetes/user-cluster-role.yaml"); err != nil {
 			log.Info("Cannot install user cluster role: skipping.")
 			log.V(8).Info("Error while installing user cluster role", "error", err)
 		}

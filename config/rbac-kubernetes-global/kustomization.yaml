@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../rbac-kubernetes
+
+patches:
+- path: ../rbac-patches/role-to-clusterrole-patch.yaml
+  target:
+    kind: Role
+    annotationSelector: can-promote=true
+- path: ../rbac-patches/rolebinding-to-clusterrolebinding-patch.yaml
+  target:
+    kind: RoleBinding
+    annotationSelector: can-promote=true

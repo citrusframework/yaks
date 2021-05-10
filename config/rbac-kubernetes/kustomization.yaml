@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- user-cluster-role.yaml
+- user-global-instance-viewer-role.yaml
+- user-global-instance-viewer-role-binding.yaml
+- operator-role-olm-cluster.yaml
+- operator-role-olm.yaml
+- operator-role-binding-olm-cluster.yaml
+- operator-role-binding-olm.yaml
+- operator-role-camel-k.yaml
+- operator-role-knative.yaml
+- operator-role-kubernetes.yaml
+- operator-role-servicemonitors.yaml
+- operator-role-binding-camel-k.yaml
+- operator-role-binding-knative.yaml
+- operator-role-binding-kubernetes.yaml
+- operator-role-binding-servicemonitors.yaml

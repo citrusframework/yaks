@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  app: yaks
+
+resources:
+- ../manager
+
+patches:
+- path: patches/image-pull-policy-patch.gen.yaml
+  target:
+    kind: Deployment
+    name: yaks-operator
+- path: patches/watch-namespace-patch.gen.yaml
+  target:
+    kind: Deployment
+    name: yaks-operator

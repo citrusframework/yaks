@@ -70,24 +70,24 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 
 func InstallViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Client, namespace string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
-		"viewer-service-account.yaml",
-		"viewer-role-openshift.yaml",
-		"viewer-role-binding.yaml",
+		"/infrastructure/deploy/viewer-service-account.yaml",
+		"/infrastructure/rbac/viewer-role-openshift.yaml",
+		"/infrastructure/rbac/viewer-role-binding-openshift.yaml",
 	)
 }
 
 func InstallViewerServiceAccountRolesKubernetes(ctx context.Context, c client.Client, namespace string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
-		"viewer-service-account.yaml",
-		"viewer-role-kubernetes.yaml",
-		"viewer-role-binding.yaml",
+		"/infrastructure/deploy/viewer-service-account.yaml",
+		"/infrastructure/rbac/viewer-role-kubernetes.yaml",
+		"/infrastructure/rbac/viewer-role-binding-kubernetes.yaml",
 	)
 }
 
 func InstallViewerServiceAccountRolesKnative(ctx context.Context, c client.Client, namespace string) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
-		"viewer-role-knative.yaml",
-		"viewer-role-binding-knative.yaml",
+		"/infrastructure/rbac/viewer-role-knative.yaml",
+		"/infrastructure/rbac/viewer-role-binding-knative.yaml",
 	); err != nil {
 		return err
 	}
@@ -99,8 +99,8 @@ func InstallViewerServiceAccountRolesKnative(ctx context.Context, c client.Clien
 
 func InstallViewerServiceAccountRolesCamelK(ctx context.Context, c client.Client, namespace string) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
-		"viewer-role-camel-k.yaml",
-		"viewer-role-binding-camel-k.yaml",
+		"/infrastructure/rbac/viewer-role-camel-k.yaml",
+		"/infrastructure/rbac/viewer-role-binding-camel-k.yaml",
 	); err != nil {
 		return err
 	}
