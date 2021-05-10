@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
+    - name: Set up JDK 11
+      uses: AdoptOpenJDK/install-jdk@v1
       with:
-        java-version: 1.8
+        version: "11"
     - name: Install Go
       uses: actions/setup-go@v1
       with:
@@ -76,10 +76,10 @@ jobs:
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
     steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
+    - name: Set up JDK 11
+      uses: AdoptOpenJDK/install-jdk@v1
       with:
-        java-version: 1.8
+        version: "11"
     - name: Install Go
       uses: actions/setup-go@v1
       with:

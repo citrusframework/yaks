@@ -63,6 +63,11 @@
       <artifactId>citrus-kafka</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-sql</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.codehaus.groovy</groupId>

@@ -38,6 +38,10 @@
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-base</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-sql</artifactId>
+    </dependency>
 
     <!-- Test scope -->
     <dependency>
