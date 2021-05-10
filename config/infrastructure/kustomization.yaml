@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deploy/viewer-service-account.yaml
+- rbac/viewer-role-camel-k.yaml
+- rbac/viewer-role-binding-camel-k.yaml
+- rbac/viewer-role-knative.yaml
+- rbac/viewer-role-binding-knative.yaml
+- rbac/viewer-role-kubernetes.yaml
+- rbac/viewer-role-binding-kubernetes.yaml
+- rbac/viewer-role-openshift.yaml
+- rbac/viewer-role-binding-openshift.yaml

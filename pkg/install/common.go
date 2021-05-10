@@ -19,9 +19,10 @@ package install
 
 import (
 	"context"
-	"github.com/citrusframework/yaks/deploy"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/resources"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +61,7 @@ func Resource(ctx context.Context, c client.Client, namespace string, force bool
 // ResourceOrCollect --
 func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection,
 	force bool, customizer ResourceCustomizer, name string) error {
-	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(name))
+	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), resources.ResourceAsString(name))
 	if err != nil {
 		return err
 	}

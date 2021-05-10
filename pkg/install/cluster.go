@@ -24,9 +24,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/citrusframework/yaks/deploy"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
+	"github.com/citrusframework/yaks/pkg/resources"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -90,12 +90,12 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 	}
 
 	// Install CRD for Instance (if needed)
-	if err := installCRD(ctx, c, v1alpha1.InstanceKind, v1alpha1.SchemeGroupVersion.Version, "crd-instance.yaml", downgradeToCRDv1beta1, collection); err != nil {
+	if err := installCRD(ctx, c, v1alpha1.InstanceKind, v1alpha1.SchemeGroupVersion.Version, "/crd/bases/yaks.citrusframework.org_instances.yaml", downgradeToCRDv1beta1, collection); err != nil {
 		return err
 	}
 
 	// Install CRD for Test (if needed)
-	if err := installCRD(ctx, c, v1alpha1.TestKind, v1alpha1.SchemeGroupVersion.Version, "crd-test.yaml", downgradeToCRDv1beta1, collection); err != nil {
+	if err := installCRD(ctx, c, v1alpha1.TestKind, v1alpha1.SchemeGroupVersion.Version, "/crd/bases/yaks.citrusframework.org_tests.yaml", downgradeToCRDv1beta1, collection); err != nil {
 		return err
 	}
 
@@ -113,7 +113,7 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 		return err
 	}
 	if !ok || collection != nil {
-		err := installResource(ctx, c, collection, "/user-cluster-role.yaml")
+		err := installResource(ctx, c, collection, "/rbac-kubernetes/user-cluster-role.yaml")
 		if err != nil {
 			return err
 		}
@@ -178,7 +178,7 @@ func IsCRDInstalled(ctx context.Context, c client.Client, kind string, version s
 }
 
 func installCRD(ctx context.Context, c client.Client, kind string, version string, resourceName string, converter ResourceCustomizer, collection *kubernetes.Collection) error {
-	crd, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(resourceName))
+	crd, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), resources.ResourceAsString(resourceName))
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func isResourceInstalled(ctx context.Context, c client.Client, object ctrl.Objec
 }
 
 func installResource(ctx context.Context, c client.Client, collection *kubernetes.Collection, resource string) error {
-	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), deploy.ResourceAsString(resource))
+	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), resources.ResourceAsString(resource))
 	if err != nil {
 		return err
 	}

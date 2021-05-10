@@ -1,0 +1,17 @@
+#
+# Binding is required for `make bundle` to detect that
+# the service account yaks-operator requires these
+# associated cluster permissions
+#
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: yaks-operator-cluster-role-olm-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: yaks-operator
+subjects:
+- kind: ServiceAccount
+  name: yaks-operator
+  namespace: placeholder

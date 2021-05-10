@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yaks-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: yaks-operator
+          imagePullPolicy: {IMAGE_PULL_POLICY}

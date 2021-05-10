@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
+	github.com/apache/camel-k v1.4.0
 	github.com/container-tools/snap v0.0.8
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-logr/logr v0.4.0
@@ -25,9 +26,9 @@ require (
 	github.com/stoewer/go-strcase v1.2.0
 	github.com/stretchr/testify v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.19.8
+	k8s.io/api v0.20.1
 	k8s.io/apiextensions-apiserver v0.19.8
-	k8s.io/apimachinery v0.19.8
+	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.5.0
 	knative.dev/eventing v0.21.1

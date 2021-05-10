@@ -13,10 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION := 0.5.0-SNAPSHOT
-SNAPSHOT_VERSION := 0.5.0-SNAPSHOT
-LAST_RELEASED_VERSION := 0.2.0
-IMAGE_NAME := docker.io/citrusframework/yaks
+#
+# Include the main common Makefile containing
+# basic common recipes and vars
+#
+include config/common/Makefile
+
+#
+# Override relative directories from common Makefile
+#
+PKG := ./pkg
+CRD := ./config/crd/bases
+SCRIPT := ./config/script
+
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
@@ -32,6 +41,8 @@ GIT_COMMIT := $(shell git rev-list -1 HEAD)
 GOLDFLAGS += -X main.GitCommit=$(GIT_COMMIT)
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -gcflags=-trimpath=$(GO_PATH) -asmflags=-trimpath=$(GO_PATH)
 
+.DEFAULT_GOAL := default
+
 default: test
 
 clean:
@@ -43,16 +54,14 @@ check-licenses:
 check-repo:
 	./script/check_repo.sh
 
-generate: generate-deepcopy generate-crd generate-client
+#
+# Will override the generate located in config/Makefile
+# to include the generate-client rule
+#
+generate: generate-deepcopy generate-crds generate-client
 
 generate-client:
 	./script/gen_client.sh
-
-generate-crd:
-	./script/gen_crd.sh
-
-generate-deepcopy:
-	operator-sdk generate k8s
 
 build: build-resources build-yaks
 
@@ -63,10 +72,7 @@ build-yaks:
 	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
 
 build-resources:
-	./script/build_resources.sh deploy
-
-update-olm:
-	./script/update_olm.sh $(VERSION) $(SNAPSHOT_VERSION)
+	go generate ./pkg/...
 
 set-version-file:
 	./script/set_version_file.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
@@ -80,7 +86,7 @@ set-next-version:
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
 
-docker-build:
+docker-build: package-artifacts-no-test
 	./script/docker-build.sh $(IMAGE_NAME):$(VERSION) '$(GOFLAGS)'
 
 images-no-test: build package-artifacts-no-test docker-build

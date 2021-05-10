@@ -31,7 +31,6 @@ go run k8s.io/code-generator/cmd/client-gen \
 	--output-base=$rootdir \
 	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/clientset
 
-
 go run k8s.io/code-generator/cmd/lister-gen \
 	--input-dirs=github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1 \
 	--go-header-file=$rootdir/script/headers/default.txt \
@@ -47,7 +46,7 @@ go run k8s.io/code-generator/cmd/informer-gen \
 	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/informers
 
 # hack to fix non go-module compliance
-cp -R $rootdir/github.com/citrusframework/yaks/pkg/ $rootdir/pkg
+cp -R $rootdir/github.com/citrusframework/yaks/pkg/* $rootdir/pkg/
 rm -rf $rootdir/github.com
 
 # hack to fix test scoped file by renaming
