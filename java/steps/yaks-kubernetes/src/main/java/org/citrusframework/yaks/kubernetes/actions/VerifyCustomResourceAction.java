@@ -176,7 +176,7 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
 
         return conditions.stream()
                 .anyMatch(propertyMap -> propertyMap.getOrDefault("type", "").equals(condition)
-                        && Optional.ofNullable(propertyMap.get("status")).map(Boolean.class::cast).orElse(false));
+                        && Optional.ofNullable(propertyMap.get("status")).map(b -> Boolean.valueOf(b.toString())).orElse(false));
     }
 
     /**
