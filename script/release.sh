@@ -56,7 +56,6 @@ release() {
 
     # Set release version in sources
     set_version "$working_dir" "$release_version" "$snapshot_version" "$image"
-    update_olm "$working_dir" "$release_version" "$snapshot_version"
 
     echo "Building virtual file system ..."
     eval go run ${working_dir}/cmd/util/vfs-gen/ ${working_dir}/deploy
@@ -108,7 +107,6 @@ release() {
     if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
         # Set next snapshot version in sources
         set_next_version "$working_dir" "$next_version" "$snapshot_version"
-        update_olm "$working_dir" "$next_version" "$snapshot_version"
 
         # Push new snapshot version (if configured)
         git_push_next_snapshot "$working_dir" "$next_version"
@@ -190,7 +188,6 @@ source "$location/util/git_funcs"
 source "$location/util/version_funcs"
 source "$location/util/maven_central_funcs"
 source "$location/util/go_funcs"
-source "$location/util/olm_funcs"
 
 ERROR_FILE="$(mktemp /tmp/yaks-output.XXXXXX)"
 trap "print_error $ERROR_FILE" EXIT
