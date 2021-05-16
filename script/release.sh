@@ -58,7 +58,7 @@ release() {
     set_version "$working_dir" "$release_version" "$snapshot_version" "$image"
 
     echo "Building virtual file system ..."
-    eval go run ${working_dir}/cmd/util/vfs-gen/ ${working_dir}/config
+    eval go run ${working_dir}/cmd/util/vfs-gen/ config
 
     # Cross compile binaries
     local build_dir=${working_dir}/xtmp
