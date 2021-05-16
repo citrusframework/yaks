@@ -72,7 +72,7 @@ build-yaks:
 	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
 
 build-resources:
-	go generate ./pkg/...
+	./script/build_resources.sh config
 
 set-version-file:
 	./script/set_version_file.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
@@ -86,7 +86,7 @@ set-next-version:
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
 
-docker-build: package-artifacts-no-test
+docker-build:
 	./script/docker-build.sh $(IMAGE_NAME):$(VERSION) '$(GOFLAGS)'
 
 images-no-test: build package-artifacts-no-test docker-build
