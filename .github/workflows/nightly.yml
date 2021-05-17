@@ -63,7 +63,7 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
       run: |
-        VERSION=$(make version | sed s/-SNAPSHOT/-$(date +%Y%m%d%H%M)/)
+        VERSION=$(make snapshot-version | sed s/-SNAPSHOT/-$(date +%Y%m%d%H%M)/)
         echo "Using VERSION=$VERSION"
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
