@@ -27,6 +27,7 @@ build_flags="$2"
 cd $location/..
 
 export GOOS=linux
+export CGO_ENABLED=0
 
 mkdir -p build/_output/bin
 eval go build "$build_flags" -o build/_output/bin/yaks ./cmd/manager/*.go

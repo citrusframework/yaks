@@ -29,6 +29,7 @@ spec:
     description: "Produces periodic events with a custom payload"
     required:
       - message
+    type: object
     properties:
       period:
         title: Period

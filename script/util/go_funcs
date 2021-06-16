@@ -26,6 +26,7 @@ cross_compile () {
 
 	export GOOS=$goos
 	export GOARCH=$goarch
+	export CGO_ENABLED=0
 
   rm -rf ${build_dir}
 
