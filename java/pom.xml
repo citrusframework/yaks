@@ -72,8 +72,8 @@
     <citrus.version>3.0.0-M3</citrus.version>
     <spring.version>5.2.8.RELEASE</spring.version>
     <cucumber.version>6.9.0</cucumber.version>
-    <camel.version>3.5.0</camel.version>
-    <jackson.version>2.12.1</jackson.version>
+    <camel.version>3.10.0</camel.version>
+    <jackson.version>2.12.3</jackson.version>
     <junit.version>4.13.1</junit.version>
     <kubernetes-client.version>5.1.1</kubernetes-client.version>
     <okhttp.version>3.12.12</okhttp.version>
@@ -83,8 +83,8 @@
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
-    <activemq.version>5.16.0</activemq.version>
-    <activemq.artemis.version>2.10.1</activemq.artemis.version>
+    <activemq.version>5.16.2</activemq.version>
+    <activemq.artemis.version>2.17.0</activemq.artemis.version>
     <mockito.version>3.5.10</mockito.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
