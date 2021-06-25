@@ -248,13 +248,10 @@
       <!-- Apache Camel -->
       <dependency>
         <groupId>org.apache.camel</groupId>
-        <artifactId>camel-core</artifactId>
+        <artifactId>camel-bom</artifactId>
         <version>${camel.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.camel</groupId>
-        <artifactId>camel-spring</artifactId>
-        <version>${camel.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- Import full jackson bom to avoid lib mis-alignment -->
