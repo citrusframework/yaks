@@ -13,19 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#
-# Include the main common Makefile containing
-# basic common recipes and vars
-#
-include config/common/Makefile
-
-#
-# Override relative directories from common Makefile
-#
-PKG := ./pkg
-CRD := ./config/crd/bases
-SCRIPT := ./config/script
-
+VERSION := 0.5.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.5.0-SNAPSHOT
+OPERATOR_VERSION := $(subst -SNAPSHOT,,$(VERSION))
+DEFAULT_IMAGE := docker.io/citrusframework/yaks
+IMAGE_NAME ?= $(DEFAULT_IMAGE)
+METADATA_IMAGE_NAME := $(IMAGE_NAME)-metadata
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
@@ -54,14 +47,16 @@ check-licenses:
 check-repo:
 	./script/check_repo.sh
 
-#
-# Will override the generate located in config/Makefile
-# to include the generate-client rule
-#
-generate: generate-deepcopy generate-crds generate-client
+generate: generate-deepcopy generate-crd generate-client
 
 generate-client:
 	./script/gen_client.sh
+
+generate-crd: controller-gen
+	CONTROLLER_GEN=$(CONTROLLER_GEN) ./script/gen_crd.sh
+
+generate-deepcopy: controller-gen
+	cd pkg/apis/yaks && $(CONTROLLER_GEN) paths="./..." object
 
 build: build-resources build-yaks
 
@@ -141,3 +136,53 @@ version:
 	@echo $(VERSION)
 
 .PHONY: clean build build-yaks build-resources generate-docs release-docs release-docs-dry-run release-docs-major update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
+
+# find or download controller-gen if necessary
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOBIN)/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+kustomize:
+ifeq (, $(shell which kustomize))
+	@{ \
+	set -e ;\
+	KUSTOMIZE_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$KUSTOMIZE_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4 ;\
+	rm -rf $$KUSTOMIZE_GEN_TMP_DIR ;\
+	}
+KUSTOMIZE=$(GOBIN)/kustomize
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
+
+.PHONY: generate-crd bundle bundle-build
+
+bundle: generate-crd kustomize
+	@# Build kustomize manifests
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle --overwrite --version $(OPERATOR_VERSION) $(BUNDLE_METADATA_OPTS)
+	@# Move the dockerfile into the bundle directory
+ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
+	mv bundle.Dockerfile bundle/Dockerfile && sed -i '' 's/bundle\///g' bundle/Dockerfile
+else
+	mv bundle.Dockerfile bundle/Dockerfile && sed -i 's/bundle\///g' bundle/Dockerfile
+endif
+	@# Adds the licence headers to the csv file
+	./script/add_license.sh bundle/manifests ./script/headers/yaml.txt
+	operator-sdk bundle validate ./bundle
+
+# Build the bundle image.
+bundle-build: bundle
+	cd bundle && docker build -f Dockerfile -t $(METADATA_IMAGE_NAME) .

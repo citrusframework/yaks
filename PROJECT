@@ -1,0 +1,13 @@
+domain: citrusframework.org
+layout: go.kubebuilder.io/v2
+repo: github.com/citrusframework/yaks
+resources:
+- group: yaks
+  kind: Test
+  version: v1alpha1
+- group: yaks
+  kind: Instance
+  version: v1alpha1
+version: 3-alpha
+plugins:
+  go.sdk.operatorframework.io/v2-alpha: {}

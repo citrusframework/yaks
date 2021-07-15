@@ -15,13 +15,30 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-resources:
-- deploy/viewer-service-account.yaml
-- rbac/viewer-role-camel-k.yaml
-- rbac/viewer-role-binding-camel-k.yaml
-- rbac/viewer-role-knative.yaml
-- rbac/viewer-role-binding-knative.yaml
-- rbac/viewer-role-kubernetes.yaml
-- rbac/viewer-role-binding-kubernetes.yaml
-- rbac/viewer-role-openshift.yaml
-- rbac/viewer-role-binding-openshift.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-operator-olm
+  labels:
+    app: "yaks"
+rules:
+- apiGroups:
+  - console.openshift.io
+  resources:
+  - consoleclidownloads
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - yaks.citrusframework.org
+  - camel.apache.org
+  resources:
+  - "*"
+  verbs:
+  - "*"

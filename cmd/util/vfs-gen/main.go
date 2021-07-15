@@ -77,7 +77,7 @@ func main() {
 		fs: http.Dir(absDir),
 	}
 	fs = filter.Skip(fs, filter.FilesWithExtensions(".go"))
-	fs = filter.Skip(fs, NamedFilesFilter("kustomization.yaml", "Makefile", "Dockerfile", ".gitignore", "PROJECT"))
+	fs = filter.Skip(fs, NamedFilesFilter("kustomization.yaml", "Dockerfile", ".gitignore", "PROJECT"))
 	fs = filter.Skip(fs, IgnoreParentDirFilter("/bundle", "/operator/patches"))
 	fs = filter.Skip(fs, func(path string, fi os.FileInfo) bool {
 		for _, ex := range exclusions {

@@ -13,6 +13,9 @@ build/_output
 _output
 target/
 
+# Bundle directory
+/bundle
+
 # Binary files
 /yaks
 /yaks-*
