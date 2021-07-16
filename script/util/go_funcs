@@ -48,7 +48,7 @@ cross_compile () {
 	cp ${working_dir}/LICENSE ${target_dir}/
 	cp ${working_dir}/NOTICE ${target_dir}/
 
-	pushd . && cd ${target_dir} && tar -zcvf ${working_dir}/${label}.tar.gz . && popd
+	pushd . && cd ${target_dir} && tar -zcvf ${working_dir}/${label}.tar.gz $(ls -A) && popd
 
 	rm -rf ${build_dir}
 }

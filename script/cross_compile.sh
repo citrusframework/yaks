@@ -16,7 +16,7 @@
 # limitations under the License.
 
 location=$(dirname $0)
-working_dir=$location/../
+working_dir=$(realpath ${location}/../)
 build_dir=$(realpath ${working_dir}/xtmp)
 
 if [ "$#" -ne 2 ]; then
@@ -28,6 +28,8 @@ version="$1"
 build_flags="$2"
 
 source "$location/util/go_funcs"
+
+cd $working_dir
 
 cross_compile "$working_dir" yaks-${version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
 cross_compile "$working_dir" yaks-${version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
