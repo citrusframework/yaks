@@ -29,11 +29,11 @@
   <name>YAKS :: Tools :: Maven :: Extension</name>
 
   <properties>
-    <maven.version>3.6.2</maven.version>
+    <maven.version>3.8.1</maven.version>
   </properties>
 
   <prerequisites>
-    <maven>3.3.9</maven>
+    <maven>3.6.3</maven>
   </prerequisites>
 
   <dependencyManagement>

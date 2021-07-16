@@ -16,12 +16,20 @@
 # ---------------------------------------------------------------------------
 
 resources:
-- deploy/viewer-service-account.yaml
-- rbac/viewer-role-camel-k.yaml
-- rbac/viewer-role-binding-camel-k.yaml
-- rbac/viewer-role-knative.yaml
-- rbac/viewer-role-binding-knative.yaml
-- rbac/viewer-role-kubernetes.yaml
-- rbac/viewer-role-binding-kubernetes.yaml
-- rbac/viewer-role-openshift.yaml
-- rbac/viewer-role-binding-openshift.yaml
+- user-cluster-role.yaml
+- user-global-instance-viewer-role.yaml
+- user-global-instance-viewer-role-binding.yaml
+- operator-role-openshift.yaml
+- operator-role-binding-openshift.yaml
+- operator-role-olm-cluster.yaml
+- operator-role-olm.yaml
+- operator-role-binding-olm-cluster.yaml
+- operator-role-binding-olm.yaml
+- operator-role-camel-k.yaml
+- operator-role-knative.yaml
+- operator-role-kubernetes.yaml
+- operator-role-servicemonitors.yaml
+- operator-role-binding-camel-k.yaml
+- operator-role-binding-knative.yaml
+- operator-role-binding-kubernetes.yaml
+- operator-role-binding-servicemonitors.yaml

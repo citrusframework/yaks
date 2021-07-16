@@ -1,3 +1,0 @@
-- op: replace
-  path: /kind
-  value: ClusterRole

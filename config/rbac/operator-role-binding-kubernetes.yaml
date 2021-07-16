@@ -15,13 +15,18 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-resources:
-- deploy/viewer-service-account.yaml
-- rbac/viewer-role-camel-k.yaml
-- rbac/viewer-role-binding-camel-k.yaml
-- rbac/viewer-role-knative.yaml
-- rbac/viewer-role-binding-knative.yaml
-- rbac/viewer-role-kubernetes.yaml
-- rbac/viewer-role-binding-kubernetes.yaml
-- rbac/viewer-role-openshift.yaml
-- rbac/viewer-role-binding-openshift.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-operator
+  labels:
+    app: "yaks"
+  annotations:
+    can-promote: "true"
+subjects:
+- kind: ServiceAccount
+  name: yaks-operator
+roleRef:
+  kind: Role
+  name: yaks-operator-kubernetes
+  apiGroup: rbac.authorization.k8s.io
