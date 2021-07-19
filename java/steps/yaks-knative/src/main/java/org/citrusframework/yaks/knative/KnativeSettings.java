@@ -143,7 +143,7 @@ public class KnativeSettings {
     public static String getBrokerUrl() {
         String brokerUrlDefault = YaksSettings.isOpenshiftCluster() ?
                 String.format("http://%s", getBrokerHost()) :
-                String.format("http://%s/${%s}/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
+                String.format("http://%s/%s/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
         return System.getProperty(BROKER_URL_PROPERTY,
                 System.getenv(BROKER_URL_ENV) != null ? System.getenv(BROKER_URL_ENV) : brokerUrlDefault);
     }
