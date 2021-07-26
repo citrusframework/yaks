@@ -67,7 +67,7 @@ build-yaks:
 	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
 
 build-resources:
-	./script/build_resources.sh config
+	go generate ./pkg/...
 
 set-version-file:
 	./script/set_version_file.sh $(VERSION) $(SNAPSHOT_VERSION) $(IMAGE_NAME)
