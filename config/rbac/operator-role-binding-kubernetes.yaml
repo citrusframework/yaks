@@ -28,5 +28,5 @@ subjects:
   name: yaks-operator
 roleRef:
   kind: Role
-  name: yaks-operator-kubernetes
+  name: yaks-operator
   apiGroup: rbac.authorization.k8s.io

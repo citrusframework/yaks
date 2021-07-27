@@ -173,8 +173,8 @@ func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 func installOpenShift(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/manager/operator-service-account.yaml",
-		"/rbac-openshift/operator-role-openshift.yaml",
-		"/rbac-openshift/operator-role-binding-openshift.yaml",
+		"/rbac/operator-role-openshift.yaml",
+		"/rbac/operator-role-binding-openshift.yaml",
 		"/manager/operator-deployment.yaml",
 	)
 }
@@ -182,16 +182,16 @@ func installOpenShift(ctx context.Context, c client.Client, namespace string, cu
 func installKubernetes(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/manager/operator-service-account.yaml",
-		"/rbac-kubernetes/operator-role-kubernetes.yaml",
-		"/rbac-kubernetes/operator-role-binding-kubernetes.yaml",
+		"/rbac/operator-role-kubernetes.yaml",
+		"/rbac/operator-role-binding-kubernetes.yaml",
 		"/manager/operator-deployment.yaml",
 	)
 }
 
 func InstallKnative(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
-		"/rbac-kubernetes/operator-role-knative.yaml",
-		"/rbac-kubernetes/operator-role-binding-knative.yaml",
+		"/rbac/operator-role-knative.yaml",
+		"/rbac/operator-role-binding-knative.yaml",
 	); err != nil {
 		return err
 	}
@@ -202,8 +202,8 @@ func InstallKnative(ctx context.Context, c client.Client, namespace string, cust
 
 func InstallCamelK(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
-		"/rbac-kubernetes/operator-role-camel-k.yaml",
-		"/rbac-kubernetes/operator-role-binding-camel-k.yaml",
+		"/rbac/operator-role-camel-k.yaml",
+		"/rbac/operator-role-binding-camel-k.yaml",
 	); err != nil {
 		return err
 	}
@@ -214,15 +214,15 @@ func InstallCamelK(ctx context.Context, c client.Client, namespace string, custo
 
 func InstallServiceMonitors(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
-		"/rbac-kubernetes/operator-role-servicemonitors.yaml",
-		"/rbac-kubernetes/operator-role-binding-servicemonitors.yaml",
+		"/rbac/operator-role-servicemonitors.yaml",
+		"/rbac/operator-role-binding-servicemonitors.yaml",
 	)
 }
 
 // installs the role that allows any user ro access to instances in all namespaces
 func InstallInstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
-		"/rbac-kubernetes/user-global-instance-viewer-role.yaml",
-		"/rbac-kubernetes/user-global-instance-viewer-role-binding.yaml",
+		"/rbac/user-global-instance-viewer-role.yaml",
+		"/rbac/user-global-instance-viewer-role-binding.yaml",
 	)
 }
