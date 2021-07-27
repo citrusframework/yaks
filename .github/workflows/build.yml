@@ -40,14 +40,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
+    - name: Set up JDK 11
+      uses: AdoptOpenJDK/install-jdk@v1
       with:
-        java-version: 1.8
+        version: "11"
     - name: Install Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13.x
+        go-version: 1.15.x
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Cache Go modules
@@ -75,15 +75,16 @@ jobs:
       KAMEL_INSTALL_REGISTRY_INSECURE: true
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
+      YAKS_RUN_OPTIONS: "--timeout=10s"
     steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
+    - name: Set up JDK 11
+      uses: AdoptOpenJDK/install-jdk@v1
       with:
-        java-version: 1.8
+        version: "11"
     - name: Install Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13.x
+        go-version: 1.15.x
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Cache Go modules
@@ -102,10 +103,14 @@ jobs:
           ${{ runner.os }}-m2-
     - name: Kind Cluster
       uses: container-tools/kind-action@v1
-      #with:
-      #  knative_serving: v0.19.0
-      #  knative_kourier: v0.19.0
-      #  knative_eventing: v0.19.0
+      with:
+        version: v0.11.0
+        node_image: kindest/node:v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad
+    - name: Info
+      run: |
+        kubectl version
+        kubectl cluster-info
+        kubectl describe nodes
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1
     - name: Build
@@ -122,22 +127,22 @@ jobs:
         # Eventually `yaks run examples` should work
 
         # For now:
-        yaks run examples/camel
-        yaks run examples/camel-k
-        #yaks run examples/extension
-        yaks run examples/http
-        #yaks run examples/jdbc
-        yaks run examples/jitpack
-        #yaks run examples/kamelets
-        #yaks run examples/knative
-        yaks run examples/kubernetes
-        yaks run examples/logging
-        yaks run examples/namespace
-        yaks run examples/openapi
-        yaks run examples/openapi-server
-        yaks run examples/run-scripts
-        #yaks run examples/secrets
-        yaks run examples/settings
-        yaks run examples/test-group
-        yaks run examples/helloworld.feature
-        yaks run examples/selenium
+        yaks run examples/camel $YAKS_RUN_OPTIONS
+        yaks run examples/camel-k $YAKS_RUN_OPTIONS
+        #yaks run examples/extension $YAKS_RUN_OPTIONS
+        yaks run examples/http $YAKS_RUN_OPTIONS
+        #yaks run examples/jdbc $YAKS_RUN_OPTIONS
+        yaks run examples/jitpack $YAKS_RUN_OPTIONS
+        #yaks run examples/kamelets $YAKS_RUN_OPTIONS
+        #yaks run examples/knative $YAKS_RUN_OPTIONS
+        yaks run examples/kubernetes $YAKS_RUN_OPTIONS
+        yaks run examples/logging $YAKS_RUN_OPTIONS
+        yaks run examples/namespace $YAKS_RUN_OPTIONS
+        yaks run examples/openapi $YAKS_RUN_OPTIONS
+        yaks run examples/openapi-server $YAKS_RUN_OPTIONS
+        yaks run examples/run-scripts $YAKS_RUN_OPTIONS
+        #yaks run examples/secrets $YAKS_RUN_OPTIONS
+        yaks run examples/settings $YAKS_RUN_OPTIONS
+        yaks run examples/test-group $YAKS_RUN_OPTIONS
+        yaks run examples/helloworld.feature $YAKS_RUN_OPTIONS
+        yaks run examples/selenium $YAKS_RUN_OPTIONS

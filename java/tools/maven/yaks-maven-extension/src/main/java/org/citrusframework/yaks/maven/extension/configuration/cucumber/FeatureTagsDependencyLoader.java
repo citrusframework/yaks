@@ -20,7 +20,6 @@ package org.citrusframework.yaks.maven.extension.configuration.cucumber;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -31,12 +30,15 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.citrusframework.yaks.maven.extension.ExtensionSettings;
-import org.citrusframework.yaks.maven.extension.configuration.DependencyLoader;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Dependency;
+import org.citrusframework.yaks.maven.extension.ExtensionSettings;
+import org.citrusframework.yaks.maven.extension.configuration.DependencyLoader;
 import org.codehaus.plexus.logging.Logger;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.util.StreamUtils;
 
 /**
  * Loader reviews all Cucumber feature files and adds additional dependencies based on tag information on scenarios. Users
@@ -69,16 +71,15 @@ public class FeatureTagsDependencyLoader implements DependencyLoader {
      */
     private void loadFromClasspath(List<Dependency> dependencyList, Properties properties, Logger logger) throws LifecycleExecutionException {
         try {
-            Files.list(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("")).toURI()))
-                    .filter(file -> file.getFileName().toString().endsWith(ExtensionSettings.FEATURE_FILE_EXTENSION))
-                    .forEach(file -> {
+            Stream.of(new PathMatchingResourcePatternResolver().getResources("classpath*:*.feature"))
+                    .forEach(resource -> {
                         try {
-                            dependencyList.addAll(loadDependencyTags(new String(Files.readAllBytes(file), StandardCharsets.UTF_8), properties, logger));
+                            dependencyList.addAll(loadDependencyTags(new String(StreamUtils.copyToByteArray(resource.getInputStream()), StandardCharsets.UTF_8), properties, logger));
                         } catch (IOException e) {
                             logger.warn("Failed to read BDD feature", e);
                         }
                     });
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new LifecycleExecutionException("Failed to retrieve BDD feature files in classpath", e);
         }
     }

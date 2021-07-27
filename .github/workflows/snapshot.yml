@@ -28,14 +28,14 @@ jobs:
     if: github.repository == 'citrusframework/yaks'
 
     steps:
-    - name: Set Up Java
-      uses: actions/setup-java@v1
+    - name: Set up JDK 11
+      uses: AdoptOpenJDK/install-jdk@v1
       with:
-        java-version: 1.8
+        version: "11"
     - name: Install Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.13.x
+        go-version: 1.15.x
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Cache Go modules

@@ -48,12 +48,12 @@ deploy_crd_file() {
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     cat "${source}.orig" | sed -n '/^---/,/^status/p;/^status/q' \
       | sed '1d;$d' \
-      | sed 's/^metadata:/metadata:\n  labels:\n    app: "yaks"/' >> "$source"
+      | sed 's/^metadata:/metadata:\n  labels:\n    app: yaks/' >> "$source"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
     cat "${source}.orig" | sed -n '/^---/,/^status/p;/^status/q' \
       | sed '1d;$d' \
-      | sed $'s/^metadata:/metadata:\\\n  labels:\\\n    app: "yaks"/' >> "$source"
+      | sed $'s/^metadata:/metadata:\\\n  labels:\\\n    app: yaks/' >> "$source"
   fi
 
   for dest in "${@:2}"; do
