@@ -44,6 +44,7 @@ type RootCmdOptions struct {
 	_client       client.Client      `mapstructure:"-"`
 	KubeConfig    string             `mapstructure:"kube-config"`
 	Namespace     string             `mapstructure:"namespace"`
+	Verbose       bool               `mapstructure:"verbose"`
 }
 
 // NewYaksCommand --
@@ -67,6 +68,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")
 	cmd.PersistentFlags().StringVarP(&options.Namespace, "namespace", "n", "", "Namespace to use for all operations")
+	cmd.PersistentFlags().BoolVarP(&options.Verbose, "verbose", "v", false, "Print details while performing an operation")
 
 	cmd.AddCommand(newCmdCompletion(&cmd))
 	cmd.AddCommand(newCmdVersion())

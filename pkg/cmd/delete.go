@@ -54,7 +54,6 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 	}
 
 	cmd.Flags().BoolP("all", "a", false, "Delete all tests")
-	cmd.Flags().BoolP("verbose", "v", false, "Print details while deleting tests")
 
 	return &cmd, &options
 }
@@ -62,7 +61,6 @@ func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOpt
 type deleteCmdOptions struct {
 	*RootCmdOptions
 	DeleteAll bool `mapstructure:"all"`
-	Verbose   bool `mapstructure:"verbose"`
 }
 
 func (o *deleteCmdOptions) validateArgs(_ *cobra.Command, args []string) error {

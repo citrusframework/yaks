@@ -181,6 +181,10 @@ func (o *uninstallCmdOptions) uninstallOperator(ctx context.Context, c client.Cl
 		if err != nil {
 			return err
 		}
+
+		if o.Verbose {
+			fmt.Println("Deployment " + deployment.Name + " deleted")
+		}
 	}
 
 	instance := v1alpha1.Instance{
@@ -302,15 +306,19 @@ func (o *uninstallCmdOptions) uninstallCrd(ctx context.Context, c kubernetes.Int
 func (o *uninstallCmdOptions) uninstallRoles(ctx context.Context, c client.Client, namespace string) error {
 	api := c.RbacV1()
 
-	roleBindings, err := api.Roles(namespace).List(ctx, defaultListOptions)
+	roles, err := api.Roles(namespace).List(ctx, defaultListOptions)
 	if err != nil {
 		return err
 	}
 
-	for _, roleBinding := range roleBindings.Items {
-		err := api.Roles(namespace).Delete(ctx, roleBinding.Name, metav1.DeleteOptions{})
+	for _, role := range roles.Items {
+		err := api.Roles(namespace).Delete(ctx, role.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
+		}
+
+		if o.Verbose {
+			fmt.Println("Role " + role.Name + " deleted")
 		}
 	}
 
@@ -330,6 +338,10 @@ func (o *uninstallCmdOptions) uninstallRoleBindings(ctx context.Context, c clien
 		if err != nil {
 			return err
 		}
+
+		if o.Verbose {
+			fmt.Println("RoleBinding " + roleBinding.Name + " deleted")
+		}
 	}
 
 	return nil
@@ -347,6 +359,10 @@ func (o *uninstallCmdOptions) uninstallClusterRoles(ctx context.Context, c clien
 		err := api.ClusterRoles().Delete(ctx, clusterRole.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
+		}
+
+		if o.Verbose {
+			fmt.Println("ClusterRole " + clusterRole.Name + " deleted")
 		}
 	}
 
@@ -366,6 +382,10 @@ func (o *uninstallCmdOptions) uninstallClusterRoleBindings(ctx context.Context, 
 		if err != nil {
 			return err
 		}
+
+		if o.Verbose {
+			fmt.Println("ClusterRoleBinding " + clusterRoleBinding.Name + " deleted")
+		}
 	}
 
 	return nil
@@ -384,13 +404,17 @@ func (o *uninstallCmdOptions) uninstallServiceAccounts(ctx context.Context, c cl
 		if err != nil {
 			return err
 		}
+
+		if o.Verbose {
+			fmt.Println("ServiceAccount " + serviceAccount.Name + " deleted")
+		}
 	}
 
 	return nil
 }
 
 func (o *uninstallCmdOptions) uninstallTests(ctx context.Context, c client.Client, namespace string) error {
-	return deleteAllTests(ctx, c, namespace, false)
+	return deleteAllTests(ctx, c, namespace, o.Verbose)
 }
 
 func (o *uninstallCmdOptions) uninstallConfigMaps(ctx context.Context, c client.Client, namespace string) error {
@@ -405,6 +429,10 @@ func (o *uninstallCmdOptions) uninstallConfigMaps(ctx context.Context, c client.
 		err := api.ConfigMaps(namespace).Delete(ctx, configMap.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return err
+		}
+
+		if o.Verbose {
+			fmt.Println("ConfigMap " + configMap.Name + " deleted")
 		}
 	}
 
