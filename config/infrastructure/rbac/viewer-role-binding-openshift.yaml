@@ -26,5 +26,5 @@ subjects:
   name: yaks-viewer
 roleRef:
   kind: Role
-  name: yaks-viewer-openshift
+  name: yaks-viewer
   apiGroup: rbac.authorization.k8s.io
