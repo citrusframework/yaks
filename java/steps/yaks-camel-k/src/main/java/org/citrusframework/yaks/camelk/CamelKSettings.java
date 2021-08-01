@@ -51,6 +51,10 @@ public final class CamelKSettings {
     private static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
 
+    private static final String SUPPORT_VARIABLES_IN_SOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "support.variables.in.sources";
+    private static final String SUPPORT_VARIABLES_IN_SOURCES_ENV = CAMELK_ENV_PREFIX + "SUPPORT_VARIABLES_IN_SOURCES";
+    private static final String SUPPORT_VARIABLES_IN_SOURCES_DEFAULT = "true";
+
     public static final String INTEGRATION_LABEL = "camel.apache.org/integration";
 
     private CamelKSettings() {
@@ -110,5 +114,15 @@ public final class CamelKSettings {
     public static boolean isAutoRemoveResources() {
         return Boolean.parseBoolean(System.getProperty(AUTO_REMOVE_RESOURCES_PROPERTY,
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
+    }
+
+    /**
+     * When set to true YAKS will replace test variables in Camel-K sources.
+     * In certain circumstances this may raise unknown variable errors when Camel body expressions are used (${body}).
+     * @return
+     */
+    public static boolean isSupportVariablesInSources() {
+        return Boolean.parseBoolean(System.getProperty(SUPPORT_VARIABLES_IN_SOURCES_PROPERTY,
+                System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) != null ? System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) : SUPPORT_VARIABLES_IN_SOURCES_DEFAULT));
     }
 }
