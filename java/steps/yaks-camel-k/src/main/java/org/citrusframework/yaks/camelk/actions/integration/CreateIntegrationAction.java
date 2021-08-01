@@ -52,6 +52,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final List<String> properties;
     private final List<String> propertyFiles;
     private final String traits;
+    private final boolean supportVariables;
 
     /**
      * Constructor using given builder.
@@ -65,6 +66,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.properties = builder.properties;
         this.propertyFiles = builder.propertyFiles;
         this.traits = builder.traits;
+        this.supportVariables = builder.supportVariables;
     }
 
     @Override
@@ -73,16 +75,23 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     }
 
     private void createIntegration(TestContext context) {
-        final Integration.Builder integrationBuilder = new Integration.Builder()
-                .name(context.replaceDynamicContentInString(integrationName))
-                .source(context.replaceDynamicContentInString(source));
-
-        if (dependencies != null && !dependencies.isEmpty()) {
-            integrationBuilder.dependencies(context.resolveDynamicValuesInList(dependencies));
+        String resolvedSource;
+        if (supportVariables) {
+            resolvedSource = context.replaceDynamicContentInString(source);
+        } else {
+            resolvedSource = source;
         }
 
+        final Integration.Builder integrationBuilder = new Integration.Builder()
+                .name(context.replaceDynamicContentInString(integrationName))
+                .source(resolvedSource);
+
+        List<String> resolvedDependencies = resolveDependencies(resolvedSource, context.resolveDynamicValuesInList(dependencies));
+        if (!resolvedDependencies.isEmpty()) {
+            integrationBuilder.dependencies(resolvedDependencies);
+        }
         addPropertyConfigurationSpec(integrationBuilder, context);
-        addTraitSpec(integrationBuilder, context);
+        addTraitSpec(integrationBuilder, resolvedSource, context);
 
         final Integration i = integrationBuilder.build();
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
@@ -93,23 +102,37 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
     }
 
-    private void addTraitSpec(Integration.Builder integrationBuilder, TestContext context) {
+    private void addTraitSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
+        final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
+
         if (traits != null && !traits.isEmpty()) {
-            final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
             for (String t : context.replaceDynamicContentInString(traits).split(",")){
-                //traitName.key=value
-                if (!validateTraitFormat(t)) {
-                    throw new IllegalArgumentException("Trait " + t + " does not match format traitName.key=value");
-                }
-                final String[] trait = t.split("\\.",2);
-                final String[] traitConfig = trait[1].split("=", 2);
-                if (traitConfigMap.containsKey(trait[0])) {
-                    traitConfigMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
-                } else {
-                    traitConfigMap.put(trait[0], new IntegrationSpec.TraitConfig(traitConfig[0], traitConfig[1]));
-                }
+                addTraitSpec(t, traitConfigMap);
             }
+        }
+
+        Pattern pattern = Pattern.compile("^// camel-k: ?trait=(.+)$", Pattern.MULTILINE);
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            addTraitSpec(depMatcher.group(1), traitConfigMap);
+        }
+
+        if (!traitConfigMap.isEmpty()) {
             integrationBuilder.traits(traitConfigMap);
+        }
+    }
+
+    private void addTraitSpec(String traitExpression, Map<String, IntegrationSpec.TraitConfig> configMap) {
+        //traitName.key=value
+        if (!validateTraitFormat(traitExpression)) {
+            throw new IllegalArgumentException("Trait " + traitExpression + " does not match format traitName.key=value");
+        }
+        final String[] trait = traitExpression.split("\\.",2);
+        final String[] traitConfig = trait[1].split("=", 2);
+        if (configMap.containsKey(trait[0])) {
+            configMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
+        } else {
+            configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitConfig[0], traitConfig[1]));
         }
     }
 
@@ -172,6 +195,24 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     }
 
     /**
+     * Resolve dependencies for Camel-K integration and support modeline instructions in given source.
+     * @param source
+     * @param dependencies
+     * @return
+     */
+    private static List<String> resolveDependencies(String source, List<String> dependencies) {
+        List<String> resolved = new ArrayList<>(dependencies);
+
+        Pattern pattern = Pattern.compile("^// camel-k: ?dependency=(.+)$", Pattern.MULTILINE);
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            resolved.add(depMatcher.group(1));
+        }
+
+        return resolved;
+    }
+
+    /**
      * Action builder.
      */
     public static final class Builder extends AbstractCamelKAction.Builder<CreateIntegrationAction, Builder> {
@@ -182,9 +223,15 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private final List<String> properties = new ArrayList<>();
         private final List<String> propertyFiles = new ArrayList<>();
         private String traits;
+        private boolean supportVariables = true;
 
         public Builder integration(String integrationName) {
             this.integrationName = integrationName;
+            return this;
+        }
+
+        public Builder supportVariables(boolean supportVariables) {
+            this.supportVariables = supportVariables;
             return this;
         }
 
