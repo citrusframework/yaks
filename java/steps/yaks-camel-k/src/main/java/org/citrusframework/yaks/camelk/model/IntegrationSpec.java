@@ -210,8 +210,8 @@ public class IntegrationSpec implements KubernetesResource {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"language", "loader", "type", "name", "content", "contentRef", "contentKey", "compression",
-            "property-names", "interceptors"})
+    @JsonPropertyOrder({"language", "loader", "type", "name", "path", "rawContent", "content",
+            "contentType", "contentRef", "contentKey", "compression", "property-names", "interceptors"})
     public static class Source extends DataSpec {
         @JsonProperty("language")
         private String language;
@@ -274,7 +274,8 @@ public class IntegrationSpec implements KubernetesResource {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"type", "mountPath", "name", "content", "contentRef", "contentKey", "compression"})
+    @JsonPropertyOrder({"type", "mountPath", "name", "path", "rawContent", "content",
+            "contentType", "contentRef", "contentKey", "compression"})
     public static class Resource extends DataSpec {
         @JsonProperty("type")
         private String type;
@@ -311,14 +312,20 @@ public class IntegrationSpec implements KubernetesResource {
     private static class DataSpec {
         @JsonProperty("name")
         private String name;
+        @JsonProperty("path")
+        private String path;
         @JsonProperty("content")
         private String content;
         @JsonProperty("contentRef")
         private String contentRef;
+        @JsonProperty("contentType")
+        private String contentType;
         @JsonProperty("contentKey")
         private String contentKey;
         @JsonProperty("compression")
         private String compression;
+        @JsonProperty("rawContent")
+        private String rawContent;
 
         public DataSpec() {
             super();
@@ -345,6 +352,22 @@ public class IntegrationSpec implements KubernetesResource {
             this.name = name;
         }
 
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
+        }
+
         public String getContentRef() {
             return contentRef;
         }
@@ -367,6 +390,14 @@ public class IntegrationSpec implements KubernetesResource {
 
         public void setCompression(String compression) {
             this.compression = compression;
+        }
+
+        public String getRawContent() {
+            return rawContent;
+        }
+
+        public void setRawContent(String rawContent) {
+            this.rawContent = rawContent;
         }
     }
 }

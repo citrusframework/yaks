@@ -51,7 +51,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final List<String> dependencies;
     private final List<String> properties;
     private final List<String> propertyFiles;
-    private final String traits;
+    private final List<String> traits;
     private final boolean supportVariables;
 
     /**
@@ -106,7 +106,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
 
         if (traits != null && !traits.isEmpty()) {
-            for (String t : context.replaceDynamicContentInString(traits).split(",")){
+            for (String t : context.resolveDynamicValuesInList(traits)){
                 addTraitSpec(t, traitConfigMap);
             }
         }
@@ -222,7 +222,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private final List<String> dependencies = new ArrayList<>();
         private final List<String> properties = new ArrayList<>();
         private final List<String> propertyFiles = new ArrayList<>();
-        private String traits;
+        private final List<String> traits = new ArrayList<>();
         private boolean supportVariables = true;
 
         public Builder integration(String integrationName) {
@@ -241,7 +241,10 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder dependencies(String dependencies) {
-            this.dependencies.addAll(Arrays.asList(dependencies.split(",")));
+            if (dependencies != null && dependencies.length() > 0) {
+                dependencies(Arrays.asList(dependencies.split(",")));
+            }
+
             return this;
         }
 
@@ -256,7 +259,10 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder properties(String properties) {
-            this.properties.addAll(Arrays.asList(properties.split(",")));
+            if (properties != null && properties.length() > 0) {
+                properties(Arrays.asList(properties.split(",")));
+            }
+
             return this;
         }
 
@@ -281,7 +287,20 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder traits(String traits) {
-            this.traits = traits;
+            if (traits != null && traits.length() > 0) {
+                traits(Arrays.asList(traits.split(",")));
+            }
+
+            return this;
+        }
+
+        public Builder traits(List<String> traits) {
+            this.traits.addAll(traits);
+            return this;
+        }
+
+        public Builder trait(String name, String key, String value) {
+            this.traits.add(String.format("%s.%s=%s", name, key, value));
             return this;
         }
 

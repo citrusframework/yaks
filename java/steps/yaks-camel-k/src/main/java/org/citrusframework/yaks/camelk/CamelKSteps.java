@@ -210,7 +210,7 @@ public class CamelKSteps {
                 .propertyFiles(propertyFiles)
                 .supportVariables(Boolean.parseBoolean(
                         configuration.getOrDefault("supportVariables", String.valueOf(supportVariablesInSources))))
-                .traits(configuration.get("traits")));
+                .traits(configuration.getOrDefault("traits", "").trim()));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
