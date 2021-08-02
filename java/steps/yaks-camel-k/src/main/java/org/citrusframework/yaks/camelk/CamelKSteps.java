@@ -101,35 +101,19 @@ public class CamelKSteps {
     }
 
 	@Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
-	public void createNewIntegration(String name, String language, Map<String, String> configuration) {
+	public void createIntegration(String name, String language, Map<String, String> configuration) {
 		if (configuration.get("source") == null) {
 			throw new IllegalStateException("Specify 'source' parameter");
 		}
 
-		String integrationName = configuration.getOrDefault("name", name.toLowerCase());
-
-		runner.run(camelk()
-                    .client(k8sClient)
-                    .createIntegration(integrationName + "." + language)
-                    .source(configuration.get("source"))
-                    .dependencies(configuration.getOrDefault("dependencies", "").trim())
-                    .properties(configuration.getOrDefault("properties", "").trim())
-                    .propertyFiles(propertyFiles)
-                    .supportVariables(Boolean.parseBoolean(
-                            configuration.getOrDefault("supportVariables", String.valueOf(supportVariablesInSources))))
-                    .traits(configuration.get("traits")));
-
-        if (autoRemoveResources) {
-            runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteIntegration(integrationName)));
-        }
+		createIntegration(name, language, configuration.get("source"), configuration);
 	}
 
 	@Given("^load Camel-K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+)$")
 	public void loadIntegrationFromFile(String name, String language) {
         Resource resource = new ClassPathResource(name + "." + language);
         try {
-            createNewIntegration(name, language, FileUtils.readToString(resource));
+            createIntegration(name, language, FileUtils.readToString(resource));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language));
         }
@@ -139,15 +123,14 @@ public class CamelKSteps {
 	public void loadIntegrationFromFile(String name, String language, Map<String, String> configuration) {
         try {
             Resource resource = new ClassPathResource(name + "." + language);
-            configuration.put("source", FileUtils.readToString(resource));
-            createNewIntegration(name, language, configuration);
+            createIntegration(name, language, FileUtils.readToString(resource), configuration);
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language));
         }
     }
 
     @Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+)$")
-	public void createNewIntegration(String name, String language, String source) {
+	public void createIntegration(String name, String language, String source) {
         String integrationName = name.toLowerCase();
 
         runner.run(camelk()
@@ -213,5 +196,25 @@ public class CamelKSteps {
                     .maxAttempts(maxAttempts)
                     .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
+    }
+
+    private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
+        String integrationName = configuration.getOrDefault("name", name.toLowerCase());
+
+        runner.run(camelk()
+                .client(k8sClient)
+                .createIntegration(integrationName + "." + language)
+                .source(source)
+                .dependencies(configuration.getOrDefault("dependencies", "").trim())
+                .properties(configuration.getOrDefault("properties", "").trim())
+                .propertyFiles(propertyFiles)
+                .supportVariables(Boolean.parseBoolean(
+                        configuration.getOrDefault("supportVariables", String.valueOf(supportVariablesInSources))))
+                .traits(configuration.get("traits")));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(camelk().client(k8sClient).deleteIntegration(integrationName)));
+        }
     }
 }
