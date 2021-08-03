@@ -80,12 +80,20 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 
 		public Integration build() {
 			Integration i = new Integration();
-			i.getMetadata().setName(name.substring(0, name.indexOf(".")));
+			i.getMetadata().setName(sanitizeIntegrationName(name));
 			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(name, source)));
 			i.getSpec().setDependencies(dependencies);
 			i.getSpec().setTraits(traits);
 			i.getSpec().setConfiguration(configuration);
 			return i;
+		}
+
+		private String sanitizeIntegrationName(String name) {
+			String sanitized = name.substring(0, name.indexOf("."));
+
+			sanitized = sanitized.replaceAll("([a-z])([A-Z]+)", "$1-$2").toLowerCase();
+
+			return sanitized.replaceAll("[^a-z0-9-]", "");
 		}
 	}
 }

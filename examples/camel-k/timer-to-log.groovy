@@ -18,6 +18,6 @@
 // camel-k: language=groovy
 
 from('timer:tick?period=1000')
-    .setBody().constant('Hello world from Camel K')
+    .setBody().constant('{{message}}')
     .to('log:info')
 

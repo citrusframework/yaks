@@ -131,18 +131,16 @@ public class CamelKSteps {
 
     @Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+)$")
 	public void createIntegration(String name, String language, String source) {
-        String integrationName = name.toLowerCase();
-
         runner.run(camelk()
                     .client(k8sClient)
-                    .createIntegration(integrationName + "." + language)
+                    .createIntegration(name + "." + language)
                     .propertyFiles(propertyFiles)
                     .supportVariables(supportVariablesInSources)
                     .source(source));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteIntegration(integrationName)));
+                    .actions(camelk().client(k8sClient).deleteIntegration(name)));
         }
 	}
 
@@ -199,11 +197,9 @@ public class CamelKSteps {
     }
 
     private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
-        String integrationName = configuration.getOrDefault("name", name.toLowerCase());
-
         runner.run(camelk()
                 .client(k8sClient)
-                .createIntegration(integrationName + "." + language)
+                .createIntegration(name + "." + language)
                 .source(source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
                 .properties(configuration.getOrDefault("properties", "").trim())
@@ -214,7 +210,7 @@ public class CamelKSteps {
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteIntegration(integrationName)));
+                    .actions(camelk().client(k8sClient).deleteIntegration(name)));
         }
     }
 }

@@ -34,6 +34,24 @@ import org.springframework.util.StringUtils;
 public class IntegrationBuilderTest {
 
 	@Test
+	public void shouldSanitizeIntegrationNames() throws IOException {
+		Integration i = new Integration.Builder()
+				.name("SomeCamelCaseSource.java")
+				.source("from(\"timer:x\").log('${body}')")
+				.build();
+
+		Assert.assertEquals(i.getMetadata().getName(), "some-camel-case-source");
+		Assert.assertEquals(i.getSpec().getSources().get(0).getName(), "SomeCamelCaseSource.java");
+
+		i = new Integration.Builder()
+				.name("ThisIsATest%&/$_!.java")
+				.source("from(\"timer:x\").log('${body}')")
+				.build();
+
+		Assert.assertEquals(i.getMetadata().getName(), "this-is-atest");
+	}
+
+	@Test
 	public void buildComplexIntegrationTest() throws IOException {
 		Map<String, IntegrationSpec.TraitConfig> traits = new HashMap<>();
 		IntegrationSpec.TraitConfig quarkus = new IntegrationSpec.TraitConfig("enabled", "true");
