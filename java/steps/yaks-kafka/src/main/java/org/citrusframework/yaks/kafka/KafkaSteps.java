@@ -25,6 +25,7 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
 import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
@@ -46,6 +47,9 @@ public class KafkaSteps {
 
     @CitrusResource
     private TestCaseRunner runner;
+
+    @CitrusResource
+    private TestContext context;
 
     @CitrusFramework
     private Citrus citrus;
@@ -92,10 +96,10 @@ public class KafkaSteps {
         String consumerGroup = connectionProps.getOrDefault("consumerGroup", KafkaMessageHeaders.KAFKA_PREFIX + "group");
         String offsetReset = connectionProps.getOrDefault("offsetReset", "earliest");
 
-        setTopic(topicName);
-        kafkaEndpoint.getEndpointConfiguration().setServer(url);
-        kafkaEndpoint.getEndpointConfiguration().setOffsetReset(offsetReset);
-        kafkaEndpoint.getEndpointConfiguration().setConsumerGroup(consumerGroup);
+        setTopic(context.replaceDynamicContentInString(topicName));
+        kafkaEndpoint.getEndpointConfiguration().setServer(context.replaceDynamicContentInString(url));
+        kafkaEndpoint.getEndpointConfiguration().setOffsetReset(context.replaceDynamicContentInString(offsetReset));
+        kafkaEndpoint.getEndpointConfiguration().setConsumerGroup(context.replaceDynamicContentInString(consumerGroup));
     }
 
     @Given("^(?:Kafka|kafka) producer configuration$")

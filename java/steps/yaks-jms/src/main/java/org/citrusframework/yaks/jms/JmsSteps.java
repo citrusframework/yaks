@@ -28,6 +28,7 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.jms.endpoint.JmsEndpoint;
 import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
@@ -47,6 +48,9 @@ public class JmsSteps {
 
     @CitrusResource
     private TestCaseRunner runner;
+
+    @CitrusResource
+    private TestContext context;
 
     @CitrusFramework
     private Citrus citrus;
@@ -106,7 +110,7 @@ public class JmsSteps {
     public void setConnection(DataTable properties) throws ClassNotFoundException {
         List<List<String>> cells = properties.cells();
         Map<String, String> connectionSettings = new LinkedHashMap<>();
-        cells.forEach(row -> connectionSettings.put(row.get(0), row.get(1)));
+        cells.forEach(row -> connectionSettings.put(row.get(0), context.replaceDynamicContentInString(row.get(1))));
 
         connectionFactory = ConnectionFactoryCreator.lookup(connectionSettings.get("type"))
                                                     .create(connectionSettings);
