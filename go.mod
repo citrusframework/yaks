@@ -1,10 +1,9 @@
 module github.com/citrusframework/yaks
 
-go 1.13
+go 1.16
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/apache/camel-k v1.4.0
 	github.com/container-tools/snap v0.0.8
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-logr/logr v0.4.0
@@ -20,26 +19,19 @@ require (
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.7.0
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
 	github.com/stoewer/go-strcase v1.2.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.20.1
-	k8s.io/apiextensions-apiserver v0.19.8
-	k8s.io/apimachinery v0.20.1
-	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/klog/v2 v2.5.0
-	knative.dev/eventing v0.21.1
-	sigs.k8s.io/controller-runtime v0.7.2
-	sigs.k8s.io/controller-tools v0.4.1 // indirect
-)
-
-replace (
-	k8s.io/api => k8s.io/api v0.19.8
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.8
-	k8s.io/client-go => k8s.io/client-go v0.19.8
+	k8s.io/api v0.20.7
+	k8s.io/apiextensions-apiserver v0.20.7
+	k8s.io/apimachinery v0.20.7
+	k8s.io/client-go v0.20.7
+	k8s.io/klog/v2 v2.8.0
+	knative.dev/eventing v0.24.1
+	sigs.k8s.io/controller-runtime v0.8.3
 )
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309 // Required by Helm
