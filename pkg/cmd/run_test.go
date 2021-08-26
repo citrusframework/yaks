@@ -107,3 +107,9 @@ func TestStepCheckCombinations(t *testing.T) {
 
 	assert.NilError(t, err)
 }
+
+func TestResolveScriptFileName(t *testing.T) {
+	assert.Equal(t, resolve("pre.sh"), "pre.sh")
+	assert.Equal(t, resolve("pre-{{os.type}}.sh"), fmt.Sprintf("pre-%s.sh", r.GOOS))
+	assert.Equal(t, resolve("pre-{{os.type}}-{{os.arch}}.sh"), fmt.Sprintf("pre-%s-%s.sh", r.GOOS, r.GOARCH))
+}

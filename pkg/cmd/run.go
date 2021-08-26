@@ -857,7 +857,7 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 		executor = "/bin/bash"
 	}
 
-	command := exec.CommandContext(ctx, executor, scriptFile)
+	command := exec.CommandContext(ctx, executor, resolve(scriptFile))
 
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
@@ -873,6 +873,12 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 		return err
 	}
 	return nil
+}
+
+func resolve(fileName string) string {
+	resolved := strings.ReplaceAll(fileName, "{{os.type}}", r.GOOS)
+	resolved = strings.ReplaceAll(resolved, "{{os.arch}}", r.GOARCH)
+	return resolved
 }
 
 func initializeTempNamespace(name string, c client.Client, context context.Context) (metav1.Object, error) {
