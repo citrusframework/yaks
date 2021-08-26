@@ -48,6 +48,7 @@ type StepConfig struct {
 	Script  string `yaml:"script"`
 	Name    string `yaml:"name"`
 	Timeout string `yaml:"timeout"`
+	If      string `yaml:"if"`
 }
 
 type RuntimeConfig struct {

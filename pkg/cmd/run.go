@@ -740,6 +740,15 @@ func (o *runCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, e
 
 func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 	for idx, step := range steps {
+		if len(step.Name) == 0 {
+			step.Name = fmt.Sprintf("step-%d", idx)
+		}
+
+		if skipStep(step) {
+			fmt.Printf("Skip %s\n", step.Name)
+			continue
+		}
+
 		if len(step.Script) > 0 {
 			desc := step.Name
 			if desc == "" {
@@ -788,6 +797,47 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 	}
 
 	return nil
+}
+
+func skipStep(step config.StepConfig) bool {
+	if step.If == "" {
+		return false
+	}
+
+	conditions := strings.Split(step.If, " && ")
+
+	skipStep := false
+	for _, condition := range conditions {
+		var keyValue []string
+		if strings.Contains(condition, "=") {
+			keyValue = strings.Split(condition, "=")
+		} else {
+			keyValue = []string{condition}
+		}
+
+		if (keyValue)[0] == "os" {
+			skipStep = (keyValue)[1] != r.GOOS
+		}
+
+		if strings.HasPrefix((keyValue)[0], "env:") {
+			if value, ok := os.LookupEnv(strings.TrimPrefix((keyValue)[0], "env:")); ok {
+				// support env name check when no expected value is given
+				if len(keyValue) == 1 {
+					// env name is available and value is ignored
+					continue
+				}
+				skipStep = (keyValue)[1] != value
+			} else {
+				skipStep = true
+			}
+		}
+
+		if skipStep {
+			return true
+		}
+	}
+
+	return false
 }
 
 func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
