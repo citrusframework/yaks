@@ -90,6 +90,8 @@ release() {
     if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
         # Release staging repo
         release_staging_repo "$working_dir" "$maven_opts"
+
+        update_project_metadata "$working_dir" "$release_version" "$next_version"
     fi
 
     # Build Docker image
@@ -182,6 +184,25 @@ git_push_next_snapshot() {
 
     # Push changes
     git push ${remote}
+}
+
+update_project_metadata() {
+    local working_dir="$1"
+    local version="$2"
+    local next_version="$3"
+
+    local file="$working_dir/.github/project.yml"
+
+    echo "Update project metadata to version: $version"
+
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+      sed -i "s/current-version: .*/current-version: $version/" $file
+      sed -i "s/next-version: .*/next-version: $next_version/g" $file
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+      # Mac OSX
+      sed -i '' "s/current-version: .*/current-version: $version/" $file
+      sed -i '' "s/next-version: .*/next-version: $next_version/g" $file
+    fi
 }
 
 source "$location/util/common_funcs"

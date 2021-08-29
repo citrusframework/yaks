@@ -18,6 +18,7 @@
 name: snapshot-release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - snapshot-release
