@@ -78,7 +78,7 @@ jobs:
     - name: Build
       run: |
         make VERSION=$VERSION build
-        make VERSION=$VERSION cross-complie
+        make VERSION=$VERSION cross-compile
     - name: Check
       run: ls -l
     - name: Create Release
