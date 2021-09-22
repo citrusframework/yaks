@@ -528,8 +528,7 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 		LabelSelector: fmt.Sprintf("%s=%s", v1alpha1.TestLabel, test.Name),
 	}
 	if test.Spec.Secret != "" {
-		options.LabelSelector = fmt.Sprintf("%s=%s,%s=%s",
-			v1alpha1.TestLabel, test.Name,
+		options.LabelSelector = fmt.Sprintf("%s=%s",
 			v1alpha1.TestConfigurationLabel, test.Spec.Secret)
 	}
 	secrets, err := action.client.CoreV1().Secrets(test.Namespace).List(ctx, options)
