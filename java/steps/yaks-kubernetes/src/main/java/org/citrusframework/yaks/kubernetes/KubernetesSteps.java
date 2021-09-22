@@ -115,7 +115,10 @@ public class KubernetesSteps {
     public void setServiceName(String name) {
         this.serviceName = name;
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
-            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(name, HttpServer.class);
+            Object component = citrus.getCitrusContext().getReferenceResolver().resolve(name);
+            if (component instanceof HttpServer) {
+                httpServer = (HttpServer) component;
+            }
         } else if (httpServer != null) {
             citrus.getCitrusContext().getReferenceResolver().bind(serviceName, httpServer);
             httpServer.setName(serviceName);
@@ -253,6 +256,11 @@ public class KubernetesSteps {
         }
     }
 
+    @Given("^create Kubernetes service$")
+    public void createService() {
+        createService(serviceName, servicePort);
+    }
+
     @Given("^create Kubernetes service ([^\\s]+)$")
     public void createService(String serviceName) {
         createService(serviceName, servicePort);
@@ -260,15 +268,17 @@ public class KubernetesSteps {
 
     @Given("^create Kubernetes service ([^\\s]+) with target port (\\d+)$")
     public void createService(String serviceName, int targetPort) {
-        setServiceName(serviceName);
-        setServicePort(targetPort);
-        if (!httpServer.isRunning()) {
-            httpServer.start();
-        }
+        createService(serviceName, 80, targetPort);
+    }
+
+    @Given("^create Kubernetes service ([^\\s]+) with port mapping (\\d+):(\\d+)$")
+    public void createService(String serviceName, int port, int targetPort) {
+        initializeService(serviceName, targetPort);
 
         runner.given(kubernetes().client(k8sClient)
                 .services()
                 .create(serviceName)
+                .port(port)
                 .targetPort(targetPort));
 
         if (autoRemoveResources) {
@@ -419,9 +429,7 @@ public class KubernetesSteps {
     }
 
     public void receiveServiceRequest(HttpMessage request, MessageType messageType) {
-        if (!httpServer.isRunning()) {
-            httpServer.start();
-        }
+        initializeService(serviceName, servicePort);
 
         runner.run(http().server(httpServer)
                 .receive()
@@ -434,5 +442,17 @@ public class KubernetesSteps {
         runner.run(http().server(httpServer)
                 .send()
                 .response(status));
+    }
+
+    private void initializeService(String serviceName, int targetPort) {
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serviceName) &&
+                citrus.getCitrusContext().getReferenceResolver().resolve(serviceName) instanceof HttpServer) {
+            setServiceName(serviceName);
+            setServicePort(targetPort);
+
+            if (!httpServer.isRunning()) {
+                httpServer.start();
+            }
+        }
     }
 }
