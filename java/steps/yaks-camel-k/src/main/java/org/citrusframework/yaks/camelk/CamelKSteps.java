@@ -199,7 +199,7 @@ public class CamelKSteps {
     private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
         runner.run(camelk()
                 .client(k8sClient)
-                .createIntegration(name + "." + language)
+                .createIntegration(configuration.getOrDefault("name", name) + "." + language)
                 .source(source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
                 .properties(configuration.getOrDefault("properties", "").trim())
@@ -210,7 +210,7 @@ public class CamelKSteps {
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteIntegration(name)));
+                    .actions(camelk().client(k8sClient).deleteIntegration(configuration.getOrDefault("name", name))));
         }
     }
 }
