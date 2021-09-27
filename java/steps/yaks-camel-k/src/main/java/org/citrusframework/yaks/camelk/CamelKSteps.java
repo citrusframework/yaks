@@ -115,7 +115,7 @@ public class CamelKSteps {
         try {
             createIntegration(name, language, FileUtils.readToString(resource));
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language));
+            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language), e);
         }
     }
 
@@ -125,7 +125,7 @@ public class CamelKSteps {
             Resource resource = new ClassPathResource(name + "." + language);
             createIntegration(name, language, FileUtils.readToString(resource), configuration);
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language));
+            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language), e);
         }
     }
 
