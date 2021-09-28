@@ -34,13 +34,31 @@ import org.springframework.util.StringUtils;
 public class IntegrationBuilderTest {
 
 	@Test
-	public void shouldSanitizeIntegrationNames() throws IOException {
+	public void shouldSanitizeIntegrationNames() {
 		Integration i = new Integration.Builder()
 				.name("SomeCamelCaseSource.java")
 				.source("from(\"timer:x\").log('${body}')")
 				.build();
 
 		Assert.assertEquals(i.getMetadata().getName(), "some-camel-case-source");
+		Assert.assertEquals(i.getSpec().getSources().get(0).getName(), "SomeCamelCaseSource.java");
+
+		i = new Integration.Builder()
+				.name("ThisIsATest%&/$_!.java")
+				.source("from(\"timer:x\").log('${body}')")
+				.build();
+
+		Assert.assertEquals(i.getMetadata().getName(), "this-is-atest");
+	}
+
+	@Test
+	public void shouldSupportExplicitIntegrationNames() {
+		Integration i = new Integration.Builder()
+				.name("some-integration")
+				.source("SomeCamelCaseSource.java", "from(\"timer:x\").log('${body}')")
+				.build();
+
+		Assert.assertEquals(i.getMetadata().getName(), "some-integration");
 		Assert.assertEquals(i.getSpec().getSources().get(0).getName(), "SomeCamelCaseSource.java");
 
 		i = new Integration.Builder()

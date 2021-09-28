@@ -51,15 +51,27 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 		private List<String> dependencies;
 		private List<IntegrationSpec.Configuration> configuration;
 		private String source;
+		private String fileName;
 		private String name;
 
 		public Builder name(String name) {
 			this.name = name;
+
+			if (fileName == null) {
+				this.fileName = name;
+			}
+
 			return this;
 		}
 
 		public Builder source(String source) {
 			this.source = source;
+			return this;
+		}
+
+		public Builder source(String fileName, String source) {
+			this.source = source;
+			this.fileName = fileName;
 			return this;
 		}
 
@@ -81,7 +93,7 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 		public Integration build() {
 			Integration i = new Integration();
 			i.getMetadata().setName(sanitizeIntegrationName(name));
-			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(name, source)));
+			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(fileName, source)));
 			i.getSpec().setDependencies(dependencies);
 			i.getSpec().setTraits(traits);
 			i.getSpec().setConfiguration(configuration);
@@ -89,10 +101,15 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 		}
 
 		private String sanitizeIntegrationName(String name) {
-			String sanitized = name.substring(0, name.indexOf("."));
+			String sanitized;
+
+			if (name.contains(".")) {
+				sanitized = name.substring(0, name.indexOf("."));
+			} else {
+				sanitized = name;
+			}
 
 			sanitized = sanitized.replaceAll("([a-z])([A-Z]+)", "$1-$2").toLowerCase();
-
 			return sanitized.replaceAll("[^a-z0-9-]", "");
 		}
 	}

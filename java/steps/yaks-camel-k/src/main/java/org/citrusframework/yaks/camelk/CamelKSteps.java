@@ -199,8 +199,8 @@ public class CamelKSteps {
     private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
         runner.run(camelk()
                 .client(k8sClient)
-                .createIntegration(configuration.getOrDefault("name", name) + "." + language)
-                .source(source)
+                .createIntegration(configuration.getOrDefault("name", name + "." + language))
+                .source(name + "." + language, source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
                 .properties(configuration.getOrDefault("properties", "").trim())
                 .propertyFiles(propertyFiles)

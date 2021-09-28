@@ -47,6 +47,7 @@ import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 public class CreateIntegrationAction extends AbstractCamelKAction {
 
     private final String integrationName;
+    private final String fileName;
     private final String source;
     private final List<String> dependencies;
     private final List<String> properties;
@@ -61,6 +62,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     public CreateIntegrationAction(Builder builder) {
         super("create-integration", builder);
         this.integrationName = builder.integrationName;
+        this.fileName = builder.fileName;
         this.source = builder.source;
         this.dependencies = builder.dependencies;
         this.properties = builder.properties;
@@ -84,7 +86,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         final Integration.Builder integrationBuilder = new Integration.Builder()
                 .name(context.replaceDynamicContentInString(integrationName))
-                .source(resolvedSource);
+                .source(context.replaceDynamicContentInString(fileName), resolvedSource);
 
         List<String> resolvedDependencies = resolveDependencies(resolvedSource, context.resolveDynamicValuesInList(dependencies));
         if (!resolvedDependencies.isEmpty()) {
@@ -218,6 +220,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     public static final class Builder extends AbstractCamelKAction.Builder<CreateIntegrationAction, Builder> {
 
         private String integrationName;
+        private String fileName;
         private String source;
         private final List<String> dependencies = new ArrayList<>();
         private final List<String> properties = new ArrayList<>();
@@ -227,6 +230,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder integration(String integrationName) {
             this.integrationName = integrationName;
+
+            if (fileName == null) {
+                fileName = integrationName;
+            }
+
             return this;
         }
 
@@ -236,6 +244,12 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder source(String source) {
+            this.source = source;
+            return this;
+        }
+
+        public Builder source(String fileName, String source) {
+            this.fileName = fileName;
             this.source = source;
             return this;
         }
