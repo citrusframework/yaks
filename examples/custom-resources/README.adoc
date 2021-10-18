@@ -198,8 +198,8 @@ You can use the YAKS command line tool to properly add the role and role binding
 
 [source,bash]
 ----
-yaks role –add role-foo.yaml
-yaks role –add role-binding-foo.yaml
+yaks role –-add role-foo.yaml
+yaks role –-add role-binding-foo.yaml
 ----
 
 The commands above create the role and role bindings on the `yaks-operator` service account.

@@ -204,11 +204,11 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 
 		if r, ok := obj.(*v1.Role); ok {
 			if !strings.HasPrefix(r.Name, config.ViewerServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.OperatorServiceAccount))
+				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.ViewerServiceAccount))
 			}
 		} else if rb, ok := obj.(*v1.RoleBinding); ok {
 			if !strings.HasPrefix(rb.Name, config.ViewerServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.OperatorServiceAccount))
+				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.ViewerServiceAccount))
 			}
 		} else {
 			return errors.New("unsupported resource type - expected Role or RoleBinding")
