@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "integrationKit", "kit", "platform", "generatedSources", "generatedResources",
+@JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "integrationKit", "kit", "lastInitTimestamp", "platform", "generatedSources", "generatedResources",
         "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
@@ -49,6 +49,8 @@ public class IntegrationStatus implements KubernetesResource {
     private IntegrationKit integrationKit;
     @JsonProperty("kit")
     private String kit;
+    @JsonProperty("lastInitTimestamp")
+    private String lastInitTimestamp;
     @JsonProperty("platform")
     private String platform;
     @JsonProperty("generatedSources")
@@ -130,6 +132,14 @@ public class IntegrationStatus implements KubernetesResource {
 
     public void setIntegrationKit(IntegrationKit integrationKit) {
         this.integrationKit = integrationKit;
+    }
+
+    public String getLastInitTimestamp() {
+        return lastInitTimestamp;
+    }
+
+    public void setLastInitTimestamp(String lastInitTimestamp) {
+        this.lastInitTimestamp = lastInitTimestamp;
     }
 
     public String getPlatform() {
