@@ -80,7 +80,7 @@ public class YaksSettings {
      */
     public static String getClusterWildcardDomain() {
         return System.getProperty(CLUSTER_WILDCARD_DOMAIN_PROPERTY,
-                System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) != null ? System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) : "default." + DEFAULT_DOMAIN_SUFFIX);
+                System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) != null ? System.getenv(CLUSTER_WILDCARD_DOMAIN_ENV) : getDefaultNamespace() + "." + DEFAULT_DOMAIN_SUFFIX);
     }
 
     /**
