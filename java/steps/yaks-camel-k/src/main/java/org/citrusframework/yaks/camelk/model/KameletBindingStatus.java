@@ -19,6 +19,7 @@ package org.citrusframework.yaks.camelk.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -40,6 +41,7 @@ public class KameletBindingStatus implements KubernetesResource {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "status", "lastUpdateTime", "lastTransitionTime", "reason", "message"})
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Condition {
         @JsonProperty("type")
         private String type;
