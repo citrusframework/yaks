@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "kit", "platform", "generatedSources", "generatedResources",
+@JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "integrationKit", "kit", "platform", "generatedSources", "generatedResources",
         "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
@@ -45,6 +45,8 @@ public class IntegrationStatus implements KubernetesResource {
     private List<String> dependencies;
     @JsonProperty("profile")
     private String profile;
+    @JsonProperty("integrationKit")
+    private IntegrationKit integrationKit;
     @JsonProperty("kit")
     private String kit;
     @JsonProperty("platform")
@@ -112,12 +114,22 @@ public class IntegrationStatus implements KubernetesResource {
         this.profile = profile;
     }
 
+    @Deprecated
     public String getKit() {
         return kit;
     }
 
+    @Deprecated
     public void setKit(String kit) {
         this.kit = kit;
+    }
+
+    public IntegrationKit getIntegrationKit() {
+        return integrationKit;
+    }
+
+    public void setIntegrationKit(IntegrationKit integrationKit) {
+        this.integrationKit = integrationKit;
     }
 
     public String getPlatform() {
@@ -485,6 +497,91 @@ public class IntegrationStatus implements KubernetesResource {
 
         public void setCompression(String compression) {
             this.compression = compression;
+        }
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"apiVersion", "fieldPath", "kind", "name", "namespace", "resourceVersion", "uid"})
+    public static class IntegrationKit {
+        @JsonProperty("apiVersion")
+        private String apiVersion;
+        @JsonProperty("fieldPath")
+        private String fieldPath;
+        @JsonProperty("kind")
+        private String kind;
+        @JsonProperty("name")
+        private String name;
+        @JsonProperty("namespace")
+        private String namespace;
+        @JsonProperty("resourceVersion")
+        private String resourceVersion;
+        @JsonProperty("uid")
+        private String uid;
+
+        public IntegrationKit() {
+            super();
+        }
+
+        public IntegrationKit(String apiVersion, String kind, String name) {
+            this.apiVersion = apiVersion;
+            this.kind = kind;
+            this.name = name;
+        }
+
+        public String getApiVersion() {
+            return apiVersion;
+        }
+
+        public void setApiVersion(String apiVersion) {
+            this.apiVersion = apiVersion;
+        }
+
+        public String getFieldPath() {
+            return fieldPath;
+        }
+
+        public void setFieldPath(String fieldPath) {
+            this.fieldPath = fieldPath;
+        }
+
+        public String getKind() {
+            return kind;
+        }
+
+        public void setKind(String kind) {
+            this.kind = kind;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getNamespace() {
+            return namespace;
+        }
+
+        public void setNamespace(String namespace) {
+            this.namespace = namespace;
+        }
+
+        public String getResourceVersion() {
+            return resourceVersion;
+        }
+
+        public void setResourceVersion(String resourceVersion) {
+            this.resourceVersion = resourceVersion;
+        }
+
+        public String getUid() {
+            return uid;
+        }
+
+        public void setUid(String uid) {
+            this.uid = uid;
         }
     }
 }
