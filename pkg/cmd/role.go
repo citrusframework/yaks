@@ -37,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
-
 )
 
 func newCmdRole(rootCmdOptions *RootCmdOptions) (*cobra.Command, *roleCmdOptions) {
@@ -111,9 +110,7 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			}
-		}
-
-		if viewerSA, err := hasServiceAccount(o.Context, c, namespace, config.ViewerServiceAccount); err != nil {
+		} else if viewerSA, err := hasServiceAccount(o.Context, c, namespace, config.ViewerServiceAccount); err != nil {
 			return err
 		} else if viewerSA {
 			for _, role := range o.Add {
@@ -148,6 +145,10 @@ func applyOperatorRole(ctx context.Context, c client.Client, role string, namesp
 		if err := install.InstallCamelK(ctx, c, namespace, customizer, nil, true); err != nil {
 			return err
 		}
+	} else if role == config.RoleStrimzi {
+		if err := install.InstallStrimzi(ctx, c, namespace, customizer, nil, true); err != nil {
+			return err
+		}
 	} else if strings.HasSuffix(role, ".yaml") {
 		data, err := loadData(role)
 		if err != nil {
@@ -160,13 +161,9 @@ func applyOperatorRole(ctx context.Context, c client.Client, role string, namesp
 		}
 
 		if r, ok := obj.(*v1.Role); ok {
-			if !strings.HasPrefix(r.Name, config.OperatorServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.OperatorServiceAccount))
-			}
+			verifyRole(r, config.OperatorServiceAccount)
 		} else if rb, ok := obj.(*v1.RoleBinding); ok {
-			if !strings.HasPrefix(rb.Name, config.OperatorServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.OperatorServiceAccount))
-			}
+			verifyRoleBinding(rb, config.OperatorServiceAccount)
 		} else {
 			return errors.New("unsupported resource type - expected Role or RoleBinding")
 		}
@@ -191,6 +188,10 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 		if err := install.InstallViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
 			return err
 		}
+	} else if role == config.RoleStrimzi {
+		if err := install.InstallViewerServiceAccountRolesStrimzi(ctx, c, namespace); err != nil {
+			return err
+		}
 	} else if strings.HasSuffix(role, ".yaml") {
 		data, err := loadData(role)
 		if err != nil {
@@ -203,13 +204,9 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 		}
 
 		if r, ok := obj.(*v1.Role); ok {
-			if !strings.HasPrefix(r.Name, config.ViewerServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid Role - please use '%s' as name prefix", config.ViewerServiceAccount))
-			}
+			verifyRole(r, config.ViewerServiceAccount)
 		} else if rb, ok := obj.(*v1.RoleBinding); ok {
-			if !strings.HasPrefix(rb.Name, config.ViewerServiceAccount) {
-				return errors.New(fmt.Sprintf("invalid RoleBinding - please use '%s' as name prefix", config.ViewerServiceAccount))
-			}
+			verifyRoleBinding(rb, config.ViewerServiceAccount)
 		} else {
 			return errors.New("unsupported resource type - expected Role or RoleBinding")
 		}
@@ -223,6 +220,36 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 	}
 
 	return nil
+}
+
+func verifyRole(r *v1.Role, serviceAccount string) {
+	if !strings.HasPrefix(r.Name, serviceAccount) {
+		r.Name = fmt.Sprintf("%s-%s", serviceAccount, r.Name)
+	}
+}
+
+func verifyRoleBinding(rb *v1.RoleBinding, serviceAccount string) {
+	if !strings.HasPrefix(rb.Name, serviceAccount) {
+		rb.Name = fmt.Sprintf("%s-%s", serviceAccount, rb.Name)
+	}
+
+	if !strings.HasPrefix(rb.RoleRef.Name, serviceAccount) {
+		rb.RoleRef.Name = fmt.Sprintf("%s-%s", serviceAccount, rb.RoleRef.Name)
+	}
+
+	found := false
+	for _, subject := range rb.Subjects {
+		if subject.Name == serviceAccount {
+			found = true
+			break
+		}
+	}
+	if !found {
+		rb.Subjects = append(rb.Subjects, v1.Subject{
+			Kind: "ServiceAccount",
+			Name: serviceAccount,
+		})
+	}
 }
 
 func (o *roleCmdOptions) customizer(namespace string, global bool) install.ResourceCustomizer {

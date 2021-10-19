@@ -15,23 +15,23 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-resources:
-- user-cluster-role.yaml
-- user-global-instance-viewer-role.yaml
-- user-global-instance-viewer-role-binding.yaml
-- operator-role-openshift.yaml
-- operator-role-binding-openshift.yaml
-- operator-role-olm-cluster.yaml
-- operator-role-olm.yaml
-- operator-role-binding-olm-cluster.yaml
-- operator-role-binding-olm.yaml
-- operator-role-camel-k.yaml
-- operator-role-strimzi.yaml
-- operator-role-knative.yaml
-- operator-role-kubernetes.yaml
-- operator-role-servicemonitors.yaml
-- operator-role-binding-camel-k.yaml
-- operator-role-binding-strimzi.yaml
-- operator-role-binding-knative.yaml
-- operator-role-binding-kubernetes.yaml
-- operator-role-binding-servicemonitors.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: yaks-viewer-strimzi
+  labels:
+    app: "yaks"
+rules:
+- apiGroups:
+    - kafka.strimzi.io
+  resources:
+    - kafkatopics
+  verbs:
+    - create
+    - delete
+    - deletecollection
+    - get
+    - list
+    - patch
+    - update
+    - watch
