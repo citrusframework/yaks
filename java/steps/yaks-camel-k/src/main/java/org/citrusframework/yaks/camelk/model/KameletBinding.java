@@ -17,6 +17,9 @@
 
 package org.citrusframework.yaks.camelk.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -45,9 +48,11 @@ public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBi
      */
     public static class Builder {
         private String name;
+        private int replicas;
         private Integration integration;
         private KameletBindingSpec.Endpoint source;
         private KameletBindingSpec.Endpoint sink;
+        private final List<KameletBindingSpec.Endpoint> steps = new ArrayList<>();
 
         public Builder name(String name) {
             this.name = name;
@@ -95,9 +100,41 @@ public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBi
             return sink(new KameletBindingSpec.Endpoint(ref, props));
         }
 
+        public Builder steps(KameletBindingSpec.Endpoint... step) {
+            this.steps.addAll(Arrays.asList(step));
+            return this;
+        }
+
+        public Builder addStep(KameletBindingSpec.Endpoint step) {
+            this.steps.add(step);
+            return this;
+        }
+
+        public Builder addStep(String uri) {
+            return addStep(new KameletBindingSpec.Endpoint(uri));
+        }
+
+        public Builder addStep(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
+            Map<String, Object> props = null;
+            if (properties != null && !properties.isEmpty()) {
+                props = KubernetesSupport.yaml().load(properties);
+            }
+
+            return addStep(new KameletBindingSpec.Endpoint(ref, props));
+        }
+
+        public Builder replicas(int replicas) {
+            this.replicas = replicas;
+            return this;
+        }
+
         public KameletBinding build() {
             KameletBinding binding = new KameletBinding();
             binding.getMetadata().setName(name);
+
+            if (replicas > 0) {
+                binding.getSpec().setReplicas(replicas);
+            }
 
             if (integration != null) {
                 binding.getSpec().setIntegration(integration);
@@ -109,6 +146,10 @@ public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBi
 
             if (sink != null) {
                 binding.getSpec().setSink(sink);
+            }
+
+            if (!steps.isEmpty()) {
+                binding.getSpec().setSteps(steps.toArray(new KameletBindingSpec.Endpoint[]{}));
             }
 
             return binding;

@@ -15,31 +15,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package config
+package strimzi
 
 import (
-	"os"
-
-	"github.com/citrusframework/yaks/pkg/util/defaults"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const (
-	OperatorServiceAccount = "yaks-operator"
-	ViewerServiceAccount   = "yaks-viewer"
-	AppendToViewerLabel    = "yaks.citrusframework.org/append-to-viewer"
-	RoleKnative            = "knative"
-	RoleCamelK             = "camelk"
-	RoleStrimzi            = "strimzi"
-)
-
-func GetTestBaseImage() string {
-	customEnv := os.Getenv("YAKS_TEST_BASE_IMAGE")
-	if customEnv != "" {
-		return customEnv
+var (
+	// RequiredKinds are Strimzi kinds used by YAKS for materializing integrations.
+	// They must be present on the cluster
+	RequiredKinds = []GroupVersionKindResource{
+		{
+			GroupVersionKind: schema.GroupVersionKind{
+				Kind:    "KafkaTopic",
+				Group:   "kafka.strimzi.io",
+				Version: "v1beta2",
+			},
+			Resource: "kafkatopics",
+		},
 	}
-	return getDefaultTestBaseImage()
-}
+)
 
-func getDefaultTestBaseImage() string {
-	return defaults.ImageName + ":" + defaults.Version
+// GroupVersionKindResource --
+type GroupVersionKindResource struct {
+	schema.GroupVersionKind
+	Resource string
 }

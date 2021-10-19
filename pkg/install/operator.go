@@ -20,6 +20,7 @@ package install
 import (
 	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/strimzi"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/client"
@@ -55,11 +56,9 @@ func Operator(ctx context.Context, c client.Client, cfg OperatorConfiguration, f
 func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
 	customizer := customizer(cfg)
 
-	isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType)
-	if err != nil {
+	if isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType); err != nil {
 		return err
-	}
-	if isOpenShift {
+	} else if isOpenShift {
 		if err := installOpenShift(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
@@ -75,23 +74,28 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 	}
 
 	// Additionally, install Knative resources (roles and bindings)
-	isKnative, err := knative.IsInstalled(ctx, c)
-	if err != nil {
+	if isKnative, err := knative.IsInstalled(ctx, c); err != nil {
 		return err
-	}
-	if isKnative {
+	} else if isKnative {
 		if err := InstallKnative(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
 	}
 
 	// Additionally, install Camel K resources (roles and bindings)
-	isCamelK, err := camelk.IsInstalled(ctx, c)
-	if err != nil {
+	if isCamelK, err := camelk.IsInstalled(ctx, c); err != nil {
 		return err
-	}
-	if isCamelK {
+	} else if isCamelK {
 		if err := InstallCamelK(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Strimzi resources (roles and bindings)
+	if isStrimzi, err := strimzi.IsInstalled(ctx, c); err != nil {
+		return err
+	} else if isStrimzi {
+		if err := InstallStrimzi(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
 	}
@@ -209,6 +213,18 @@ func InstallCamelK(ctx context.Context, c client.Client, namespace string, custo
 	}
 
 	fmt.Printf("Added CamelK addon to YAKS operator in namespace '%s'\n", namespace)
+	return nil
+}
+
+func InstallStrimzi(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+		"/rbac/operator-role-strimzi.yaml",
+		"/rbac/operator-role-binding-strimzi.yaml",
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added Strimzi addon to YAKS operator in namespace '%s'\n", namespace)
 	return nil
 }
 

@@ -109,3 +109,16 @@ func InstallViewerServiceAccountRolesCamelK(ctx context.Context, c client.Client
 
 	return nil
 }
+
+func InstallViewerServiceAccountRolesStrimzi(ctx context.Context, c client.Client, namespace string) error {
+	if err := ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
+		"/infrastructure/rbac/viewer-role-strimzi.yaml",
+		"/infrastructure/rbac/viewer-role-binding-strimzi.yaml",
+	); err != nil {
+		return err
+	}
+
+	fmt.Printf("Added Strimzi addon to YAKS viewer service account in namespace '%s'\n", namespace)
+
+	return nil
+}
