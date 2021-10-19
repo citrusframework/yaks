@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"integration", "source", "sink"})
+@JsonPropertyOrder({"integration", "replicas", "source", "steps", "sink"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
@@ -42,6 +42,20 @@ public class KameletBindingSpec implements KubernetesResource {
 
     @JsonProperty("sink")
     private Endpoint sink;
+
+    @JsonProperty("steps")
+    private Endpoint[] steps;
+
+    @JsonProperty("replicas")
+    private Integer replicas;
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
 
     public void setSource(Endpoint source) {
         this.source = source;
@@ -57,6 +71,14 @@ public class KameletBindingSpec implements KubernetesResource {
 
     public Endpoint getSink() {
         return sink;
+    }
+
+    public Endpoint[] getSteps() {
+        return steps;
+    }
+
+    public void setSteps(Endpoint[] steps) {
+        this.steps = steps;
     }
 
     public void setIntegration(Integration integration) {
