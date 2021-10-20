@@ -18,6 +18,7 @@ Feature: Standard steps
   Scenario: Load variables from properties
     Given load variables variables.properties
     Then log '${greeting} ${name}: ${text}'
+    Then log '${message}'
 
   Scenario: Create variable from file
     Given load variable message.txt

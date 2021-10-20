@@ -19,7 +19,6 @@ package org.citrusframework.yaks.standard;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Properties;
 
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
@@ -30,6 +29,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 
 import static com.consol.citrus.actions.EchoAction.Builder.echo;
+import static com.consol.citrus.actions.LoadPropertiesAction.Builder.load;
 import static com.consol.citrus.actions.SleepAction.Builder.sleep;
 
 public class StandardSteps {
@@ -74,13 +74,7 @@ public class StandardSteps {
 
     @Given("^load variables ([^\\s]+)$")
     public void loadVariables(String file) {
-        try {
-            Properties variables = new Properties();
-            variables.load(FileUtils.getFileResource(file).getInputStream());
-            variables.forEach((key, value) -> runner.variable(key.toString(), value));
-        } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to load variables from file resource %s", file));
-        }
+        runner.run(load(file));
     }
 
     @Given("^variables$")
