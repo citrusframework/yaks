@@ -20,6 +20,7 @@ package install
 import (
 	"context"
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/util/strimzi"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/camelk"
@@ -44,23 +45,28 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 	}
 
 	// Additionally, install Knative resources (roles and bindings)
-	isKnative, err := knative.IsInstalled(ctx, c)
-	if err != nil {
+	if isKnative, err := knative.IsInstalled(ctx, c); err != nil {
 		return err
-	}
-	if isKnative {
+	} else if isKnative {
 		if err := InstallViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
 			return err
 		}
 	}
 
 	// Additionally, install Camel K resources (roles and bindings)
-	isCamelK, err := camelk.IsInstalled(ctx, c)
-	if err != nil {
+	if isCamelK, err := camelk.IsInstalled(ctx, c); err != nil {
 		return err
-	}
-	if isCamelK {
+	} else if isCamelK {
 		if err := InstallViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
+			return err
+		}
+	}
+
+	// Additionally, install Strimzi resources (roles and bindings)
+	if isStrimzi, err := strimzi.IsInstalled(ctx, c); err != nil {
+		return err
+	} else if isStrimzi {
+		if err := InstallViewerServiceAccountRolesStrimzi(ctx, c, namespace); err != nil {
 			return err
 		}
 	}

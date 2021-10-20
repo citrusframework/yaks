@@ -110,7 +110,9 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 					return err
 				}
 			}
-		} else if viewerSA, err := hasServiceAccount(o.Context, c, namespace, config.ViewerServiceAccount); err != nil {
+		}
+
+		if viewerSA, err := hasServiceAccount(o.Context, c, namespace, config.ViewerServiceAccount); err != nil {
 			return err
 		} else if viewerSA {
 			for _, role := range o.Add {
