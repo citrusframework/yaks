@@ -173,7 +173,7 @@ func applyOperatorRole(ctx context.Context, c client.Client, role string, namesp
 		}
 		fmt.Printf("Added role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
 	} else {
-		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative))
+		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi))
 	}
 
 	return nil
@@ -216,7 +216,7 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 		}
 		fmt.Printf("Added role permission '%s' from file %s to YAKS viewer service account in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
 	} else {
-		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative))
+		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi))
 	}
 
 	return nil
