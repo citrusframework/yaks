@@ -61,6 +61,21 @@ rules:
   - replicasets
   - statefulsets
   verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - "batch"
+  resources:
+  - jobs
+  - jobs/status
+  verbs:
   - get
   - list
   - watch
+

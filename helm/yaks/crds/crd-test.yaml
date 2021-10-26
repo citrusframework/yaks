@@ -19,7 +19,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   labels:
-    app: "yaks"
+    app: yaks
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
@@ -82,7 +82,7 @@ spec:
             description: TestSpec defines the desired state of Test
             properties:
               config:
-                description: SettingsSpec--
+                description: SettingsSpec
                 properties:
                   content:
                     type: string
@@ -93,9 +93,15 @@ spec:
                 items:
                   type: string
                 type: array
+              kubedock:
+                description: KubeDockSpec
+                properties:
+                  image:
+                    type: string
+                type: object
               resources:
                 items:
-                  description: ResourceSpec--
+                  description: ResourceSpec
                   properties:
                     content:
                       type: string
@@ -106,13 +112,13 @@ spec:
               secret:
                 type: string
               selenium:
-                description: SeleniumSpec--
+                description: SeleniumSpec
                 properties:
                   image:
                     type: string
                 type: object
               source:
-                description: SourceSpec--
+                description: SourceSpec
                 properties:
                   content:
                     type: string

@@ -225,9 +225,8 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		return nil, err
 	}
 
-	if err := action.addSelenium(test, &job); err != nil {
-		return nil, err
-	}
+	action.addSelenium(test, &job)
+	action.addKubeDock(test, &job)
 
 	return &job, nil
 }
@@ -477,7 +476,7 @@ func (action *startAction) applyOperatorClusterRoles(ctx context.Context, namesp
 	return nil
 }
 
-func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) error {
+func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
 	if test.Spec.Selenium.Image != "" {
 		shareProcessNamespace := true
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
@@ -519,8 +518,51 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) er
 		// Add selenium profile that will shutdown the selenium container when test is finished
 		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pselenium")
 	}
+}
 
-	return nil
+func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
+	if test.Spec.KubeDock.Image != "" {
+		shareProcessNamespace := true
+		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
+
+		// set explicit non-root user for all containers - required for killing the supervisord process later
+		uid := int64(1000)
+		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
+			RunAsUser: &uid,
+		}
+
+		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, v1.Container{
+			Name:            "kubedock",
+			Image:           test.Spec.KubeDock.Image,
+			ImagePullPolicy: v1.PullIfNotPresent,
+			Args:            []string{"server", "--reverse-proxy"},
+		})
+
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env,
+			v1.EnvVar{
+				Name:  "DOCKER_HOST",
+				Value: "tcp://localhost:2475",
+			},
+			v1.EnvVar{
+				// needed to get it working with kubedock
+				Name:  "TESTCONTAINERS_RYUK_DISABLED",
+				Value: "true",
+			},
+			v1.EnvVar{
+				// needed to get it working with kubedock
+				Name:  "TESTCONTAINERS_CHECKS_DISABLE",
+				Value: "true",
+			})
+
+		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
+			Capabilities: &v1.Capabilities{
+				Add: []v1.Capability{"SYS_PTRACE"},
+			},
+		}
+
+		// Add kubedock profile that will shutdown the kubedock container when test is finished
+		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pkubedock")
+	}
 }
 
 func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test, job *batchv1.Job) error {
@@ -590,10 +632,11 @@ func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) err
 			return err
 		}
 
-		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
-			Name:  "YAKS_S3_REPOSITORY_URL",
-			Value: url,
-		},
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env,
+			v1.EnvVar{
+				Name:  "YAKS_S3_REPOSITORY_URL",
+				Value: url,
+			},
 			v1.EnvVar{
 				Name:  "YAKS_S3_REPOSITORY_BUCKET",
 				Value: bucket,
