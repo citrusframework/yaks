@@ -104,6 +104,31 @@ public class GroovyScriptSteps {
         createEndpoint(baseName, script);
     }
 
+    @Given("^(?:create|new|bind) component ([^\"\\s]+)\\.groovy$")
+    public void createComponent(String name, String configurationScript) {
+        Object component = GroovyShellUtils.run(new ImportCustomizer(),
+                context.replaceDynamicContentInString(configurationScript));
+
+        if (component instanceof InitializingPhase) {
+            ((InitializingPhase) component).initialize();
+        }
+
+        citrus.getCitrusContext().bind(name, component);
+    }
+
+    @Given("^load component ([^\"\\s]+)\\.groovy$")
+    public void loadComponent(String filePath) throws IOException {
+        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        String script = FileUtils.readToString(scriptFile);
+        final String fileName = scriptFile.getFilename();
+        final String baseName = Optional.ofNullable(fileName)
+                .map(f -> f.lastIndexOf("."))
+                .filter(index -> index >= 0)
+                .map(index -> fileName.substring(0, index))
+                .orElse(fileName);
+        createComponent(baseName, script);
+    }
+
     @Given("^(?:create|new) actions ([^\"\\s]+)\\.groovy$")
     public void createActionScript(String scriptName, String code) {
         scripts.put(scriptName, new ActionScript(code));
