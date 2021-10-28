@@ -63,7 +63,7 @@ public class CreateServiceAction extends AbstractKubernetesAction {
             }
 
             servicePorts.add(new ServicePortBuilder()
-                    .withName("port_mapping_" + i)
+                    .withName("port-mapping-" + i)
                     .withProtocol(context.replaceDynamicContentInString(protocol))
                     .withPort(Integer.parseInt(context.replaceDynamicContentInString(ports.get(i))))
                     .withTargetPort(new IntOrString(Integer.parseInt(context.replaceDynamicContentInString(targetPort))))
