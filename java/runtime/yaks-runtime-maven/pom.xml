@@ -68,6 +68,11 @@
     </dependency>
     <dependency>
       <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-testcontainers</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
       <artifactId>yaks-jms</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -160,6 +165,32 @@
                   <arguments>
                     <argument>-f</argument>
                     <argument>supervisord</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>kubedock</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>shutdown-kubedock-process</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>pkill</executable>
+                  <arguments>
+                    <argument>kubedock</argument>
                   </arguments>
                 </configuration>
               </execution>

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
@@ -29,11 +30,15 @@ import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.camel.endpoint.CamelEndpoint;
 import com.consol.citrus.camel.endpoint.CamelEndpointConfiguration;
+import com.consol.citrus.camel.endpoint.CamelSyncEndpoint;
+import com.consol.citrus.camel.endpoint.CamelSyncEndpointConfiguration;
+import com.consol.citrus.common.InitializingPhase;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import groovy.util.DelegatingScript;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
@@ -43,6 +48,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -57,6 +63,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 
 import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
 import static com.consol.citrus.actions.SendMessageAction.Builder.send;
@@ -86,6 +93,8 @@ public class CamelSteps {
 
     private boolean globalCamelContext = false;
     private boolean autoRemoveResources = CamelSettings.isAutoRemoveResources();
+
+    private ExchangePattern exchangePattern = ExchangePattern.InOnly;
 
     @Before
     public void before(Scenario scenario) {
@@ -123,11 +132,24 @@ public class CamelSteps {
         autoRemoveResources = true;
     }
 
+    @Given("^Camel exchange pattern (InOut|InOnly)$")
+    public void setExchangePattern(String exchangePattern) {
+        this.exchangePattern = ExchangePattern.valueOf(exchangePattern);
+    }
+
     @Given("^(?:Default|New) Camel context$")
     public void defaultContext() {
         destroyCamelContext();
         camelContext();
         globalCamelContext = false;
+    }
+
+    @Given("^(?:Default|New) global Camel context$")
+    public void defaultGlobalContext() {
+        destroyCamelContext();
+        camelContext();
+        citrus.getCitrusContext().bind("camelContext", camelContext);
+        globalCamelContext = true;
     }
 
     @Given("^New Spring Camel context$")
@@ -148,6 +170,39 @@ public class CamelSteps {
     @Given("^Camel consumer timeout is (\\d+)(?: ms| milliseconds)$")
     public void configureTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    @Given("^bind to Camel registry ([^\"\\s]+)\\.groovy$")
+    public void bindComponent(String name, String configurationScript) {
+        CompilerConfiguration cc = new CompilerConfiguration();
+        cc.addCompilationCustomizers(new ImportCustomizer());
+        cc.setScriptBaseClass(DelegatingScript.class.getName());
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
+
+        Script script = sh.parse(context.replaceDynamicContentInString(configurationScript));
+
+        Object component = script.run();
+
+        if (component instanceof InitializingPhase) {
+            ((InitializingPhase) component).initialize();
+        }
+
+        camelContext.getRegistry().bind(name, component);
+    }
+
+    @Given("^load to Camel registry ([^\"\\s]+)\\.groovy$")
+    public void loadComponent(String filePath) throws IOException {
+        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        String script = FileUtils.readToString(scriptFile);
+        final String fileName = scriptFile.getFilename();
+        final String baseName = Optional.ofNullable(fileName)
+                .map(f -> f.lastIndexOf("."))
+                .filter(index -> index >= 0)
+                .map(index -> fileName.substring(0, index))
+                .orElse(fileName);
+        bindComponent(baseName, script);
     }
 
     @Given("^Camel route ([^\\s]+)\\.xml")
@@ -340,15 +395,27 @@ public class CamelSteps {
             return endpoints.get(endpointUri);
         }
 
-        CamelEndpointConfiguration endpointConfiguration = new CamelEndpointConfiguration();
-        endpointConfiguration.setCamelContext(camelContext());
-        endpointConfiguration.setEndpointUri(endpointUri);
-        endpointConfiguration.setTimeout(timeout);
-        CamelEndpoint endpoint = new CamelEndpoint(endpointConfiguration);
+        if (exchangePattern.equals(ExchangePattern.InOut)) {
+            CamelSyncEndpointConfiguration endpointConfiguration = new CamelSyncEndpointConfiguration();
+            endpointConfiguration.setCamelContext(camelContext());
+            endpointConfiguration.setEndpointUri(endpointUri);
+            endpointConfiguration.setTimeout(timeout);
+            CamelSyncEndpoint endpoint = new CamelSyncEndpoint(endpointConfiguration);
 
-        endpoints.put(endpointUri, endpoint);
+            endpoints.put(endpointUri, endpoint);
 
-        return endpoint;
+            return endpoint;
+        } else {
+            CamelEndpointConfiguration endpointConfiguration = new CamelEndpointConfiguration();
+            endpointConfiguration.setCamelContext(camelContext());
+            endpointConfiguration.setEndpointUri(endpointUri);
+            endpointConfiguration.setTimeout(timeout);
+            CamelEndpoint endpoint = new CamelEndpoint(endpointConfiguration);
+
+            endpoints.put(endpointUri, endpoint);
+
+            return endpoint;
+        }
     }
 
     private CamelContext camelContext() {

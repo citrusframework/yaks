@@ -47,31 +47,37 @@ type TestSpec struct {
 	Resources []ResourceSpec `json:"resources,omitempty"`
 	Settings  SettingsSpec   `json:"config,omitempty"`
 	Selenium  SeleniumSpec   `json:"selenium,omitempty"`
+	KubeDock  KubeDockSpec   `json:"kubedock,omitempty"`
 	Env       []string       `json:"env,omitempty"`
 	Secret    string         `json:"secret,omitempty"`
 }
 
-// SourceSpec--
+// SourceSpec
 type SourceSpec struct {
 	Name     string   `json:"name,omitempty"`
 	Content  string   `json:"content,omitempty"`
 	Language Language `json:"language,omitempty"`
 }
 
-// ResourceSpec--
+// ResourceSpec
 type ResourceSpec struct {
-	Name     string   `json:"name,omitempty"`
-	Content  string   `json:"content,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
-// SettingsSpec--
+// SettingsSpec
 type SettingsSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
-// SeleniumSpec--
+// SeleniumSpec
 type SeleniumSpec struct {
+	Image string `json:"image,omitempty"`
+}
+
+// KubeDockSpec
+type KubeDockSpec struct {
 	Image string `json:"image,omitempty"`
 }
 
@@ -82,12 +88,12 @@ type TestStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	Phase   TestPhase   `json:"phase,omitempty"`
-	Results TestSuite   `json:"results,omitempty"`
-	Errors	string      `json:"errors,omitempty"`
-	TestID  string      `json:"testID,omitempty"`
-	Digest  string      `json:"digest,omitempty"`
-	Version string      `json:"version,omitempty"`
+	Phase   TestPhase `json:"phase,omitempty"`
+	Results TestSuite `json:"results,omitempty"`
+	Errors  string    `json:"errors,omitempty"`
+	TestID  string    `json:"testID,omitempty"`
+	Digest  string    `json:"digest,omitempty"`
+	Version string    `json:"version,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -117,44 +123,44 @@ type Test struct {
 type TestList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items    []Test `json:"items"`
+	Items           []Test `json:"items"`
 }
 
 type TestResults struct {
-	Summary TestSummary  `json:"summary,omitempty"`
-	Suites  []TestSuite  `json:"suites,omitempty"`
+	Summary TestSummary `json:"summary,omitempty"`
+	Suites  []TestSuite `json:"suites,omitempty"`
 }
 
 type TestSuite struct {
-	Name    string     `json:"suiteName,omitempty"`
+	Name    string       `json:"suiteName,omitempty"`
 	Summary TestSummary  `json:"summary,omitempty"`
-	Tests	[]TestResult `json:"tests,omitempty"`
-	Errors 	[]string 	 `json:"errors,omitempty"`
+	Tests   []TestResult `json:"tests,omitempty"`
+	Errors  []string     `json:"errors,omitempty"`
 }
 
 type TestSummary struct {
-	Total  		int   	  `json:"total,omitempty"`
-	Errors 		int   	  `json:"errors,omitempty"`
-	Passed 		int   	  `json:"passed,omitempty"`
-	Failed 		int   	  `json:"failed,omitempty"`
-	Skipped 	int   	  `json:"skipped,omitempty"`
-	Pending 	int   	  `json:"pending,omitempty"`
-	Undefined 	int   	  `json:"undefined,omitempty"`
+	Total     int `json:"total,omitempty"`
+	Errors    int `json:"errors,omitempty"`
+	Passed    int `json:"passed,omitempty"`
+	Failed    int `json:"failed,omitempty"`
+	Skipped   int `json:"skipped,omitempty"`
+	Pending   int `json:"pending,omitempty"`
+	Undefined int `json:"undefined,omitempty"`
 }
 
 type TestResult struct {
-	Name         string  `json:"name,omitempty"`
-	ClassName    string  `json:"classname,omitempty"`
-	ErrorType    string  `json:"errorType,omitempty"`
-	ErrorMessage string  `json:"errorMessage,omitempty"`
+	Name         string `json:"name,omitempty"`
+	ClassName    string `json:"classname,omitempty"`
+	ErrorType    string `json:"errorType,omitempty"`
+	ErrorMessage string `json:"errorMessage,omitempty"`
 }
 
 // TestPhase
 type TestPhase string
 
 const (
-	TestLabel = "yaks.citrusframework.org/test"
-	TestIdLabel = "yaks.citrusframework.org/test-id"
+	TestLabel              = "yaks.citrusframework.org/test"
+	TestIdLabel            = "yaks.citrusframework.org/test-id"
 	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
 
 	// InstanceKind

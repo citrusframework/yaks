@@ -52,12 +52,13 @@ type StepConfig struct {
 }
 
 type RuntimeConfig struct {
-	Cucumber  CucumberConfig `yaml:"cucumber"`
-	Selenium  SeleniumConfig `yaml:"selenium"`
-	Resources []string       `yaml:"resources"`
-	Settings  SettingsConfig `yaml:"settings"`
-	Env       []EnvConfig    `yaml:"env"`
-	Secret    string         `yaml:"secret"`
+	Cucumber       CucumberConfig       `yaml:"cucumber"`
+	Selenium       SeleniumConfig       `yaml:"selenium"`
+	TestContainers TestContainersConfig `yaml:"testcontainers"`
+	Resources      []string             `yaml:"resources"`
+	Settings       SettingsConfig       `yaml:"settings"`
+	Env            []EnvConfig          `yaml:"env"`
+	Secret         string               `yaml:"secret"`
 }
 
 type CucumberConfig struct {
@@ -68,6 +69,10 @@ type CucumberConfig struct {
 
 type SeleniumConfig struct {
 	Image string `yaml:"image"`
+}
+
+type TestContainersConfig struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 type EnvConfig struct {
