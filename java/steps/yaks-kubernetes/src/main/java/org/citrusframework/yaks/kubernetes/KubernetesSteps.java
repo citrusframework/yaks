@@ -31,11 +31,13 @@ import com.consol.citrus.http.server.HttpServer;
 import com.consol.citrus.http.server.HttpServerBuilder;
 import com.consol.citrus.message.MessageType;
 import com.consol.citrus.util.FileUtils;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.actions.CreateServiceAction;
 import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
 import org.springframework.http.HttpStatus;
 
@@ -280,6 +282,28 @@ public class KubernetesSteps {
                 .create(serviceName)
                 .port(port)
                 .targetPort(targetPort));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .services()
+                            .delete(serviceName)));
+        }
+    }
+
+    @Given("^create Kubernetes service ([^\\s]+) with port mappings$")
+    public void createServiceWithPortMappings(String serviceName, DataTable portMappings) {
+        CreateServiceAction.Builder createServiceAction = kubernetes().client(k8sClient)
+                .services()
+                .create(serviceName);
+
+        Map<Integer, Integer> mappings = portMappings.asMap(Integer.class, Integer.class);
+
+        initializeService(serviceName, mappings.values().iterator().next());
+
+        mappings.forEach(createServiceAction::portMapping);
+
+        runner.run(createServiceAction);
 
         if (autoRemoveResources) {
             runner.then(doFinally()
