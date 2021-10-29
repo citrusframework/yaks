@@ -25,9 +25,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.camel.dsl.CamelSupport;
 import com.consol.citrus.camel.endpoint.CamelEndpoint;
 import com.consol.citrus.camel.endpoint.CamelEndpointConfiguration;
 import com.consol.citrus.camel.endpoint.CamelSyncEndpoint;
@@ -88,6 +90,7 @@ public class CamelSteps {
 
     private Map<String, Object> headers = new HashMap<>();
     private String body;
+    private String messageType = CitrusSettings.DEFAULT_MESSAGE_TYPE;
 
     private long timeout = CamelSettings.getTimeout();
 
@@ -304,6 +307,12 @@ public class CamelSteps {
         headerPairs.forEach(this::addMessageHeader);
     }
 
+    @Given("^Camel exchange body type: (.+)$")
+    @Then("^(?:expect|verify) Camel exchange body type: (.+)$")
+    public void setExchangeBodyType(String messageType) {
+        this.messageType = messageType;
+    }
+
     @Given("^Camel exchange body$")
     @Then("^(?:expect|verify) Camel exchange body$")
     public void setExchangeBodyMultiline(String body) {
@@ -330,6 +339,7 @@ public class CamelSteps {
     public void sendExchange(String endpointUri) {
         runner.run(send().endpoint(camelEndpoint(endpointUri))
                 .message()
+                .type(messageType)
                 .body(body)
                 .headers(headers));
 
@@ -337,11 +347,13 @@ public class CamelSteps {
         headers.clear();
     }
 
-    @Then("^receive Camel exchange from\\(\"(.+)\"\\)$")
+    @Then("^(?:receive|expect|verify) Camel exchange from\\(\"(.+)\"\\)$")
     public void receiveExchange(String endpointUri) {
         runner.run(receive().endpoint(camelEndpoint(endpointUri))
                 .timeout(timeout)
+                .transform(CamelSupport.camel(camelContext).convertBodyTo(String.class))
                 .message()
+                .type(messageType)
                 .body(body)
                 .headers(headers));
 
