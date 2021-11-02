@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Cucumber.class)
 @CucumberOptions(
+        extraGlue = { "org.citrusframework.yaks.standard" },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
 public class KubernetesFeature_IT {

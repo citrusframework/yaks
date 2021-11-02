@@ -161,9 +161,8 @@ public class KnativeSettings {
      * Service port used when consuming cloud events via Http.
      * @return
      */
-    public static int getServicePort() {
+    public static String getServicePort() {
         return Optional.ofNullable(System.getProperty(SERVICE_PORT_PROPERTY, System.getenv(SERVICE_PORT_ENV)))
-                .map(Integer::parseInt)
                 .orElseGet(KubernetesSettings::getServicePort);
     }
 

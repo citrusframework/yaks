@@ -68,8 +68,8 @@ public class ReceiveEventSteps {
         kubernetesSteps.setServiceName(name);
     }
 
-    @Given("^Knative service port (\\d+)$")
-    public void setServicePort(int port) {
+    @Given("^Knative service port ([^\\s]+)$")
+    public void setServicePort(String port) {
         kubernetesSteps.setServicePort(port);
     }
 
@@ -103,8 +103,8 @@ public class ReceiveEventSteps {
         kubernetesSteps.createService(serviceName);
     }
 
-    @Given("^create Knative event consumer service ([^\\s]+) with target port (\\d+)$")
-    public void createService(String serviceName, int targetPort) {
+    @Given("^create Knative event consumer service ([^\\s]+) with target port ([^\\s]+)$")
+    public void createService(String serviceName, String targetPort) {
         kubernetesSteps.createService(serviceName, targetPort);
     }
 

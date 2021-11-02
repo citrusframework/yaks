@@ -111,9 +111,9 @@ public class KubernetesSettings {
      * Service port used when consuming cloud events via Http.
      * @return
      */
-    public static int getServicePort() {
-        return Integer.parseInt(System.getProperty(SERVICE_PORT_PROPERTY,
-                System.getenv(SERVICE_PORT_ENV) != null ? System.getenv(SERVICE_PORT_ENV) : SERVICE_PORT_DEFAULT));
+    public static String getServicePort() {
+        return System.getProperty(SERVICE_PORT_PROPERTY,
+                System.getenv(SERVICE_PORT_ENV) != null ? System.getenv(SERVICE_PORT_ENV) : SERVICE_PORT_DEFAULT);
     }
 
     /**
