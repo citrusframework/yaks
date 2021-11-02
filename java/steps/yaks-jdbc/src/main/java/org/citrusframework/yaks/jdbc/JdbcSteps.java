@@ -39,6 +39,7 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 import static com.consol.citrus.actions.ExecuteSQLAction.Builder.sql;
 import static com.consol.citrus.actions.ExecuteSQLQueryAction.Builder.query;
+import static com.consol.citrus.container.RepeatOnErrorUntilTrue.Builder.repeatOnError;
 
 /**
  * @author Christoph Deppisch
@@ -57,11 +58,30 @@ public class JdbcSteps {
     private DataSource dataSource;
     private final List<String> sqlQueryStatements = new ArrayList<>();
 
+    private int maxRetryAttempts = JdbcSettings.getMaxAttempts();
+    private long delayBetweenAttempts = JdbcSettings.getDelayBetweenAttempts();
+
     @Before
     public void before(Scenario scenario) {
         if (dataSource == null && citrus.getCitrusContext().getReferenceResolver().resolveAll(DataSource.class).size() == 1L) {
             dataSource = citrus.getCitrusContext().getReferenceResolver().resolve(DataSource.class);
         }
+    }
+
+    @Given("^SQL query retry configuration$")
+    public void configureRetryConfiguration(Map<String, Object> configuration) {
+        maxRetryAttempts = Integer.parseInt(configuration.getOrDefault("maxRetryAttempts", maxRetryAttempts).toString());
+        delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
+    }
+
+    @Given("^SQL query max retry attempts: (\\d+)")
+    public void configureMaxRetryAttempts(int maxRetryAttempts) {
+        this.maxRetryAttempts = maxRetryAttempts;
+    }
+
+    @Given("^SQL query retry delay: (\\d+)ms")
+    public void configureDelayBetweenAttempts(long delayBetweenAttempts) {
+        this.delayBetweenAttempts = delayBetweenAttempts;
     }
 
     @Given("^(?:D|d)ata source: ([^\"\\s]+)$")
@@ -112,9 +132,18 @@ public class JdbcSteps {
 
     @Then("^verify column ([^\"\\s]+)=(.+)$")
     public void verifyColumn(String name, String value) {
-        runner.run(query(dataSource)
-                 .statements(sqlQueryStatements)
-                 .validate(name, value));
+        if (maxRetryAttempts > 0) {
+            runner.run(repeatOnError()
+                    .until((index, context) -> index <= maxRetryAttempts)
+                    .autoSleep(delayBetweenAttempts)
+                    .actions(query(dataSource)
+                              .statements(sqlQueryStatements)
+                              .validate(name, value)));
+        } else {
+            runner.run(query(dataSource)
+                        .statements(sqlQueryStatements)
+                        .validate(name, value));
+        }
         sqlQueryStatements.clear();
     }
 
@@ -131,15 +160,32 @@ public class JdbcSteps {
             }
         });
 
-        runner.run(action);
+        if (maxRetryAttempts > 0) {
+            runner.run(repeatOnError()
+                    .until((index, context) -> index <= maxRetryAttempts)
+                    .autoSleep(delayBetweenAttempts)
+                    .actions(action));
+        } else {
+            runner.run(action);
+        }
+
         sqlQueryStatements.clear();
     }
 
     @Then("^verify result set$")
     public void verifyResultSet(String verifyScript) {
-        runner.run(query(dataSource)
-                 .statements(sqlQueryStatements)
-                 .groovy(verifyScript));
+        if (maxRetryAttempts > 0) {
+            runner.run(repeatOnError()
+                    .until((index, context) -> index <= maxRetryAttempts)
+                    .autoSleep(delayBetweenAttempts)
+                    .actions(query(dataSource)
+                              .statements(sqlQueryStatements)
+                              .groovy(verifyScript)));
+        } else {
+            runner.run(query(dataSource)
+                        .statements(sqlQueryStatements)
+                        .groovy(verifyScript));
+        }
 
         sqlQueryStatements.clear();
     }
