@@ -109,8 +109,12 @@ public class PostgreSQLSteps {
      * @param context
      */
     private void setConnectionSettings(PostgreSQLContainer<?> postgreSQLContainer, TestContext context) {
+        String containerId = postgreSQLContainer.getContainerId().substring(0, 12);
+
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_IP", postgreSQLContainer.getContainerIpAddress());
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_ID", containerId);
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_NAME", postgreSQLContainer.getContainerName());
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", "kd-" + containerId);
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_PORT", String.valueOf(postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", postgreSQLContainer.getJdbcUrl());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_USERNAME", postgreSQLContainer.getUsername());

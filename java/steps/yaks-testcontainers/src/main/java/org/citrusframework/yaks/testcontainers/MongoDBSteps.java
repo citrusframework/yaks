@@ -88,8 +88,12 @@ public class MongoDBSteps {
      */
     private void setConnectionSettings(MongoDBContainer mongoDBContainer, TestContext context) {
         if (mongoDBContainer.isRunning()) {
+            String containerId = mongoDBContainer.getContainerId().substring(0, 12);
+
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_IP", mongoDBContainer.getContainerIpAddress());
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_ID", containerId);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_NAME", mongoDBContainer.getContainerName());
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", "kd-" + containerId);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", mongoDBContainer.getReplicaSetUrl());
         }
     }
