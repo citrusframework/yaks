@@ -19,6 +19,7 @@ package org.citrusframework.yaks.camelk;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
@@ -57,6 +59,7 @@ public class CamelKSteps {
     private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
 
     private List<String> propertyFiles;
+    private Map<String, String> properties;
 
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
 
@@ -67,6 +70,7 @@ public class CamelKSteps {
         }
 
         propertyFiles = new ArrayList<>();
+        properties = new LinkedHashMap<>();
     }
 
     @Given("^Disable auto removal of Camel-K resources$")
@@ -98,6 +102,17 @@ public class CamelKSteps {
 	@Given("^Camel-K integration property file ([^\\s]+)$")
     public void addPropertyFile(String filePath) {
         propertyFiles.add(filePath);
+    }
+
+    @Given("^Camel-K integration property ([^\\s]+)=\"([^\"]*)\"$")
+    @Given("^Camel-K integration property ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
+    public void addProperty(String name, String value) {
+        properties.put(name, value);
+    }
+
+	@Given("^Camel-K integration properties$")
+    public void addProperties(DataTable propertyTable) {
+        properties.putAll(propertyTable.asMap(String.class, String.class));
     }
 
 	@Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
@@ -203,6 +218,7 @@ public class CamelKSteps {
                 .source(name + "." + language, source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
                 .properties(configuration.getOrDefault("properties", "").trim())
+                .properties(properties)
                 .propertyFiles(propertyFiles)
                 .supportVariables(Boolean.parseBoolean(
                         configuration.getOrDefault("supportVariables", String.valueOf(supportVariablesInSources))))

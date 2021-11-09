@@ -148,7 +148,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 }
                 final String[] property = p.split("=",2);
                 configurationList.add(
-                        new IntegrationSpec.Configuration("property", createPropertySpec(property[0], property[1])));
+                        new IntegrationSpec.Configuration("property", createPropertySpec(property[0], property[1], context)));
             }
         }
 
@@ -158,7 +158,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                     Properties props = new Properties();
                     props.load(FileUtils.getFileResource(pf, context).getInputStream());
                     props.forEach((key, value) -> configurationList.add(
-                            new IntegrationSpec.Configuration("property", createPropertySpec(key.toString(), value.toString()))));
+                            new IntegrationSpec.Configuration("property", createPropertySpec(key.toString(), value.toString(), context))));
                 } catch (IOException e) {
                     throw new CitrusRuntimeException("Failed to load property file", e);
                 }
@@ -170,8 +170,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
     }
 
-    private String createPropertySpec(String key, String value) {
-        return escapePropertyItem(key) + "=" + escapePropertyItem(value);
+    private String createPropertySpec(String key, String value, TestContext context) {
+        return escapePropertyItem(key) + "=" + escapePropertyItem(context.replaceDynamicContentInString(value));
     }
 
     private String escapePropertyItem(String item) {
@@ -282,6 +282,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder properties(List<String> properties) {
             this.properties.addAll(properties);
+            return this;
+        }
+
+        public Builder properties(Map<String, String> properties) {
+            properties.forEach(this::property);
             return this;
         }
 
