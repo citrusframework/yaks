@@ -51,6 +51,10 @@ public class PostgreSQLSteps {
 
     private PostgreSQLContainer<?> postgreSQLContainer;
 
+    private String databaseName = PostgreSQLSettings.getDatabaseName();
+    private String username = PostgreSQLSettings.getUsername();
+    private String password = PostgreSQLSettings.getPassword();
+
     @Before
     public void before(Scenario scenario) {
         if (postgreSQLContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(PostgreSQLContainer.class)) {
@@ -64,9 +68,27 @@ public class PostgreSQLSteps {
         this.postgreSQLVersion = version;
     }
 
+    @Given("^PostgreSQL database name (^\\s+)$")
+    public void setDatabaseName(String name) {
+        this.databaseName = name;
+    }
+
+    @Given("^PostgreSQL username (^\\s+)$")
+    public void setUsername(String name) {
+        this.username = name;
+    }
+
+    @Given("^PostgreSQL password (^\\s+)$")
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Given("^start PostgreSQL container$")
     public void startPostgresql() {
-        postgreSQLContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres").withTag(postgreSQLVersion));
+        postgreSQLContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres").withTag(postgreSQLVersion))
+                .withUsername(username)
+                .withPassword(password)
+                .withDatabaseName(databaseName);
 
         postgreSQLContainer.start();
 

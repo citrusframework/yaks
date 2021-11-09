@@ -24,8 +24,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
  */
 public class TestContainersSettings {
 
-    private static final String TESTCONTAINERS_PROPERTY_PREFIX = "yaks.testcontainers.";
-    private static final String TESTCONTAINERS_ENV_PREFIX = "YAKS_TESTCONTAINERS_";
+    static final String TESTCONTAINERS_PROPERTY_PREFIX = "yaks.testcontainers.";
+    static final String TESTCONTAINERS_ENV_PREFIX = "YAKS_TESTCONTAINERS_";
 
     private static final String MONGODB_VERSION_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "mongodb.version";
     private static final String MONGODB_VERSION_ENV = TESTCONTAINERS_ENV_PREFIX + "MONGODB_VERSION";
