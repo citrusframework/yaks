@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -53,6 +54,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final List<String> properties;
     private final List<String> propertyFiles;
     private final List<String> traits;
+    private final Map<String, String> openApis;
     private final boolean supportVariables;
 
     /**
@@ -68,6 +70,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.properties = builder.properties;
         this.propertyFiles = builder.propertyFiles;
         this.traits = builder.traits;
+        this.openApis = builder.openApis;
         this.supportVariables = builder.supportVariables;
     }
 
@@ -94,6 +97,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
         addPropertyConfigurationSpec(integrationBuilder, context);
         addTraitSpec(integrationBuilder, resolvedSource, context);
+        addOpenApiSpec(integrationBuilder, context);
 
         final Integration i = integrationBuilder.build();
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
@@ -102,6 +106,10 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 .createOrReplace(i);
 
         LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
+    }
+
+    private void addOpenApiSpec(Integration.Builder integrationBuilder, TestContext context) {
+        openApis.forEach((k, v) -> integrationBuilder.openApi(k, context.replaceDynamicContentInString(v)));
     }
 
     private void addTraitSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
@@ -208,7 +216,17 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         Pattern pattern = Pattern.compile("^// camel-k: ?dependency=(.+)$", Pattern.MULTILINE);
         Matcher depMatcher = pattern.matcher(source);
         while (depMatcher.find()) {
-            resolved.add(depMatcher.group(1));
+            String dependency = depMatcher.group(1);
+
+            if (dependency.startsWith("camel-quarkus-")) {
+                dependency = "camel:" + dependency.substring("camel-quarkus-".length());
+            } else if (dependency.startsWith("camel-quarkus:")) {
+                dependency = "camel:" + dependency.substring("camel-quarkus:".length());
+            } else if (dependency.startsWith("camel-")) {
+                dependency = "camel:" + dependency.substring("camel-".length());
+            }
+
+            resolved.add(dependency);
         }
 
         return resolved;
@@ -226,6 +244,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private final List<String> properties = new ArrayList<>();
         private final List<String> propertyFiles = new ArrayList<>();
         private final List<String> traits = new ArrayList<>();
+        private final Map<String, String> openApis = new LinkedHashMap<>();
         private boolean supportVariables = true;
 
         public Builder integration(String integrationName) {
@@ -251,6 +270,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         public Builder source(String fileName, String source) {
             this.fileName = fileName;
             this.source = source;
+            return this;
+        }
+
+        public Builder openApi(String fileName, String content) {
+            this.openApis.put(fileName, content);
             return this;
         }
 

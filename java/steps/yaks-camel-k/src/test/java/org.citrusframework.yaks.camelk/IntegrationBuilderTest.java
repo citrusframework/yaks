@@ -18,8 +18,9 @@
 package org.citrusframework.yaks.camelk;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.consol.citrus.util.FileUtils;
@@ -77,15 +78,29 @@ public class IntegrationBuilderTest {
 		traits.put("quarkus", quarkus);
 		traits.put("route", new IntegrationSpec.TraitConfig("enabled", "true"));
 
+		List<String> dependencies = Arrays.asList("mvn:fake.dependency:id:version-1", "camel:jackson");
 		Integration i = new Integration.Builder()
 				.name("bar.groovy")
 				.source("from(\"timer:x\").log('${body}')")
 				.traits(traits)
-				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
+				.dependencies(dependencies)
 				.build();
 
 		final String json = KubernetesSupport.json().writeValueAsString(i);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
 				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
+	}
+
+	@Test
+	public void buildOpenApiIntegrationTest() throws IOException {
+		Integration i = new Integration.Builder()
+				.name("openapi.groovy")
+				.source("from(\"timer:x\").log('${body}')")
+				.openApi("openapi.yaml", FileUtils.readToString(FileUtils.getFileResource("classpath:openapi.yaml")))
+				.build();
+
+		final String json = StringUtils.trimAllWhitespace(KubernetesSupport.json().writeValueAsString(i));
+		Assert.assertEquals(StringUtils.trimAllWhitespace(
+				FileUtils.readToString(new ClassPathResource("integration-api.json", IntegrationBuilderTest.class))), json);
 	}
 }

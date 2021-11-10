@@ -36,6 +36,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -212,7 +213,7 @@ public class CamelKSteps {
     }
 
     private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
-        runner.run(camelk()
+        CreateIntegrationAction.Builder create = camelk()
                 .client(k8sClient)
                 .createIntegration(configuration.getOrDefault("name", name + "." + language))
                 .source(name + "." + language, source)
@@ -222,7 +223,19 @@ public class CamelKSteps {
                 .propertyFiles(propertyFiles)
                 .supportVariables(Boolean.parseBoolean(
                         configuration.getOrDefault("supportVariables", String.valueOf(supportVariablesInSources))))
-                .traits(configuration.getOrDefault("traits", "").trim()));
+                .traits(configuration.getOrDefault("traits", "").trim());
+
+        String openApiSpec = configuration.getOrDefault("openapi", "");
+        if (!openApiSpec.isEmpty()) {
+            try {
+                Resource file = FileUtils.getFileResource(openApiSpec);
+                create.openApi(file.getFilename(), FileUtils.readToString(file));
+            } catch (IOException e) {
+                throw new CitrusRuntimeException(String.format("Failed to read openapi spec form file path %s", openApiSpec));
+            }
+        }
+
+        runner.run(create);
 
         if (autoRemoveResources) {
             runner.then(doFinally()
