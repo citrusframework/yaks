@@ -12,7 +12,8 @@
       }
     ],
     "dependencies": [
-      "mvn:fake.dependency:id:version-1"
+      "mvn:fake.dependency:id:version-1",
+      "camel:jackson"
     ],
     "traits": {
       "route": {

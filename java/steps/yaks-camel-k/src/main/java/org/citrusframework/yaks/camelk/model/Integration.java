@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.camelk.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 	 */
 	public static class Builder {
 		private Map<String, IntegrationSpec.TraitConfig> traits;
+		private final List<IntegrationSpec.Resource> resources = new ArrayList<>();
 		private List<String> dependencies;
 		private List<IntegrationSpec.Configuration> configuration;
 		private String source;
@@ -75,6 +77,11 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 			return this;
 		}
 
+		public Builder openApi(String fileName, String content) {
+			this.resources.add(new IntegrationSpec.Resource("openapi", null, fileName, content));
+			return this;
+		}
+
 		public Builder dependencies(List<String> dependencies) {
 			this.dependencies = Collections.unmodifiableList(dependencies);
 			return this;
@@ -97,6 +104,11 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 			i.getSpec().setDependencies(dependencies);
 			i.getSpec().setTraits(traits);
 			i.getSpec().setConfiguration(configuration);
+
+			if (!resources.isEmpty()) {
+				i.getSpec().setResources(resources);
+			}
+
 			return i;
 		}
 
