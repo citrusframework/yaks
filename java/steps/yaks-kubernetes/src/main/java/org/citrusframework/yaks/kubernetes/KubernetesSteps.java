@@ -349,21 +349,22 @@ public class KubernetesSteps {
         resourceShouldMatchCondition("Ready", name, resourceType);
     }
 
-    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
-    public void resourceLabeledShouldMatchCondition(String condition, String resourceType, String label, String value) {
+    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
+    public void resourceLabeledShouldMatchCondition(String condition, String kind, String resourceType, String label, String value) {
         runner.run(kubernetes().client(k8sClient)
                 .customResources()
                 .verify(label, value)
+                .kind(kind)
                 .type(resourceType)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .condition(condition));
     }
 
-    @Given("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) is ready")
-    @Then("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) should be ready")
-    public void resourceLabeledShouldBeReady(String resourceType, String label, String value) {
-        resourceLabeledShouldMatchCondition("Ready", resourceType, label, value);
+    @Given("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) is ready")
+    @Then("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) should be ready")
+    public void resourceLabeledShouldBeReady(String kind, String resourceType, String label, String value) {
+        resourceLabeledShouldMatchCondition("Ready", kind, resourceType, label, value);
     }
 
     @Given("^wait for Kubernetes pod ([a-z0-9-]+)$")

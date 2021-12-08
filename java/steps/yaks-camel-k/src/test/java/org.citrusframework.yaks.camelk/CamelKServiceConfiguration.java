@@ -17,7 +17,6 @@
 
 package org.citrusframework.yaks.camelk;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 
@@ -39,9 +38,8 @@ public class CamelKServiceConfiguration {
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
 
-    @Bean(destroyMethod = "destroy")
+    @Bean(initMethod = "init", destroyMethod = "destroy")
     public KubernetesMockServer k8sMockServer() throws UnknownHostException {
-        k8sServer.start(InetAddress.getLocalHost(), 0);
         return k8sServer;
     }
 

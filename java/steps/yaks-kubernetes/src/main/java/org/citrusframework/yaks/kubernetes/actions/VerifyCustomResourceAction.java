@@ -18,7 +18,6 @@
 package org.citrusframework.yaks.kubernetes.actions;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +26,9 @@ import java.util.stream.Collectors;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -88,7 +90,7 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      */
     private void verifyResource(String name, String labelExpression, String condition, TestContext context) {
         for (int i = 0; i < maxAttempts; i++) {
-            Map<String, Object> resource;
+            GenericKubernetesResource resource;
             if (name != null && !name.isEmpty()) {
                 resource = getResource(name, condition, context);
             } else {
@@ -121,8 +123,8 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      * @param context
      * @return
      */
-    private Map<String, Object> getResource(String name, String condition, TestContext context) {
-        Map<String, Object> resource = KubernetesSupport.getResource(getKubernetesClient(), namespace(context),
+    private GenericKubernetesResource getResource(String name, String condition, TestContext context) {
+        GenericKubernetesResource resource = KubernetesSupport.getResource(getKubernetesClient(), namespace(context),
                 getCrdContext(context), name);
 
         return verifyResourceStatus(resource, condition) ? resource : null;
@@ -135,7 +137,7 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      * @param context
      * @return
      */
-    private Map<String, Object> getResourceFromLabel(String labelExpression, String condition, TestContext context) {
+    private GenericKubernetesResource getResourceFromLabel(String labelExpression, String condition, TestContext context) {
         if (labelExpression == null || labelExpression.isEmpty()) {
             return null;
         }
@@ -144,24 +146,19 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
         String labelKey = tokens[0];
         String labelValue = tokens.length > 1 ? tokens[1] : "";
 
-        Map<String, Object> resourceList = KubernetesSupport.getResources(getKubernetesClient(), namespace(context), getCrdContext(context));
+        GenericKubernetesResourceList resourceList = KubernetesSupport.getResources(getKubernetesClient(), namespace(context), getCrdContext(context));
 
-        Map<String, Object> resource = new HashMap<>();
-        for (Object value : getAsPropertyList("items", resourceList)) {
-            if (value instanceof Map) {
-                Map<String, Object> candidate = (Map<String, Object>) value;
-                Map<String, Object> metadata = getAsPropertyMap("metadata", candidate);
-                if (metadata.containsKey("labels")) {
-                    Map<String, Object> labels = getAsPropertyMap("labels", metadata);
-                    if (labels.containsKey(labelKey) && labels.get(labelKey).equals(labelValue)) {
-                        resource = candidate;
-                        break;
-                    }
+        for (GenericKubernetesResource resource : resourceList.getItems()) {
+            ObjectMeta metadata = resource.getMetadata();
+            if (metadata.getLabels() != null &&
+                    metadata.getLabels().entrySet().stream().anyMatch(entry -> entry.getKey().equals(labelKey) && labelValue.equals(entry.getValue()))) {
+                if (verifyResourceStatus(resource, condition)) {
+                    return resource;
                 }
             }
         }
 
-        return verifyResourceStatus(resource, condition) ? resource : null;
+        return null;
     }
 
     /**
@@ -170,8 +167,8 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      * @param condition
      * @return
      */
-    private boolean verifyResourceStatus(Map<String, Object> resource, String condition) {
-        Map<String, Object> status = getAsPropertyMap("status", resource);
+    private boolean verifyResourceStatus(GenericKubernetesResource resource, String condition) {
+        Map<String, Object> status = getAsPropertyMap("status", resource.getAdditionalProperties());
         List<Map<String, Object>> conditions = getAsPropertyList("conditions", status);
 
         return conditions.stream()
@@ -213,7 +210,7 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      * @return
      */
     private Map<String, Object> getAsPropertyMap(String property, Map<String, Object> objectMap) {
-        if (objectMap.containsKey(property) && objectMap.get(property) instanceof Map) {
+        if (objectMap != null && objectMap.containsKey(property) && objectMap.get(property) instanceof Map) {
             return (Map<String, Object>) objectMap.get(property);
         }
 

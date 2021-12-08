@@ -36,6 +36,7 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 
 	public Integration() {
 		super();
+		this.spec = new IntegrationSpec();
 		this.status = null;
 	}
 

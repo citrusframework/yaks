@@ -53,8 +53,8 @@ status:
   - type: Ready
     status: true
 """
-    Then wait for condition=Ready on Kubernetes custom resource in foos.yaks.dev/v1 labeled with app=foo-app
-    Then Kubernetes custom resource in foos.yaks.dev/v1 labeled with app=foo-app should be ready
+    Then wait for condition=Ready on Kubernetes custom resource Foo in foos.yaks.dev/v1 labeled with app=foo-app
+    Then Kubernetes custom resource Foo in foos.yaks.dev/v1 labeled with app=foo-app should be ready
 
   Scenario: Wait for completed custom resource
     Given create Kubernetes custom resource in foos.yaks.dev
