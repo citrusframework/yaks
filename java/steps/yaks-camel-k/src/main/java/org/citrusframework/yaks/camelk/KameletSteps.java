@@ -68,6 +68,7 @@ public class KameletSteps {
     private Map<String, Object> sinkProperties;
 
     private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
+    private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
 
     @Before
     public void before(Scenario scenario) {
@@ -89,7 +90,17 @@ public class KameletSteps {
         autoRemoveResources = true;
     }
 
-	@Given("^Kamelet type (in|out|error)(?:=| is )\"(.+)\"$")
+    @Given("^Disable variable support in Kamelet sources$")
+    public void disableVariableSupport() {
+        supportVariablesInSources = false;
+    }
+
+    @Given("^Enable variable support in Kamelet sources$")
+    public void enableVariableSupport() {
+        supportVariablesInSources = true;
+    }
+
+    @Given("^Kamelet type (in|out|error)(?:=| is )\"(.+)\"$")
 	public void addType(String slot, String mediaType) {
         kamelet.addType(slot, mediaType);
 	}
@@ -186,6 +197,7 @@ public class KameletSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .createKamelet(fileName)
+                .supportVariables(supportVariablesInSources)
                 .resource(resource));
 
         if (autoRemoveResources) {
@@ -221,6 +233,7 @@ public class KameletSteps {
         runner.run(camelk()
                     .client(k8sClient)
                     .createKamelet(name)
+                    .supportVariables(supportVariablesInSources)
                     .fromBuilder(kamelet));
 
         initializeKameletBuilder();

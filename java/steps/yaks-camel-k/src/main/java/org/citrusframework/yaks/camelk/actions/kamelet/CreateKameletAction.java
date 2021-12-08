@@ -54,6 +54,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
     private final List<String> dependencies;
     private final Map<String, KameletSpec.TypeSpec> types;
     private final Resource resource;
+    private final boolean supportVariables;
 
     /**
      * Constructor using given builder.
@@ -68,6 +69,7 @@ public class CreateKameletAction extends AbstractCamelKAction {
         this.dependencies = builder.dependencies;
         this.types = builder.types;
         this.resource = builder.resource;
+        this.supportVariables = builder.supportVariables;
     }
 
     @Override
@@ -80,8 +82,14 @@ public class CreateKameletAction extends AbstractCamelKAction {
 
         if (resource != null) {
             try {
-                kamelet = KubernetesSupport.yaml().loadAs(
-                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), Kamelet.class);
+                String resolvedSource;
+                if (supportVariables) {
+                    resolvedSource = context.replaceDynamicContentInString(FileUtils.readToString(resource));
+                } else {
+                    resolvedSource = FileUtils.readToString(resource);
+                }
+
+                kamelet = KubernetesSupport.yaml().loadAs(resolvedSource, Kamelet.class);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load Kamelet from resource %s", name + ".kamelet.yaml"));
             }
@@ -144,10 +152,16 @@ public class CreateKameletAction extends AbstractCamelKAction {
         private String name;
         private String flow;
         private KameletSpec.Source source;
-        private List<String> dependencies = new ArrayList<>();
+        private final List<String> dependencies = new ArrayList<>();
         private KameletSpec.Definition definition = new KameletSpec.Definition();
-        private Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+        private final Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
         private Resource resource;
+        private boolean supportVariables = true;
+
+        public Builder supportVariables(boolean supportVariables) {
+            this.supportVariables = supportVariables;
+            return this;
+        }
 
         public Builder kamelet(String kameletName) {
             this.name = kameletName;
