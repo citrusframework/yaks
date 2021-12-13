@@ -28,7 +28,6 @@ import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -146,19 +145,14 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
         String labelKey = tokens[0];
         String labelValue = tokens.length > 1 ? tokens[1] : "";
 
-        GenericKubernetesResourceList resourceList = KubernetesSupport.getResources(getKubernetesClient(), namespace(context), getCrdContext(context));
+        GenericKubernetesResourceList resourceList = KubernetesSupport.getResources(getKubernetesClient(),
+                namespace(context),
+                getCrdContext(context), labelKey, labelValue);
 
-        for (GenericKubernetesResource resource : resourceList.getItems()) {
-            ObjectMeta metadata = resource.getMetadata();
-            if (metadata.getLabels() != null &&
-                    metadata.getLabels().entrySet().stream().anyMatch(entry -> entry.getKey().equals(labelKey) && labelValue.equals(entry.getValue()))) {
-                if (verifyResourceStatus(resource, condition)) {
-                    return resource;
-                }
-            }
-        }
-
-        return null;
+        return resourceList.getItems().stream()
+                .filter(resource -> this.verifyResourceStatus(resource, condition))
+                .findFirst()
+                .orElse(null);
     }
 
     /**

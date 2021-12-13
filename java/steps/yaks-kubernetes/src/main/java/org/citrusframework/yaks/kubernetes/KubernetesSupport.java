@@ -92,12 +92,24 @@ public final class KubernetesSupport {
 
     public static GenericKubernetesResource getResource(KubernetesClient k8sClient, String namespace,
                                                         CustomResourceDefinitionContext context, String resourceName) {
-        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind()).inNamespace(namespace).withName(resourceName).get();
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind()).inNamespace(namespace)
+                .withName(resourceName)
+                .get();
     }
 
     public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
                                                              CustomResourceDefinitionContext context) {
-        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind()).inNamespace(namespace).list();
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                .inNamespace(namespace)
+                .list();
+    }
+
+    public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
+                                                             CustomResourceDefinitionContext context, String labelKey, String labelValue) {
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                .inNamespace(namespace)
+                .withLabel(labelKey, labelValue)
+                .list();
     }
 
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
@@ -125,10 +137,6 @@ public final class KubernetesSupport {
                 .withPlural(resourceType.contains(".") ? resourceType.substring(0, resourceType.indexOf(".")) : resourceType)
                 .withScope("Namespaced")
                 .build();
-    }
-
-    public static String kubernetesApiVersion() {
-        return KubernetesSettings.getApiVersion();
     }
 
     /**

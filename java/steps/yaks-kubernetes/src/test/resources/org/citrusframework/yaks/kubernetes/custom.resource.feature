@@ -35,7 +35,15 @@ status:
     status: true
 """
     Then wait for condition=Ready on Kubernetes custom resource foo/test-resource in foos.yaks.dev/v1
+    Then wait for condition=Ready on Kubernetes custom resource
+      | apiVersion | yaks.dev/v1 |
+      | kind       | Foo         |
+      | name       | test-resource |
     Then Kubernetes custom resource foo/test-resource in foos.yaks.dev/v1 should be ready
+    Then Kubernetes custom resource test-resource should be ready
+      | group   | yaks.dev |
+      | version | v1       |
+      | kind    | Foo      |
 
   Scenario: Wait for labeled custom resource
     Given create Kubernetes custom resource in foos.yaks.dev
@@ -54,7 +62,15 @@ status:
     status: true
 """
     Then wait for condition=Ready on Kubernetes custom resource Foo in foos.yaks.dev/v1 labeled with app=foo-app
+    Then wait for condition=Ready on Kubernetes custom resource
+      | apiVersion | yaks.dev/v1 |
+      | kind       | Foo         |
+      | label      | app=foo-app |
     Then Kubernetes custom resource Foo in foos.yaks.dev/v1 labeled with app=foo-app should be ready
+    Then Kubernetes custom resource should be ready
+      | apiVersion | yaks.dev/v1 |
+      | kind       | Foo         |
+      | label      | app=foo-app |
 
   Scenario: Wait for completed custom resource
     Given create Kubernetes custom resource in foos.yaks.dev
