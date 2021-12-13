@@ -42,6 +42,7 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
 
     public Kamelet() {
         super();
+        this.spec = new KameletSpec();
         this.status = null;
     }
 

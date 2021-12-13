@@ -17,8 +17,6 @@
 
 package org.citrusframework.yaks.kubernetes;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -44,9 +42,8 @@ public class KubernetesServiceConfiguration {
         KubernetesDeserializer.registerCustomKind("yaks.dev/v1", "Foo", Foo.class);
     }
 
-    @Bean(destroyMethod = "destroy")
-    public KubernetesMockServer k8sMockServer() throws UnknownHostException {
-        k8sServer.start(InetAddress.getLocalHost(), 0);
+    @Bean(initMethod = "init", destroyMethod = "destroy")
+    public KubernetesMockServer k8sMockServer() {
         return k8sServer;
     }
 

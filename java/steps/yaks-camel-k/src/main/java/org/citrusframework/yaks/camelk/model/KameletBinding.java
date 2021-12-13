@@ -40,6 +40,7 @@ public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBi
 
     public KameletBinding() {
         super();
+        this.spec = new KameletBindingSpec();
         this.status = null;
     }
 

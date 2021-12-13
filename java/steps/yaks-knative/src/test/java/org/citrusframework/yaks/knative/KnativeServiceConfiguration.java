@@ -17,8 +17,6 @@
 
 package org.citrusframework.yaks.knative;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 
 import com.consol.citrus.endpoint.EndpointAdapter;
@@ -51,9 +49,8 @@ public class KnativeServiceConfiguration {
     private final KnativeMockServer knativeServer = new KnativeMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
 
-    @Bean(destroyMethod = "destroy")
-    public KnativeMockServer knativeMockServer() throws UnknownHostException {
-        knativeServer.start(InetAddress.getLocalHost(), 0);
+    @Bean(initMethod = "init", destroyMethod = "destroy")
+    public KnativeMockServer knativeMockServer() {
         return knativeServer;
     }
 

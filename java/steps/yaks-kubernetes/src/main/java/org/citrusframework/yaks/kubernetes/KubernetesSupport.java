@@ -17,11 +17,10 @@
 
 package org.citrusframework.yaks.kubernetes;
 
-import java.io.IOException;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import com.consol.citrus.Citrus;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -29,6 +28,8 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -89,14 +90,26 @@ public final class KubernetesSupport {
         return OBJECT_MAPPER;
     }
 
-    public static Map<String, Object> getResource(KubernetesClient k8sClient, String namespace,
-                                                  CustomResourceDefinitionContext context, String resourceName) {
-        return k8sClient.customResource(context).get(namespace, resourceName);
+    public static GenericKubernetesResource getResource(KubernetesClient k8sClient, String namespace,
+                                                        CustomResourceDefinitionContext context, String resourceName) {
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind()).inNamespace(namespace)
+                .withName(resourceName)
+                .get();
     }
 
-    public static Map<String, Object> getResources(KubernetesClient k8sClient, String namespace,
-                                                  CustomResourceDefinitionContext context) {
-        return k8sClient.customResource(context).list(namespace);
+    public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
+                                                             CustomResourceDefinitionContext context) {
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                .inNamespace(namespace)
+                .list();
+    }
+
+    public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
+                                                             CustomResourceDefinitionContext context, String labelKey, String labelValue) {
+        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                .inNamespace(namespace)
+                .withLabel(labelKey, labelValue)
+                .list();
     }
 
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
@@ -106,20 +119,13 @@ public final class KubernetesSupport {
 
     public static void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, String yaml) {
-        try {
-            k8sClient.customResource(context).createOrReplace(namespace, yaml);
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create Knative resource", e);
-        }
+        k8sClient.genericKubernetesResources(context).inNamespace(namespace)
+                .load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))).createOrReplace();
     }
 
     public static void deleteResource(KubernetesClient k8sClient, String namespace,
                                       CustomResourceDefinitionContext context, String resourceName) {
-        try {
-            k8sClient.customResource(context).delete(namespace, resourceName);
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to delete Knative resource", e);
-        }
+        k8sClient.genericKubernetesResources(context).inNamespace(namespace).withName(resourceName).delete();
     }
 
     public static CustomResourceDefinitionContext crdContext(String resourceType, String group, String kind, String version) {
@@ -131,10 +137,6 @@ public final class KubernetesSupport {
                 .withPlural(resourceType.contains(".") ? resourceType.substring(0, resourceType.indexOf(".")) : resourceType)
                 .withScope("Namespaced")
                 .build();
-    }
-
-    public static String kubernetesApiVersion() {
-        return KubernetesSettings.getApiVersion();
     }
 
     /**

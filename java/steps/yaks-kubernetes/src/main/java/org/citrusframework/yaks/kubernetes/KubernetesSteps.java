@@ -18,6 +18,10 @@
 package org.citrusframework.yaks.kubernetes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.consol.citrus.Citrus;
@@ -349,21 +353,71 @@ public class KubernetesSteps {
         resourceShouldMatchCondition("Ready", name, resourceType);
     }
 
-    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
-    public void resourceLabeledShouldMatchCondition(String condition, String resourceType, String label, String value) {
+    @Given("^Kubernetes custom resource ([^\\s]+) is ready")
+    @Then("^Kubernetes custom resource ([^\\s]+) should be ready")
+    public void resourceShouldBeReady(String name, DataTable table) {
+        List<List<String>> cells = new ArrayList<>(table.cells());
+        cells.add(Arrays.asList("name", name));
+        resourceShouldMatchConditionWithConfiguration("Ready", DataTable.create(cells, table.getTableConverter()));
+    }
+
+    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource$")
+    public void resourceShouldMatchConditionWithConfiguration(String condition, DataTable table) {
+        Map<String, String> configuration = table.asMap(String.class, String.class);
+
+        if (!configuration.containsKey("kind")) {
+            throw new CitrusRuntimeException("Invalid custom resource type configuration - must use proper \"kind\" setting");
+        }
+
+        String kind = configuration.get("kind");
+        String apiVersion = configuration.getOrDefault("apiVersion", "");
+        String group = configuration.getOrDefault("group", apiVersion.length() > 0 ? apiVersion.substring(0, apiVersion.indexOf("/")) : "");
+        String version = configuration.getOrDefault("version", apiVersion.length() > 0 ? apiVersion.substring(apiVersion.indexOf("/") + 1) : "");
+        String resourceType = configuration.getOrDefault("type", String.format("%ss.%s/%s", kind.toLowerCase(Locale.ENGLISH), group, version));
+
+        if (configuration.containsKey("name")) {
+            String name = configuration.get("name");
+
+            if (!name.contains("/")) {
+                name = kind + "/" +name;
+            }
+            resourceShouldMatchCondition(condition, name, resourceType);
+        } else if (configuration.containsKey("label")) {
+            String labelExpression = configuration.get("label");
+
+            String[] tokens = labelExpression.split("=");
+            String labelKey = tokens[0];
+            String labelValue = tokens.length > 1 ? tokens[1] : "";
+
+            resourceLabeledShouldMatchCondition(condition, kind, resourceType, labelKey, labelValue);
+        } else {
+            throw new CitrusRuntimeException("Invalid custom resource type configuration - must identify resource via \"name\" or \"label\"");
+        }
+    }
+
+
+    @Given("^Kubernetes custom resource is ready")
+    @Then("^Kubernetes custom resource should be ready")
+    public void resourceConfiguredShouldBeReady(DataTable table) {
+        resourceShouldMatchConditionWithConfiguration("Ready", table);
+    }
+
+    @Given("^wait for condition=([^\\s]+) on Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+)$")
+    public void resourceLabeledShouldMatchCondition(String condition, String kind, String resourceType, String label, String value) {
         runner.run(kubernetes().client(k8sClient)
                 .customResources()
                 .verify(label, value)
+                .kind(kind)
                 .type(resourceType)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .condition(condition));
     }
 
-    @Given("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) is ready")
-    @Then("^Kubernetes custom resource in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) should be ready")
-    public void resourceLabeledShouldBeReady(String resourceType, String label, String value) {
-        resourceLabeledShouldMatchCondition("Ready", resourceType, label, value);
+    @Given("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) is ready")
+    @Then("^Kubernetes custom resource ([^\\s]+) in ([^\\s]+) labeled with ([^\\s]+)=([^\\s]+) should be ready")
+    public void resourceLabeledShouldBeReady(String kind, String resourceType, String label, String value) {
+        resourceLabeledShouldMatchCondition("Ready", kind, resourceType, label, value);
     }
 
     @Given("^wait for Kubernetes pod ([a-z0-9-]+)$")

@@ -50,8 +50,10 @@ public class KubernetesTestSteps {
             @Override
             public void doExecute(TestContext context) {
                 Assertions.assertThat(getKubernetesClient()
-                        .customResource(KubernetesSupport.crdContext("brokers", "eventing.knative.dev", "Broker", "v1"))
-                        .get(namespace(context), brokerName)).isNotNull();
+                        .genericKubernetesResources(KubernetesSupport.crdContext("brokers", "eventing.knative.dev", "Broker", "v1"))
+                        .inNamespace(namespace(context))
+                        .withName(brokerName)
+                        .get()).isNotNull();
             }
         });
     }
