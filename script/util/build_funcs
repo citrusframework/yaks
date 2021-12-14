@@ -104,7 +104,7 @@ build_artifacts () {
       # deploy artifacts to Sonatype OSS staging
       echo "Deploy YAKS artifacts ..."
 
-      ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging Syndesis for $release_version"
+      ./mvnw ${maven_opts} clean install deploy -Prelease-central -DstagingDescription="Staging YAKS for $release_version"
   fi
 }
 
