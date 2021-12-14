@@ -69,6 +69,18 @@ release() {
     cross_compile "$working_dir" yaks-${release_version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
     cross_compile "$working_dir" yaks-${release_version}-windows-64bit "$build_dir" windows amd64 "$build_flags"
 
+    # Update project metadata to new release version
+    if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
+        update_project_metadata "$working_dir" "$release_version" "$next_version"
+    else
+        update_project_metadata "$working_dir" "$release_version" "$snapshot_version"
+    fi
+
+    if [ ! $(hasflag --local-release) ]; then
+        # Commit project metadata for new version
+        git_commit "$working_dir" project.yml "Update project metadata for $release_version"
+    fi
+
     # Build and stage artifacts
     build_artifacts "$working_dir" "$release_version" "$maven_opts"
 
@@ -90,8 +102,6 @@ release() {
     if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
         # Release staging repo
         release_staging_repo "$working_dir" "$maven_opts"
-
-        update_project_metadata "$working_dir" "$release_version" "$next_version"
     fi
 
     # Build Docker image
@@ -110,10 +120,17 @@ release() {
     if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
         # Set next snapshot version in sources
         set_next_version "$working_dir" "$next_version" "$snapshot_version"
+
+        # Update OLM sources with next version
         update_olm "$working_dir" "$next_version" "$snapshot_version"
 
-        # Push new snapshot version (if configured)
-        git_push_next_snapshot "$working_dir" "$next_version"
+        # Update to new snapshot version
+        update_next_snapshot "$working_dir" "$next_version"
+    fi
+
+    if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --no-git-push) ]; then
+        # Push changes
+        git push ${remote}
     fi
 
     echo "==== Finished release $release_version"
@@ -166,7 +183,7 @@ git_push() {
     git checkout ${original_branch}
 }
 
-git_push_next_snapshot() {
+update_next_snapshot() {
     local working_dir="$1"
     local next_version="$2"
 
@@ -181,9 +198,6 @@ git_push_next_snapshot() {
     echo "==== Using next snapshot version $next_version"
     git add * || true
     git commit -a -m "Use next snapshot version $next_version"
-
-    # Push changes
-    git push ${remote}
 }
 
 update_project_metadata() {
