@@ -129,6 +129,8 @@ release() {
     fi
 
     if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --no-git-push) ]; then
+        local remote=$(get_git_remote)
+
         # Push changes
         git push ${remote}
     fi
@@ -191,8 +193,6 @@ update_next_snapshot() {
         echo "Skip git push"
         return
     fi
-
-    local remote=$(get_git_remote)
 
     cd $working_dir
     echo "==== Using next snapshot version $next_version"
