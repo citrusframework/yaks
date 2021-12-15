@@ -88,6 +88,8 @@ generate_docs() {
             git_commit "$working_dir" overview.adoc "Add docs version for $release_version"
         fi
     fi
+
+    echo "==== Finished docs release $release_version"
 }
 
 docs_maven_opts() {
