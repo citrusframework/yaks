@@ -76,7 +76,7 @@ release() {
         update_project_metadata "$working_dir" "$release_version" "$snapshot_version"
     fi
 
-    if [ ! $(hasflag --local-release) ]; then
+    if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --snapshot-release) ]; then
         # Commit project metadata for new version
         git_commit "$working_dir" project.yml "Update project metadata for $release_version"
     fi
