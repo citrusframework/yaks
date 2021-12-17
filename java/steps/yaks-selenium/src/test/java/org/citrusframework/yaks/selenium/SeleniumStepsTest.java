@@ -20,7 +20,7 @@ package org.citrusframework.yaks.selenium;
 import java.net.URL;
 
 import com.consol.citrus.Citrus;
-import com.consol.citrus.CitrusContext;
+import com.consol.citrus.DefaultCitrusContextProvider;
 import com.consol.citrus.DefaultTestCaseRunner;
 import com.consol.citrus.TestCase;
 import com.consol.citrus.TestCaseRunner;
@@ -62,7 +62,7 @@ public class SeleniumStepsTest {
 
     private final ChromeDriver webDriver = Mockito.mock(ChromeDriver.class);
 
-    private final Citrus citrus = Citrus.newInstance(CitrusContext.create());
+    private final Citrus citrus = Citrus.newInstance(new DefaultCitrusContextProvider());
 
     @Before
     public void injectResources() {
