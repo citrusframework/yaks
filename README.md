@@ -3,7 +3,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.citrusframework.yaks/yaks-parent/badge.svg?style=flat-square)](https://search.maven.org/search?q=g:org.citrusframework.yaks)
 [![build](https://github.com/citrusframework/yaks/workflows/build/badge.svg?branch=main)](https://github.com/citrusframework/yaks/actions) 
 [![nightly](https://github.com/citrusframework/yaks/workflows/nightly/badge.svg)](https://github.com/citrusframework/yaks/actions)
-[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/openshift/origin.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0")
+[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/openshift/origin.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Chat on Zulip](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://citrusframework.zulipchat.com)
 
 ## What is YAKS!?
