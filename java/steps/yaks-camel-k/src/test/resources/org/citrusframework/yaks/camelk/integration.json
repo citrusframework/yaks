@@ -18,13 +18,13 @@
     "traits": {
       "route": {
         "configuration": {
-          "enabled": "true"
+          "enabled": true
         }
       },
       "quarkus": {
         "configuration": {
           "native": "true",
-          "enabled": "true"
+          "enabled": true
         }
       }
     }

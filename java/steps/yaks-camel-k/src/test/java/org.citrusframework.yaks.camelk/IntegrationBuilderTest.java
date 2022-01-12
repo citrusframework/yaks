@@ -73,10 +73,10 @@ public class IntegrationBuilderTest {
 	@Test
 	public void buildComplexIntegrationTest() throws IOException {
 		Map<String, IntegrationSpec.TraitConfig> traits = new HashMap<>();
-		IntegrationSpec.TraitConfig quarkus = new IntegrationSpec.TraitConfig("enabled", "true");
+		IntegrationSpec.TraitConfig quarkus = new IntegrationSpec.TraitConfig("enabled", true);
 		quarkus.add("native", "true");
 		traits.put("quarkus", quarkus);
-		traits.put("route", new IntegrationSpec.TraitConfig("enabled", "true"));
+		traits.put("route", new IntegrationSpec.TraitConfig("enabled", true));
 
 		List<String> dependencies = Arrays.asList("mvn:fake.dependency:id:version-1", "camel:jackson");
 		Integration i = new Integration.Builder()
