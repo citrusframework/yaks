@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
+import com.consol.citrus.variable.VariableUtils;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
@@ -139,11 +140,36 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
         final String[] trait = traitExpression.split("\\.",2);
         final String[] traitConfig = trait[1].split("=", 2);
+
+        final String traitKey = traitConfig[0];
+        final Object traitValue = resolveTraitValue(traitKey, traitConfig[1].trim());
         if (configMap.containsKey(trait[0])) {
-            configMap.get(trait[0]).add(traitConfig[0], traitConfig[1]);
+            configMap.get(trait[0]).add(traitKey, traitValue);
         } else {
-            configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitConfig[0], traitConfig[1]));
+            configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitKey, traitValue));
         }
+    }
+
+    /**
+     * Resolve trait value with automatic type conversion. Enabled trait keys need to be converted to boolean type.
+     * @param traitKey
+     * @param value
+     * @return
+     */
+    private Object resolveTraitValue(String traitKey, String value) {
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            return VariableUtils.cutOffDoubleQuotes(value);
+        }
+
+        if (value.startsWith("'") && value.endsWith("'")) {
+            return VariableUtils.cutOffSingleQuotes(value);
+        }
+
+        if (traitKey.equalsIgnoreCase("enabled")) {
+            return Boolean.valueOf(value);
+        }
+
+        return value;
     }
 
     private void addPropertyConfigurationSpec(Integration.Builder integrationBuilder, TestContext context) {
@@ -342,7 +368,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return this;
         }
 
-        public Builder trait(String name, String key, String value) {
+        public Builder trait(String name, String key, Object value) {
             this.traits.add(String.format("%s.%s=%s", name, key, value));
             return this;
         }
