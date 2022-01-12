@@ -19,11 +19,10 @@ package org.citrusframework.yaks.knative.ce;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.message.HttpMessage;
+import com.consol.citrus.message.MessageType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,8 +47,9 @@ public final class CloudEventSupport {
      * @param attributes
      * @return
      */
-    public static HttpMessage createEventRequest(String eventData, Map<String, String> attributes) {
-        HttpMessage request = new HttpMessage();
+    public static CloudEventMessage createEventMessage(String eventData, Map<String, String> attributes) {
+        CloudEventMessage request = CloudEventMessage.fromEvent(CloudEvent.v1_0());
+        request.setType(MessageType.JSON);
         request.method(HttpMethod.POST);
 
         if (attributes.containsKey("data")) {
@@ -58,15 +58,21 @@ public final class CloudEventSupport {
             request.setPayload(eventData);
         }
 
-        for (CloudEvent.Attribute attribute : CloudEvent.v1_0().attributes()) {
-            if (attributes.containsKey(attribute.http())) {
-                request.setHeader(attribute.http(), attributes.get(attribute.http()));
-            } else if (attributes.containsKey(attribute.json())) {
-                request.setHeader(attribute.http(), attributes.get(attribute.json()));
-            } else if (!Objects.isNull(attribute.defaultValue())) {
-                request.setHeader(attribute.http(), attribute.defaultValue());
-            }
-        }
+        attributes.entrySet()
+                .stream()
+                .filter(entry -> !entry.getKey().equals("data"))
+                .forEach(entry -> {
+                    Optional<CloudEvent.Attribute> attribute = CloudEvent.v1_0().attributes()
+                            .stream()
+                            .filter(a -> a.http().equals(entry.getKey()) || a.json().equals(entry.getKey()))
+                            .findFirst();
+
+                    if (attribute.isPresent()) {
+                        request.setAttribute(attribute.get(), entry.getValue());
+                    } else {
+                        request.header(entry.getKey(), entry.getValue());
+                    }
+                });
 
         return request;
     }
