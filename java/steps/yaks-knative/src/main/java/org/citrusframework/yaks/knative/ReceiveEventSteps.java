@@ -23,13 +23,13 @@ import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.http.message.HttpMessage;
 import com.consol.citrus.message.MessageType;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import org.citrusframework.yaks.knative.ce.CloudEventMessage;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesSteps;
 import org.springframework.http.HttpStatus;
@@ -90,12 +90,12 @@ public class ReceiveEventSteps {
 
     @Then("^(?:receive|verify) Knative event$")
     public void receiveEvent(DataTable attributes) {
-        receiveEvent(CloudEventSupport.createEventRequest(eventData, attributes.asMap(String.class, String.class)));
+        receiveEvent(CloudEventSupport.createEventMessage(eventData, attributes.asMap(String.class, String.class)));
     }
 
     @Then("^(?:receive|verify) Knative event as json$")
     public void receiveEventJson(String json) {
-        receiveEvent(CloudEventSupport.createEventRequest(eventData, CloudEventSupport.attributesFromJson(json)));
+        receiveEvent(CloudEventSupport.createEventMessage(eventData, CloudEventSupport.attributesFromJson(json)));
     }
 
     @Given("^create Knative event consumer service ([^\\s]+)$")
@@ -112,8 +112,8 @@ public class ReceiveEventSteps {
      * Receives cloud event as Http request.
      * @param request
      */
-    private void receiveEvent(HttpMessage request) {
-        kubernetesSteps.receiveServiceRequest(request, MessageType.JSON);
+    private void receiveEvent(CloudEventMessage request) {
+        kubernetesSteps.receiveServiceRequest(request, MessageType.valueOf(request.getType()));
         kubernetesSteps.sendServiceResponse(HttpStatus.ACCEPTED);
     }
 }

@@ -55,7 +55,7 @@ public class KnativeTestSteps {
 
     @Given("^create test event$")
     public void sendTestEvents(String json) {
-        HttpMessage eventRequest = CloudEventSupport.createEventRequest("", CloudEventSupport.attributesFromJson(json));
+        HttpMessage eventRequest = CloudEventSupport.createEventMessage("", CloudEventSupport.attributesFromJson(json));
 
         runner.run(http().client("http://localhost:${knativeServicePort}/")
                         .send()

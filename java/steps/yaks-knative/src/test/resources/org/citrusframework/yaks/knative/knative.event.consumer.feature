@@ -33,6 +33,13 @@ Feature: Knative event consumer
       | data            | {"msg": "Hello Knative!"} |
     Then verify test event accepted
 
+  Scenario: Receive event selected attributes
+    Given expect Knative event data: {"msg": "Hello Knative!"}
+    When receive Knative event
+      | type            | greeting |
+      | subject         | hello |
+    Then verify test event accepted
+
   Scenario: Receive event data
     Given expect Knative event data: {"msg": "Hello Knative!"}
     When receive Knative event

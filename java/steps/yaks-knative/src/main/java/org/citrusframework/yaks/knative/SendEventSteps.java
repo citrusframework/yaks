@@ -31,7 +31,6 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.http.client.HttpClientBuilder;
-import com.consol.citrus.http.message.HttpMessage;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -42,6 +41,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
+import org.citrusframework.yaks.knative.ce.CloudEventMessage;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -118,21 +118,33 @@ public class SendEventSteps {
 
     @When("^(?:create|send) Knative event$")
     public void createEvent(DataTable attributes) {
-        sendEventRequest(CloudEventSupport.createEventRequest(eventData, attributes.asMap(String.class, String.class)));
+        sendEvent(CloudEventSupport.createEventMessage(eventData, attributes.asMap(String.class, String.class)));
     }
 
     @When("^(?:create|send) Knative event as json$")
     public void createEventJson(String json) {
-        sendEventRequest(CloudEventSupport.createEventRequest(eventData, CloudEventSupport.attributesFromJson(json)));
+        sendEvent(CloudEventSupport.createEventMessage(eventData, CloudEventSupport.attributesFromJson(json)));
     }
 
     /**
      * Sends event request as Http request and verify accepted response.
      * @param request
      */
-    private void sendEventRequest(HttpMessage request) {
+    private void sendEvent(CloudEventMessage request) {
         if (Objects.isNull(request.getContentType())) {
             request.contentType(MediaType.APPLICATION_JSON_VALUE);
+        }
+
+        if (request.getEventId() == null) {
+            request.eventId("yaks-test-event");
+        }
+
+        if (request.getEventType() == null) {
+            request.eventType("yaks-test");
+        }
+
+        if (request.getSource() == null) {
+            request.source("yaks-test-source");
         }
 
         request.setHeader("Host", KnativeSettings.getBrokerHost());

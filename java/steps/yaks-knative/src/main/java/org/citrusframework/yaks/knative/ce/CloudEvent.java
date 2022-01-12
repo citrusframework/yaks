@@ -50,14 +50,14 @@ public class CloudEvent {
         return new CloudEvent(
                 "1.0",
                 Arrays.asList(
-                        Attribute.create("Ce-Id", "id", "yaks-test-event"),
-                        Attribute.create("Ce-Source", "source", "yaks-test-source"),
-                        Attribute.create("Ce-Specversion", "specversion", "1.0"),
-                        Attribute.create("Ce-Type", "type", "yaks-test"),
-                        Attribute.create("Ce-Subject", "subject"),
-                        Attribute.create("Ce-Dataschema", "dataschema"),
-                        Attribute.create("Ce-Time", "time"),
-                        Attribute.create("Content-Type", "datacontenttype")
+                        Attribute.ID,
+                        Attribute.SOURCE,
+                        Attribute.SPEC_VERSION,
+                        Attribute.TYPE,
+                        Attribute.SUBJECT,
+                        Attribute.DATA_SCHEMA,
+                        Attribute.TIME,
+                        Attribute.CONTENT_TYPE
                 )
         );
     }
@@ -66,43 +66,58 @@ public class CloudEvent {
      * Cloud event attribute with Http header name and Json field name representation. Optional default value
      * can be specified.
      */
-    public interface Attribute {
+    public enum Attribute {
+
+        ID("Ce-Id", "id"),
+        SOURCE("Ce-Source", "source"),
+        SPEC_VERSION("Ce-Specversion", "specversion", "1.0"),
+        TYPE("Ce-Type", "type"),
+        SUBJECT("Ce-Subject", "subject"),
+        DATA_SCHEMA("Ce-Dataschema", "dataschema"),
+        TIME("Ce-Time", "time"),
+        CONTENT_TYPE("Content-Type", "datacontenttype");
+
+        private final String http;
+        private final String json;
+        private final String defaultValue;
+
         /**
          * The name of the http header.
          */
-        String http();
+        public String http() {
+            return this.http;
+        }
 
         /**
          * The name of the json field.
          */
-        String json();
+        public String json() {
+            return this.json;
+        }
 
         /**
          * Default value if any.
          */
-        String defaultValue();
-
-        static Attribute create(String http, String json) {
-            return create(http, json, null);
+        public String defaultValue() {
+            return this.defaultValue;
         }
 
-        static Attribute create(String http, String json, String defaultValue) {
-            return new Attribute() {
-                @Override
-                public String http() {
-                    return http;
-                }
+        /**
+         * Checks if this attribute provides a default value.
+         * @return
+         */
+        public boolean hasDefaultValue() {
+            return defaultValue != null;
+        }
 
-                @Override
-                public String json() {
-                    return json;
-                }
+        Attribute(String http, String json) {
+            this(http, json, null);
+        }
 
-                @Override
-                public String defaultValue() {
-                    return defaultValue;
-                }
-            };
+        Attribute(String http, String json, String defaultValue) {
+            this.http = http;
+            this.json = json;
+            this.defaultValue = defaultValue;
         }
     }
 }
