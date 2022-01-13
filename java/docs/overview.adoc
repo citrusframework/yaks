@@ -15,7 +15,7 @@ hesitate to contact us. Find below the reference documentation for the latest YA
 |Version |HTML |PDF
 
 |Latest	|link:/yaks/reference/html/index.html[HTML] |link:/yaks/reference/pdf/yaks-reference.pdf[PDF]
-|0.8.0-SNAPSHOT	|link:/yaks/reference/0.8.0-SNAPSHOT/html/index.html[HTML] |link:/yaks/reference/0.8.0-SNAPSHOT/pdf/yaks-reference-0.8.0-SNAPSHOT.pdf[PDF]
+|0.8.0	|link:/yaks/reference/0.8.0/html/index.html[HTML] |link:/yaks/reference/0.8.0/pdf/yaks-reference-0.8.0.pdf[PDF]
 |0.7.0	|link:/yaks/reference/0.7.0/html/index.html[HTML] |link:/yaks/reference/0.7.0/pdf/yaks-reference-0.7.0.pdf[PDF]
 |0.6.0	|link:/yaks/reference/0.6.0/html/index.html[HTML] |link:/yaks/reference/0.6.0/pdf/yaks-reference-0.6.0.pdf[PDF]
 |0.5.0	|link:/yaks/reference/0.5.0/html/index.html[HTML] |link:/yaks/reference/0.5.0/pdf/yaks-reference-0.5.0.pdf[PDF]
