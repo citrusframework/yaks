@@ -67,26 +67,26 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
-    <slf4j.version>1.7.30</slf4j.version>
-    <log4j2.version>2.16.0</log4j2.version>
-    <groovy.version>3.0.8</groovy.version>
-    <citrus.version>3.1.1</citrus.version>
-    <spring.version>5.3.6</spring.version>
-    <cucumber.version>6.10.3</cucumber.version>
-    <camel.version>3.10.0</camel.version>
-    <jackson.version>2.12.3</jackson.version>
+    <slf4j.version>1.7.32</slf4j.version>
+    <log4j2.version>2.17.1</log4j2.version>
+    <groovy.version>3.0.9</groovy.version>
+    <citrus.version>3.1.2</citrus.version>
+    <spring.version>5.3.14</spring.version>
+    <cucumber.version>6.11.0</cucumber.version>
+    <camel.version>3.14.0</camel.version>
+    <jackson.version>2.12.6</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <kubernetes-client.version>5.10.1</kubernetes-client.version>
-    <knative-client.version>5.10.1</knative-client.version>
+    <kubernetes-client.version>5.10.2</kubernetes-client.version>
+    <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
     <postgresql.version>9.4.1212</postgresql.version>
-    <testcontainers.version>1.15.1</testcontainers.version>
+    <testcontainers.version>1.15.3</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
-    <activemq.version>5.16.2</activemq.version>
+    <activemq.version>5.16.3</activemq.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
-    <mockito.version>3.9.0</mockito.version>
+    <mockito.version>3.12.4</mockito.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
