@@ -34,10 +34,10 @@ cross_compile () {
 		extension=".exe"
 	fi
 
-  echo "Generating ${label}${extension}..."
+  echo "Generating ${label}${extension} ..."
 
 	local target_dir=${build_dir}/${label}
-	eval go build "$build_flags" -o ${target_dir}/yaks${extension} ./cmd/manager/...
+	eval go build "$build_flags" -o ${target_dir}/yaks${extension} ${working_dir}/cmd/manager/*.go
 
 	if [ -n "${GPG_PASS:-}" ]; then
 	    gpg --output ${target_dir}/yaks${extension}.asc --armor --detach-sig --passphrase ${GPG_PASS} ${target_dir}/yaks${extension}
