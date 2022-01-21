@@ -17,6 +17,14 @@ limitations under the License.
 
 package util
 
+import (
+	"io"
+	"os"
+
+	"go.uber.org/multierr"
+	"path/filepath"
+)
+
 // StringSliceContains --
 func StringSliceContains(slice []string, items []string) bool {
 	for i := 0; i < len(items); i++ {
@@ -54,4 +62,19 @@ func StringSliceUniqueAdd(slice *[]string, item string) bool {
 	*slice = append(*slice, item)
 
 	return true
+}
+
+// WithFile a safe wrapper to process a file.
+func WithFile(name string, flag int, perm os.FileMode, consumer func(out io.Writer) error) error {
+	// #nosec G304
+	file, err := os.OpenFile(filepath.Clean(name), flag, perm)
+	if err == nil {
+		err = consumer(file)
+	}
+
+	return Close(err, file)
+}
+
+func Close(err error, closer io.Closer) error {
+	return multierr.Append(err, closer.Close())
 }

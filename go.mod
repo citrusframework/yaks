@@ -24,6 +24,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/stoewer/go-strcase v1.2.0
 	github.com/stretchr/testify v1.7.0
+	go.uber.org/multierr v1.6.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.0.3
 	k8s.io/api v0.21.4

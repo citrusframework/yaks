@@ -146,3 +146,4 @@ jobs:
         yaks run examples/test-group $YAKS_RUN_OPTIONS
         yaks run examples/helloworld.feature $YAKS_RUN_OPTIONS
         yaks run examples/selenium $YAKS_RUN_OPTIONS
+        yaks run examples/dump $YAKS_RUN_OPTIONS

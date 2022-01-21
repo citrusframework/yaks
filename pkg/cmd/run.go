@@ -20,8 +20,9 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/install"
+	"github.com/citrusframework/yaks/pkg/util"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -34,6 +35,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/cmd/report"
+	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	k8slog "github.com/citrusframework/yaks/pkg/util/kubernetes/log"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
@@ -91,7 +93,8 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	cmd.Flags().StringArray("property-file", nil, "Bind a property file to the test. E.g. \"--property-file test.properties\"")
 	cmd.Flags().StringArrayP("glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
 	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
-	cmd.Flags().String("dump", "", "Dump output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
+	cmd.Flags().Bool("dump", false, "Dump all test resources in namespace after running the test.")
+	cmd.Flags().String("print", "", "Print output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
 	cmd.Flags().StringP("report", "r", "junit", "Create test report in given output format")
 	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
 	cmd.Flags().BoolP("wait", "w", true, "Wait for the test to be complete")
@@ -114,7 +117,8 @@ type runCmdOptions struct {
 	PropertyFiles []string            `mapstructure:"property-files"`
 	Glue          []string            `mapstructure:"glue"`
 	Options       string              `mapstructure:"options"`
-	DumpFormat    string              `mapstructure:"dump"`
+	Dump          bool                `mapstructure:"dump"`
+	PrintFormat   string              `mapstructure:"print"`
 	ReportFormat  report.OutputFormat `mapstructure:"report"`
 	Timeout       string              `mapstructure:"timeout"`
 	Wait          bool                `mapstructure:"wait"`
@@ -318,6 +322,10 @@ func (o *runCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 		runConfig.Config.Namespace.Name = o.Namespace
 	}
 
+	if o.Dump {
+		runConfig.Config.Dump.Enabled = true
+	}
+
 	return runConfig, nil
 }
 
@@ -330,29 +338,21 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clien
 	runConfig.Config.Namespace.Name = namespaceName
 
 	// looking for existing operator instance in current namespace
-	instance, err := o.findInstance(c, o.Namespace)
+	instance, err := findInstance(o.Context, c, o.Namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
-		// looking for operator instances in other namespaces
-		if instanceList, err := o.listInstances(c); err == nil {
-			for _, instance := range instanceList.Items {
-				if instance.Spec.Operator.Global {
-					// Using global operator to manage temporary namespaces, no action required
-					return namespace, nil
-				}
-			}
+		// looking for global operator instance
+		instance, err = findGlobalInstance(o.Context, c)
 
-			if len(instanceList.Items) == 0 {
-				fmt.Println("Unable to find existing YAKS instance - " +
-					"adding new operator instance to temporary namespace by default")
-			}
-		} else {
+		if err != nil {
 			return namespace, err
 		}
-	} else if err != nil {
-		return namespace, err
-	} else if instance != nil && v1alpha1.IsGlobal(instance) {
+	}
+
+	if instance != nil && v1alpha1.IsGlobal(instance) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
+	} else {
+		fmt.Println("Adding new operator instance to temporary namespace by default")
 	}
 
 	// no operator or non-global operator found, deploy into temp namespace
@@ -494,9 +494,9 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		}
 	}
 
-	switch o.DumpFormat {
+	switch o.PrintFormat {
 	case "":
-		// continue..
+		// continue ...
 	case "yaml":
 		data, err := kubernetes.ToYAML(&test)
 		if err != nil {
@@ -514,7 +514,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		return nil, nil
 
 	default:
-		return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.DumpFormat)
+		return nil, fmt.Errorf("invalid dump output format option '%s', should be one of: yaml|json", o.PrintFormat)
 	}
 
 	existed := false
@@ -605,6 +605,35 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		fmt.Println(fmt.Sprintf("Test '%s' finished with status: %s", name, string(status)))
 	} else {
 		fmt.Println(fmt.Sprintf("Test '%s' started", name))
+	}
+
+	if runConfig.Config.Dump.Enabled {
+		if runConfig.Config.Dump.FailedOnly && len(test.Status.Results.Errors) == 0 {
+			fmt.Println("Skip dump for successful test")
+		} else {
+			var fileName string
+			if runConfig.Config.Dump.File != "" {
+				fileName = runConfig.Config.Dump.File
+			} else {
+				fileName = fmt.Sprintf("%s-dump.log", test.Name)
+			}
+
+			fmt.Println(fmt.Sprintf("Dump test '%s' to file '%s'", name, fileName))
+
+			var flags int
+			if runConfig.Config.Dump.Append {
+				flags = os.O_RDWR | os.O_CREATE | os.O_APPEND
+			} else {
+				flags = os.O_RDWR | os.O_CREATE
+			}
+
+			err = util.WithFile(path.Join(runConfig.Config.Dump.Directory, fileName), flags, 0o644, func(out io.Writer) error {
+				return dumpTest(o.Context, c, test.Name, namespace, out, runConfig.Config.Dump.Lines)
+			})
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 
 	return &test, status.AsError(name)
@@ -712,15 +741,11 @@ func (o *runCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Sett
 	return nil, nil
 }
 
-func (o *runCmdOptions) findInstance(c client.Client, namespace string) (*v1alpha1.Instance, error) {
+func findInstance(ctx context.Context, c client.Client, namespace string) (*v1alpha1.Instance, error) {
 	yaks := v1alpha1.Instance{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.InstanceKind,
 			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      "yaks",
 		},
 	}
 	key := ctrl.ObjectKey{
@@ -728,11 +753,27 @@ func (o *runCmdOptions) findInstance(c client.Client, namespace string) (*v1alph
 		Name:      "yaks",
 	}
 
-	err := c.Get(o.Context, key, &yaks)
+	err := c.Get(ctx, key, &yaks)
 	return &yaks, err
 }
 
-func (o *runCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, error) {
+func findGlobalInstance(ctx context.Context, c client.Client) (*v1alpha1.Instance, error) {
+	// looking for operator instances in other namespaces
+	instanceList, err := listInstances(ctx, c)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, instance := range instanceList.Items {
+		if instance.Spec.Operator.Global {
+			return &instance, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func listInstances(ctx context.Context, c client.Client) (v1alpha1.InstanceList, error) {
 	instanceList := v1alpha1.InstanceList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.InstanceKind,
@@ -740,7 +781,7 @@ func (o *runCmdOptions) listInstances(c client.Client) (v1alpha1.InstanceList, e
 		},
 	}
 
-	err := c.List(o.Context, &instanceList)
+	err := c.List(ctx, &instanceList)
 	return instanceList, err
 }
 

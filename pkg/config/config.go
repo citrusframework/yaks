@@ -27,6 +27,8 @@ const (
 	OperatorServiceAccount = "yaks-operator"
 	ViewerServiceAccount   = "yaks-viewer"
 	AppendToViewerLabel    = "yaks.citrusframework.org/append-to-viewer"
+	OperatorLabel          = "yaks.citrusframework.org/operator"
+	ComponentLabel         = "yaks.citrusframework.org/component"
 	RoleKnative            = "knative"
 	RoleCamelK             = "camelk"
 	RoleStrimzi            = "strimzi"

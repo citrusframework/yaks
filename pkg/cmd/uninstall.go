@@ -20,15 +20,15 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"io"
 	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/client-go/kubernetes"
 
-	"github.com/spf13/viper"
-
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/util/olm"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
+	"github.com/spf13/viper"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes/customclient"
@@ -36,8 +36,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-const DefaultLabel = "app=yaks"
 
 func newCmdUninstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *uninstallCmdOptions) {
 	options := uninstallCmdOptions{
@@ -92,7 +90,7 @@ type uninstallCmdOptions struct {
 }
 
 var defaultListOptions = metav1.ListOptions{
-	LabelSelector: DefaultLabel,
+	LabelSelector: config.DefaultAppLabel,
 }
 
 // nolint: gocyclo
@@ -292,7 +290,7 @@ func (o *uninstallCmdOptions) uninstallCrd(ctx context.Context, c kubernetes.Int
 
 	result := restClient.
 		Delete().
-		Param("labelSelector", DefaultLabel).
+		Param("labelSelector", config.DefaultAppLabel).
 		Resource("customresourcedefinitions").
 		Do(ctx)
 

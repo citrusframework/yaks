@@ -50,6 +50,10 @@ Some of the most used commands are:
 |Fetch and generate reports from test results
 |`yaks report --fetch -o junit`
 
+|dump
+|Dump all YAKS resources in current namespace (operator, tests, jobs, pods, configmaps, ...)
+|`yaks dump`
+
 |upload
 |Upload custom artifacts (steps, extensions) to Minio storage
 |`yaks upload ./steps/my-custom-steps`
@@ -67,12 +71,16 @@ Some of the most used commands are:
 The list above is not the full list of available commands. You can run `yaks help` to obtain the full list.
 Each sub-command also takes `--help` as parameter to output more information on that specific command usage:
 
-.Overall help
+[[cli-help]]
+== help
+
+.Overall help page
 [source, shell script]
 ----
 yaks help
 ----
 
+.Display help page
 [source]
 ----
 YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
@@ -83,6 +91,7 @@ Usage:
 Available Commands:
   completion  Generates completion scripts
   delete      Delete tests
+  dump        Dump the state of YAKS resources for a test
   help        Help about any command
   install     Installs YAKS on a Kubernetes cluster
   list        List tests
@@ -102,10 +111,29 @@ Flags:
 Use "yaks [command] --help" for more information about a command.
 ----
 
-.Command help
+.Command specific help
 [source, shell script]
 ----
-yaks run --help
+yaks [command] --help
+----
+
+.Example
+[source, shell script]
+----
+yaks upload --help
+
+Upload a local test artifact to the cluster so that it can be used when running a test.
+
+Usage:
+  yaks upload artifact [flags]
+
+Flags:
+  -h, --help   help for upload
+
+Global Flags:
+      --config string      Path to the config file to use for CLI requests (default "/Users/cdeppisc/Projects/IBMcloud/auth/kubeconfig")
+  -n, --namespace string   Namespace to use for all operations
+  -v, --verbose            Print details while performing an operation
 ----
 
 [[cli-install]]
@@ -143,6 +171,11 @@ TODO
 
 [[cli-report]]
 == report
+
+TODO
+
+[[cli-dump]]
+== dump
 
 TODO
 
