@@ -44,8 +44,7 @@ import (
 )
 
 const (
-	OperatorWatchNamespaceEnv = "WATCH_NAMESPACE"
-	offlineCommandLabel       = "yaks.citrusframework.org/cmd.offline"
+	offlineCommandLabel = "yaks.citrusframework.org/cmd.offline"
 )
 
 func bindPFlagsHierarchy(cmd *cobra.Command) error {

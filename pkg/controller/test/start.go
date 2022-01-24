@@ -79,6 +79,13 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	}
 
 	test.Status.Phase = v1alpha1.TestPhaseRunning
+
+	if operatorNamespace, err := envvar.GetOperatorNamespace(); err == nil {
+		test.Labels[config.OperatorLabel] = operatorNamespace
+	} else {
+		return nil, err
+	}
+
 	return test, nil
 }
 

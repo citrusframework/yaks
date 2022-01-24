@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	DefaultTimeout = "30m"
+	DefaultTimeout  = "30m"
+	DefaultAppLabel = "app=yaks"
 )
 
 type RunConfig struct {
@@ -41,6 +42,7 @@ type Config struct {
 	Namespace NamespaceConfig `yaml:"namespace"`
 	Operator  OperatorConfig  `yaml:"operator"`
 	Runtime   RuntimeConfig   `yaml:"runtime"`
+	Dump      DumpConfig      `yaml:"dump"`
 }
 
 type StepConfig struct {
@@ -122,13 +124,32 @@ type OperatorConfig struct {
 	Roles     []string `yaml:"roles"`
 }
 
+type DumpConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	FailedOnly bool   `yaml:"failedOnly"`
+	Append     bool   `yaml:"append"`
+	Directory  string `yaml:"directory"`
+	File       string `yaml:"file"`
+	Lines      int    `yaml:"lines"`
+}
+
 func NewWithDefaults() *RunConfig {
 	ns := NamespaceConfig{
 		AutoRemove: true,
 		Temporary:  false,
 	}
 
-	var config = Config{Recursive: true, Namespace: ns, Timeout: DefaultTimeout}
+	var config = Config{
+		Recursive: true,
+		Namespace: ns,
+		Timeout:   DefaultTimeout,
+		Dump: DumpConfig{
+			Enabled:    false,
+			Append:     false,
+			FailedOnly: true,
+			Directory:  "_output",
+		},
+	}
 	return &RunConfig{Config: config, BaseDir: ""}
 }
 

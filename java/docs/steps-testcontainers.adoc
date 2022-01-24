@@ -1,0 +1,48 @@
+[[steps-testcontainers]]
+== Testcontainers steps
+
+YAKS provides steps that allow to leverage the power of https://www.testcontainers.org/[Testcontainers] library as part of Cloud native tests.
+You can configure and start Testcontainers modules as pod in the current namespace.
+Testcontainers provides a great set of ready-to-use containers (e.g. https://www.testcontainers.org/modules/databases/[database containers], https://www.testcontainers.org/modules/localstack/[AWS cloud stack] and many more).
+
+You can find examples of the Testcontainer steps in xref:../../examples/testcontainers/postgresql.feature.feature[examples/testcontainers].
+
+[[testcontainer-database]]
+=== Database containers
+
+You can choose from a wide range of database modules provided in Testcontainers.
+YAKS is able to run these database containers as part of the test.
+
+[[testcontainer-postgresql]]
+=== PostgreSQL container
+
+Configure and manage a PostgreSQL database container.
+
+.@Given("^PostgreSQL version (^\\s+)$")
+[source,gherkin]
+----
+Given PostgreSQL version 9.6.12
+----
+
+.@Given("^start PostgreSQL container$")
+[source,gherkin]
+----
+Given start PostgreSQL container
+----
+
+[[testcontainer-mongodb]]
+=== MongoDB container
+
+Configure and manage a MongoDB database container.
+
+.@Given("^MongoDB version (^\\s+)$")
+[source,gherkin]
+----
+Given MongoDB version 4.10.0
+----
+
+.@Given("^start MongoDB container$")
+[source,gherkin]
+----
+Given start MongoDB container
+----

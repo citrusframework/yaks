@@ -114,7 +114,7 @@ func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 	return func(o ctrl.Object) ctrl.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
+				if d.Labels[config.ComponentLabel] == "operator" {
 					d.Spec.Template.Spec.Containers[0].Image = cfg.CustomImage
 				}
 			}
@@ -122,7 +122,7 @@ func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 
 		if cfg.CustomImagePullPolicy != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
+				if d.Labels[config.ComponentLabel] == "operator" {
 					d.Spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullPolicy(cfg.CustomImagePullPolicy)
 				}
 			}
@@ -130,7 +130,7 @@ func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 
 		if cfg.Global {
 			if d, ok := o.(*appsv1.Deployment); ok {
-				if d.Labels["yaks.citrusframework.org/component"] == "operator" {
+				if d.Labels[config.ComponentLabel] == "operator" {
 					// Make the operator watch all namespaces
 					envvar.SetVal(&d.Spec.Template.Spec.Containers[0].Env, "WATCH_NAMESPACE", "")
 				}
