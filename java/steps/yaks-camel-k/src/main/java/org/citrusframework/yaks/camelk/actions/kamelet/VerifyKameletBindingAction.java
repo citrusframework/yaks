@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -33,7 +32,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  *
  * @author Christoph Deppisch
  */
-public class VerifyKameletBindingAction extends AbstractCamelKAction {
+public class VerifyKameletBindingAction extends AbstractKameletAction {
 
     private final String name;
 
@@ -51,12 +50,12 @@ public class VerifyKameletBindingAction extends AbstractCamelKAction {
         String bindingName = context.replaceDynamicContentInString(name);
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         KameletBinding binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .withName(bindingName)
                 .get();
 
         if (binding == null) {
-            throw new ValidationException(String.format("Failed to retrieve KameletBinding '%s' in namespace '%s'", name, CamelKSettings.getNamespace()));
+            throw new ValidationException(String.format("Failed to retrieve KameletBinding '%s' in namespace '%s'", name, namespace(context)));
         }
 
         LOG.info("KamletBinding validation successful - All values OK!");
@@ -72,7 +71,7 @@ public class VerifyKameletBindingAction extends AbstractCamelKAction {
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractCamelKAction.Builder<VerifyKameletBindingAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<VerifyKameletBindingAction, Builder> {
 
         private String name;
 

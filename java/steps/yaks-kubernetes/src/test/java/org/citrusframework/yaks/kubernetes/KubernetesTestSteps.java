@@ -108,14 +108,14 @@ public class KubernetesTestSteps {
                 Pod pod = new PodBuilder()
                         .withNewMetadata()
                         .withName(podName)
-                        .withNamespace(KubernetesSettings.getNamespace())
+                        .withNamespace(namespace(context))
                         .endMetadata()
                         .withNewStatus()
                         .withPhase(status)
                         .endStatus()
                         .build();
 
-                getKubernetesClient().pods().inNamespace(KubernetesSettings.getNamespace()).create(pod);
+                getKubernetesClient().pods().inNamespace(namespace(context)).create(pod);
             }
         });
     }
@@ -133,7 +133,7 @@ public class KubernetesTestSteps {
                 Pod pod = new PodBuilder()
                         .withNewMetadata()
                         .withName(podName)
-                        .withNamespace(KubernetesSettings.getNamespace())
+                        .withNamespace(namespace(context))
                         .withLabels(Collections.singletonMap(label, value))
                         .endMetadata()
                         .withNewStatus()
@@ -141,7 +141,7 @@ public class KubernetesTestSteps {
                         .endStatus()
                         .build();
 
-                getKubernetesClient().pods().inNamespace(KubernetesSettings.getNamespace()).create(pod);
+                getKubernetesClient().pods().inNamespace(namespace(context)).create(pod);
             }
         });
     }

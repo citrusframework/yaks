@@ -42,7 +42,7 @@ public class DeleteIntegrationAction extends AbstractCamelKAction {
     public void doExecute(TestContext context) {
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
         getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .withName(integrationName)
                 .delete();
     }

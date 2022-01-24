@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
@@ -41,7 +40,7 @@ import org.springframework.core.io.Resource;
  *
  * @author Christoph Deppisch
  */
-public class CreateKameletBindingAction extends AbstractCamelKAction {
+public class CreateKameletBindingAction extends AbstractKameletAction {
 
     private final String name;
     private final Integration integration;
@@ -112,7 +111,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
 
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .createOrReplace(binding);
 
         LOG.info(String.format("Successfully created KameletBinding '%s'", binding.getMetadata().getName()));
@@ -121,7 +120,7 @@ public class CreateKameletBindingAction extends AbstractCamelKAction {
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractCamelKAction.Builder<CreateKameletBindingAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<CreateKameletBindingAction, Builder> {
 
         private String name;
         private Integration integration;

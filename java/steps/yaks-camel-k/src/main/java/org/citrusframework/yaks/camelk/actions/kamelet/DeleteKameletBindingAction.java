@@ -21,14 +21,13 @@ import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 
 /**
  * @author Christoph Deppisch
  */
-public class DeleteKameletBindingAction extends AbstractCamelKAction {
+public class DeleteKameletBindingAction extends AbstractKameletAction {
 
     private final String name;
 
@@ -43,7 +42,7 @@ public class DeleteKameletBindingAction extends AbstractCamelKAction {
         String bindingName = context.replaceDynamicContentInString(name);
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .withName(bindingName)
                 .delete();
     }
@@ -51,7 +50,7 @@ public class DeleteKameletBindingAction extends AbstractCamelKAction {
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractCamelKAction.Builder<DeleteKameletBindingAction, Builder> {
+    public static class Builder extends AbstractKameletAction.Builder<DeleteKameletBindingAction, Builder> {
 
         private String name;
 
