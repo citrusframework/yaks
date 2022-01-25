@@ -42,6 +42,11 @@
 
     <dependency>
       <groupId>org.testcontainers</groupId>
+      <artifactId>localstack</artifactId>
+      <version>${testcontainers.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
       <artifactId>mongodb</artifactId>
       <version>${testcontainers.version}</version>
     </dependency>
@@ -104,6 +109,30 @@
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-mongodb</artifactId>
       <version>${camel.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-aws2-kinesis</artifactId>
+      <version>${camel.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-kinesis</artifactId>
+      <version>${aws-java-sdk.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-aws2-s3</artifactId>
+      <version>${camel.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+      <version>${aws-java-sdk.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

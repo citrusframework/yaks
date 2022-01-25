@@ -80,10 +80,11 @@
     <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
     <postgresql.version>9.4.1212</postgresql.version>
-    <testcontainers.version>1.15.3</testcontainers.version>
+    <testcontainers.version>1.16.3</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
+    <aws-java-sdk.version>1.12.146</aws-java-sdk.version>
     <activemq.version>5.16.3</activemq.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
     <mockito.version>3.12.4</mockito.version>
