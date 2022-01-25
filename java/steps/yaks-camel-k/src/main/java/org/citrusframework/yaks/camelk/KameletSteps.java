@@ -41,6 +41,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
+import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.camelk.actions.CamelKActionBuilder.camelk;
 
@@ -66,6 +67,8 @@ public class KameletSteps {
 
     private Map<String, Object> sourceProperties;
     private Map<String, Object> sinkProperties;
+
+    private String namespace = CamelKSettings.getNamespace();
 
     private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
@@ -98,6 +101,14 @@ public class KameletSteps {
     @Given("^Enable variable support in Kamelet sources$")
     public void enableVariableSupport() {
         supportVariablesInSources = true;
+    }
+
+    @Given("^Kamelet namespace ([^\\s]+)$")
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+
+        // update the test variable that points to the namespace
+        runner.run(createVariable(VariableNames.KAMELET_NAMESPACE.value(), namespace));
     }
 
     @Given("^Kamelet type (in|out|error)(?:=| is )\"(.+)\"$")
@@ -158,7 +169,7 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to uri ([^\\s]+)$")
     public void bindKameletToUri(String kameletName, String uri) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         sink = new KameletBindingSpec.Endpoint(uri);
@@ -167,7 +178,7 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to Kafka topic ([^\\s]+)$")
     public void bindKameletToKafka(String kameletName, String topic) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         KameletBindingSpec.Endpoint.ObjectReference sinkRef =
@@ -183,7 +194,7 @@ public class KameletSteps {
     @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+) of kind ([^\\s]+)$")
     public void bindKameletToKnativeChannel(String kameletName, String channel, String channelKind) {
         KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", CamelKSettings.getNamespace(), kameletName);
+                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
         source = new KameletBindingSpec.Endpoint(sourceRef);
 
         KameletBindingSpec.Endpoint.ObjectReference sinkRef =

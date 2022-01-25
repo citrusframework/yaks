@@ -62,10 +62,10 @@ public class VerifyPodAction extends AbstractKubernetesAction {
         String resolvedPodName = context.replaceDynamicContentInString(podName);
         String resolvedLabelExpression = context.replaceDynamicContentInString(labelExpression);
         Pod pod = verifyPod(resolvedPodName, resolvedLabelExpression,
-                context.replaceDynamicContentInString(phase));
+                context.replaceDynamicContentInString(phase), namespace(context));
 
         if (logMessage != null) {
-            verifyPodLogs(pod, getNameOrLabel(resolvedPodName, resolvedLabelExpression), context.replaceDynamicContentInString(logMessage));
+            verifyPodLogs(pod, getNameOrLabel(resolvedPodName, resolvedLabelExpression), namespace(context), context.replaceDynamicContentInString(logMessage));
         }
     }
 
@@ -73,11 +73,12 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * Wait for pod to log given message.
      * @param pod
      * @param nameOrLabel
+     * @param namespace
      * @param message
      */
-    private void verifyPodLogs(Pod pod, String nameOrLabel, String message) {
+    private void verifyPodLogs(Pod pod, String nameOrLabel, String namespace, String message) {
         for (int i = 0; i < maxAttempts; i++) {
-            String log = getPodLogs(pod);
+            String log = getPodLogs(pod, namespace);
             if (log.contains(message)) {
                 LOG.info("Verified pod logs - All values OK!");
                 return;
@@ -99,11 +100,12 @@ public class VerifyPodAction extends AbstractKubernetesAction {
     /**
      * Retrieve log messages from given pod.
      * @param pod
+     * @param namespace
      * @return
      */
-    private String getPodLogs(Pod pod) {
+    private String getPodLogs(Pod pod, String namespace) {
         PodResource<Pod> podRes = getKubernetesClient().pods()
-                .inNamespace(KubernetesSettings.getNamespace())
+                .inNamespace(namespace)
                 .withName(pod.getMetadata().getName());
 
         String containerName = null;
@@ -123,17 +125,18 @@ public class VerifyPodAction extends AbstractKubernetesAction {
     /**
      * Wait for given pod to be in given state.
      * @param name
-     * @param labelExpression
+     * @param labelExpression         1
      * @param phase
+     * @param namespace
      * @return
      */
-    private Pod verifyPod(String name, String labelExpression, String phase) {
+    private Pod verifyPod(String name, String labelExpression, String phase, String namespace) {
         for (int i = 0; i < maxAttempts; i++) {
             Pod pod;
             if (name != null && !name.isEmpty()) {
-                pod = getPod(name, phase);
+                pod = getPod(name, phase, namespace);
             } else {
-                pod = getPodFromLabel(labelExpression, phase);
+                pod = getPodFromLabel(labelExpression, phase, namespace);
             }
 
             if (pod != null) {
@@ -159,11 +162,12 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * Retrieve pod given state.
      * @param name
      * @param phase
+     * @param namespace
      * @return
      */
-    private Pod getPod(String name, String phase) {
+    private Pod getPod(String name, String phase, String namespace) {
         Pod pod = getKubernetesClient().pods()
-                .inNamespace(KubernetesSettings.getNamespace())
+                .inNamespace(namespace)
                 .withName(name)
                 .get();
 
@@ -174,9 +178,10 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * Retrieve pod given state selected by label key and value expression.
      * @param labelExpression
      * @param phase
+     * @param namespace
      * @return
      */
-    private Pod getPodFromLabel(String labelExpression, String phase) {
+    private Pod getPodFromLabel(String labelExpression, String phase, String namespace) {
         if (labelExpression == null || labelExpression.isEmpty()) {
             return null;
         }
@@ -186,7 +191,7 @@ public class VerifyPodAction extends AbstractKubernetesAction {
         String labelValue = tokens.length > 1 ? tokens[1] : "";
 
         PodList pods = getKubernetesClient().pods()
-                .inNamespace(KubernetesSettings.getNamespace())
+                .inNamespace(namespace)
                 .withLabel(labelKey, labelValue)
                 .list();
 

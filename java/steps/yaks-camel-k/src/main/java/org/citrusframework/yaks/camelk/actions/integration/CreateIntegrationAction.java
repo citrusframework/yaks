@@ -103,7 +103,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         final Integration i = integrationBuilder.build();
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
         getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .createOrReplace(i);
 
         LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));

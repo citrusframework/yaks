@@ -18,7 +18,10 @@
 package org.citrusframework.yaks.camelk.actions;
 
 import com.consol.citrus.TestAction;
+import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.camelk.VariableNames;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 
 /**
  * Base action provides access to Knative properties such as broker name. These properties are read from
@@ -34,5 +37,20 @@ public interface CamelKAction extends TestAction {
      * @return
      */
     KubernetesClient getKubernetesClient();
+
+    /**
+     * Resolves namespace name from given test context using the stored test variable.
+     * Fallback to the namespace given in Kubernetes environment settings when no test variable is present.
+     *
+     * @param context
+     * @return
+     */
+    default String namespace(TestContext context) {
+        if (context.getVariables().containsKey(VariableNames.CAMEL_K_NAMESPACE.value())) {
+            return context.getVariable(VariableNames.CAMEL_K_NAMESPACE.value());
+        }
+
+        return KubernetesSettings.getNamespace();
+    }
 }
 

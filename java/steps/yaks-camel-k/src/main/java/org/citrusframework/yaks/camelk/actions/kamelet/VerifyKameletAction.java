@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -33,7 +32,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  *
  * @author Christoph Deppisch
  */
-public class VerifyKameletAction extends AbstractCamelKAction {
+public class VerifyKameletAction extends AbstractKameletAction {
 
     private final String name;
 
@@ -51,12 +50,12 @@ public class VerifyKameletAction extends AbstractCamelKAction {
         String kameletName = context.replaceDynamicContentInString(name);
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
         Kamelet kamelet = getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace(context))
                 .withName(kameletName)
                 .get();
 
         if (kamelet == null) {
-            throw new ValidationException(String.format("Failed to retrieve Kamelet '%s' in namespace '%s'", name, CamelKSettings.getNamespace()));
+            throw new ValidationException(String.format("Failed to retrieve Kamelet '%s' in namespace '%s'", name, namespace(context)));
         }
 
         LOG.info("Kamlet validation successful - All values OK!");
@@ -72,7 +71,7 @@ public class VerifyKameletAction extends AbstractCamelKAction {
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractCamelKAction.Builder<VerifyKameletAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<VerifyKameletAction, Builder> {
 
         private String name;
 

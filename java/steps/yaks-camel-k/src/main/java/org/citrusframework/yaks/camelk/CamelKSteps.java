@@ -41,6 +41,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
+import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
 import static com.consol.citrus.container.Assert.Builder.assertException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.camelk.actions.CamelKActionBuilder.camelk;
@@ -98,6 +99,12 @@ public class CamelKSteps {
     public void configureResourcePolling(Map<String, Object> configuration) {
         maxAttempts = Integer.parseInt(configuration.getOrDefault("maxAttempts", maxAttempts).toString());
         delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
+    }
+
+    @Given("^Camel-K namespace ([^\\s]+)$")
+    public void setNamespace(String namespace) {
+        // update the test variable that points to the namespace
+        runner.run(createVariable(VariableNames.CAMEL_K_NAMESPACE.value(), namespace));
     }
 
 	@Given("^Camel-K integration property file ([^\\s]+)$")

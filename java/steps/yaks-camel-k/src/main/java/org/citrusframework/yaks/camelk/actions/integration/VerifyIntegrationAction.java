@@ -59,10 +59,10 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     @Override
     public void doExecute(TestContext context) {
         String podName = context.replaceDynamicContentInString(integrationName);
-        Pod pod = verifyIntegrationPod(podName, context.replaceDynamicContentInString(phase));
+        Pod pod = verifyIntegrationPod(podName, context.replaceDynamicContentInString(phase), namespace(context));
 
         if (logMessage != null) {
-            verifyIntegrationLogs(pod, podName, context.replaceDynamicContentInString(logMessage));
+            verifyIntegrationLogs(pod, podName, namespace(context), context.replaceDynamicContentInString(logMessage));
         }
     }
 
@@ -70,11 +70,12 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * Wait for integration pod to log given message.
      * @param pod
      * @param name
+     * @param namespace
      * @param message
      */
-    private void verifyIntegrationLogs(Pod pod, String name, String message) {
+    private void verifyIntegrationLogs(Pod pod, String name, String namespace, String message) {
         for (int i = 0; i < maxAttempts; i++) {
-            String log = getIntegrationPodLogs(pod);
+            String log = getIntegrationPodLogs(pod, namespace);
             if (log.contains(message)) {
                 LOG.info("Verified integration logs - All values OK!");
                 return;
@@ -96,11 +97,12 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     /**
      * Retrieve log messages from given pod.
      * @param pod
+     * @param namespace
      * @return
      */
-    private String getIntegrationPodLogs(Pod pod) {
+    private String getIntegrationPodLogs(Pod pod, String namespace) {
         PodResource<Pod> podRes = getKubernetesClient().pods()
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace)
                 .withName(pod.getMetadata().getName());
 
         String containerName = null;
@@ -121,11 +123,12 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * Wait for given pod to be in given state.
      * @param name
      * @param phase
+     * @param namespace
      * @return
      */
-    private Pod verifyIntegrationPod(String name, String phase) {
+    private Pod verifyIntegrationPod(String name, String phase, String namespace) {
         for (int i = 0; i < maxAttempts; i++) {
-            Pod pod = getIntegrationPod(name, phase);
+            Pod pod = getIntegrationPod(name, phase, namespace);
             if (pod != null) {
                 LOG.info(String.format("Verified integration pod '%s' state '%s'!", name, phase));
                 return pod;
@@ -148,11 +151,12 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * Retrieve pod given state.
      * @param integration
      * @param phase
+     * @param namespace
      * @return
      */
-    private Pod getIntegrationPod(final String integration, final String phase) {
+    private Pod getIntegrationPod(final String integration, final String phase, final String namespace) {
         PodList pods = getKubernetesClient().pods()
-                .inNamespace(CamelKSettings.getNamespace())
+                .inNamespace(namespace)
                 .withLabel(CamelKSettings.INTEGRATION_LABEL, integration)
                 .list();
 
