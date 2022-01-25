@@ -188,7 +188,7 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
     public class PodActionBuilder {
         /**
          * Verify that given pod is running.
-         * @param podName the name of the Camel-K pod.
+         * @param podName the name of the Camel K pod.
          */
         public VerifyPodAction.Builder verify(String podName) {
             VerifyPodAction.Builder builder = new VerifyPodAction.Builder()

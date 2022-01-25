@@ -41,7 +41,7 @@ import org.citrusframework.yaks.camelk.model.IntegrationList;
 import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 
 /**
- * Test action creates new Camel-K integration with given name and source code. Uses given Kubernetes client to
+ * Test action creates new Camel K integration with given name and source code. Uses given Kubernetes client to
  * create a custom resource of type integration.
  *
  * @author Christoph Deppisch
@@ -106,7 +106,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 .inNamespace(namespace(context))
                 .createOrReplace(i);
 
-        LOG.info(String.format("Successfully created Camel-K integration '%s'", i.getMetadata().getName()));
+        LOG.info(String.format("Successfully created Camel K integration '%s'", i.getMetadata().getName()));
     }
 
     private void addOpenApiSpec(Integration.Builder integrationBuilder, TestContext context) {
@@ -231,7 +231,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     }
 
     /**
-     * Resolve dependencies for Camel-K integration and support modeline instructions in given source.
+     * Resolve dependencies for Camel K integration and support modeline instructions in given source.
      * @param source
      * @param dependencies
      * @return

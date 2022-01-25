@@ -46,7 +46,7 @@ from:
 
   Scenario: Create Kamelet from file
     Given load Kamelet timer-source.kamelet.yaml
-    And load Camel-K integration timer-to-log.groovy
+    And load Camel K integration timer-to-log.groovy
     Then Kamelet timer-source should be available
 
   Scenario: Bind Kamelet to Kafka

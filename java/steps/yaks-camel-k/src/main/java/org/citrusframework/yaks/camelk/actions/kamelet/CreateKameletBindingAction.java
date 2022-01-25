@@ -35,7 +35,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.Resource;
 
 /**
- * Test action creates new Camel-K integration with given name and source code. Uses given Kubernetes client to
+ * Test action creates new Camel K integration with given name and source code. Uses given Kubernetes client to
  * create a custom resource of type integration.
  *
  * @author Christoph Deppisch

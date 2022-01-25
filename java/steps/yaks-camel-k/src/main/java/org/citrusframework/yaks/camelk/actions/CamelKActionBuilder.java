@@ -58,7 +58,7 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
 
     /**
      * Create integration instance.
-     * @param integrationName the name of the Camel-K integration.
+     * @param integrationName the name of the Camel K integration.
      */
     public CreateIntegrationAction.Builder createIntegration(String integrationName) {
         CreateIntegrationAction.Builder builder = new CreateIntegrationAction.Builder()
@@ -70,7 +70,7 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
 
     /**
      * Delete integration instance.
-     * @param integrationName the name of the Camel-K integration.
+     * @param integrationName the name of the Camel K integration.
      */
     public DeleteIntegrationAction.Builder deleteIntegration(String integrationName) {
         DeleteIntegrationAction.Builder builder = new DeleteIntegrationAction.Builder()
@@ -130,7 +130,7 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
 
     /**
      * Verify that given integration is running.
-     * @param integrationName the name of the Camel-K integration.
+     * @param integrationName the name of the Camel K integration.
      */
     public VerifyIntegrationAction.Builder verifyIntegration(String integrationName) {
         VerifyIntegrationAction.Builder builder = new VerifyIntegrationAction.Builder()
