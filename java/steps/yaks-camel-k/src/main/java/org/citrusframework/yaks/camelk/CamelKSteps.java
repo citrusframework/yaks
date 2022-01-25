@@ -75,55 +75,55 @@ public class CamelKSteps {
         properties = new LinkedHashMap<>();
     }
 
-    @Given("^Disable auto removal of Camel-K resources$")
+    @Given("^Disable auto removal of Camel K resources$")
     public void disableAutoRemove() {
         autoRemoveResources = false;
     }
 
-	@Given("^Enable auto removal of Camel-K resources$")
+	@Given("^Enable auto removal of Camel K resources$")
     public void enableAutoRemove() {
         autoRemoveResources = true;
     }
 
-	@Given("^Disable variable support in Camel-K sources$")
+	@Given("^Disable variable support in Camel K sources$")
     public void disableVariableSupport() {
         supportVariablesInSources = false;
     }
 
-	@Given("^Enable variable support in Camel-K sources$")
+	@Given("^Enable variable support in Camel K sources$")
     public void enableVariableSupport() {
         supportVariablesInSources = true;
     }
 
-	@Given("^Camel-K resource polling configuration$")
+	@Given("^Camel K resource polling configuration$")
     public void configureResourcePolling(Map<String, Object> configuration) {
         maxAttempts = Integer.parseInt(configuration.getOrDefault("maxAttempts", maxAttempts).toString());
         delayBetweenAttempts = Long.parseLong(configuration.getOrDefault("delayBetweenAttempts", delayBetweenAttempts).toString());
     }
 
-    @Given("^Camel-K namespace ([^\\s]+)$")
+    @Given("^Camel K namespace ([^\\s]+)$")
     public void setNamespace(String namespace) {
         // update the test variable that points to the namespace
         runner.run(createVariable(VariableNames.CAMEL_K_NAMESPACE.value(), namespace));
     }
 
-	@Given("^Camel-K integration property file ([^\\s]+)$")
+	@Given("^Camel K integration property file ([^\\s]+)$")
     public void addPropertyFile(String filePath) {
         propertyFiles.add(filePath);
     }
 
-    @Given("^Camel-K integration property ([^\\s]+)=\"([^\"]*)\"$")
-    @Given("^Camel-K integration property ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
+    @Given("^Camel K integration property ([^\\s]+)=\"([^\"]*)\"$")
+    @Given("^Camel K integration property ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
     public void addProperty(String name, String value) {
         properties.put(name, value);
     }
 
-	@Given("^Camel-K integration properties$")
+	@Given("^Camel K integration properties$")
     public void addProperties(DataTable propertyTable) {
         properties.putAll(propertyTable.asMap(String.class, String.class));
     }
 
-	@Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
+	@Given("^(?:create|new) Camel K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void createIntegration(String name, String language, Map<String, String> configuration) {
 		if (configuration.get("source") == null) {
 			throw new IllegalStateException("Specify 'source' parameter");
@@ -132,27 +132,27 @@ public class CamelKSteps {
 		createIntegration(name, language, configuration.get("source"), configuration);
 	}
 
-	@Given("^load Camel-K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+)$")
+	@Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+)$")
 	public void loadIntegrationFromFile(String name, String language) {
         Resource resource = new ClassPathResource(name + "." + language);
         try {
             createIntegration(name, language, FileUtils.readToString(resource));
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language), e);
+            throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
     }
 
-    @Given("^load Camel-K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+) with configuration:?$")
+    @Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void loadIntegrationFromFile(String name, String language, Map<String, String> configuration) {
         try {
             Resource resource = new ClassPathResource(name + "." + language);
             createIntegration(name, language, FileUtils.readToString(resource), configuration);
         } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to load Camel-K integration from resource %s", name + "." + language), e);
+            throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
     }
 
-    @Given("^(?:create|new) Camel-K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+)$")
+    @Given("^(?:create|new) Camel K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+)$")
 	public void createIntegration(String name, String language, String source) {
         runner.run(camelk()
                     .client(k8sClient)
@@ -167,16 +167,16 @@ public class CamelKSteps {
         }
 	}
 
-    @Given("^delete Camel-K integration ([a-z0-9-]+)$")
+    @Given("^delete Camel K integration ([a-z0-9-]+)$")
 	public void deleteIntegration(String name) {
         runner.run(camelk()
                     .client(k8sClient)
                     .deleteIntegration(name));
 	}
 
-    @Given("^wait for Camel-K integration ([a-z0-9-]+)$")
-    @Given("^Camel-K integration ([a-z0-9-]+) is running$")
-    @Then("^Camel-K integration ([a-z0-9-]+) should be running$")
+    @Given("^wait for Camel K integration ([a-z0-9-]+)$")
+    @Given("^Camel K integration ([a-z0-9-]+) is running$")
+    @Then("^Camel K integration ([a-z0-9-]+) should be running$")
     public void integrationShouldBeRunning(String name) {
         runner.run(camelk()
                 .client(k8sClient)
@@ -186,8 +186,8 @@ public class CamelKSteps {
                 .isRunning());
     }
 
-    @Given("^Camel-K integration ([a-z0-9-]+) is stopped")
-    @Then("^Camel-K integration ([a-z0-9-]+) should be stopped")
+    @Given("^Camel K integration ([a-z0-9-]+) is stopped")
+    @Then("^Camel K integration ([a-z0-9-]+) should be stopped")
     public void integrationShouldBeStopped(String name) {
         runner.run(camelk()
                 .client(k8sClient)
@@ -197,7 +197,7 @@ public class CamelKSteps {
                 .isStopped());
     }
 
-    @Then("^Camel-K integration ([a-z0-9-]+) should print (.*)$")
+    @Then("^Camel K integration ([a-z0-9-]+) should print (.*)$")
     public void integrationShouldPrint(String name, String message) {
         runner.run(camelk()
                 .client(k8sClient)
@@ -207,7 +207,7 @@ public class CamelKSteps {
                 .waitForLogMessage(message));
     }
 
-    @Then("^Camel-K integration ([a-z0-9-]+) should not print (.*)$")
+    @Then("^Camel K integration ([a-z0-9-]+) should not print (.*)$")
     public void integrationShouldNotPrint(String name, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)

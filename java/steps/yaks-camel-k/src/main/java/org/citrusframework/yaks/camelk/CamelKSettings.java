@@ -62,7 +62,7 @@ public final class CamelKSettings {
     }
 
     /**
-     * Api version for current Camel-K installation.
+     * Api version for current Camel K installation.
      * @return
      */
     public static String getApiVersion() {
@@ -107,7 +107,7 @@ public final class CamelKSettings {
     }
 
     /**
-     * When set to true Camel-K resources (integrations, Kamelets etc.) created during the test are
+     * When set to true Camel K resources (integrations, Kamelets etc.) created during the test are
      * automatically removed after the test.
      * @return
      */
@@ -117,7 +117,7 @@ public final class CamelKSettings {
     }
 
     /**
-     * When set to true YAKS will replace test variables in Camel-K sources.
+     * When set to true YAKS will replace test variables in Camel K sources.
      * In certain circumstances this may raise unknown variable errors when Camel body expressions are used (${body}).
      * @return
      */
