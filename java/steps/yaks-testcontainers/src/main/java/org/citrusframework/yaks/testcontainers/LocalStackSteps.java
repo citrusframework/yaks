@@ -30,6 +30,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
@@ -74,7 +75,8 @@ public class LocalStackSteps {
     @Given("^start LocalStack container$")
     public void startLocalStack() {
         localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack").withTag(localStackVersion))
-                .withServices(services.toArray(LocalStackContainer.Service[]::new));
+                .withServices(services.toArray(LocalStackContainer.Service[]::new))
+                .waitingFor(Wait.forListeningPort());
 
         localStackContainer.start();
 

@@ -490,7 +490,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 
 	if runConfig.Config.Runtime.TestContainers.Enabled {
 		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
-			Image: "joyrex2001/kubedock:0.7.0",
+			Image: "joyrex2001/kubedock:0.8.1",
 		}
 	}
 
