@@ -19,13 +19,13 @@ config:
   runtime:
     testcontainers:
       enabled: true
-    env:
-      - name: YAKS_TESTCONTAINERS_AUTO_REMOVE_RESOURCES
-        value: false
-      - name: CITRUS_DEFAULT_MESSAGE_TYPE
-        value: PLAINTEXT
     settings:
       dependencies:
-        - groupId: org.postgresql
-          artifactId: postgresql
-          version: "@postgresql.version@"
+        - groupId: org.apache.camel
+          artifactId: camel-aws2-s3
+          version: "@camel.version@"
+        - groupId: com.amazonaws
+          artifactId: aws-java-sdk-s3
+          version: "@aws-java-sdk.version@"
+    resources:
+      - amazonS3Client.groovy
