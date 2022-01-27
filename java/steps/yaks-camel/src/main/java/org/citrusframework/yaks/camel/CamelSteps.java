@@ -108,8 +108,6 @@ public class CamelSteps {
             } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(contextName)) {
                 camelContext = citrus.getCitrusContext().getReferenceResolver().resolve(contextName, CamelContext.class);
                 globalCamelContext = true;
-            } else {
-                camelContext();
             }
         }
 
@@ -142,32 +140,30 @@ public class CamelSteps {
 
     @Given("^(?:Default|New) Camel context$")
     public void defaultContext() {
+        verifyNonGlobalContext();
         destroyCamelContext();
         camelContext();
-        globalCamelContext = false;
     }
 
     @Given("^(?:Default|New) global Camel context$")
     public void defaultGlobalContext() {
         destroyCamelContext();
-        camelContext();
-        citrus.getCitrusContext().bind("camelContext", camelContext);
+        citrus.getCitrusContext().getReferenceResolver().bind(contextName, camelContext());
         globalCamelContext = true;
     }
 
-    @Given("^New Spring Camel context$")
+    @Given("^(?:Default|New) Spring Camel context$")
     public void camelContext(String beans) {
+        verifyNonGlobalContext();
         destroyCamelContext();
+        springCamelContext(beans);
+    }
 
-        try {
-            ApplicationContext ctx = new GenericXmlApplicationContext(
-                    new ByteArrayResource(context.replaceDynamicContentInString(beans).getBytes(StandardCharsets.UTF_8)));
-            camelContext = ctx.getBean(SpringCamelContext.class);
-            camelContext.start();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to start Spring Camel context", e);
-        }
-        globalCamelContext = false;
+    @Given("^(?:Default|New) global Spring Camel context$")
+    public void defaultGlobalContext(String beans) {
+        destroyCamelContext();
+        citrus.getCitrusContext().getReferenceResolver().bind(contextName, springCamelContext(beans));
+        globalCamelContext = true;
     }
 
     @Given("^Camel consumer timeout is (\\d+)(?: ms| milliseconds)$")
@@ -192,7 +188,7 @@ public class CamelSteps {
             ((InitializingPhase) component).initialize();
         }
 
-        camelContext.getRegistry().bind(name, component);
+        camelContext().getRegistry().bind(name, component);
     }
 
     @Given("^load to Camel registry ([^\"\\s]+)\\.groovy$")
@@ -234,7 +230,7 @@ public class CamelSteps {
                             getRouteCollection().getRoutes().add(route);
                             log.info(String.format("Created new Camel route '%s' in context '%s'", route.getRouteId(), camelContext().getName()));
                         } catch (Exception e) {
-                            throw new CitrusRuntimeException(String.format("Failed to create route definition '%s' in context '%s'", route.getRouteId(), camelContext.getName()), e);
+                            throw new CitrusRuntimeException(String.format("Failed to create route definition '%s' in context '%s'", route.getRouteId(), camelContext().getName()), e);
                         }
                     }
                 }
@@ -351,7 +347,7 @@ public class CamelSteps {
     public void receiveExchange(String endpointUri) {
         runner.run(receive().endpoint(camelEndpoint(endpointUri))
                 .timeout(timeout)
-                .transform(CamelSupport.camel(camelContext).convertBodyTo(String.class))
+                .transform(CamelSupport.camel(camelContext()).convertBodyTo(String.class))
                 .message()
                 .type(messageType)
                 .body(body)
@@ -443,6 +439,21 @@ public class CamelSteps {
         return camelContext;
     }
 
+    private CamelContext springCamelContext(String beans) {
+        if (camelContext == null) {
+            try {
+                ApplicationContext ctx = new GenericXmlApplicationContext(
+                        new ByteArrayResource(context.replaceDynamicContentInString(beans).getBytes(StandardCharsets.UTF_8)));
+                camelContext = ctx.getBean(SpringCamelContext.class);
+                camelContext.start();
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to start Spring Camel context", e);
+            }
+        }
+
+        return camelContext;
+    }
+
     private void destroyCamelContext() {
         if (globalCamelContext) {
             // do not destroy global Camel context
@@ -456,6 +467,13 @@ public class CamelSteps {
             }
         } catch (Exception e) {
             throw new IllegalStateException("Failed to stop existing Camel context", e);
+        }
+    }
+
+    private void verifyNonGlobalContext() {
+        if (globalCamelContext) {
+            throw new CitrusRuntimeException("Unable to create new Spring Camel context because of active global Camel context. " +
+                    "You are not allowed to overwrite global Camel context");
         }
     }
 }
