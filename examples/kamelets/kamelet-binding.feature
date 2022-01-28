@@ -3,7 +3,7 @@ Feature: Kamelet resource
   Background:
     Given Disable auto removal of Kamelet resources
     Given Disable auto removal of Kubernetes resources
-    Given Camel-K resource polling configuration
+    Given Camel K resource polling configuration
       | maxAttempts          | 20   |
       | delayBetweenAttempts | 1000 |
 

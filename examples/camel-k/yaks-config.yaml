@@ -23,6 +23,6 @@ config:
       - timer-to-log.groovy
       - application.properties
 pre:
-  - name: Camel-K setup
+  - name: Camel K setup
     run: |
       kamel install -w -n ${YAKS_NAMESPACE}
