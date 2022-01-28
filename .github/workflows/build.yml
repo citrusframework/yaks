@@ -75,7 +75,7 @@ jobs:
       KAMEL_INSTALL_REGISTRY_INSECURE: true
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
-      YAKS_RUN_OPTIONS: "--timeout=10s"
+      YAKS_RUN_OPTIONS: "--timeout=180s"
     steps:
     - name: Set up JDK 11
       uses: AdoptOpenJDK/install-jdk@v1
