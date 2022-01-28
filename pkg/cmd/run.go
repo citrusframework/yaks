@@ -655,17 +655,17 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 
 	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
 
-	if o.Tags != nil {
+	if len(o.Tags) > 0 {
 		env = append(env, CucumberFilterTags+"="+strings.Join(o.Tags, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
 		env = append(env, CucumberFilterTags+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
 	}
 
-	if o.Features != nil {
+	if len(o.Features) > 0 {
 		env = append(env, CucumberFeatures+"="+strings.Join(o.Features, ","))
 	}
 
-	if o.Glue != nil {
+	if len(o.Glue) > 0 {
 		env = append(env, CucumberGlue+"="+strings.Join(o.Glue, ","))
 	} else if len(runConfig.Config.Runtime.Cucumber.Glue) > 0 {
 		env = append(env, CucumberGlue+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Glue, ","))
@@ -693,7 +693,7 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 		env = append(env, envConfig.Name+"="+envConfig.Value)
 	}
 
-	if o.Env != nil {
+	if len(o.Env) > 0 {
 		env = append(env, o.Env...)
 	}
 
