@@ -246,7 +246,7 @@ func getMavenArgLine() []string {
 	argLine := make([]string, 0)
 
 	// add base flags
-	argLine = append(argLine, "mvn", "-B", "-q")
+	argLine = append(argLine, "mvn", "-B", "-q", "--no-snapshot-updates", "--no-transfer-progress")
 
 	// add pom file path
 	argLine = append(argLine, "-f", "/deployments/data/yaks-runtime-maven")
@@ -255,10 +255,10 @@ func getMavenArgLine() []string {
 	argLine = append(argLine, "-s", "/deployments/artifacts/settings.xml")
 
 	// add test goal
-	argLine = append(argLine, "verify")
+	argLine = append(argLine, "resources:testResources", "compiler:testCompile", "failsafe:integration-test")
 
 	// add system property settings
-	argLine = append(argLine, "-Dremoteresources.skip=true", "-Dmaven.repo.local=/deployments/artifacts/m2")
+	argLine = append(argLine, "-Dmaven.repo.local=/deployments/artifacts/m2")
 
 	return argLine
 }
