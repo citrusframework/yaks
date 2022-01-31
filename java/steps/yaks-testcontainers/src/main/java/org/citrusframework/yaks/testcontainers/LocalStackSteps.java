@@ -110,12 +110,15 @@ public class LocalStackSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_IP", localStackContainer.getContainerIpAddress());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_ID", containerId);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_NAME", localStackContainer.getContainerName());
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_NAME", "kd-" + containerId);
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_PORT", String.valueOf(localStackContainer.getMappedPort(4566)));
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_REGION", localStackContainer.getRegion());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_ACCESS_KEY", localStackContainer.getAccessKey());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SECRET_KEY", localStackContainer.getSecretKey());
 
             services.forEach(service -> {
-                context.setVariable(String.format("%sLOCALSTACK_%s_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).toString());
+                context.setVariable(String.format("%sLOCALSTACK_%s_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), String.format("http://kd-%s:%s", containerId, localStackContainer.getEndpointOverride(service).getPort()));
+                context.setVariable(String.format("%sLOCALSTACK_%s_LOCAL_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).toString());
                 context.setVariable(String.format("%sLOCALSTACK_%s_PORT", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).getPort());
             });
         }

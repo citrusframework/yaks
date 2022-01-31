@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.kinesis.KinesisClient
 
 KinesisClient kinesisClient = KinesisClient
         .builder()
-        .endpointOverride(URI.create("${YAKS_TESTCONTAINERS_LOCALSTACK_KINESIS_URL}"))
+        .endpointOverride(URI.create("${YAKS_TESTCONTAINERS_LOCALSTACK_KINESIS_LOCAL_URL}"))
         .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(
                         "${YAKS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}",
