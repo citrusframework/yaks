@@ -38,6 +38,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	NonRootUser = 1000700001
+)
+
 // NewStartAction creates a new start action
 func NewStartAction() Action {
 	return &startAction{}
@@ -255,7 +259,7 @@ func getMavenArgLine() []string {
 	argLine = append(argLine, "-s", "/deployments/artifacts/settings.xml")
 
 	// add test goal
-	argLine = append(argLine, "resources:testResources", "compiler:testCompile", "failsafe:integration-test")
+	argLine = append(argLine, "verify")
 
 	// add system property settings
 	argLine = append(argLine, "-Dmaven.repo.local=/deployments/artifacts/m2")
@@ -493,7 +497,7 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
 
 		// set explicit non-root user for all containers - required for killing the supervisord process later
-		uid := int64(1000)
+		uid := int64(NonRootUser)
 		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
 			RunAsUser: &uid,
 		}
@@ -537,7 +541,7 @@ func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
 
 		// set explicit non-root user for all containers - required for killing the supervisord process later
-		uid := int64(1000)
+		uid := int64(NonRootUser)
 		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
 			RunAsUser: &uid,
 		}
