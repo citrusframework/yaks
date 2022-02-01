@@ -253,16 +253,21 @@ public class KubernetesSteps {
 
     @Given("^load Kubernetes secret from file ([^\\s]+).properties$")
     public void createSecret(String fileName) {
+        createSecret(fileName, fileName);
+    }
+
+    @Given("^create Kubernetes secret ([^\\s]+) from file ([^\\s]+).properties$")
+    public void createSecret(String secretName, String fileName) {
         runner.run(kubernetes().client(k8sClient)
                 .secrets()
-                .create(fileName)
+                .create(secretName)
                 .fromFile(fileName + ".properties"));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
                     .actions(kubernetes().client(k8sClient)
                             .secrets()
-                            .delete(fileName)));
+                            .delete(secretName)));
         }
     }
 
@@ -508,6 +513,40 @@ public class KubernetesSteps {
                         .maxAttempts(maxAttempts)
                         .delayBetweenAttempts(delayBetweenAttempts)
                         .waitForLogMessage(message)));
+    }
+
+    @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    public void createAnnotationOnResource(String annotation, String value, String resourceType, String resourceName) {
+        runner.run(kubernetes().client(k8sClient)
+                        .resources()
+                        .addAnnotation(resourceName, resourceType.toUpperCase(Locale.US))
+                        .annotation(annotation, value));
+    }
+
+    @Then("^create annotations on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    public void createAnnotationOnResource(String resourceType, String resourceName, DataTable table) {
+        Map<String, String> annotations = table.asMap(String.class, String.class);
+        runner.run(kubernetes().client(k8sClient)
+                .resources()
+                .addAnnotation(resourceName, resourceType.toUpperCase(Locale.US))
+                .annotations(annotations));
+    }
+
+    @Then("^create label ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    public void createLabelOnResource(String label, String value, String resourceType, String resourceName) {
+        runner.run(kubernetes().client(k8sClient)
+                        .resources()
+                        .addLabel(resourceName, resourceType.toUpperCase(Locale.US))
+                        .label(label, value));
+    }
+
+    @Then("^create labels on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    public void createLabelOnResource(String resourceType, String resourceName, DataTable table) {
+        Map<String, String> labels = table.asMap(String.class, String.class);
+        runner.run(kubernetes().client(k8sClient)
+                .resources()
+                .addLabel(resourceName, resourceType.toUpperCase(Locale.US))
+                .labels(labels));
     }
 
     public void receiveServiceRequest(HttpMessage request, MessageType messageType) {
