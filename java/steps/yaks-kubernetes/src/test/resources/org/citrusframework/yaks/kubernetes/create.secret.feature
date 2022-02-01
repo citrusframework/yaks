@@ -14,3 +14,4 @@ Feature: Kubernetes secrets
   Scenario: Create from file resource
     Given load Kubernetes secret from file secret.properties
     Then verify secret secret exists
+    Then delete Kubernetes secret secret

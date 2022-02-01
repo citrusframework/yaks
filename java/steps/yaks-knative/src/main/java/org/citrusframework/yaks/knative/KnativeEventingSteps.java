@@ -86,6 +86,13 @@ public class KnativeEventingSteps {
         }
     }
 
+    @Given("^delete Knative broker ([^\\s]+)$")
+    public void deleteBroker(String brokerName) {
+        runner.given(knative().client(k8sClient).client(knativeClient)
+                .brokers()
+                .delete(brokerName));
+    }
+
     @Given("^Knative broker ([^\\s]+) is running$")
     public void verifyBrokerIsRunning(String brokerName) {
         runner.then(repeatOnError()
