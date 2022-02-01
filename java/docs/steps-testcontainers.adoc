@@ -5,7 +5,28 @@ YAKS provides steps that allow to leverage the power of https://www.testcontaine
 You can configure and start Testcontainers modules as pod in the current namespace.
 Testcontainers provides a great set of ready-to-use containers (e.g. https://www.testcontainers.org/modules/databases/[database containers], https://www.testcontainers.org/modules/localstack/[AWS cloud stack] and many more).
 
-You can find examples of the Testcontainer steps in xref:../../examples/testcontainers/postgresql.feature.feature[examples/testcontainers].
+You can find examples of different Testcontainers in use
+
+* xref:../../examples/postgresql/postgresql.feature[examples/postgresql].
+* xref:../../examples/aws-kinesis/aws-kinesis.feature[examples/aws-kinesis].
+* xref:../../examples/aws-s3/aws-s3.feature[examples/aws-s3].
+
+[[testcontainer-priviledges]]
+=== Setup required privileges
+
+Running Testcontainers in Kubernetes may require privileges on the YAKS service account.
+This depends on the restrictions and RBAC settings in your cluster.
+
+Be sure to add `privileged` security context constraint to the `yaks-viewer` service account in the namespace where tests are run.
+
+.Add privileged security context constraint
+[source,bash]
+----
+oc adm policy add-scc-to-user privileged system:serviceaccount:{namespace}:yaks-viewer
+----
+
+This adds the `privileged` security constraint to the `yaks-viewer` service account.
+This is required for the test to start and manage a Testcontainer pod as part of the test.
 
 [[testcontainer-database]]
 === Database containers

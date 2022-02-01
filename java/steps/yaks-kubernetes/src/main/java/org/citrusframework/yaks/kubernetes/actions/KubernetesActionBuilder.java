@@ -124,6 +124,30 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         }
 
         /**
+         * Add annotation on secret instance.
+         * @param secretName the name of the Kubernetes secret.
+         */
+        public CreateAnnotationsAction.Builder addAnnotation(String secretName) {
+            CreateAnnotationsAction.Builder builder = new CreateAnnotationsAction.Builder()
+                    .client(kubernetesClient)
+                    .secret(secretName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add label on secret instance.
+         * @param secretName the name of the Kubernetes secret.
+         */
+        public CreateLabelsAction.Builder addLabel(String secretName) {
+            CreateLabelsAction.Builder builder = new CreateLabelsAction.Builder()
+                    .client(kubernetesClient)
+                    .secret(secretName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
          * Delete secret instance.
          * @param secretName the name of the Kubernetes secret.
          */
@@ -199,6 +223,30 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         }
 
         /**
+         * Add annotation on pod instance.
+         * @param podName the name of the Kubernetes pod.
+         */
+        public CreateAnnotationsAction.Builder addAnnotation(String podName) {
+            CreateAnnotationsAction.Builder builder = new CreateAnnotationsAction.Builder()
+                    .client(kubernetesClient)
+                    .pod(podName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add label on pod instance.
+         * @param podName the name of the Kubernetes pod.
+         */
+        public CreateLabelsAction.Builder addLabel(String podName) {
+            CreateLabelsAction.Builder builder = new CreateLabelsAction.Builder()
+                    .client(kubernetesClient)
+                    .pod(podName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
          * Verify that given pod is running.
          * @param label the name of the pod label to filter on.
          * @param value the value of the pod label to match.
@@ -219,6 +267,34 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         public CreateResourceAction.Builder create() {
             CreateResourceAction.Builder builder = new CreateResourceAction.Builder()
                     .client(kubernetesClient);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add annotation on resource instance.
+         * @param resourceName the name of the Kubernetes resource.
+         * @param resourceType the type of the Kubernetes resource.
+         */
+        public CreateAnnotationsAction.Builder addAnnotation(String resourceName, String resourceType) {
+            CreateAnnotationsAction.Builder builder = new CreateAnnotationsAction.Builder()
+                    .client(kubernetesClient)
+                    .name(resourceName)
+                    .type(resourceType);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add label on resource instance.
+         * @param resourceName the name of the Kubernetes resource.
+         * @param resourceType the type of the Kubernetes resource.
+         */
+        public CreateLabelsAction.Builder addLabel(String resourceName, String resourceType) {
+            CreateLabelsAction.Builder builder = new CreateLabelsAction.Builder()
+                    .client(kubernetesClient)
+                    .name(resourceName)
+                    .type(resourceType);
             delegate = builder;
             return builder;
         }
@@ -251,6 +327,30 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         }
 
         /**
+         * Add annotation on service instance.
+         * @param serviceName the name of the Kubernetes service.
+         */
+        public CreateAnnotationsAction.Builder addAnnotation(String serviceName) {
+            CreateAnnotationsAction.Builder builder = new CreateAnnotationsAction.Builder()
+                    .client(kubernetesClient)
+                    .service(serviceName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add label on service instance.
+         * @param serviceName the name of the Kubernetes service.
+         */
+        public CreateLabelsAction.Builder addLabel(String serviceName) {
+            CreateLabelsAction.Builder builder = new CreateLabelsAction.Builder()
+                    .client(kubernetesClient)
+                    .service(serviceName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
          * Delete service instance.
          * @param serviceName the name of the Kubernetes service.
          */
@@ -261,7 +361,5 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
             delegate = builder;
             return builder;
         }
-
-
     }
 }

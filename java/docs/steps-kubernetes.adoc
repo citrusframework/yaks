@@ -191,12 +191,45 @@ Given load Kubernetes secret from file {file}.properties
 The step loads the property file and creates the secret from the file content. The file name is used
 as the name fo the secret.
 
-In case you want to cleanup the secret you can delete it with:
+In case you want to clean up the secret you can delete it with:
 
 .@Given("^delete Kubernetes secret {name}$")
 [source,gherkin]
 ----
 Given delete Kubernetes secret {name}
+----
+
+Sometimes secrets need to have labels and/or annotations that mark the secret with important metadata.
+You can add labels/annotations on the Kubernetes resource with these steps:
+
+.@Then("^create label {label}={value} on Kubernetes secret {name}$")
+[source,gherkin]
+----
+Then create label app=yaks on Kubernetes secret my-secret
+----
+
+.@Then("^create annotation {annotation}={value} on Kubernetes secret {name}$")
+[source,gherkin]
+----
+Then create annotation app=yaks on Kubernetes secret my-secret
+----
+
+Or use multiple labels/annotations in one single step:
+
+.@Then("^create labels on Kubernetes secret {name}$")
+[source,gherkin]
+----
+Then create labels on Kubernetes secret my-secret
+    | app      | yaks |
+    | owned-by | odo  |
+----
+
+.@Then("^create annotations on Kubernetes secret {name}$")
+[source,gherkin]
+----
+Then create annotations on Kubernetes secret my-secret
+    | app      | yaks |
+    | owned-by | odo  |
 ----
 
 [[k8s-resources]]

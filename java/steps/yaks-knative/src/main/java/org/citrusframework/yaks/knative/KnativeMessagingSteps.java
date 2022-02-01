@@ -70,6 +70,13 @@ public class KnativeMessagingSteps {
         }
     }
 
+    @Given("^delete Knative channel ([^\\s]+)$")
+    public void deleteChannel(String channelName) {
+        runner.given(knative().client(k8sClient).client(knativeClient)
+                .channels()
+                .delete(channelName));
+    }
+
     @Given("^subscribe service ([^\\s]+) to Knative channel ([^\\s]+)$")
     public void createSubscription(String serviceName, String channelName) {
         runner.given(knative().client(k8sClient).client(knativeClient)
