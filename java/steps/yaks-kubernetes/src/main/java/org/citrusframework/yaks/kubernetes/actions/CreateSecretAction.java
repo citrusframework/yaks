@@ -18,17 +18,19 @@
 package org.citrusframework.yaks.kubernetes.actions;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import org.springframework.core.io.Resource;
 
 /**
  * @author Christoph Deppisch
@@ -49,18 +51,20 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
 
     @Override
     public void doExecute(TestContext context) {
-        Map<String, String> secrets = new LinkedHashMap<>(properties);
+        Map<String, String> data = new LinkedHashMap<>();
         if (filePath != null) {
             try {
-                Properties resourceProperties = new Properties();
-                resourceProperties.load(FileUtils.getFileResource(
-                        context.replaceDynamicContentInString(filePath), context).getInputStream());
-                resourceProperties.forEach((key, value) -> secrets.put(key.toString(),
-                        Optional.ofNullable(value).map(Object::toString).orElse("")));
+                Resource file = FileUtils.getFileResource(context.replaceDynamicContentInString(filePath), context);
+                String resolvedFileContent = context.replaceDynamicContentInString(FileUtils.readToString(file, StandardCharsets.UTF_8));
+                data.put(Optional.ofNullable(file.getFilename()).orElse("application.properties"),
+                        Base64.getEncoder().encodeToString(resolvedFileContent.getBytes(StandardCharsets.UTF_8)));
             } catch (IOException e) {
                 throw new CitrusRuntimeException("Failed to read properties file", e);
             }
         }
+
+        context.resolveDynamicValuesInMap(properties)
+                .forEach((k, v) -> data.put(k, Base64.getEncoder().encodeToString(v.getBytes(StandardCharsets.UTF_8))));
 
         Secret secret = new SecretBuilder()
                 .withNewMetadata()
@@ -68,7 +72,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
                     .withName(context.replaceDynamicContentInString(secretName))
                 .endMetadata()
                 .withType("generic")
-                .withData(context.resolveDynamicValuesInMap(secrets))
+                .withData(data)
                 .build();
 
         getKubernetesClient().secrets()
