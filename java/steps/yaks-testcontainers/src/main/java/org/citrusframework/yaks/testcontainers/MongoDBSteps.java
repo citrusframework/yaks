@@ -41,7 +41,7 @@ public class MongoDBSteps {
     @CitrusResource
     private TestContext context;
 
-    private String mongoDBVersion = TestContainersSettings.getMongoDBVersion();
+    private String mongoDBVersion = MongoDBSettings.getMongoDBVersion();
 
     private MongoDBContainer mongoDBContainer;
 

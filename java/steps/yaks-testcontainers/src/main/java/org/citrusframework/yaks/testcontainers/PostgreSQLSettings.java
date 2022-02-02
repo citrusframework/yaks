@@ -17,6 +17,8 @@
 
 package org.citrusframework.yaks.testcontainers;
 
+import org.testcontainers.containers.PostgreSQLContainer;
+
 /**
  * @author Christoph Deppisch
  */
@@ -24,6 +26,10 @@ public class PostgreSQLSettings {
 
     private static final String POSTGRESQL_PROPERTY_PREFIX = TestContainersSettings.TESTCONTAINERS_PROPERTY_PREFIX + "postgresql.";
     private static final String POSTGRESQL_ENV_PREFIX = TestContainersSettings.TESTCONTAINERS_ENV_PREFIX + "POSTGRESQL_";
+
+    private static final String POSTGRESQL_VERSION_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "postgresql.version";
+    private static final String POSTGRESQL_VERSION_ENV = POSTGRESQL_ENV_PREFIX + "POSTGRESQL_VERSION";
+    private static final String POSTGRESQL_VERSION_DEFAULT = PostgreSQLContainer.DEFAULT_TAG;
 
     private static final String DATABASE_NAME_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "db.name";
     private static final String DATABASE_NAME_ENV = POSTGRESQL_ENV_PREFIX + "DB_NAME";
@@ -66,5 +72,14 @@ public class PostgreSQLSettings {
     public static String getPassword() {
         return System.getProperty(PASSWORD_PROPERTY,
                 System.getenv(PASSWORD_ENV) != null ? System.getenv(PASSWORD_ENV) : PASSWORD_DEFAULT);
+    }
+
+    /**
+     * PostgreSQL version setting.
+     * @return
+     */
+    public static String getPostgreSQLVersion() {
+        return System.getProperty(POSTGRESQL_VERSION_PROPERTY,
+                System.getenv(POSTGRESQL_VERSION_ENV) != null ? System.getenv(POSTGRESQL_VERSION_ENV) : POSTGRESQL_VERSION_DEFAULT);
     }
 }

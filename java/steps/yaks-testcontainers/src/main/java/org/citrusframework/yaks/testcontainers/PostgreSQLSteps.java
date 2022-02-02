@@ -47,7 +47,7 @@ public class PostgreSQLSteps {
     @CitrusResource
     private TestContext context;
 
-    private String postgreSQLVersion = TestContainersSettings.getPostgreSQLVersion();
+    private String postgreSQLVersion = PostgreSQLSettings.getPostgreSQLVersion();
 
     private PostgreSQLContainer<?> postgreSQLContainer;
 
