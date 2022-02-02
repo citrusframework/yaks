@@ -425,13 +425,13 @@ public class KubernetesSteps {
         resourceLabeledShouldMatchCondition("Ready", kind, resourceType, label, value);
     }
 
-    @Given("^wait for Kubernetes pod ([a-z0-9-]+)$")
+    @Given("^wait for Kubernetes pod ([a-z\\.0-9-]+)$")
     public void waitForRunningPod(String name) {
         podShouldBeInPhase(name, "running");
     }
 
-    @Given("^Kubernetes pod ([a-z0-9-]+) is (running|stopped)$")
-    @Then("^Kubernetes pod ([a-z0-9-]+) should be (running|stopped)$")
+    @Given("^Kubernetes pod ([a-z\\.0-9-]+) is (running|stopped)$")
+    @Then("^Kubernetes pod ([a-z\\.0-9-]+) should be (running|stopped)$")
     public void podShouldBeInPhase(String name, String status) {
         VerifyPodAction.Builder action = kubernetes().client(k8sClient)
                 .pods()
@@ -471,7 +471,7 @@ public class KubernetesSteps {
         runner.run(action);
     }
 
-    @Then("^Kubernetes pod ([a-z0-9-]+) should print (.*)$")
+    @Then("^Kubernetes pod ([a-z\\.0-9-]+) should print (.*)$")
     public void podShouldPrint(String name, String message) {
         runner.run(kubernetes().client(k8sClient)
                 .pods()
@@ -481,7 +481,7 @@ public class KubernetesSteps {
                 .waitForLogMessage(message));
     }
 
-    @Then("^Kubernetes pod ([a-z0-9-]+) should not print (.*)$")
+    @Then("^Kubernetes pod ([a-z\\.0-9-]+) should not print (.*)$")
     public void podShouldNotPrint(String name, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)
@@ -515,7 +515,7 @@ public class KubernetesSteps {
                         .waitForLogMessage(message)));
     }
 
-    @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
     public void createAnnotationOnResource(String annotation, String value, String resourceType, String resourceName) {
         runner.run(kubernetes().client(k8sClient)
                         .resources()
@@ -523,7 +523,7 @@ public class KubernetesSteps {
                         .annotation(annotation, value));
     }
 
-    @Then("^create annotations on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    @Then("^create annotations on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
     public void createAnnotationOnResource(String resourceType, String resourceName, DataTable table) {
         Map<String, String> annotations = table.asMap(String.class, String.class);
         runner.run(kubernetes().client(k8sClient)
@@ -532,7 +532,7 @@ public class KubernetesSteps {
                 .annotations(annotations));
     }
 
-    @Then("^create label ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    @Then("^create label ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
     public void createLabelOnResource(String label, String value, String resourceType, String resourceName) {
         runner.run(kubernetes().client(k8sClient)
                         .resources()
@@ -540,7 +540,7 @@ public class KubernetesSteps {
                         .label(label, value));
     }
 
-    @Then("^create labels on Kubernetes (pod|secret|service) ([a-z0-9-]+)$")
+    @Then("^create labels on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
     public void createLabelOnResource(String resourceType, String resourceName, DataTable table) {
         Map<String, String> labels = table.asMap(String.class, String.class);
         runner.run(kubernetes().client(k8sClient)
