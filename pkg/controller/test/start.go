@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	NonRootUser = 1000700001
+	RunAsUser = 1001 // non-root user must match id used in Dockerfile
 )
 
 // NewStartAction creates a new start action
@@ -497,7 +497,11 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
 
 		// set explicit non-root user for all containers - required for killing the supervisord process later
-		uid := int64(NonRootUser)
+		uid := int64(RunAsUser)
+		if test.Spec.Selenium.RunAsUser > 0 {
+			uid = int64(test.Spec.Selenium.RunAsUser)
+		}
+
 		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
 			RunAsUser: &uid,
 		}
@@ -541,7 +545,11 @@ func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
 
 		// set explicit non-root user for all containers - required for killing the supervisord process later
-		uid := int64(NonRootUser)
+		uid := int64(RunAsUser)
+		if test.Spec.KubeDock.RunAsUser > 0 {
+			uid = int64(test.Spec.KubeDock.RunAsUser)
+		}
+
 		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
 			RunAsUser: &uid,
 		}

@@ -73,12 +73,14 @@ type SettingsSpec struct {
 
 // SeleniumSpec
 type SeleniumSpec struct {
-	Image string `json:"image,omitempty"`
+	Image     string `json:"image,omitempty"`
+	RunAsUser int    `json:"runAsUser,omitempty"`
 }
 
 // KubeDockSpec
 type KubeDockSpec struct {
-	Image string `json:"image,omitempty"`
+	Image     string `json:"image,omitempty"`
+	RunAsUser int    `json:"runAsUser,omitempty"`
 }
 
 // TestStatus defines the observed state of Test
