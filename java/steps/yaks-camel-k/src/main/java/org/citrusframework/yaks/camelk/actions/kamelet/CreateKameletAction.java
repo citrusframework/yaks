@@ -47,7 +47,7 @@ import org.springframework.util.StringUtils;
 public class CreateKameletAction extends AbstractKameletAction {
 
     private final String name;
-    private final String flow;
+    private final String template;
     private final KameletSpec.Source source;
     private final KameletSpec.Definition definition;
     private final List<String> dependencies;
@@ -62,7 +62,7 @@ public class CreateKameletAction extends AbstractKameletAction {
     public CreateKameletAction(Builder builder) {
         super("create-kamelet", builder);
         this.name = builder.name;
-        this.flow = builder.flow;
+        this.template = builder.template;
         this.source = builder.source;
         this.definition = builder.definition;
         this.dependencies = builder.dependencies;
@@ -108,8 +108,8 @@ public class CreateKameletAction extends AbstractKameletAction {
                     .name(context.replaceDynamicContentInString(name))
                     .definition(definition);
 
-            if (flow != null) {
-                builder.flow(context.replaceDynamicContentInString(flow));
+            if (template != null) {
+                builder.template(context.replaceDynamicContentInString(template));
             }
 
             if (source != null) {
@@ -149,7 +149,7 @@ public class CreateKameletAction extends AbstractKameletAction {
     public static final class Builder extends AbstractKameletAction.Builder<CreateKameletAction, Builder> {
 
         private String name;
-        private String flow;
+        private String template;
         private KameletSpec.Source source;
         private final List<String> dependencies = new ArrayList<>();
         private KameletSpec.Definition definition = new KameletSpec.Definition();
@@ -183,8 +183,14 @@ public class CreateKameletAction extends AbstractKameletAction {
             return this;
         }
 
+        public Builder template(String template) {
+            this.template = template;
+            return this;
+        }
+
+        @Deprecated
         public Builder flow(String flow) {
-            this.flow = flow;
+            this.template = flow;
             return this;
         }
 
@@ -242,8 +248,10 @@ public class CreateKameletAction extends AbstractKameletAction {
                 source = kamelet.getSpec().getSources().get(0);
             }
 
-            if (kamelet.getSpec().getFlow() != null) {
-                flow = KubernetesSupport.yaml().dump(kamelet.getSpec().getFlow());
+            if (kamelet.getSpec().getTemplate() != null) {
+                template = KubernetesSupport.yaml().dump(kamelet.getSpec().getTemplate());
+            } else if (kamelet.getSpec().getFlow() != null) {
+                template = KubernetesSupport.yaml().dump(kamelet.getSpec().getFlow());
             }
 
             return this;

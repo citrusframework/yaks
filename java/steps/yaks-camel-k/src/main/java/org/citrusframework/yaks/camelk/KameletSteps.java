@@ -126,9 +126,9 @@ public class KameletSteps {
         kamelet.source(name, language, content);
 	}
 
-    @Given("^Kamelet flow$")
-	public void setFlow(String flow) {
-        kamelet.flow(flow);
+    @Given("^Kamelet template")
+	public void setFlow(String template) {
+        kamelet.template(template);
 	}
 
     @Given("^Kamelet property definition$")
@@ -255,9 +255,15 @@ public class KameletSteps {
         }
 	}
 
-	@Given("^(?:create|new) Kamelet ([a-z0-9-]+) with flow$")
+    @Deprecated
+	@Given("^(?:create|new) Kamelet ([a-z0-9-]+) with flow")
 	public void createNewKameletWithFlow(String name, String flow) {
-        kamelet.flow(flow);
+        createNewKameletWithTemplate(name, flow);
+	}
+
+    @Given("^(?:create|new) Kamelet ([a-z0-9-]+) with template")
+	public void createNewKameletWithTemplate(String name, String template) {
+        kamelet.template(template);
         createNewKamelet(name);
 	}
 

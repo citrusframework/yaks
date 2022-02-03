@@ -20,7 +20,7 @@ Feature: Kamelet
     When create Kamelet timer-source
     Then Kamelet timer-source should be available
 
-  Scenario: Create Kamelet with flow
+  Scenario: Create Kamelet with template
     Given Kamelet property definition
       | name     | message       |
       | type     | string        |
@@ -31,7 +31,7 @@ Feature: Kamelet
       | type     | integer       |
       | default  | 1000          |
     And Kamelet type out="test/plain"
-    When create Kamelet timer-source with flow
+    When create Kamelet timer-source with template
 """
 from:
   uri: timer:tick
