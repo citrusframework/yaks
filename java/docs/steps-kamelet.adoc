@@ -44,13 +44,13 @@ The Kamelet can use a title that you set with the following step.
 Given Kamelet title "{title}"
 ----
 
-Each flow uses an endpoint uri and defines a set of steps that get called when the Kamelet processing takes place.
-The following step defines a flow on the current Kamelet.
+Each template uses an endpoint uri and defines a set of steps that get called when the Kamelet processing takes place.
+The following step defines a template on the current Kamelet.
 
-.@Given("^Kamelet flow$")
+.@Given("^Kamelet template$")
 [source,gherkin]
 ----
-Given Kamelet flow
+Given Kamelet template
 """
 from:
   uri: timer:tick
@@ -63,7 +63,7 @@ from:
 """
 ----
 
-The flow uses two properties `{{message}}` and `{{period}}`. These placeholders need to be provided by the Kamelet user.
+The template uses two properties `{{message}}` and `{{period}}`. These placeholders need to be provided by the Kamelet user.
 The next step defines the property `message` in detail:
 
 .@Given("^Kamelet property definition {name}$")
@@ -79,7 +79,7 @@ Given Kamelet property definition message
 The property receives specification such as type, required and an example. In addition to the example you can
 set a `default` value for the property.
 
-In addition to using a flow on the Kamelet you can add multiple sources to the Kamelet.
+In addition to using a template on the Kamelet you can add multiple sources to the Kamelet.
 
 .@Given("^Kamelet source {name}.{language}$")
 [source,gherkin]
@@ -100,12 +100,12 @@ Given create Kamelet {name}
 ----
 
 The Kamelet requires a unique `name`. Creating a Kamelet means that a new custom resource of type Kamelet is created. As a variation
-you can also set the flow when creating the Kamelet.
+you can also set the template when creating the Kamelet.
 
-.@Given("^(?:create|new) Kamelet {name} with flow$")
+.@Given("^(?:create|new) Kamelet {name} with template")
 [source,gherkin]
 ----
-Given create Kamelet {name} with flow
+Given create Kamelet {name} with template
 """
 <<YAML>>
 """

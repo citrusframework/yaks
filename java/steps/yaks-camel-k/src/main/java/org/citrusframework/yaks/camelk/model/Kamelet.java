@@ -56,9 +56,9 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
      */
     public static class Builder {
         private String name;
-        private String flow;
+        private String template;
         private KameletSpec.Definition definition = new KameletSpec.Definition();
-        private Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+        private final Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
         private List<String> dependencies = new ArrayList<>();
         private KameletSpec.Source source;
 
@@ -83,8 +83,14 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
             return this;
         }
 
+        public Builder template(String template) {
+            this.template = template;
+            return this;
+        }
+
+        @Deprecated
         public Builder flow(String flow) {
-            this.flow = flow;
+            this.template = flow;
             return this;
         }
 
@@ -108,8 +114,8 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
             kamelet.getMetadata().setName(name);
             kamelet.getSpec().setDefinition(definition);
 
-            if (flow != null && !flow.isEmpty()) {
-                kamelet.getSpec().setFlow(KubernetesSupport.yaml().load(flow));
+            if (template != null && !template.isEmpty()) {
+                kamelet.getSpec().setTemplate(KubernetesSupport.yaml().load(template));
             }
 
             if (source != null) {

@@ -50,7 +50,7 @@ public class KameletBuilderTest {
 				.definition(definition)
 				.types(types)
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
-				.flow("from:\n" +
+				.template("from:\n" +
 						"  uri: timer:tick\n" +
 						"  parameters:\n" +
 						"    period: \"#property:period\"\n" +
@@ -68,7 +68,11 @@ public class KameletBuilderTest {
 
 	@Test
 	public void shouldDeserializeKamelet() throws IOException {
-		new ObjectMapper().readValue(
+		Kamelet deserialized = new ObjectMapper().readValue(
 				FileUtils.readToString(new ClassPathResource("timer-source.kamelet.json")), Kamelet.class);
+
+		Assert.assertNull(deserialized.getSpec().getFlow());
+		Assert.assertNotNull(deserialized.getSpec().getTemplate());
+		Assert.assertEquals(1L, deserialized.getSpec().getTemplate().size());
 	}
 }

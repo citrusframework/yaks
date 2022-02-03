@@ -94,10 +94,12 @@ public class KameletSpec implements KubernetesResource {
         this.types = types;
     }
 
+    @Deprecated
     public Map<String, Object> getFlow() {
         return flow;
     }
 
+    @Deprecated
     public void setFlow(Map<String, Object> flow) {
         this.flow = flow;
     }
