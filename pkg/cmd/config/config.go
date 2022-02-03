@@ -70,11 +70,13 @@ type CucumberConfig struct {
 }
 
 type SeleniumConfig struct {
-	Image string `yaml:"image"`
+	Image     string `yaml:"image"`
+	RunAsUser int    `yaml:"runAsUser"`
 }
 
 type TestContainersConfig struct {
-	Enabled bool `yaml:"enabled"`
+	Enabled   bool `yaml:"enabled"`
+	RunAsUser int  `yaml:"runAsUser"`
 }
 
 type EnvConfig struct {

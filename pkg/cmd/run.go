@@ -484,13 +484,15 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 
 	if runConfig.Config.Runtime.Selenium.Image != "" {
 		test.Spec.Selenium = v1alpha1.SeleniumSpec{
-			Image: runConfig.Config.Runtime.Selenium.Image,
+			Image:     runConfig.Config.Runtime.Selenium.Image,
+			RunAsUser: runConfig.Config.Runtime.Selenium.RunAsUser,
 		}
 	}
 
 	if runConfig.Config.Runtime.TestContainers.Enabled {
 		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
-			Image: "joyrex2001/kubedock:0.8.1",
+			Image:     "joyrex2001/kubedock:0.8.1",
+			RunAsUser: runConfig.Config.Runtime.TestContainers.RunAsUser,
 		}
 	}
 
