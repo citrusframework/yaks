@@ -51,14 +51,16 @@ func newCmdDump(rootCmdOptions *RootCmdOptions) (*cobra.Command, *dumpCmdOptions
 	}
 
 	cmd.Flags().StringP("test", "t", "", "Name of test to dump")
+	cmd.Flags().StringArrayP("includes", "i", nil, "Label selector to include pods when scraping pod logs.")
 	cmd.Flags().IntP("lines", "l", 0, "Number of pod log lines to print")
 	return &cmd, &options
 }
 
 type dumpCmdOptions struct {
 	*RootCmdOptions
-	Test  string `mapstructure:"test"`
-	Lines int    `mapstructure:"lines"`
+	Test     string   `mapstructure:"test"`
+	Includes []string `mapstructure:"includes"`
+	Lines    int      `mapstructure:"lines"`
 }
 
 func (o *dumpCmdOptions) dump(cmd *cobra.Command, args []string) (err error) {
@@ -69,9 +71,9 @@ func (o *dumpCmdOptions) dump(cmd *cobra.Command, args []string) (err error) {
 
 	createDump := func(out io.Writer) error {
 		if o.Test != "" {
-			return dumpTest(o.Context, c, o.Test, o.Namespace, out, o.Lines)
+			return dumpTest(o.Context, c, o.Test, o.Namespace, out, o.Lines, o.Includes)
 		} else {
-			return dumpAll(o.Context, c, o.Namespace, out, o.Lines)
+			return dumpAll(o.Context, c, o.Namespace, out, o.Lines, o.Includes)
 		}
 	}
 
@@ -82,7 +84,7 @@ func (o *dumpCmdOptions) dump(cmd *cobra.Command, args []string) (err error) {
 	}
 }
 
-func dumpTest(ctx context.Context, c client.Client, name string, namespace string, out io.Writer, logLines int) error {
+func dumpTest(ctx context.Context, c client.Client, name string, namespace string, out io.Writer, logLines int, includes []string) error {
 	yaksClient, err := versioned.NewForConfig(c.GetConfig())
 	if err != nil {
 		return err
@@ -103,25 +105,9 @@ func dumpTest(ctx context.Context, c client.Client, name string, namespace strin
 		operatorNamespace = test.Labels[cfg.OperatorLabel]
 	}
 
-	instances, err := yaksClient.YaksV1alpha1().Instances(operatorNamespace).List(ctx, metav1.ListOptions{})
+	err = dumpOperator(yaksClient, ctx, c, operatorNamespace, out, logLines)
 	if err != nil {
 		return err
-	}
-	fmt.Fprintf(out, "Found %d operator instance(s):\n", len(instances.Items))
-	for _, instance := range instances.Items {
-		err = printObject(&instance, out)
-		if err != nil {
-			return err
-		}
-
-		operatorPodSelector := metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=operator", cfg.ComponentLabel),
-		}
-
-		err = dumpPods(ctx, c, operatorNamespace, out, operatorPodSelector, logLines)
-		if err != nil {
-			return err
-		}
 	}
 
 	testLabelSelector := metav1.ListOptions{}
@@ -155,10 +141,27 @@ func dumpTest(ctx context.Context, c client.Client, name string, namespace strin
 		}
 	}
 
-	return dumpPods(ctx, c, namespace, out, testLabelSelector, logLines)
+	err = dumpPods(ctx, c, namespace, out, testLabelSelector, logLines)
+	if err != nil {
+		return err
+	}
+
+	// also dump pod logs for custom label selectors.
+	for _, include := range includes {
+		podLabelSelector := metav1.ListOptions{
+			LabelSelector: include,
+		}
+
+		err = dumpPods(ctx, c, namespace, out, podLabelSelector, logLines)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writer, logLines int) error {
+func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writer, logLines int, includes []string) error {
 	yaksClient, err := versioned.NewForConfig(c.GetConfig())
 	if err != nil {
 		return err
@@ -168,41 +171,9 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		LabelSelector: config.DefaultAppLabel,
 	}
 
-	instances, err := yaksClient.YaksV1alpha1().Instances(namespace).List(ctx, metav1.ListOptions{})
+	err = dumpOperator(yaksClient, ctx, c, namespace, out, logLines)
 	if err != nil {
 		return err
-	}
-	fmt.Fprintf(out, "Found %d operator instance(s):\n", len(instances.Items))
-	for _, instance := range instances.Items {
-		err = printObject(&instance, out)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(instances.Items) == 0 {
-		// looking for global operator instance
-		instance, err := findGlobalInstance(ctx, c)
-		if err != nil {
-			return err
-		}
-
-		if instance != nil {
-			fmt.Fprintf(out, "Found global operator instance:\n")
-			err = printObject(instance, out)
-			if err != nil {
-				return err
-			}
-
-			operatorPodSelector := metav1.ListOptions{
-				LabelSelector: fmt.Sprintf("%s=operator", cfg.ComponentLabel),
-			}
-
-			err = dumpPods(ctx, c, instance.Namespace, out, operatorPodSelector, logLines)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	tests, err := yaksClient.YaksV1alpha1().Tests(namespace).List(ctx, metav1.ListOptions{})
@@ -253,7 +224,74 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		}
 	}
 
-	return dumpPods(ctx, c, namespace, out, appLabelSelector, logLines)
+	err = dumpPods(ctx, c, namespace, out, appLabelSelector, logLines)
+	if err != nil {
+		return err
+	}
+
+	// also dump pod logs for custom label selectors.
+	for _, include := range includes {
+		podLabelSelector := metav1.ListOptions{
+			LabelSelector: include,
+		}
+
+		err = dumpPods(ctx, c, namespace, out, podLabelSelector, logLines)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func dumpOperator(yaksClient *versioned.Clientset, ctx context.Context, c client.Client, namespace string, out io.Writer, logLines int) error {
+	instances, err := yaksClient.YaksV1alpha1().Instances(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "Found %d operator instance(s):\n", len(instances.Items))
+	for _, instance := range instances.Items {
+		err = printObject(&instance, out)
+		if err != nil {
+			return err
+		}
+
+		operatorPodSelector := metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=operator", cfg.ComponentLabel),
+		}
+
+		err = dumpPods(ctx, c, namespace, out, operatorPodSelector, logLines)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(instances.Items) == 0 {
+		// looking for global operator instance
+		instance, err := findGlobalInstance(ctx, c)
+		if err != nil {
+			return err
+		}
+
+		if instance != nil {
+			fmt.Fprintf(out, "Found global operator instance:\n")
+			err = printObject(instance, out)
+			if err != nil {
+				return err
+			}
+
+			operatorPodSelector := metav1.ListOptions{
+				LabelSelector: fmt.Sprintf("%s=operator", cfg.ComponentLabel),
+			}
+
+			err = dumpPods(ctx, c, instance.Namespace, out, operatorPodSelector, logLines)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func dumpPods(ctx context.Context, c client.Client, namespace string, out io.Writer, selector metav1.ListOptions, logLines int) error {
