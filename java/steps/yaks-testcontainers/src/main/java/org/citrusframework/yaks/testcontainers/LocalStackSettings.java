@@ -29,6 +29,10 @@ public class LocalStackSettings {
     private static final String VERSION_ENV = LOCALSTACK_ENV_PREFIX + "VERSION";
     private static final String VERSION_DEFAULT = "0.13.3";
 
+    private static final String STARTUP_TIMEOUT_PROPERTY = LOCALSTACK_PROPERTY_PREFIX + "startup.timeout";
+    private static final String STARTUP_TIMEOUT_ENV = LOCALSTACK_ENV_PREFIX + "STARTUP_TIMEOUT";
+    private static final String STARTUP_TIMEOUT_DEFAULT = "180";
+
     private LocalStackSettings() {
         // prevent instantiation of utility class
     }
@@ -42,4 +46,12 @@ public class LocalStackSettings {
                 System.getenv(VERSION_ENV) != null ? System.getenv(VERSION_ENV) : VERSION_DEFAULT);
     }
 
+    /**
+     * Time in seconds to wait for the container to startup and accept connections.
+     * @return
+     */
+    public static int getStartupTimeout() {
+        return Integer.parseInt(System.getProperty(STARTUP_TIMEOUT_PROPERTY,
+                System.getenv(STARTUP_TIMEOUT_ENV) != null ? System.getenv(STARTUP_TIMEOUT_ENV) : STARTUP_TIMEOUT_DEFAULT));
+    }
 }

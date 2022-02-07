@@ -29,14 +29,6 @@ public class TestContainersSettings {
     private static final String AUTO_REMOVE_RESOURCES_ENV = TESTCONTAINERS_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
 
-    private static final String MAX_ATTEMPTS_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "max.attempts";
-    private static final String MAX_ATTEMPTS_ENV = TESTCONTAINERS_ENV_PREFIX + "MAX_ATTEMPTS";
-    private static final String MAX_ATTEMPTS_DEFAULT = "150";
-
-    private static final String DELAY_BETWEEN_ATTEMPTS_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "delay.between.attempts";
-    private static final String DELAY_BETWEEN_ATTEMPTS_ENV = TESTCONTAINERS_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
-    private static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
-
     private TestContainersSettings() {
         // prevent instantiation of utility class
     }
@@ -51,21 +43,4 @@ public class TestContainersSettings {
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
     }
 
-    /**
-     * Maximum number of attempts when polling for running state and log messages.
-     * @return
-     */
-    public static int getMaxAttempts() {
-        return Integer.parseInt(System.getProperty(MAX_ATTEMPTS_PROPERTY,
-                System.getenv(MAX_ATTEMPTS_ENV) != null ? System.getenv(MAX_ATTEMPTS_ENV) : MAX_ATTEMPTS_DEFAULT));
-    }
-
-    /**
-     * Delay in milliseconds to wait after polling attempt.
-     * @return
-     */
-    public static long getDelayBetweenAttempts() {
-        return Long.parseLong(System.getProperty(DELAY_BETWEEN_ATTEMPTS_PROPERTY,
-                System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) != null ? System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) : DELAY_BETWEEN_ATTEMPTS_DEFAULT));
-    }
 }

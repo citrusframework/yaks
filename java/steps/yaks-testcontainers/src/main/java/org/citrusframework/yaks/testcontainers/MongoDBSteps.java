@@ -17,6 +17,8 @@
 
 package org.citrusframework.yaks.testcontainers;
 
+import java.time.Duration;
+
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
@@ -26,9 +28,11 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class MongoDBSteps {
 
@@ -42,6 +46,7 @@ public class MongoDBSteps {
     private TestContext context;
 
     private String mongoDBVersion = MongoDBSettings.getMongoDBVersion();
+    private int startupTimeout = MongoDBSettings.getStartupTimeout();
 
     private MongoDBContainer mongoDBContainer;
 
@@ -58,9 +63,16 @@ public class MongoDBSteps {
         this.mongoDBVersion = version;
     }
 
+    @Given("^MongoDB startup timeout is (\\d+)(?: s| seconds)$")
+    public void setStartupTimeout(int timeout) {
+        this.startupTimeout = timeout;
+    }
+
     @Given("^start MongoDB container$")
     public void startMongo() {
-        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion));
+        mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
+                .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
+                        .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
         mongoDBContainer.start();
 

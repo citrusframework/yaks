@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.testcontainers;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -34,6 +35,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class LocalStackSteps {
 
@@ -47,6 +49,7 @@ public class LocalStackSteps {
     private TestContext context;
 
     private String localStackVersion = LocalStackSettings.getVersion();
+    private int startupTimeout = LocalStackSettings.getStartupTimeout();
 
     private LocalStackContainer localStackContainer;
     private Set<LocalStackContainer.Service> services;
@@ -67,6 +70,11 @@ public class LocalStackSteps {
         this.localStackVersion = version;
     }
 
+    @Given("^LocalStack startup timeout is (\\d+)(?: s| seconds)$")
+    public void setStartupTimeout(int timeout) {
+        this.startupTimeout = timeout;
+    }
+
     @Given("^Enable service (S3|KINESIS|SQS|SNS|DYNAMODB)$")
     public void enableService(String service) {
         services.add(LocalStackContainer.Service.valueOf(service));
@@ -76,7 +84,8 @@ public class LocalStackSteps {
     public void startLocalStack() {
         localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack").withTag(localStackVersion))
                 .withServices(services.toArray(LocalStackContainer.Service[]::new))
-                .waitingFor(Wait.forListeningPort());
+                .waitingFor(Wait.forListeningPort()
+                        .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
         localStackContainer.start();
 
