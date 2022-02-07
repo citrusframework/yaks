@@ -59,6 +59,7 @@ const (
 	RepositoriesEnv = "YAKS_REPOSITORIES"
 	DependenciesEnv = "YAKS_DEPENDENCIES"
 	LoggersEnv      = "YAKS_LOGGERS"
+	TestStatusEnv   = "YAKS_TEST_STATUS"
 
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
@@ -191,9 +192,12 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 		return
 	}
 
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
-	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
+	handleError := func(err error) {
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+	}
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
+	runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
+	if hasErrors(results) {
 		return
 	}
 
@@ -245,9 +249,12 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 		return
 	}
 
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir)
-	if err = runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir); err != nil {
+	handleError := func(err error) {
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
+	}
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
+	runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
+	if hasErrors(results) {
 		return
 	}
 
@@ -787,13 +794,13 @@ func listInstances(ctx context.Context, c client.Client) (v1alpha1.InstanceList,
 	return instanceList, err
 }
 
-func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
+func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1alpha1.TestResults, handleError func(err error)) {
 	for idx, step := range steps {
 		if len(step.Name) == 0 {
 			step.Name = fmt.Sprintf("step-%d", idx)
 		}
 
-		if skipStep(step) {
+		if skipStep(step, results) {
 			fmt.Printf("Skip %s\n", step.Name)
 			continue
 		}
@@ -803,8 +810,9 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 			if desc == "" {
 				desc = fmt.Sprintf("script %s", step.Script)
 			}
-			if err := runScript(step.Script, desc, namespace, baseDir, step.Timeout); err != nil {
-				return fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err))
+			if err := runScript(step.Script, desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
+				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
+				return
 			}
 		}
 
@@ -812,43 +820,47 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string) error {
 			// Let's save it to a bash script to allow for multiline scripts
 			file, err := ioutil.TempFile("", "yaks-script-*.sh")
 			if err != nil {
-				return err
+				handleError(err)
+				return
 			}
 			defer os.Remove(file.Name())
 
 			_, err = file.WriteString("#!/bin/bash\n\nset -e\n\n")
 			if err != nil {
-				return err
+				handleError(err)
+				return
 			}
 
 			_, err = file.WriteString(step.Run)
 			if err != nil {
-				return err
+				handleError(err)
+				return
 			}
 
 			if err = file.Close(); err != nil {
-				return err
+				handleError(err)
+				return
 			}
 
 			// Make it executable
 			if err = os.Chmod(file.Name(), 0777); err != nil {
-				return err
+				handleError(err)
+				return
 			}
 
 			desc := step.Name
 			if desc == "" {
 				desc = fmt.Sprintf("inline command %d", idx)
 			}
-			if err := runScript(file.Name(), desc, namespace, baseDir, step.Timeout); err != nil {
-				return fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err))
+			if err := runScript(file.Name(), desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
+				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
+				return
 			}
 		}
 	}
-
-	return nil
 }
 
-func skipStep(step config.StepConfig) bool {
+func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
 	if step.If == "" {
 		return false
 	}
@@ -866,9 +878,9 @@ func skipStep(step config.StepConfig) bool {
 
 		if (keyValue)[0] == "os" {
 			skipStep = (keyValue)[1] != r.GOOS
-		}
-
-		if strings.HasPrefix((keyValue)[0], "env:") {
+		} else if (keyValue)[0] == "failure()" {
+			skipStep = !hasErrors(results)
+		} else if strings.HasPrefix((keyValue)[0], "env:") {
 			if value, ok := os.LookupEnv(strings.TrimPrefix((keyValue)[0], "env:")); ok {
 				// support env name check when no expected value is given
 				if len(keyValue) == 1 {
@@ -889,7 +901,7 @@ func skipStep(step config.StepConfig) bool {
 	return false
 }
 
-func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
+func runScript(scriptFile string, desc string, namespace string, baseDir string, failed bool, timeout string) error {
 	if timeout == "" {
 		timeout = config.DefaultTimeout
 	}
@@ -910,6 +922,12 @@ func runScript(scriptFile, desc, namespace, baseDir, timeout string) error {
 
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
+
+	if failed {
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", TestStatusEnv, "FAILED"))
+	} else {
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", TestStatusEnv, "SUCCESS"))
+	}
 
 	command.Dir = baseDir
 
