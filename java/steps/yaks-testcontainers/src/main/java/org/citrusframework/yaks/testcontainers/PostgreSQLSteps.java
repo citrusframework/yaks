@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.testcontainers;
 
 import javax.script.ScriptException;
+import java.time.Duration;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
@@ -30,11 +31,13 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class PostgreSQLSteps {
 
@@ -55,6 +58,8 @@ public class PostgreSQLSteps {
     private String username = PostgreSQLSettings.getUsername();
     private String password = PostgreSQLSettings.getPassword();
 
+    private int startupTimeout = PostgreSQLSettings.getStartupTimeout();
+
     @Before
     public void before(Scenario scenario) {
         if (postgreSQLContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(PostgreSQLContainer.class)) {
@@ -66,6 +71,11 @@ public class PostgreSQLSteps {
     @Given("^PostgreSQL version (^\\s+)$")
     public void setPostgreSQLVersion(String version) {
         this.postgreSQLVersion = version;
+    }
+
+    @Given("^PostgreSQL startup timeout is (\\d+)(?: s| seconds)$")
+    public void setStartupTimeout(int timeout) {
+        this.startupTimeout = timeout;
     }
 
     @Given("^PostgreSQL database name (^\\s+)$")
@@ -88,7 +98,9 @@ public class PostgreSQLSteps {
         postgreSQLContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres").withTag(postgreSQLVersion))
                 .withUsername(username)
                 .withPassword(password)
-                .withDatabaseName(databaseName);
+                .withDatabaseName(databaseName)
+                .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\s", 2)
+                        .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
         postgreSQLContainer.start();
 

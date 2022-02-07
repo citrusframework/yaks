@@ -25,9 +25,13 @@ public class MongoDBSettings {
     private static final String MONGODB_PROPERTY_PREFIX = TestContainersSettings.TESTCONTAINERS_PROPERTY_PREFIX + "mongodb.";
     private static final String MONGODB_ENV_PREFIX = TestContainersSettings.TESTCONTAINERS_ENV_PREFIX + "MONGODB_";
 
-    private static final String MONGODB_VERSION_PROPERTY = MONGODB_PROPERTY_PREFIX + "version";
-    private static final String MONGODB_VERSION_ENV = MONGODB_ENV_PREFIX + "VERSION";
-    private static final String MONGODB_VERSION_DEFAULT = "4.0.10";
+    private static final String VERSION_PROPERTY = MONGODB_PROPERTY_PREFIX + "version";
+    private static final String VERSION_ENV = MONGODB_ENV_PREFIX + "VERSION";
+    private static final String VERSION_DEFAULT = "4.0.10";
+
+    private static final String STARTUP_TIMEOUT_PROPERTY = MONGODB_PROPERTY_PREFIX + "startup.timeout";
+    private static final String STARTUP_TIMEOUT_ENV = MONGODB_ENV_PREFIX + "STARTUP_TIMEOUT";
+    private static final String STARTUP_TIMEOUT_DEFAULT = "180";
 
     private MongoDBSettings() {
         // prevent instantiation of utility class
@@ -38,7 +42,16 @@ public class MongoDBSettings {
      * @return
      */
     public static String getMongoDBVersion() {
-        return System.getProperty(MONGODB_VERSION_PROPERTY,
-                System.getenv(MONGODB_VERSION_ENV) != null ? System.getenv(MONGODB_VERSION_ENV) : MONGODB_VERSION_DEFAULT);
+        return System.getProperty(VERSION_PROPERTY,
+                System.getenv(VERSION_ENV) != null ? System.getenv(VERSION_ENV) : VERSION_DEFAULT);
+    }
+
+    /**
+     * Time in seconds to wait for the container to startup and accept connections.
+     * @return
+     */
+    public static int getStartupTimeout() {
+        return Integer.parseInt(System.getProperty(STARTUP_TIMEOUT_PROPERTY,
+                System.getenv(STARTUP_TIMEOUT_ENV) != null ? System.getenv(STARTUP_TIMEOUT_ENV) : STARTUP_TIMEOUT_DEFAULT));
     }
 }

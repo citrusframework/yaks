@@ -43,6 +43,10 @@ public class PostgreSQLSettings {
     private static final String PASSWORD_ENV = POSTGRESQL_ENV_PREFIX + "PASSWORD";
     private static final String PASSWORD_DEFAULT = "test";
 
+    private static final String STARTUP_TIMEOUT_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "startup.timeout";
+    private static final String STARTUP_TIMEOUT_ENV = POSTGRESQL_ENV_PREFIX + "STARTUP_TIMEOUT";
+    private static final String STARTUP_TIMEOUT_DEFAULT = "180";
+
     private PostgreSQLSettings() {
         // prevent instantiation of utility class
     }
@@ -81,5 +85,14 @@ public class PostgreSQLSettings {
     public static String getPostgreSQLVersion() {
         return System.getProperty(POSTGRESQL_VERSION_PROPERTY,
                 System.getenv(POSTGRESQL_VERSION_ENV) != null ? System.getenv(POSTGRESQL_VERSION_ENV) : POSTGRESQL_VERSION_DEFAULT);
+    }
+
+    /**
+     * Time in seconds to wait for the container to startup and accept connections.
+     * @return
+     */
+    public static int getStartupTimeout() {
+        return Integer.parseInt(System.getProperty(STARTUP_TIMEOUT_PROPERTY,
+                System.getenv(STARTUP_TIMEOUT_ENV) != null ? System.getenv(STARTUP_TIMEOUT_ENV) : STARTUP_TIMEOUT_DEFAULT));
     }
 }
