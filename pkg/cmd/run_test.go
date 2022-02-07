@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"gotest.tools/v3/assert"
 	"os"
@@ -39,9 +40,13 @@ func TestStepOsCheck(t *testing.T) {
 		},
 	}
 
-	err := runSteps(steps, "default", "")
+	var scriptError error
+	saveErr := func(err error) {
+		scriptError = err
+	}
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, err)
+	assert.NilError(t, scriptError)
 }
 
 func TestStepEnvCheck(t *testing.T) {
@@ -71,9 +76,13 @@ func TestStepEnvCheck(t *testing.T) {
 		},
 	}
 
-	err = runSteps(steps, "default", "")
+	var scriptError error
+	saveErr := func(err error) {
+		scriptError = err
+	}
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, err)
+	assert.NilError(t, scriptError)
 }
 
 func TestStepCheckCombinations(t *testing.T) {
@@ -103,13 +112,40 @@ func TestStepCheckCombinations(t *testing.T) {
 		},
 	}
 
-	err = runSteps(steps, "default", "")
+	var scriptError error
+	saveErr := func(err error) {
+		scriptError = err
+	}
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, err)
+	assert.NilError(t, scriptError)
 }
 
 func TestResolveScriptFileName(t *testing.T) {
 	assert.Equal(t, resolve("pre.sh"), "pre.sh")
 	assert.Equal(t, resolve("pre-{{os.type}}.sh"), fmt.Sprintf("pre-%s.sh", r.GOOS))
 	assert.Equal(t, resolve("pre-{{os.type}}-{{os.arch}}.sh"), fmt.Sprintf("pre-%s-%s.sh", r.GOOS, r.GOARCH))
+}
+
+func TestStepOnFailure(t *testing.T) {
+	steps := []config.StepConfig{
+		{
+			Name: "failure-check-ok",
+			Run:  "echo Should run",
+			If:   fmt.Sprintf("os=%s", r.GOOS),
+		},
+		{
+			Name: "failure-check-fail",
+			Run:  "echo Should not run &fail",
+			If:   "failure()",
+		},
+	}
+
+	var scriptError error
+	saveErr := func(err error) {
+		scriptError = err
+	}
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+
+	assert.NilError(t, scriptError)
 }
