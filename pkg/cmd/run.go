@@ -617,7 +617,9 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	if runConfig.Config.Dump.Enabled {
-		if runConfig.Config.Dump.FailedOnly && len(test.Status.Results.Errors) == 0 {
+		if runConfig.Config.Dump.FailedOnly &&
+			test.Status.Phase != v1alpha1.TestPhaseFailed && test.Status.Phase != v1alpha1.TestPhaseError &&
+			len(test.Status.Errors) == 0 && !hasSuiteErrors(&test.Status.Results) {
 			fmt.Println("Skip dump for successful test")
 		} else {
 			var fileName string

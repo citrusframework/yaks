@@ -226,9 +226,17 @@ func resolvePath(runConfig *config.RunConfig, resource string) string {
 
 func hasErrors(results *v1alpha1.TestResults) bool {
 	for _, suite := range results.Suites {
-		if len(suite.Errors) > 0 || suite.Summary.Errors > 0 || suite.Summary.Failed > 0 {
+		if hasSuiteErrors(&suite) {
 			return true
 		}
+	}
+
+	return false
+}
+
+func hasSuiteErrors(suite *v1alpha1.TestSuite) bool {
+	if len(suite.Errors) > 0 || suite.Summary.Errors > 0 || suite.Summary.Failed > 0 {
+		return true
 	}
 
 	return false
