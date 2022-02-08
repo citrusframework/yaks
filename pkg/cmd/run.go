@@ -639,7 +639,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 			}
 
 			err = util.WithFile(path.Join(runConfig.Config.Dump.Directory, fileName), flags, 0o644, func(out io.Writer) error {
-				return dumpTest(o.Context, c, test.Name, namespace, out, runConfig.Config.Dump.Lines)
+				return dumpTest(o.Context, c, test.Name, namespace, out, runConfig.Config.Dump.Lines, runConfig.Config.Dump.Includes)
 			})
 			if err != nil {
 				fmt.Println(err)

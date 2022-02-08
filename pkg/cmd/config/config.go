@@ -127,12 +127,13 @@ type OperatorConfig struct {
 }
 
 type DumpConfig struct {
-	Enabled    bool   `yaml:"enabled"`
-	FailedOnly bool   `yaml:"failedOnly"`
-	Append     bool   `yaml:"append"`
-	Directory  string `yaml:"directory"`
-	File       string `yaml:"file"`
-	Lines      int    `yaml:"lines"`
+	Enabled    bool     `yaml:"enabled"`
+	FailedOnly bool     `yaml:"failedOnly"`
+	Append     bool     `yaml:"append"`
+	Directory  string   `yaml:"directory"`
+	File       string   `yaml:"file"`
+	Lines      int      `yaml:"lines"`
+	Includes   []string `yaml:"includes"`
 }
 
 func NewWithDefaults() *RunConfig {
