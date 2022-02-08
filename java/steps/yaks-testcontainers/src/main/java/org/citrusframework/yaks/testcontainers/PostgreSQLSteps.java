@@ -99,7 +99,7 @@ public class PostgreSQLSteps {
                 .withUsername(username)
                 .withPassword(password)
                 .withDatabaseName(databaseName)
-                .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\s", 2)
+                .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
         postgreSQLContainer.start();
