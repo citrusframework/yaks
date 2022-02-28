@@ -79,7 +79,7 @@
     <kubernetes-client.version>5.10.2</kubernetes-client.version>
     <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
-    <postgresql.version>42.3.2</postgresql.version>
+    <postgresql.version>42.3.3</postgresql.version>
     <testcontainers.version>1.16.3</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
