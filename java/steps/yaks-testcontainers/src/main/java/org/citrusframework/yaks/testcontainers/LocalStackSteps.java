@@ -75,7 +75,7 @@ public class LocalStackSteps {
         this.startupTimeout = timeout;
     }
 
-    @Given("^Enable service (S3|KINESIS|SQS|SNS|DYNAMODB)$")
+    @Given("^Enable service (S3|KINESIS|SQS|SNS|DYNAMODB|DYNAMODB_STREAMS|IAM|API_GATEWAY|FIREHOSE|LAMBDA)$")
     public void enableService(String service) {
         services.add(LocalStackContainer.Service.valueOf(service));
     }
