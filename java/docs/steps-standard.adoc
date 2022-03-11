@@ -123,7 +123,7 @@ Then sleep
 
 The above step performs a sleep with the default time of 5000 milliseconds.
 
-You can also give a time in milliseconds to sleep.
+You can also provide the duration to sleep in milliseconds or ISO 8601 format.
 
 .@Then("^sleep {time} ms$")
 [source,gherkin]
@@ -133,5 +133,8 @@ Then sleep 2500 ms
 
 The step receives a numeric parameter that represents the amount of time (in milliseconds) to wait.
 
-TIP: The Citrus framework also provides a set of BDD step implementations that you can use in a feature file. Read more about the available steps
-(e.g. for connecting with Selenium) in the official https://citrusframework.org/citrus/reference/2.8.0/html/index.html#cucumber[Citrus documentation on BDD testing].
+.@Then("^sleep {hours}h {minutes}min {seconds}sec {milliseconds}ms$")
+[source,gherkin]
+----
+Then sleep 1h 25min 15sec 500ms
+----

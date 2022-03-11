@@ -35,3 +35,7 @@ Feature: Standard steps
     """
     YAKS rocks!
     """
+
+  Scenario: sleep
+    Given sleep 100 ms
+    Given sleep 2sec 500ms

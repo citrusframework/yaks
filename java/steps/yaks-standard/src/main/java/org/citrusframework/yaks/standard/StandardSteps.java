@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.standard;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
 
 import com.consol.citrus.TestCaseRunner;
@@ -103,5 +104,29 @@ public class StandardSteps {
     @Then("^sleep (\\d+) ms$")
     public void doSleep(long milliseconds) {
         runner.then(sleep().milliseconds(milliseconds));
+    }
+
+    @Then("^sleep( \\d+h)?( \\d+min)?( \\d+sec)?( \\d+ms)?$")
+    public void doSleep(String hours, String min, String sec, String milliseconds) {
+        StringBuilder time = new StringBuilder("PT");
+
+        if (hours != null) {
+            time.append(String.format("%sH", hours.substring(0, hours.indexOf("h")).trim()));
+        }
+
+        if (min != null) {
+            time.append(String.format("%sM", min.substring(0, min.indexOf("m")).trim()));
+        }
+
+        if (sec != null) {
+            time.append(String.format("%sS", sec.substring(0, sec.indexOf("s")).trim()));
+        }
+
+        long ms = 0;
+        if (milliseconds != null) {
+            ms = Long.parseLong(milliseconds.substring(0, milliseconds.indexOf("m")).trim());
+        }
+
+        runner.then(sleep().milliseconds(Duration.parse(time.toString()).toMillis() + ms));
     }
 }
