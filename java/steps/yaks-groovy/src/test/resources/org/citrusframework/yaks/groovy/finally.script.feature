@@ -13,7 +13,7 @@ Feature: Run finally actions
       }
     }
     """
-    Then apply finally.groovy
+    Then apply actions finally.groovy
     And variable greeting is "Hello"
 
   Scenario: Finally actions

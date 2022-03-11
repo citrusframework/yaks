@@ -17,10 +17,9 @@
 
 package org.citrusframework.yaks.groovy.dsl.actions;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.consol.citrus.Citrus;
 import com.consol.citrus.TestActionRunner;
+import com.consol.citrus.context.TestContext;
 import org.citrusframework.yaks.groovy.GroovyShellUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 
@@ -29,35 +28,38 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
  */
 public class ActionScript {
 
-    private static final Pattern COMMENTS = Pattern.compile("^(?:\\s*//|/\\*|\\s+\\*).*$", Pattern.MULTILINE);
-
     private final String script;
+    private final Citrus citrus;
+    private final TestContext context;
 
-    public ActionScript(String script) {
+    public ActionScript(String script, Citrus citrus, TestContext context) {
         this.script = script;
+        this.citrus = citrus;
+        this.context = context;
     }
 
     public void execute(TestActionRunner runner) {
         ImportCustomizer ic = new ImportCustomizer();
-        GroovyShellUtils.run(ic, new ActionsConfiguration(runner), normalize(script));
+        GroovyShellUtils.run(ic, new ActionsConfiguration(runner), normalize(script), citrus, context);
     }
 
     private String normalize(String script) {
-        Matcher matcher = COMMENTS.matcher(script);
-        String normalized;
-        if (matcher.find()) {
-            normalized = matcher.replaceAll("").trim();
-        } else {
-            normalized = script.trim();
-        }
+        String normalized = GroovyShellUtils.removeComments(script);
 
-        if (normalized.startsWith("$actions {") ||
-                normalized.startsWith("$finally {")) {
+        if (isActionScript(normalized)) {
+            if (normalized.startsWith("$(")) {
+                return String.format("$actions { %s }", normalized);
+            }
+
             return normalized;
-        } else if (normalized.startsWith("$(")) {
-            return String.format("$actions { %s }", normalized);
         } else {
             return String.format("$actions { $(%s) }", normalized);
         }
+    }
+
+    public static boolean isActionScript(String script) {
+        return script.startsWith("$actions {") || script.startsWith("$actions{") ||
+                script.startsWith("$finally {") || script.startsWith("$finally{") ||
+                script.startsWith("$(");
     }
 }

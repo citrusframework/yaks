@@ -65,9 +65,8 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) configuration$")
     public void createConfiguration(String config) {
-        GroovyShellUtils.run(new ImportCustomizer(),
-                new ConfigurationScript(citrus),
-                context.replaceDynamicContentInString(config));
+        GroovyShellUtils.run(new ImportCustomizer(), new ConfigurationScript(citrus),
+                context.replaceDynamicContentInString(config), citrus, context);
     }
 
     @Given("^load configuration ([^\"\\s]+)\\.groovy$")
@@ -79,9 +78,8 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) endpoint ([^\"\\s]+)\\.groovy$")
     public void createEndpoint(String name, String configurationScript) {
-        EndpointBuilder<?> builder = GroovyShellUtils.run(new ImportCustomizer(),
-                new EndpointConfigurationScript(),
-                context.replaceDynamicContentInString(configurationScript));
+        EndpointBuilder<?> builder = GroovyShellUtils.run(new ImportCustomizer(), new EndpointConfigurationScript(),
+                context.replaceDynamicContentInString(configurationScript), citrus, context);
         Endpoint endpoint = builder.build();
 
         if (endpoint instanceof InitializingPhase) {
@@ -107,7 +105,7 @@ public class GroovyScriptSteps {
     @Given("^(?:create|new|bind) component ([^\"\\s]+)\\.groovy$")
     public void createComponent(String name, String configurationScript) {
         Object component = GroovyShellUtils.run(new ImportCustomizer(),
-                context.replaceDynamicContentInString(configurationScript));
+                context.replaceDynamicContentInString(configurationScript), citrus, context);
 
         if (component instanceof InitializingPhase) {
             ((InitializingPhase) component).initialize();
@@ -131,7 +129,7 @@ public class GroovyScriptSteps {
 
     @Given("^(?:create|new) actions ([^\"\\s]+)\\.groovy$")
     public void createActionScript(String scriptName, String code) {
-        scripts.put(scriptName, new ActionScript(code));
+        scripts.put(scriptName, new ActionScript(code, citrus, context));
     }
 
     @Given("^load actions ([^\"\\s]+)\\.groovy$")
@@ -147,7 +145,7 @@ public class GroovyScriptSteps {
         createActionScript(baseName, script);
     }
 
-    @Then("^(?:apply|verify) ([^\"\\s]+)\\.groovy$")
+    @Then("^(?:apply|verify) actions ([^\"\\s]+)\\.groovy$")
     public void runScript(String scriptName) {
         if (!scripts.containsKey(scriptName)) {
             try {
@@ -162,14 +160,29 @@ public class GroovyScriptSteps {
                 .execute(runner);
     }
 
-    @Then("^apply script: (.+)$")
     @Then("^\\$\\((.+)\\)$")
     public void runAction(String script) {
-        new ActionScript(script).execute(runner);
+        new ActionScript(script, citrus, context).execute(runner);
     }
 
-    @Then("^apply script$")
-    public void runActionMultiline(String script) {
-        new ActionScript(script).execute(runner);
+    @Then("^(?:apply|run) script: (.+)$")
+    public void applyScript(String script) {
+        if (ActionScript.isActionScript(script)) {
+            new ActionScript(script, citrus, context).execute(runner);
+        } else {
+            GroovyShellUtils.run(new ImportCustomizer(),
+                    context.replaceDynamicContentInString(script), citrus, context);
+        }
+    }
+
+    @Then("^(?:apply|run) script$")
+    public void applyScriptMultiline(String script) {
+        applyScript(script);
+    }
+
+    @Given("^(?:apply|run) script ([^\"\\s]+)\\.groovy$")
+    public void applyScriptFile(String filePath) throws IOException {
+        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        applyScript(context.replaceDynamicContentInString(FileUtils.readToString(scriptFile)));
     }
 }

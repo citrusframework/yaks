@@ -2,12 +2,12 @@ Feature: Run script actions
 
   Scenario: Load actions
     Given load actions actions.groovy
-    Then apply actions.groovy
+    Then apply actions actions.groovy
     And variable greeting is "Hey there"
 
   Scenario: Apply actions file
     Given variable greeting is "Hey there"
-    Then apply echo.groovy
+    Then apply actions echo.groovy
 
   Scenario: Inline actions
     Given create actions basic.groovy
@@ -26,7 +26,7 @@ Feature: Run script actions
       $(echo('Variable foo=${foo}'))
     }
     """
-    Then apply basic.groovy
+    Then apply actions basic.groovy
     And variable greeting is "Hello"
 
   Scenario: Messaging actions
@@ -42,7 +42,7 @@ Feature: Run script actions
         .body('Hello from Groovy script!'))
     }
     """
-    Then apply messaging.groovy
+    Then apply actions messaging.groovy
 
   Scenario: Run actions
     Given $(doFinally().actions(echo('${greeting} in finally!')))
@@ -50,6 +50,7 @@ Feature: Run script actions
     Then $(echo('${greeting}'))
     And print '${greeting}'
     And variable greeting is "Ciao"
+    And $(echo(greeting))
 
   Scenario: Run actions multiline
     Given apply script
@@ -60,14 +61,14 @@ Feature: Run script actions
     """
     When apply script
     """
-    send('direct:myQueue')
+    $(send('direct:myQueue')
       .message()
-      .body('Hello from Groovy script!')
+      .body('Hello from Groovy script!'))
     """
     Then apply script
     """
-    receive('direct:myQueue')
+    $(receive('direct:myQueue')
       .message()
-      .body('Hello from Groovy script!')
+      .body('Hello from Groovy script!'))
     """
     And variable greeting is "Bye"

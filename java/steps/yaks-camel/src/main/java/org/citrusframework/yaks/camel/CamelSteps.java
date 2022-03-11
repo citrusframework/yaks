@@ -38,10 +38,6 @@ import com.consol.citrus.common.InitializingPhase;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.Script;
-import groovy.util.DelegatingScript;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -60,7 +56,7 @@ import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.spi.XMLRoutesDefinitionLoader;
 import org.apache.camel.spring.SpringCamelContext;
-import org.codehaus.groovy.control.CompilerConfiguration;
+import org.citrusframework.yaks.groovy.GroovyShellUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
@@ -173,16 +169,8 @@ public class CamelSteps {
 
     @Given("^bind to Camel registry ([^\"\\s]+)\\.groovy$")
     public void bindComponent(String name, String configurationScript) {
-        CompilerConfiguration cc = new CompilerConfiguration();
-        cc.addCompilationCustomizers(new ImportCustomizer());
-        cc.setScriptBaseClass(DelegatingScript.class.getName());
-
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
-
-        Script script = sh.parse(context.replaceDynamicContentInString(configurationScript));
-
-        Object component = script.run();
+        Object component = GroovyShellUtils.run(new ImportCustomizer(),
+                context.replaceDynamicContentInString(configurationScript), citrus, context);
 
         if (component instanceof InitializingPhase) {
             ((InitializingPhase) component).initialize();
@@ -250,18 +238,7 @@ public class CamelSteps {
                 ImportCustomizer ic = new ImportCustomizer();
                 ic.addStarImports("org.apache.camel");
 
-                CompilerConfiguration cc = new CompilerConfiguration();
-                cc.addCompilationCustomizers(ic);
-                cc.setScriptBaseClass(DelegatingScript.class.getName());
-
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
-
-                DelegatingScript script = (DelegatingScript) sh.parse(context.replaceDynamicContentInString(route));
-
-                // set the delegate target
-                script.setDelegate(this);
-                script.run();
+                GroovyShellUtils.run(ic, this, context.replaceDynamicContentInString(route), citrus, context);
             }
 
             @Override

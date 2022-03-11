@@ -30,6 +30,13 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-groovy</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
     </dependency>
@@ -75,11 +82,6 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-xml-jaxb-dsl</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy</artifactId>
     </dependency>
 
     <!-- Test scope -->

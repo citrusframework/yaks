@@ -17,10 +17,14 @@
 
 package org.citrusframework.yaks.groovy;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.consol.citrus.Citrus;
+import com.consol.citrus.context.TestContext;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
-import groovy.util.DelegatingScript;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 
@@ -28,6 +32,8 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
  * @author Christoph Deppisch
  */
 public final class GroovyShellUtils {
+
+    private static final Pattern COMMENTS = Pattern.compile("^(?:\\s*//|/\\*|\\s+\\*).*$", Pattern.MULTILINE);
 
     private GroovyShellUtils() {
         // prevent instantiation of utility class
@@ -37,11 +43,12 @@ public final class GroovyShellUtils {
      * Run given scriptCode with GroovyShell.
      * @param ic import customizer
      * @param scriptCode code to evaluate in shell
+     * @param context the current test context
      * @param <T> return type
      * @return script result
      */
-    public static <T> T run(ImportCustomizer ic, String scriptCode) {
-        return run(ic, null, scriptCode);
+    public static <T> T run(ImportCustomizer ic, String scriptCode, Citrus citrus, TestContext context) {
+        return run(ic, null, scriptCode, citrus, context);
     }
 
     /**
@@ -49,23 +56,44 @@ public final class GroovyShellUtils {
      * @param ic import customizer
      * @param delegate instance providing methods and properties
      * @param scriptCode code to evaluate in shell
+     * @param context the current test context
      * @param <T> return type
      * @return script result
      */
-    public static <T> T run(ImportCustomizer ic, Object delegate, String scriptCode) {
+    public static <T> T run(ImportCustomizer ic, Object delegate, String scriptCode, Citrus citrus, TestContext context) {
         CompilerConfiguration cc = new CompilerConfiguration();
         cc.addCompilationCustomizers(ic);
-        cc.setScriptBaseClass(DelegatingScript.class.getName());
+        cc.setScriptBaseClass(GroovyScript.class.getName());
 
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         GroovyShell sh = new GroovyShell(cl, new Binding(), cc);
 
         Script script = sh.parse(scriptCode);
 
-        if (delegate != null && script instanceof DelegatingScript) {
-            // set the delegate target
-            ((DelegatingScript) script).setDelegate(delegate);
+        if (script instanceof GroovyScript) {
+            if (delegate != null) {
+                // set the delegate target
+                ((GroovyScript) script).setDelegate(delegate);
+            }
+
+            ((GroovyScript) script).setCitrusFramework(citrus);
+            ((GroovyScript) script).setContext(context);
         }
+
         return (T) script.run();
+    }
+
+    /**
+     * Remove leading comments such as license header.
+     * @param script
+     * @return
+     */
+    public static String removeComments(String script) {
+        Matcher matcher = COMMENTS.matcher(script);
+        if (matcher.find()) {
+            return matcher.replaceAll("").trim();
+        } else {
+            return script.trim();
+        }
     }
 }

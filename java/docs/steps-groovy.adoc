@@ -218,10 +218,10 @@ Scenario: Custom test actions
 The example above defines the test actions with the Groovy DSL under the name `basic.groovy`. Later in the test the actions are executed with the
 `apply` step.
 
-.@Then("^(?:apply|verify) {name}\\.groovy$")
+.@Then("^(?:apply|verify) actions {name}\\.groovy$")
 [source,gherkin]
 ----
-Then apply {name}.groovy
+Then apply actions {name}.groovy
 ----
 
 Users familiar with Citrus will notice immediately that the action script is using the Citrus actions DSL to describe
@@ -243,7 +243,7 @@ Scenario: Messaging actions
       .payload('Hello from Groovy script!'))
   }
   """
-  Then apply messaging.groovy
+  Then apply actions messaging.groovy
 ----
 
 As an alternative to write the Groovy DSL directly into the test feature file you can also laod the test action script
@@ -260,7 +260,7 @@ The file name is the name of the action script. So you can use the file name to 
 .Apply Groovy script
 [source,gherkin]
 ----
-Then apply {file_name}.groovy
+Then apply actions {file_name}.groovy
 ----
 
 You can also use a shortcut syntax to directly call a test action.

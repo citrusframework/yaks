@@ -106,6 +106,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-groovy</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-mongodb</artifactId>
       <version>${camel.version}</version>

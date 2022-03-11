@@ -15,23 +15,4 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.groovy;
-
-import com.consol.citrus.common.InitializingPhase;
-
-/**
- * @author Christoph Deppisch
- */
-public class Foo implements InitializingPhase {
-
-    private String text;
-
-    public static Foo create() {
-        return new Foo();
-    }
-
-    @Override
-    public void initialize() {
-        text = "Hello Foo!";
-    }
-}
+println '${greeting} from Groovy script!'

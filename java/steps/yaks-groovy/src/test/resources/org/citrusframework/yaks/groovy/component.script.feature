@@ -7,3 +7,6 @@ Feature: Component script
     Foo.create()
     """
     When verify bean foo
+
+  Scenario: Use new component
+    Given $(echo(foo.text))
