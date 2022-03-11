@@ -151,7 +151,7 @@ public class GroovyScriptSteps {
     public void runScript(String scriptName) {
         if (!scripts.containsKey(scriptName)) {
             try {
-                loadActionScript(scriptName + ".groovy");
+                loadActionScript(scriptName);
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to load/get action script for path/name %s.groovy", scriptName), e);
             }

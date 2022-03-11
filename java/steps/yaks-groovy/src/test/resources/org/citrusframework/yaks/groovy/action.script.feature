@@ -5,6 +5,10 @@ Feature: Run script actions
     Then apply actions.groovy
     And variable greeting is "Hey there"
 
+  Scenario: Apply actions file
+    Given variable greeting is "Hey there"
+    Then apply echo.groovy
+
   Scenario: Inline actions
     Given create actions basic.groovy
     """
