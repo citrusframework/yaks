@@ -107,6 +107,11 @@ public class CamelSteps {
             }
         }
 
+        if (camelContext != null && !(context.getReferenceResolver() instanceof CamelReferenceResolver)) {
+            context.setReferenceResolver(new CamelReferenceResolver(camelContext)
+                    .withFallback(citrus.getCitrusContext().getReferenceResolver()));
+        }
+
         headers = new HashMap<>();
         body = null;
     }
@@ -177,6 +182,7 @@ public class CamelSteps {
         }
 
         camelContext().getRegistry().bind(name, component);
+        citrus.getCitrusContext().bind(name, component);
     }
 
     @Given("^load to Camel registry ([^\"\\s]+)\\.groovy$")
@@ -407,6 +413,8 @@ public class CamelSteps {
         if (camelContext == null) {
             try {
                 camelContext = new DefaultCamelContext();
+                context.setReferenceResolver(new CamelReferenceResolver(camelContext)
+                        .withFallback(citrus.getCitrusContext().getReferenceResolver()));
                 camelContext.start();
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to start default Camel context", e);
@@ -422,6 +430,8 @@ public class CamelSteps {
                 ApplicationContext ctx = new GenericXmlApplicationContext(
                         new ByteArrayResource(context.replaceDynamicContentInString(beans).getBytes(StandardCharsets.UTF_8)));
                 camelContext = ctx.getBean(SpringCamelContext.class);
+                context.setReferenceResolver(new CamelReferenceResolver(camelContext)
+                        .withFallback(citrus.getCitrusContext().getReferenceResolver()));
                 camelContext.start();
             } catch (Exception e) {
                 throw new IllegalStateException("Failed to start Spring Camel context", e);
