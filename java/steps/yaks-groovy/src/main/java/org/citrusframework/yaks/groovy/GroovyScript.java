@@ -35,6 +35,14 @@ public abstract class GroovyScript extends DelegatingScript {
         try {
             return getMetaClass().getProperty(this, propertyName);
         } catch (NullPointerException | MissingPropertyException e) {
+            if (propertyName.equals("citrus")) {
+                return citrusFramework;
+            }
+
+            if (propertyName.equals("context")) {
+                return context;
+            }
+
             if (context != null) {
                 if (context.getReferenceResolver().isResolvable(propertyName)) {
                     return context.getReferenceResolver().resolve(propertyName);

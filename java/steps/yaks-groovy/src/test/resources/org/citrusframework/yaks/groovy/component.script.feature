@@ -10,3 +10,4 @@ Feature: Component script
 
   Scenario: Use new component
     Given $(echo(foo.text))
+    And run script: println foo.text

@@ -149,7 +149,7 @@ public class CamelSteps {
     @Given("^(?:Default|New) global Camel context$")
     public void defaultGlobalContext() {
         destroyCamelContext();
-        citrus.getCitrusContext().getReferenceResolver().bind(contextName, camelContext());
+        citrus.getCitrusContext().bind(contextName, camelContext());
         globalCamelContext = true;
     }
 
@@ -163,7 +163,7 @@ public class CamelSteps {
     @Given("^(?:Default|New) global Spring Camel context$")
     public void defaultGlobalContext(String beans) {
         destroyCamelContext();
-        citrus.getCitrusContext().getReferenceResolver().bind(contextName, springCamelContext(beans));
+        citrus.getCitrusContext().bind(contextName, springCamelContext(beans));
         globalCamelContext = true;
     }
 
