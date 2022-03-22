@@ -49,8 +49,12 @@ public class StandardSteps {
     }
 
     @Given("^variable ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
-    @Given("^variable ([^\\s]+)=\"([^\"]*)\"$")
     public void variable(String name, String value) {
+        runner.variable(name, value);
+    }
+
+    @Given("^variable ([^\\s]+)=\"([^\"]*)\"$")
+    public void variableDeclaration(String name, String value) {
         runner.variable(name, value);
     }
 
