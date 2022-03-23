@@ -20,6 +20,6 @@
   <extension>
     <groupId>org.citrusframework.yaks</groupId>
     <artifactId>yaks-maven-extension</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
   </extension>
 </extensions>
