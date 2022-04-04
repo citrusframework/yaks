@@ -26,15 +26,13 @@ import java.util.Map;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.http.server.HttpServer;
-import com.consol.citrus.http.server.HttpServerBuilder;
-import com.consol.citrus.message.MessageType;
 import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
@@ -42,6 +40,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.http.HttpServerSteps;
 import org.citrusframework.yaks.kubernetes.actions.CreateServiceAction;
 import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
 import org.springframework.http.HttpStatus;
@@ -49,7 +48,6 @@ import org.springframework.http.HttpStatus;
 import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
 import static com.consol.citrus.container.Assert.Builder.assertException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
 public class KubernetesSteps {
@@ -63,12 +61,10 @@ public class KubernetesSteps {
     @CitrusResource
     private TestContext context;
 
-    private HttpServer httpServer;
+    private HttpServerSteps httpServerSteps;
 
     private String servicePort = KubernetesSettings.getServicePort();
     private String serviceName = KubernetesSettings.getServiceName();
-
-    private long timeout = KubernetesSettings.getServiceTimeout();
 
     private KubernetesClient k8sClient;
 
@@ -78,21 +74,14 @@ public class KubernetesSteps {
 
     @Before
     public void before(Scenario scenario) {
-        if (httpServer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(serviceName)) {
-            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serviceName, HttpServer.class);
-            servicePort = String.valueOf(httpServer.getPort());
-            timeout = httpServer.getDefaultTimeout();
-        } else {
-            httpServer = new HttpServerBuilder()
-                    .port(Integer.parseInt(context.replaceDynamicContentInString(servicePort)))
-                    .defaultStatus(HttpStatus.ACCEPTED)
-                    .timeout(timeout)
-                    .name(serviceName)
-                    .build();
+        httpServerSteps = new HttpServerSteps();
+        CitrusAnnotations.injectAll(httpServerSteps, citrus, context);
+        CitrusAnnotations.injectTestRunner(httpServerSteps, runner);
+        httpServerSteps.before(scenario);
 
-            citrus.getCitrusContext().getReferenceResolver().bind(serviceName, httpServer);
-            httpServer.initialize();
-        }
+        httpServerSteps.configureTimeout(KubernetesSettings.getServiceTimeout());
+        httpServerSteps.setServerPort(Integer.parseInt(context.replaceDynamicContentInString(servicePort)));
+        httpServerSteps.setServer(serviceName);
 
         if (k8sClient == null) {
             k8sClient = KubernetesSupport.getKubernetesClient(citrus);
@@ -118,29 +107,19 @@ public class KubernetesSteps {
 
     @Given("^Kubernetes timeout is (\\d+)(?: ms| milliseconds)$")
     public void configureTimeout(long timeout) {
-        this.timeout = timeout;
+        httpServerSteps.configureTimeout(timeout);
     }
 
     @Given("^Kubernetes service \"([^\"\\s]+)\"$")
     public void setServiceName(String name) {
         this.serviceName = name;
-        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
-            Object component = citrus.getCitrusContext().getReferenceResolver().resolve(name);
-            if (component instanceof HttpServer) {
-                httpServer = (HttpServer) component;
-            }
-        } else if (httpServer != null) {
-            citrus.getCitrusContext().getReferenceResolver().bind(serviceName, httpServer);
-            httpServer.setName(serviceName);
-        }
+        httpServerSteps.setServer(name);
     }
 
     @Given("^Kubernetes service port ([^\\s]+)$")
     public void setServicePort(String port) {
-        servicePort = context.replaceDynamicContentInString(port);
-        if (httpServer != null) {
-            httpServer.setPort(Integer.parseInt(servicePort));
-        }
+        this.servicePort = port;
+        httpServerSteps.setServerPort(Integer.parseInt(context.replaceDynamicContentInString(port)));
     }
 
     @Given("^create Kubernetes custom resource in ([^\\s]+)$")
@@ -549,31 +528,26 @@ public class KubernetesSteps {
                 .labels(labels));
     }
 
-    public void receiveServiceRequest(HttpMessage request, MessageType messageType) {
-        initializeService(serviceName, servicePort);
-
-        runner.run(http().server(httpServer)
-                .receive()
-                .post()
-                .timeout(timeout)
-                .message(request.setType(messageType)));
+    /**
+     * Receive and verify given request.
+     * @param request
+     */
+    public void receiveServiceRequest(HttpMessage request) {
+        httpServerSteps.setRequestMessageType(request.getType());
+        httpServerSteps.receiveServerRequest(request);
     }
 
+    /**
+     * Send given response status.
+     * @param status
+     */
     public void sendServiceResponse(HttpStatus status) {
-        runner.run(http().server(httpServer)
-                .send()
-                .response(status));
+        httpServerSteps.sendServerResponse(status);
     }
 
     private void initializeService(String serviceName, String targetPort) {
-        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serviceName) &&
-                citrus.getCitrusContext().getReferenceResolver().resolve(serviceName) instanceof HttpServer) {
-            setServiceName(serviceName);
-            setServicePort(targetPort);
-
-            if (!httpServer.isRunning()) {
-                httpServer.start();
-            }
-        }
+        setServiceName(serviceName);
+        setServicePort(targetPort);
+        httpServerSteps.getOrCreateHttpServer();
     }
 }

@@ -56,6 +56,7 @@ import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
@@ -108,8 +109,6 @@ public class HttpServerSteps implements HttpSteps {
                 httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
                 serverPort = httpServer.getPort();
                 timeout = httpServer.getDefaultTimeout();
-            } else {
-                httpServer = createHttpServer();
             }
         }
 
@@ -133,8 +132,6 @@ public class HttpServerSteps implements HttpSteps {
         } else if (httpServer != null) {
             citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
             httpServer.setName(serverName);
-        } else {
-            httpServer = createHttpServer();
         }
     }
 
@@ -150,7 +147,7 @@ public class HttpServerSteps implements HttpSteps {
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
             httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(name, HttpServer.class);
         } else {
-            httpServer = createHttpServer();
+            httpServer = getOrCreateHttpServer();
         }
     }
 
@@ -163,24 +160,18 @@ public class HttpServerSteps implements HttpSteps {
     @Given("^HTTP server listening on port (\\d+)$")
     public void setServerPort(int port) {
         this.serverPort = port;
-        if (httpServer != null) {
-            httpServer.setPort(port);
-        }
+        getOrCreateHttpServer().setPort(port);
     }
 
     @Given("^HTTP server secure port (\\d+)$")
     public void setSecureServerPort(int port) {
         this.securePort = port;
-        if (httpServer != null) {
-            httpServer.setConnector(sslConnector());
-        }
+        getOrCreateHttpServer().setConnector(sslConnector());
     }
 
     @Given("^enable secure HTTP server$")
     public void enableSecureConnector() {
-        if (httpServer != null) {
-            httpServer.setConnector(sslConnector());
-        }
+        getOrCreateHttpServer().setConnector(sslConnector());
     }
 
     @Given("^HTTP server SSL keystore path ([^\\s]+)$")
@@ -195,6 +186,7 @@ public class HttpServerSteps implements HttpSteps {
 
     @Given("^start HTTP server$")
     public void startServer() {
+        HttpServer httpServer = getOrCreateHttpServer();
         if (!httpServer.isRunning()) {
             httpServer.start();
         }
@@ -202,6 +194,7 @@ public class HttpServerSteps implements HttpSteps {
 
     @Given("^stop HTTP server$")
     public void stopServer() {
+        HttpServer httpServer = getOrCreateHttpServer();
         if (httpServer.isRunning()) {
             httpServer.stop();
         }
@@ -330,7 +323,8 @@ public class HttpServerSteps implements HttpSteps {
      * Receives server request.
      * @param request
      */
-    private void receiveServerRequest(HttpMessage request) {
+    public void receiveServerRequest(HttpMessage request) {
+        HttpServer httpServer = getOrCreateHttpServer();
         if (!httpServer.isRunning()) {
             httpServer.start();
         }
@@ -376,7 +370,18 @@ public class HttpServerSteps implements HttpSteps {
      * Create a new server instance and bind it to the context.
      * @return
      */
-    public HttpServer createHttpServer() {
+    public HttpServer getOrCreateHttpServer() {
+        if (httpServer != null) {
+            if (httpServer.getName().equals(serverName)) {
+                return httpServer;
+            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
+                serverPort = httpServer.getPort();
+                timeout = httpServer.getDefaultTimeout();
+                return httpServer;
+            }
+        }
+
         httpServer = new HttpServerBuilder()
                 .timeout(timeout)
                 .port(serverPort)
@@ -413,11 +418,7 @@ public class HttpServerSteps implements HttpSteps {
      * Sends server response.
      * @param response
      */
-    private void sendServerResponse(HttpMessage response) {
-        if (!httpServer.isRunning()) {
-            httpServer.start();
-        }
-
+    public void sendServerResponse(HttpMessage response) {
         response.setType(responseMessageType);
 
         HttpServerResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().server(httpServer)
@@ -431,6 +432,16 @@ public class HttpServerSteps implements HttpSteps {
 
 
         runner.run(responseBuilder);
+    }
+
+    /**
+     * Sends server response.
+     * @param status
+     */
+    public void sendServerResponse(HttpStatus status) {
+        runner.run(http().server(httpServer)
+                .send()
+                .response(status));
     }
 
     private ServerConnector sslConnector() {
@@ -490,5 +501,13 @@ public class HttpServerSteps implements HttpSteps {
      */
     public void setOutboundDictionary(DataDictionary<?> outboundDictionary) {
         this.outboundDictionary = outboundDictionary;
+    }
+
+    /**
+     * Specify the request message type.
+     * @param requestType
+     */
+    public void setRequestMessageType(String requestType) {
+        this.requestMessageType = requestType;
     }
 }

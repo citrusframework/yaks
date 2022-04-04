@@ -23,7 +23,6 @@ import com.consol.citrus.annotations.CitrusAnnotations;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.message.MessageType;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -113,7 +112,7 @@ public class ReceiveEventSteps {
      * @param request
      */
     private void receiveEvent(CloudEventMessage request) {
-        kubernetesSteps.receiveServiceRequest(request, MessageType.valueOf(request.getType()));
+        kubernetesSteps.receiveServiceRequest(request);
         kubernetesSteps.sendServiceResponse(HttpStatus.ACCEPTED);
     }
 }
