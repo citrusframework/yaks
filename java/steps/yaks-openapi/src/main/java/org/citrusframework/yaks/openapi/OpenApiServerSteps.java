@@ -57,28 +57,42 @@ public class OpenApiServerSteps {
     @CitrusFramework
     private Citrus citrus;
 
-    private HttpServerSteps serverSteps;
+    private HttpServerSteps httpServerSteps;
 
     private OasOperation operation;
 
-    private long timeout = OpenApiSettings.getTimeout();
-
     @Before
     public void before(Scenario scenario) {
-        serverSteps = new HttpServerSteps();
-        CitrusAnnotations.injectAll(serverSteps, citrus);
-        CitrusAnnotations.injectTestRunner(serverSteps, runner);
-        serverSteps.before(scenario);
+        httpServerSteps = new HttpServerSteps();
+        CitrusAnnotations.injectAll(httpServerSteps, citrus, context);
+        CitrusAnnotations.injectTestRunner(httpServerSteps, runner);
+        httpServerSteps.before(scenario);
 
-        serverSteps.configureTimeout(timeout);
+        httpServerSteps.configureTimeout(OpenApiSettings.getTimeout());
+        httpServerSteps.setServerPort(Integer.parseInt(context.replaceDynamicContentInString(OpenApiSettings.getServicePort())));
+        httpServerSteps.setServer(OpenApiSettings.getServiceName());
 
         operation = null;
     }
 
     @Given("^OpenAPI server timeout is (\\d+)(?: ms| milliseconds)$")
     public void configureTimeout(long timeout) {
-        this.timeout = timeout;
-        serverSteps.configureTimeout(timeout);
+        httpServerSteps.configureTimeout(timeout);
+    }
+
+    @Given("^OpenAPI service \"([^\"\\s]+)\"$")
+    public void setServiceName(String name) {
+        httpServerSteps.setServer(name);
+    }
+
+    @Given("^OpenAPI service port ([^\\s]+)$")
+    public void setServicePort(String port) {
+        httpServerSteps.setServerPort(Integer.parseInt(context.replaceDynamicContentInString(port)));
+    }
+
+    @Given("^create OpenAPI service$")
+    public void createService() {
+        httpServerSteps.startServer();
     }
 
     @When("^(?:receive|expect|verify) operation: (.+)$")
@@ -118,26 +132,26 @@ public class OpenApiServerSteps {
             operation.parameters.stream()
                     .filter(param -> "header".equals(param.in))
                     .filter(param -> (param.required != null && param.required) || context.getVariables().containsKey(param.getName()))
-                    .forEach(param -> serverSteps.addRequestHeader(param.getName(),
+                    .forEach(param -> httpServerSteps.addRequestHeader(param.getName(),
                             OpenApiTestDataGenerator.createValidationExpression(param.getName(), (OasSchema) param.schema,
                                     OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context)));
 
             operation.parameters.stream()
                     .filter(param -> "query".equals(param.in))
                     .filter(param -> (param.required != null && param.required) || context.getVariables().containsKey(param.getName()))
-                    .forEach(param -> serverSteps.addRequestQueryParam(param.getName(),
+                    .forEach(param -> httpServerSteps.addRequestQueryParam(param.getName(),
                             OpenApiTestDataGenerator.createValidationExpression(param.getName(), (OasSchema) param.schema,
                                     OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context)));
         }
 
         Optional<OasSchema> body = OasModelHelper.getRequestBodySchema(OpenApiSteps.openApiDoc, operation);
         if (body.isPresent()) {
-            serverSteps.setRequestBody(OpenApiTestDataGenerator.createInboundPayload(body.get(), OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc)));
+            httpServerSteps.setRequestBody(OpenApiTestDataGenerator.createInboundPayload(body.get(), OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc)));
 
             if (OasModelHelper.isReferenceType(body.get())
                     || OasModelHelper.isObjectType(body.get())
                     || OasModelHelper.isArrayType(body.get())) {
-                serverSteps.setInboundDictionary(OpenApiSteps.inboundDictionary);
+                httpServerSteps.setInboundDictionary(OpenApiSteps.inboundDictionary);
             }
         }
 
@@ -161,9 +175,9 @@ public class OpenApiServerSteps {
         }
 
         Optional<String> contentType = OasModelHelper.getRequestContentType(operation);
-        contentType.ifPresent(s -> serverSteps.addRequestHeader(HttpHeaders.CONTENT_TYPE, String.format("@startsWith(%s)@", s)));
+        contentType.ifPresent(s -> httpServerSteps.addRequestHeader(HttpHeaders.CONTENT_TYPE, String.format("@startsWith(%s)@", s)));
 
-        serverSteps.receiveServerRequest(method.toUpperCase(), randomizedPath);
+        httpServerSteps.receiveServerRequest(method.toUpperCase(), randomizedPath);
     }
 
     /**
@@ -179,7 +193,7 @@ public class OpenApiServerSteps {
             if (response != null) {
                 Map<String, OasSchema> requiredHeaders = OasModelHelper.getRequiredHeaders(response);
                 for (Map.Entry<String, OasSchema> header : requiredHeaders.entrySet()) {
-                    serverSteps.addResponseHeader(header.getKey(),
+                    httpServerSteps.addResponseHeader(header.getKey(),
                             OpenApiTestDataGenerator.createRandomValueExpression(header.getKey(), header.getValue(),
                                     OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc), false, context));
                 }
@@ -187,30 +201,30 @@ public class OpenApiServerSteps {
                 Map<String, OasSchema> headers = OasModelHelper.getHeaders(response);
                 for (Map.Entry<String, OasSchema> header : headers.entrySet()) {
                     if (!requiredHeaders.containsKey(header.getKey()) && context.getVariables().containsKey(header.getKey())) {
-                        serverSteps.addResponseHeader(header.getKey(),CitrusSettings.VARIABLE_PREFIX + header.getKey() + CitrusSettings.VARIABLE_SUFFIX);
+                        httpServerSteps.addResponseHeader(header.getKey(),CitrusSettings.VARIABLE_PREFIX + header.getKey() + CitrusSettings.VARIABLE_SUFFIX);
                     }
                 }
 
                 Optional<OasSchema> responseSchema = OasModelHelper.getSchema(response);
                 if (responseSchema.isPresent()) {
-                    serverSteps.setResponseBody(OpenApiTestDataGenerator.createOutboundPayload(responseSchema.get(), OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc)));
+                    httpServerSteps.setResponseBody(OpenApiTestDataGenerator.createOutboundPayload(responseSchema.get(), OasModelHelper.getSchemaDefinitions(OpenApiSteps.openApiDoc)));
 
                     if (OasModelHelper.isReferenceType(responseSchema.get())
                             || OasModelHelper.isObjectType(responseSchema.get())
                             || OasModelHelper.isArrayType(responseSchema.get())) {
-                        serverSteps.setOutboundDictionary(OpenApiSteps.outboundDictionary);
+                        httpServerSteps.setOutboundDictionary(OpenApiSteps.outboundDictionary);
                     }
                 }
             }
         }
 
         Optional<String> contentType = OasModelHelper.getResponseContentType(OpenApiSteps.openApiDoc, operation);
-        contentType.ifPresent(s -> serverSteps.addResponseHeader(HttpHeaders.CONTENT_TYPE, s));
+        contentType.ifPresent(s -> httpServerSteps.addResponseHeader(HttpHeaders.CONTENT_TYPE, s));
 
         if (Pattern.compile("[0-9]+").matcher(status).matches()) {
-            serverSteps.sendServerResponse(Integer.parseInt(status));
+            httpServerSteps.sendServerResponse(Integer.parseInt(status));
         } else {
-            serverSteps.sendServerResponse(HttpStatus.OK.value());
+            httpServerSteps.sendServerResponse(HttpStatus.OK.value());
         }
     }
 }

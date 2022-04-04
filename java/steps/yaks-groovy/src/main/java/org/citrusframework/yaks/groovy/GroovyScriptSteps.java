@@ -86,6 +86,8 @@ public class GroovyScriptSteps {
             ((InitializingPhase) endpoint).initialize();
         }
 
+        endpoint.setName(name);
+
         citrus.getCitrusContext().bind(name, endpoint);
     }
 

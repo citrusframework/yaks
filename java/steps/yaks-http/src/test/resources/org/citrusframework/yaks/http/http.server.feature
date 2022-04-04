@@ -2,9 +2,8 @@ Feature: Http server
 
   Background:
     Given URL: http://localhost:8088
+    Given HTTP server listening on port 8088
     Given create HTTP server "sampleHttpServer"
-    And HTTP server listening on port 8088
-    And start HTTP server
     And HTTP request fork mode is enabled
 
   Scenario: Http health check
