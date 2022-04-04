@@ -548,6 +548,6 @@ public class KubernetesSteps {
     private void initializeService(String serviceName, String targetPort) {
         setServiceName(serviceName);
         setServicePort(targetPort);
-        httpServerSteps.getOrCreateHttpServer();
+        httpServerSteps.startServer();
     }
 }

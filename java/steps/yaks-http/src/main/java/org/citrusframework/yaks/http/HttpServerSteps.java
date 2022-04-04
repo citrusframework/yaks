@@ -32,6 +32,7 @@ import com.consol.citrus.CitrusSettings;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.actions.HttpServerActionBuilder;
 import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
@@ -72,7 +73,12 @@ public class HttpServerSteps implements HttpSteps {
     @CitrusFramework
     private Citrus citrus;
 
+    @CitrusResource
+    private TestContext context;
+
     private HttpServer httpServer;
+
+    private ServerConnector sslConnector;
 
     private Map<String, String> requestHeaders = new HashMap<>();
     private Map<String, String> responseHeaders = new HashMap<>();
@@ -101,12 +107,13 @@ public class HttpServerSteps implements HttpSteps {
     @Before
     public void before(Scenario scenario) {
         if (httpServer == null) {
-            if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
-                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
+            if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
                 serverPort = httpServer.getPort();
                 timeout = httpServer.getDefaultTimeout();
-            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
-                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
+            } else if (citrus.getCitrusContext().getReferenceResolver().resolveAll(HttpServer.class).size() == 1L) {
+                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(HttpServer.class);
+                serverName = httpServer.getName();
                 serverPort = httpServer.getPort();
                 timeout = httpServer.getDefaultTimeout();
             }
@@ -122,6 +129,7 @@ public class HttpServerSteps implements HttpSteps {
         bodyValidationExpressions = new HashMap<>();
         outboundDictionary = null;
         inboundDictionary = null;
+        sslConnector = null;
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\"$")
@@ -129,16 +137,13 @@ public class HttpServerSteps implements HttpSteps {
         this.serverName = name;
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
             httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(name, HttpServer.class);
-        } else if (httpServer != null) {
-            citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
-            httpServer.setName(serverName);
         }
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\" with configuration$")
     public void setServerWithProperties(String name, DataTable properties) {
-        setServer(name);
         configureServer(properties.asMap(String.class, String.class));
+        setServer(name);
     }
 
     @Given("^(?:create|new) HTTP server \"([^\"\\s]+)\"$")
@@ -153,25 +158,24 @@ public class HttpServerSteps implements HttpSteps {
 
     @Given("^(?:create|new) HTTP server \"([^\"\\s]+)\" with configuration$")
     public void newServerWithProperties(String name, DataTable properties) {
-        newServer(name);
         configureServer(properties.asMap(String.class, String.class));
+        newServer(name);
     }
 
     @Given("^HTTP server listening on port (\\d+)$")
     public void setServerPort(int port) {
         this.serverPort = port;
-        getOrCreateHttpServer().setPort(port);
     }
 
     @Given("^HTTP server secure port (\\d+)$")
     public void setSecureServerPort(int port) {
         this.securePort = port;
-        getOrCreateHttpServer().setConnector(sslConnector());
+        enableSecureConnector();
     }
 
     @Given("^enable secure HTTP server$")
     public void enableSecureConnector() {
-        getOrCreateHttpServer().setConnector(sslConnector());
+        sslConnector = sslConnector();
     }
 
     @Given("^HTTP server SSL keystore path ([^\\s]+)$")
@@ -371,22 +375,28 @@ public class HttpServerSteps implements HttpSteps {
      * @return
      */
     public HttpServer getOrCreateHttpServer() {
-        if (httpServer != null) {
-            if (httpServer.getName().equals(serverName)) {
-                return httpServer;
-            } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
-                httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
-                serverPort = httpServer.getPort();
-                timeout = httpServer.getDefaultTimeout();
-                return httpServer;
-            }
+        if (httpServer != null && httpServer.getName().equals(serverName)) {
+            return httpServer;
+        }
+
+        if (citrus.getCitrusContext().getReferenceResolver().isResolvable(serverName)) {
+            httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(serverName, HttpServer.class);
+            serverName = httpServer.getName();
+            serverPort = httpServer.getPort();
+            timeout = httpServer.getDefaultTimeout();
+            return httpServer;
         }
 
         httpServer = new HttpServerBuilder()
+                .autoStart(true)
                 .timeout(timeout)
                 .port(serverPort)
                 .name(serverName)
                 .build();
+
+        if (sslConnector != null) {
+            httpServer.setConnector(sslConnector);
+        }
 
         citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
         httpServer.initialize();
@@ -399,18 +409,16 @@ public class HttpServerSteps implements HttpSteps {
      * @param settings
      */
     private void configureServer(Map<String, String> settings) {
-        setServerPort(Optional.ofNullable(settings.get("port")).map(Integer::parseInt).orElse(serverPort));
-        configureTimeout(Optional.ofNullable(settings.get("timeout")).map(Long::valueOf).orElse(timeout));
+        setServerPort(Optional.ofNullable(settings.get("port")).map(context::replaceDynamicContentInString).map(Integer::parseInt).orElse(serverPort));
+        configureTimeout(Optional.ofNullable(settings.get("timeout")).map(context::replaceDynamicContentInString).map(Long::valueOf).orElse(timeout));
 
         setSslKeyStorePath(settings.getOrDefault("sslKeyStorePath", sslKeyStorePath));
         setSslKeyStorePassword(settings.getOrDefault("sslKeyStorePassword", sslKeyStorePassword));
 
-        if (Boolean.parseBoolean(settings.getOrDefault("secure", "false"))) {
-            enableSecureConnector();
-        }
-
         if (settings.containsKey("securePort")) {
-            setSecureServerPort(Integer.parseInt(settings.get("securePort")));
+            setSecureServerPort(Integer.parseInt(context.replaceDynamicContentInString(settings.get("securePort"))));
+        } else if (Boolean.parseBoolean(context.replaceDynamicContentInString(settings.getOrDefault("secure", "false")))) {
+            enableSecureConnector();
         }
     }
 
@@ -465,7 +473,7 @@ public class HttpServerSteps implements HttpSteps {
         try {
             SslContextFactory.Server contextFactory = new SslContextFactory.Server();
             contextFactory.setKeyStorePath(getKeyStorePathPath());
-            contextFactory.setKeyStorePassword(sslKeyStorePassword);
+            contextFactory.setKeyStorePassword(context.replaceDynamicContentInString(sslKeyStorePassword));
             return contextFactory;
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read keystore file in path: " + sslKeyStorePath);
@@ -481,7 +489,7 @@ public class HttpServerSteps implements HttpSteps {
                 return tmpKeyStore.getPath();
             }
         } else {
-            return FileUtils.getFileResource(sslKeyStorePath).getURL().getFile();
+            return FileUtils.getFileResource(context.replaceDynamicContentInString(sslKeyStorePath)).getURL().getFile();
         }
     }
 

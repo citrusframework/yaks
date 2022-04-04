@@ -2,6 +2,7 @@ Feature: OpenAPI server
 
   Background:
     Given OpenAPI specification: org/citrusframework/yaks/openapi/petstore-v3.json
+    Given OpenAPI service port 8088
     Given URL: http://localhost:8088/petstore/v3
     Given HTTP request fork mode is enabled
     Given OpenAPI outbound dictionary
@@ -11,6 +12,7 @@ Feature: OpenAPI server
       | $.status        | available |
       | $.photoUrls[0]  | http://localhost:8080/photos/${petId} |
       | $.tags[0].name  | generated |
+    Given create OpenAPI service
 
   Scenario: getPet
     Given variable petId is "1000"

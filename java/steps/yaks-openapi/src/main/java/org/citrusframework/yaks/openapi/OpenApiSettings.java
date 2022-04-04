@@ -37,6 +37,14 @@ public class OpenApiSettings {
     private static final String VALIDATE_OPTIONAL_FIELDS_ENV = OPENAPI_ENV_PREFIX + "VALIDATE_OPTIONAL_FIELDS";
     private static final String VALIDATE_OPTIONAL_FIELDS_DEFAULT = "true";
 
+    private static final String SERVICE_NAME_PROPERTY = OPENAPI_PROPERTY_PREFIX + "service.name";
+    private static final String SERVICE_NAME_ENV = OPENAPI_ENV_PREFIX + "SERVICE_NAME";
+    private static final String SERVICE_NAME_DEFAULT = "yaks-openapi-service";
+
+    private static final String SERVICE_PORT_PROPERTY = OPENAPI_PROPERTY_PREFIX + "service.port";
+    private static final String SERVICE_PORT_ENV = OPENAPI_ENV_PREFIX + "SERVICE_PORT";
+    private static final String SERVICE_PORT_DEFAULT = "8080";
+
     private OpenApiSettings() {
         // prevent instantiation of utility class
     }
@@ -48,6 +56,24 @@ public class OpenApiSettings {
     public static long getTimeout() {
         return Long.parseLong(System.getProperty(TIMEOUT_PROPERTY,
                 System.getenv(TIMEOUT_ENV) != null ? System.getenv(TIMEOUT_ENV) : TIMEOUT_DEFAULT));
+    }
+
+    /**
+     * Service name to use when creating a new service for OpenAPI Http server.
+     * @return
+     */
+    public static String getServiceName() {
+        return System.getProperty(SERVICE_NAME_PROPERTY,
+                System.getenv(SERVICE_NAME_ENV) != null ? System.getenv(SERVICE_NAME_ENV) : SERVICE_NAME_DEFAULT);
+    }
+
+    /**
+     * Service port used when providing OpenAPI operations via Http.
+     * @return
+     */
+    public static String getServicePort() {
+        return System.getProperty(SERVICE_PORT_PROPERTY,
+                System.getenv(SERVICE_PORT_ENV) != null ? System.getenv(SERVICE_PORT_ENV) : SERVICE_PORT_DEFAULT);
     }
 
     /**

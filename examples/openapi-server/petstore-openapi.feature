@@ -11,7 +11,7 @@ Feature: OpenAPI server
       | $.status        | available |
       | $.photoUrls[0]  | http://localhost:8080/photos/${petId} |
       | $.tags[0].name  | generated |
-    Given start HTTP server
+    Given create OpenAPI service
 
   Scenario: getPet
     Given variable petId is "1000"
