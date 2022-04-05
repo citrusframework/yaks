@@ -61,6 +61,28 @@
     <url>http://github.com/citrusframework/yaks</url>
   </scm>
 
+  <ciManagement>
+    <system>GitHub actions</system>
+    <url>https://github.com/citrusframework/yaks/actions</url>
+    <notifiers>
+      <notifier>
+        <type>mail</type>
+        <address>yaks-dev@googlegroups.com</address>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>Project Development List</name>
+      <post>yaks-dev@googlegroups.com</post>
+    </mailingList>
+    <mailingList>
+      <name>Project User List</name>
+      <post>yaks-users@googlegroups.com</post>
+    </mailingList>
+  </mailingLists>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
