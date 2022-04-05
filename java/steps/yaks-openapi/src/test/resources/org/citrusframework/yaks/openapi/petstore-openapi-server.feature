@@ -69,3 +69,33 @@ Feature: OpenAPI server
     And send operation response: 201
     Then receive HTTP 201 CREATED
     Then Enable OpenAPI validate optional fields
+
+  Scenario: addPet with YAML spec
+    Given OpenAPI specification: org/citrusframework/yaks/openapi/petstore-v3.yaml
+    Given HTTP request body
+    """
+    {
+      "id": 1,
+      "name": "fluffy",
+      "category": {
+        "id": "1",
+        "name":"cat"
+      },
+      "status": "available",
+      "photoUrls":[
+        "http://localhost:8080/photos/1"
+      ],
+      "tags":[
+        {
+          "id": "1",
+          "name":"generated"
+        }
+      ]
+    }
+    """
+    Given HTTP request header Content-Type="application/json"
+    When send POST /pet
+    Then verify operation: addPet
+    And send operation response: 201
+    Then receive HTTP 201 CREATED
+    Then Enable OpenAPI validate optional fields
