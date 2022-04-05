@@ -22,9 +22,15 @@ Feature: Http server
 
   Scenario: Http POST
     Given variable id is "citrus:randomNumber(5)"
+    Given HTTP request body
+    """
+      {"id": ${id}, "message": "Hello!"}
+    """
     When send POST /message/${id}
+    Then expect HTTP request body
+    """
+      {"id": ${id}, "message": "Hello!"}
+    """
     Then receive POST /message/${id}
-    And HTTP response body: {"id": ${id}, "message": "Hello!"}
     And send HTTP 201 CREATED
-    Then expect HTTP response body: {"id": ${id}, "message": "Hello!"}
     And receive HTTP 201 CREATED

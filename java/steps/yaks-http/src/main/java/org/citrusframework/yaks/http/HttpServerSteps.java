@@ -356,8 +356,10 @@ public class HttpServerSteps implements HttpSteps {
             requestBuilder = receiveBuilder.post().message(request);
         }
 
-        requestBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
-        bodyValidationExpressions.clear();
+        if (!bodyValidationExpressions.isEmpty()) {
+            requestBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
+            bodyValidationExpressions.clear();
+        }
 
         requestBuilder
                 .timeout(timeout)
