@@ -156,6 +156,8 @@ public class OpenApiServerSteps {
         }
 
         String randomizedPath = OasModelHelper.getBasePath(OpenApiSteps.openApiDoc) + path;
+        randomizedPath = randomizedPath.replaceAll("//", "/");
+
         if (operation.parameters != null) {
             List<OasParameter> pathParams = operation.parameters.stream()
                     .filter(p -> "path".equals(p.in))
