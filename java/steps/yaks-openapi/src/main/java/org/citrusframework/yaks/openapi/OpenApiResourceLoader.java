@@ -28,6 +28,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 
 import com.consol.citrus.util.FileUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.apicurio.datamodels.Library;
 import io.apicurio.datamodels.openapi.models.OasDocument;
 import org.apache.http.HttpHeaders;
@@ -36,12 +38,17 @@ import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Loads Open API specifications from different locations like file resource or web resource.
  * @author Christoph Deppisch
  */
 public final class OpenApiResourceLoader {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Yaml YAML_PARSER = new Yaml(new SafeConstructor());
 
     /**
      * Prevent instantiation of utility class.
@@ -57,7 +64,7 @@ public final class OpenApiResourceLoader {
      */
     public static OasDocument fromFile(String resource) {
         try {
-            return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(FileUtils.getFileResource(resource)));
+            return resolve(FileUtils.readToString(FileUtils.getFileResource(resource)));
         } catch (IOException e) {
             throw new IllegalStateException("Failed to parse Open API specification: " + resource, e);
         }
@@ -80,7 +87,7 @@ public final class OpenApiResourceLoader {
                 throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(),
                         new IOException(FileUtils.readToString(con.getErrorStream())));
             } else {
-                return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(con.getInputStream()));
+                return resolve(FileUtils.readToString(con.getInputStream()));
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(), e);
@@ -118,7 +125,7 @@ public final class OpenApiResourceLoader {
                 throw new IllegalStateException("Failed to retrieve Open API specification: " + url.toString(),
                         new IOException(FileUtils.readToString(con.getErrorStream())));
             } else {
-                return (OasDocument) Library.readDocumentFromJSONString(FileUtils.readToString(con.getInputStream()));
+                return resolve(FileUtils.readToString(con.getInputStream()));
             }
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new IllegalStateException("Failed to create https client for ssl connection", e);
@@ -129,5 +136,18 @@ public final class OpenApiResourceLoader {
                 con.disconnect();
             }
         }
+    }
+
+    private static OasDocument resolve(String specification) {
+        if (isJsonSpec(specification)) {
+            return (OasDocument) Library.readDocumentFromJSONString(specification);
+        }
+
+        final JsonNode node = OBJECT_MAPPER.convertValue(YAML_PARSER.load(specification), JsonNode.class);
+        return (OasDocument) Library.readDocument(node);
+    }
+
+    private static boolean isJsonSpec(final String specification) {
+        return specification.trim().startsWith("{");
     }
 }
