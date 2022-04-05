@@ -8,7 +8,7 @@ info:
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 servers:
   -
-    url: 'https://localhost/petstore/v3'
+    url: 'https://localhost/petstore/v3/'
 paths:
   /pet:
     put:
