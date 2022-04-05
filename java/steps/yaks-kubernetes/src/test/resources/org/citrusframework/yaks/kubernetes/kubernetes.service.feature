@@ -25,6 +25,6 @@ Feature: Kubernetes service
 
   Scenario: Create service with variables
     Given variable port="80"
-    Given variable targetPort="citrus:randomNumber(5)"
+    Given variable targetPort="citrus:concat(1, citrus:randomNumber(4))"
     Given create Kubernetes service http-service-4 with port mapping ${port}:${targetPort}
     Then verify Kubernetes service http-service-4 exists
