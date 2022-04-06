@@ -203,7 +203,7 @@ yaks role –-add role-binding-foo.yaml
 ----
 
 The commands above create the role and role bindings on the `yaks-operator` service account.
-The command automatically coveres all available operator instances on the cluster.
+The command automatically covers all available operator instances on the cluster.
 Also, the command will automatically convert the role to a cluster role when there is a global operator on the cluster.
 
 IMPORTANT: This role setup must be done by a cluster administrator.
