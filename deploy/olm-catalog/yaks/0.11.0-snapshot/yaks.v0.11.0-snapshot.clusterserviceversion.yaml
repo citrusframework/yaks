@@ -354,7 +354,7 @@ spec:
   - yaks
   - testing
   - knative
-  - kafka
+  - camel-k
   - camel
   labels:
     name: yaks-operator
@@ -372,7 +372,7 @@ spec:
   minKubeVersion: 1.11.0
   provider:
     name: Citrus Framework
-  replaces: yaks-operator.v0.9.0
+  replaces: yaks-operator.v0.10.0
   selector:
     matchLabels:
       name: yaks-operator
