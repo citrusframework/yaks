@@ -29,7 +29,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "integrationKit", "kit", "lastInitTimestamp", "platform", "generatedSources", "generatedResources",
-        "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities"})
+        "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities", "observedGeneration"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
@@ -75,6 +75,8 @@ public class IntegrationStatus implements KubernetesResource {
     private String selector;
     @JsonProperty("capabilities")
     private List<String> capabilities;
+    @JsonProperty("observedGeneration")
+    private Integer observedGeneration;
 
     public String getPhase() {
         return phase;
@@ -236,6 +238,14 @@ public class IntegrationStatus implements KubernetesResource {
 
     public void setCapabilities(List<String> capabilities) {
         this.capabilities = capabilities;
+    }
+
+    public Integer getObservedGeneration() {
+        return observedGeneration;
+    }
+
+    public void setObservedGeneration(Integer observedGeneration) {
+        this.observedGeneration = observedGeneration;
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

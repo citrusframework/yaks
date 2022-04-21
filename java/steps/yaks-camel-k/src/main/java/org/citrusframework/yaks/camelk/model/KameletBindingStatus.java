@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"phase", "conditions"})
+@JsonPropertyOrder({"phase", "conditions", "observedGeneration"})
 @JsonDeserialize(
         using = JsonDeserializer.None.class
 )
@@ -38,6 +38,8 @@ public class KameletBindingStatus implements KubernetesResource {
     private String phase;
     @JsonProperty("conditions")
     private List<Condition> conditions;
+    @JsonProperty("observedGeneration")
+    private Integer observedGeneration;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "status", "lastUpdateTime", "lastTransitionTime", "reason", "message"})
@@ -114,5 +116,29 @@ public class KameletBindingStatus implements KubernetesResource {
         public void setMessage(String message) {
             this.message = message;
         }
+    }
+
+    public String getPhase() {
+        return phase;
+    }
+
+    public void setPhase(String phase) {
+        this.phase = phase;
+    }
+
+    public List<Condition> getConditions() {
+        return conditions;
+    }
+
+    public void setConditions(List<Condition> conditions) {
+        this.conditions = conditions;
+    }
+
+    public Integer getObservedGeneration() {
+        return observedGeneration;
+    }
+
+    public void setObservedGeneration(Integer observedGeneration) {
+        this.observedGeneration = observedGeneration;
     }
 }
