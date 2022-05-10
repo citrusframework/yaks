@@ -134,7 +134,7 @@ public class JdbcSteps {
     public void verifyColumn(String name, String value) {
         if (maxRetryAttempts > 0) {
             runner.run(repeatOnError()
-                    .until((index, context) -> index <= maxRetryAttempts)
+                    .until((index, context) -> index >= maxRetryAttempts)
                     .autoSleep(delayBetweenAttempts)
                     .actions(query(dataSource)
                               .statements(sqlQueryStatements)
@@ -162,7 +162,7 @@ public class JdbcSteps {
 
         if (maxRetryAttempts > 0) {
             runner.run(repeatOnError()
-                    .until((index, context) -> index <= maxRetryAttempts)
+                    .until((index, context) -> index >= maxRetryAttempts)
                     .autoSleep(delayBetweenAttempts)
                     .actions(action));
         } else {
@@ -176,7 +176,7 @@ public class JdbcSteps {
     public void verifyResultSet(String verifyScript) {
         if (maxRetryAttempts > 0) {
             runner.run(repeatOnError()
-                    .until((index, context) -> index <= maxRetryAttempts)
+                    .until((index, context) -> index >= maxRetryAttempts)
                     .autoSleep(delayBetweenAttempts)
                     .actions(query(dataSource)
                               .statements(sqlQueryStatements)
