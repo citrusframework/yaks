@@ -23,7 +23,6 @@ import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.GroovyRuntimeException;
 import groovy.lang.MissingMethodException;
-import org.citrusframework.yaks.groovy.dsl.EndpointsConfiguration;
 
 /**
  * @author Christoph Deppisch
@@ -46,7 +45,7 @@ public class BeansConfiguration extends GroovyObjectSupport {
 
     public Object methodMissing(String name, Object argLine) {
         if (argLine == null) {
-            throw new MissingMethodException(name, EndpointsConfiguration.class, null);
+            throw new MissingMethodException(name, BeansConfiguration.class, null);
         }
 
         Object[] args = (Object[]) argLine;
@@ -77,6 +76,6 @@ public class BeansConfiguration extends GroovyObjectSupport {
             }
         }
 
-        throw new MissingMethodException(name, EndpointsConfiguration.class, args);
+        throw new MissingMethodException(name, BeansConfiguration.class, args);
     }
 }

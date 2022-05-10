@@ -25,7 +25,6 @@ import com.consol.citrus.endpoint.EndpointBuilder;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
-import org.citrusframework.yaks.groovy.dsl.EndpointsConfiguration;
 
 /**
  * @author Christoph Deppisch
@@ -48,7 +47,7 @@ public class EndpointConfiguration extends GroovyObjectSupport implements Suppli
 
     public Object methodMissing(String name, Object argLine) {
         if (argLine == null) {
-            throw new MissingMethodException(name, EndpointsConfiguration.class, null);
+            throw new MissingMethodException(name, EndpointConfiguration.class, null);
         }
 
         Object[] args = (Object[]) argLine;
@@ -69,7 +68,7 @@ public class EndpointConfiguration extends GroovyObjectSupport implements Suppli
             return null;
         }
 
-        throw new MissingMethodException(name, EndpointsConfiguration.class, args);
+        throw new MissingMethodException(name, EndpointConfiguration.class, args);
     }
 
     @Override

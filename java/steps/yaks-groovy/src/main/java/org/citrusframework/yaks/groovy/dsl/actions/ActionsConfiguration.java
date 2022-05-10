@@ -30,7 +30,6 @@ import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;
-import org.citrusframework.yaks.groovy.dsl.EndpointsConfiguration;
 
 /**
  * @author Christoph Deppisch
@@ -132,13 +131,13 @@ public class ActionsConfiguration {
 
         public Object methodMissing(String name, Object argLine) {
             if (argLine == null) {
-                throw new MissingMethodException(name, EndpointsConfiguration.class, null);
+                throw new MissingMethodException(name, ActionsConfiguration.class, null);
             }
 
             Object[] args = (Object[]) argLine;
             TestActionBuilder<?> actionBuilder = findTestActionBuilder(name, args);
             if (actionBuilder == null) {
-                throw new MissingMethodException(name, EndpointsConfiguration.class, args);
+                throw new MissingMethodException(name, ActionsConfiguration.class, args);
             }
 
             return actionBuilder;
