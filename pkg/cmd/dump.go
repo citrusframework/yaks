@@ -21,10 +21,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"io"
 	"os"
 
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/client/yaks/clientset/versioned"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
@@ -34,6 +34,7 @@ import (
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -268,8 +269,8 @@ func dumpOperator(yaksClient *versioned.Clientset, ctx context.Context, c client
 
 	if len(instances.Items) == 0 {
 		// looking for global operator instance
-		instance, err := findGlobalInstance(ctx, c)
-		if err != nil {
+		instance, err := v1alpha1.FindGlobalInstance(ctx, c)
+		if err != nil && !errors.IsForbidden(err) {
 			return err
 		}
 
