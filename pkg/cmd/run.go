@@ -196,8 +196,7 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	if hasErrors(results) {
+	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError) {
 		return
 	}
 
@@ -253,8 +252,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
 	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	if hasErrors(results) {
+	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError) {
 		return
 	}
 
@@ -345,12 +343,15 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clien
 	runConfig.Config.Namespace.Name = namespaceName
 
 	// looking for existing operator instance in current namespace
-	instance, err := findInstance(o.Context, c, o.Namespace)
+	instance, err := v1alpha1.GetOrFindInstance(o.Context, c, o.Namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
 		// looking for global operator instance
-		instance, err = findGlobalInstance(o.Context, c)
+		instance, err = v1alpha1.FindGlobalInstance(o.Context, c)
 
-		if err != nil {
+		if err != nil && k8serrors.IsForbidden(err) {
+			// not allowed to list all instances on the clusterr
+			return namespace, nil
+		} else if err != nil {
 			return namespace, err
 		}
 	}
@@ -752,51 +753,7 @@ func (o *runCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.Sett
 	return nil, nil
 }
 
-func findInstance(ctx context.Context, c client.Client, namespace string) (*v1alpha1.Instance, error) {
-	yaks := v1alpha1.Instance{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       v1alpha1.InstanceKind,
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-	}
-	key := ctrl.ObjectKey{
-		Namespace: namespace,
-		Name:      "yaks",
-	}
-
-	err := c.Get(ctx, key, &yaks)
-	return &yaks, err
-}
-
-func findGlobalInstance(ctx context.Context, c client.Client) (*v1alpha1.Instance, error) {
-	// looking for operator instances in other namespaces
-	instanceList, err := listInstances(ctx, c)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, instance := range instanceList.Items {
-		if instance.Spec.Operator.Global {
-			return &instance, nil
-		}
-	}
-
-	return nil, nil
-}
-
-func listInstances(ctx context.Context, c client.Client) (v1alpha1.InstanceList, error) {
-	instanceList := v1alpha1.InstanceList{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       v1alpha1.InstanceKind,
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-	}
-
-	err := c.List(ctx, &instanceList)
-	return instanceList, err
-}
-
-func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1alpha1.TestResults, handleError func(err error)) {
+func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1alpha1.TestResults, handleError func(err error)) bool {
 	for idx, step := range steps {
 		if len(step.Name) == 0 {
 			step.Name = fmt.Sprintf("step-%d", idx)
@@ -814,7 +771,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 			}
 			if err := runScript(step.Script, desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
 				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
-				return
+				return false
 			}
 		}
 
@@ -823,31 +780,31 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 			file, err := ioutil.TempFile("", "yaks-script-*.sh")
 			if err != nil {
 				handleError(err)
-				return
+				return false
 			}
 			defer os.Remove(file.Name())
 
 			_, err = file.WriteString("#!/bin/bash\n\nset -e\n\n")
 			if err != nil {
 				handleError(err)
-				return
+				return false
 			}
 
 			_, err = file.WriteString(step.Run)
 			if err != nil {
 				handleError(err)
-				return
+				return false
 			}
 
 			if err = file.Close(); err != nil {
 				handleError(err)
-				return
+				return false
 			}
 
 			// Make it executable
 			if err = os.Chmod(file.Name(), 0777); err != nil {
 				handleError(err)
-				return
+				return false
 			}
 
 			desc := step.Name
@@ -856,10 +813,12 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 			}
 			if err := runScript(file.Name(), desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
 				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
-				return
+				return false
 			}
 		}
 	}
+
+	return true
 }
 
 func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
