@@ -30,4 +30,7 @@ const (
 
 	// ImageName --
 	ImageName = "docker.io/citrusframework/yaks"
+
+	// InstanceName --
+	InstanceName = "yaks"
 )

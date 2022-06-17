@@ -20,6 +20,7 @@ package olm
 import (
 	"context"
 	"fmt"
+	"k8s.io/kubectl/pkg/cmd/set/env"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/client"
@@ -134,7 +135,7 @@ func HasPermissionToInstall(ctx context.Context, client client.Client, namespace
 }
 
 // Install creates a subscription for the OLM package
-func Install(ctx context.Context, client client.Client, namespace string, global bool, options Options, collection *kubernetes.Collection) (bool, error) {
+func Install(ctx context.Context, client client.Client, namespace string, global bool, options Options, envVars []string, collection *kubernetes.Collection) (bool, error) {
 	options = fillDefaults(options)
 	if installed, err := IsOperatorInstalled(ctx, client, namespace, global, options); err != nil {
 		return false, err
@@ -161,6 +162,12 @@ func Install(ctx context.Context, client client.Client, namespace string, global
 			StartingCSV:            options.StartingCSV,
 			InstallPlanApproval:    operatorsv1alpha1.ApprovalAutomatic,
 		},
+	}
+
+	//additional configuration
+	err := maybeSetEnvVars(&sub, envVars)
+	if err != nil {
+		return false, errors.Wrap(err, "could not set environment variables")
 	}
 
 	if collection != nil {
@@ -194,6 +201,17 @@ func Install(ctx context.Context, client client.Client, namespace string, global
 		}
 	}
 	return true, nil
+}
+
+func maybeSetEnvVars(sub *operatorsv1alpha1.Subscription, envVars []string) error {
+	if envVars != nil {
+		vars, _, _, err := env.ParseEnv(envVars, nil)
+		if err != nil {
+			return err
+		}
+		sub.Spec.Config.Env = vars
+	}
+	return nil
 }
 
 // Uninstall removes CSV and subscription from the namespace

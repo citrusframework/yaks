@@ -19,6 +19,7 @@ package v1alpha1
 
 import (
 	"context"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,7 +75,7 @@ func GetOrFindInstance(ctx context.Context, client ctrl.Client, namespace string
 
 // GetInstance return the YAKS operator instance in given namespace.
 func GetInstance(ctx context.Context, client ctrl.Client, namespace string) (*Instance, error) {
-	instance := NewInstance(namespace, "yaks")
+	instance := NewInstance(namespace, defaults.InstanceName)
 	if err := client.Get(ctx, ctrl.ObjectKeyFromObject(&instance), &instance); err != nil {
 		return nil, err
 	}

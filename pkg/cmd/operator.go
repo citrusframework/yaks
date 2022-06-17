@@ -19,19 +19,43 @@ package cmd
 
 import (
 	"github.com/citrusframework/yaks/pkg/cmd/operator"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 	"github.com/spf13/cobra"
 )
 
-func newCmdOperator() *cobra.Command {
+func newCmdOperator() (*cobra.Command, *operatorCmdOptions) {
+	options := operatorCmdOptions{}
+
 	cmd := cobra.Command{
-		Use:   "operator",
-		Short: "Run the YAKS operator",
-		Long:  `Run the YAKS operator locally.`,
-		Hidden: true,
-		Run: func(cmd *cobra.Command, args []string) {
-			operator.Run()
-		},
+		Use:     "operator",
+		Short:   "Run the YAKS operator",
+		Long:    `Run the YAKS operator locally.`,
+		Hidden:  true,
+		PreRunE: decode(&options),
+		Run:     options.run,
 	}
 
-	return &cmd
+	cmd.Flags().Bool("leader-election", true, "Use leader election")
+	cmd.Flags().String("leader-election-id", "", "Use the given ID as the leader election Lease name")
+
+	return &cmd, &options
+}
+
+type operatorCmdOptions struct {
+	LeaderElection   bool   `mapstructure:"leader-election"`
+	LeaderElectionID string `mapstructure:"leader-election-id"`
+}
+
+func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
+
+	leaderElectionID := o.LeaderElectionID
+	if leaderElectionID == "" {
+		if defaults.OperatorID() != "" {
+			leaderElectionID = defaults.GetOperatorLockName(defaults.OperatorID())
+		} else {
+			leaderElectionID = operator.OperatorLockName
+		}
+	}
+
+	operator.Run(o.LeaderElection, leaderElectionID)
 }

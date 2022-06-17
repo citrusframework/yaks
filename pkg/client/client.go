@@ -100,18 +100,22 @@ func GetOutOfClusterConfig(kubeconfig string) (*rest.Config, error) {
 	return config.GetConfig()
 }
 
-// NewClient creates a new k8s client that can be used from outside or in the cluster
+// NewClient creates a new k8s client that can be used from outside or in the cluster.
 func NewClient(fastDiscovery bool) (Client, error) {
-	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return nil, err
 	}
+	return NewClientWithConfig(fastDiscovery, cfg)
+}
 
+// NewClientWithConfig creates a new k8s client that can be used from outside or in the cluster.
+func NewClientWithConfig(fastDiscovery bool, cfg *rest.Config) (Client, error) {
 	scheme := clientscheme.Scheme
 
 	// Setup Scheme for all resources
-	if err := apis.AddToScheme(scheme); err != nil {
+	err := apis.AddToScheme(scheme)
+	if err != nil {
 		return nil, err
 	}
 
@@ -156,23 +160,6 @@ func FromManager(manager manager.Manager) (Client, error) {
 		scheme:    manager.GetScheme(),
 		config:    manager.GetConfig(),
 	}, nil
-}
-
-func GetValidKubeConfig(kubeconfig string) string {
-	if kubeconfig == "" {
-		// skip out-of-cluster initialization if inside the container
-		if kc, err := shouldUseContainerMode(); kc && err == nil {
-			return ""
-		} else if err != nil {
-			logrus.Errorf("could not determine if running in a container: %v", err)
-		}
-		var err error
-		kubeconfig, err = getDefaultKubeConfigFile()
-		if err != nil {
-			panic(err)
-		}
-	}
-	return kubeconfig
 }
 
 // init initialize the k8s client for usage outside the cluster
