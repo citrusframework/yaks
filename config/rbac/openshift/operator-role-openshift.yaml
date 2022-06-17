@@ -18,9 +18,11 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: yaks-operator-olm
+  name: yaks-operator-openshift
   labels:
     app: "yaks"
+  annotations:
+    can-promote: "true"
 rules:
 - apiGroups:
   - yaks.citrusframework.org
@@ -115,36 +117,6 @@ rules:
   - deployments
   - replicasets
   - statefulsets
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  attributeRestrictions: null
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterroles
-  verbs:
-  - bind
-  resourceNames:
-  - system:image-builder
-- apiGroups:
-  - monitoring.coreos.com
-  resources:
-  - servicemonitors
   verbs:
   - create
   - delete

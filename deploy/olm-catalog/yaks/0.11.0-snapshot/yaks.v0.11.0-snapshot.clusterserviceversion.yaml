@@ -20,39 +20,63 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     alm-examples: |-
-      [{
-        "apiVersion": "yaks.citrusframework.org/v1alpha1",
-        "kind": "Test",
-        "metadata": {
-          "name": "example"
+      [
+        {
+          "apiVersion": "yaks.citrusframework.org/v1alpha1",
+          "kind": "Instance",
+          "metadata": {
+            "labels": {
+              "app": "yaks"
+            },
+            "name": "example-instance"
+          },
+          "spec": {
+            "operator": {
+              "global": true
+            }
+          }
         },
-        "spec": {
-          "source": {
-            "name":"example.feature",
-            "content": "Feature: hello world\n  Scenario: print slogan\n    Given YAKS does Cloud-Native BDD testing\n    Then YAKS rocks!\n"
+        {
+          "apiVersion": "yaks.citrusframework.org/v1alpha1",
+          "kind": "Test",
+          "metadata": {
+            "labels": {
+              "app": "yaks"
+            },
+            "name": "example-test"
+          },
+          "spec": {
+            "source": {
+              "content": "Feature: hello world\n\n  Scenario: print slogan\n    Given YAKS does Cloud-Native BDD testing\n    Then YAKS rocks!",
+              "language": "feature",
+              "name": "example.feature"
+            }
           }
         }
-      }]
+      ]
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
     containerImage: docker.io/citrusframework/yaks:0.11.0-SNAPSHOT
-    createdAt: "2020-09-25T02:45:00Z"
+    createdAt: "2022-06-17T19:23:29Z"
     description: YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
+    operators.operatorframework.io/builder: operator-sdk-v1.22.0
+    operators.operatorframework.io/internal-objects: '["instances.yaks.citrusframework.org"]'
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/citrusframework/yaks
     support: Citrus Framework
-  name: yaks-operator.v0.11.0-SNAPSHOT
+  name: yaks-operator.v0.11.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: A YAKS instance
+    - description: Instance is the Schema for the yaks instance
       displayName: Instance
       kind: Instance
       name: instances.yaks.citrusframework.org
       version: v1alpha1
-    - description: A YAKS test
+    - description: Test is the Schema for the tests API
       displayName: Test
       kind: Test
       name: tests.yaks.citrusframework.org
@@ -111,19 +135,17 @@ spec:
           - patch
           - update
           - watch
-        - apiGroups:
-          - camel.apache.org
-          resources:
-          - '*'
-          verbs:
-          - '*'
         serviceAccountName: yaks-operator
       deployments:
-      - name: yaks-operator
+      - label:
+          app: yaks
+          yaks.citrusframework.org/component: operator
+        name: yaks-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
+              app: yaks
               name: yaks-operator
           strategy:
             type: Recreate
@@ -131,8 +153,8 @@ spec:
             metadata:
               labels:
                 app: yaks
-                yaks.citrusframework.org/component: operator
                 name: yaks-operator
+                yaks.citrusframework.org/component: operator
             spec:
               containers:
               - command:
@@ -163,13 +185,35 @@ spec:
         - apiGroups:
           - yaks.citrusframework.org
           resources:
-          - "*"
+          - '*'
           verbs:
-          - "*"
+          - '*'
+        - apiGroups:
+          - batch
+          resources:
+          - jobs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - batch
+          resources:
+          - jobs/status
+          verbs:
+          - get
+          - list
+          - watch
         - apiGroups:
           - ""
           resources:
           - pods
+          - pods/exec
           - services
           - endpoints
           - persistentvolumeclaims
@@ -190,27 +234,6 @@ spec:
           resources:
           - pods/log
           - pods/status
-          verbs:
-          - get
-          - list
-          - watch
-        - apiGroups:
-          - "batch"
-          resources:
-          - jobs
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - "batch"
-          resources:
-          - jobs/status
           verbs:
           - get
           - list
@@ -264,7 +287,6 @@ spec:
           - watch
         - apiGroups:
           - apps
-          attributeRestrictions: null
           resources:
           - daemonsets
           verbs:
@@ -285,9 +307,24 @@ spec:
           - update
           - watch
         - apiGroups:
-          - monitoring.coreos.com
+          - coordination.k8s.io
           resources:
-          - servicemonitors
+          - leases
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - camel.apache.org
+          resources:
+          - integrations
+          - kamelets
+          - kameletbindings
           verbs:
           - create
           - delete
@@ -329,7 +366,161 @@ spec:
         - apiGroups:
           - sources.knative.dev
           resources:
-          - "*"
+          - '*'
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - yaks.citrusframework.org
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        - apiGroups:
+          - batch
+          resources:
+          - jobs
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - batch
+          resources:
+          - jobs/status
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - endpoints
+          - persistentvolumeclaims
+          - configmaps
+          - secrets
+          - serviceaccounts
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods/log
+          - pods/status
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - roles
+          - rolebindings
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - clusterroles
+          - clusterrolebindings
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - replicasets
+          - statefulsets
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - kafka.strimzi.io
+          resources:
+          - kafkatopics
           verbs:
           - create
           - delete
@@ -353,27 +544,28 @@ spec:
   keywords:
   - yaks
   - testing
+  - microservices
   - knative
-  - camel-k
   - camel
+  - camel-k
   labels:
     name: yaks-operator
   links:
-    - name: Project page
-      url: https://citrusframework.org/
-    - name: YAKS source code repository
-      url: https://github.com/citrusframework/yaks
+  - name: Project page
+    url: https://citrusframework.org/
+  - name: YAKS source code repository
+    url: https://github.com/citrusframework/yaks
   maintainers:
-    - email: cdeppisch@redhat.com
-      name: Christoph Deppisch
-    - email: nferraro@redhat.com
-      name: Nicola Ferraro
+  - email: cdeppisch@redhat.com
+    name: Christoph Deppisch
+  - email: nferraro@redhat.com
+    name: Nicola Ferraro
   maturity: alpha
-  minKubeVersion: 1.11.0
+  minKubeVersion: 1.16.0
   provider:
     name: Citrus Framework
   replaces: yaks-operator.v0.10.0
   selector:
     matchLabels:
       name: yaks-operator
-  version: 0.11.0-SNAPSHOT
+  version: 0.11.0

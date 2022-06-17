@@ -77,8 +77,8 @@ func ViewerServiceAccountRoles(ctx context.Context, c client.Client, namespace s
 func InstallViewerServiceAccountRolesOpenShift(ctx context.Context, c client.Client, namespace string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, true, IdentityResourceCustomizer,
 		"/infrastructure/deploy/viewer-service-account.yaml",
-		"/infrastructure/rbac/viewer-role-openshift.yaml",
-		"/infrastructure/rbac/viewer-role-binding-openshift.yaml",
+		"/infrastructure/rbac/openshift/viewer-role-openshift.yaml",
+		"/infrastructure/rbac/openshift/viewer-role-binding-openshift.yaml",
 	)
 }
 

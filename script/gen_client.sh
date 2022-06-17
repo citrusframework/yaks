@@ -54,3 +54,7 @@ rm -rf ./informers
 rm -rf ./listers
 cp -R ./github.com/citrusframework/yaks/pkg/client/yaks/* .
 rm -rf ./github.com
+
+# hack to fix test custom resource generated fake. otherwise generated fake file is handled as test scoped file
+mv $rootdir/pkg/client/yaks/clientset/versioned/typed/yaks/v1alpha1/fake/fake_test.go \
+   $rootdir/pkg/client/yaks/clientset/versioned/typed/yaks/v1alpha1/fake/fake_tests.go

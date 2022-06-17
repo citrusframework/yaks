@@ -15,10 +15,10 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-#
-# * patches/integration-platform-patch.yaml
-# customizes the integration platform custom resource
-# Edit the patch manually to add required configuration
-resources:
-- bases/yaks_v1alpha1_test.yaml
-- bases/yaks_v1alpha1_instance.yaml
+apiVersion: yaks.citrusframework.org/v1alpha1
+kind: Instance
+metadata:
+  name: example-instance
+spec:
+  operator:
+    global: true

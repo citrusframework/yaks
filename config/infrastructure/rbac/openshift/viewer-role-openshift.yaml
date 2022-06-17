@@ -18,11 +18,9 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: yaks-operator
+  name: yaks-viewer-openshift
   labels:
     app: "yaks"
-  annotations:
-    can-promote: "true"
 rules:
 - apiGroups:
   - yaks.citrusframework.org
@@ -31,36 +29,13 @@ rules:
   verbs:
   - "*"
 - apiGroups:
-  - "batch"
-  resources:
-  - jobs
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - "batch"
-  resources:
-  - jobs/status
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - ""
   resources:
   - pods
   - services
-  - endpoints
-  - persistentvolumeclaims
-  - configmaps
   - secrets
-  - serviceaccounts
+  - endpoints
+  - configmaps
   verbs:
   - create
   - delete
@@ -80,38 +55,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  - rolebindings
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - clusterroles
-  - clusterrolebindings
-  verbs:
-  - get
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - create
-  - patch
-  - get
-  - list
-  - watch
-- apiGroups:
   - apps
   resources:
   - deployments
@@ -127,15 +70,11 @@ rules:
   - update
   - watch
 - apiGroups:
-  - coordination.k8s.io
+  - "batch"
   resources:
-  - leases
+  - jobs
+  - jobs/status
   verbs:
-  - create
-  - delete
-  - deletecollection
   - get
   - list
-  - patch
-  - update
   - watch

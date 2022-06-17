@@ -18,9 +18,9 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: camel-k-operator-leases
+  name: yaks-operator-leases
   labels:
-    app: "camel-k"
+    app: "yaks"
 rules:
 - apiGroups:
   - "coordination.k8s.io"
