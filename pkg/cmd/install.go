@@ -23,6 +23,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/citrusframework/yaks/pkg/util/olm"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/citrusframework/yaks/pkg/client"
@@ -59,9 +60,11 @@ func newCmdInstall(rootCmdOptions *RootCmdOptions) (*cobra.Command, *installCmdO
 	cmd.Flags().Bool("no-cluster-setup", false, "Skip the cluster-setup phase")
 	cmd.Flags().Bool("global", true, "Configure the operator to watch all namespaces")
 	cmd.Flags().Bool("force", false, "Force replacement of configuration resources when already present.")
+	cmd.Flags().String("operator-id", "yaks", "Set the operator id")
 	cmd.Flags().String("operator-image", "", "Set the operator Image used for the operator deployment")
 	cmd.Flags().String("operator-image-pull-policy", "", "Set the operator ImagePullPolicy used for the operator deployment")
 	cmd.Flags().StringP("output", "o", "", "Output format. One of: json|yaml")
+	cmd.Flags().StringArray("env-vars", nil, "Add an environment variable to set in the operator Pod(s), as <name=value>")
 
 	// olm
 	cmd.Flags().Bool("olm", true, "Try to install everything via OLM (Operator Lifecycle Manager) if available")
@@ -90,7 +93,9 @@ type installCmdOptions struct {
 	Olm                     bool     `mapstructure:"olm"`
 	ClusterType             string   `mapstructure:"cluster-type"`
 	OutputFormat            string   `mapstructure:"output"`
-	olmOptions   			olm.Options
+	OperatorID              string   `mapstructure:"operator-id"`
+	EnvVars                 []string `mapstructure:"env-vars"`
+	olmOptions              olm.Options
 }
 
 // nolint: gocyclo
@@ -102,6 +107,9 @@ func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 
 	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
 	clientProvider := client.Provider{Get: o.NewCmdClient}
+
+	// --operator-id={id} is a syntax sugar for '--env-vars YAKS_OPERATOR_ID={id}'
+	o.EnvVars = append(o.EnvVars, fmt.Sprintf("YAKS_OPERATOR_ID=%s", strings.TrimSpace(o.OperatorID)))
 
 	installViaOLM := false
 	if o.Olm {
@@ -129,7 +137,7 @@ func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 		if installViaOLM && !o.ClusterSetupOnly {
 			fmt.Fprintln(cobraCmd.OutOrStdout(), "OLM is available in the cluster")
 			var installed bool
-			if installed, err = olm.Install(o.Context, olmClient, o.Namespace, o.Global, o.olmOptions, collection); err != nil {
+			if installed, err = olm.Install(o.Context, olmClient, o.Namespace, o.Global, o.olmOptions, o.EnvVars, collection); err != nil {
 				return err
 			}
 			if !installed {
@@ -160,7 +168,7 @@ func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 		}
 
 		if !o.SkipOperatorSetup && !installViaOLM {
-			err = o.setupOperator(c, collection)
+			err = o.setupOperator(c, cobraCmd, collection)
 			if err != nil {
 				return err
 			}
@@ -201,15 +209,16 @@ func setupCluster(ctx context.Context, clientProvider client.Provider, collectio
 	return err
 }
 
-func (o *installCmdOptions) setupOperator(c client.Client, collection *kubernetes.Collection) error {
+func (o *installCmdOptions) setupOperator(c client.Client, cmd *cobra.Command, collection *kubernetes.Collection) error {
 	cfg := install.OperatorConfiguration{
 		CustomImage:           o.OperatorImage,
 		CustomImagePullPolicy: o.OperatorImagePullPolicy,
 		Namespace:             o.Namespace,
 		Global:                o.Global,
 		ClusterType:           o.ClusterType,
+		EnvVars:               o.EnvVars,
 	}
-	err := install.OperatorOrCollect(o.Context, c, cfg, collection, o.Force)
+	err := install.OperatorOrCollect(o.Context, cmd, c, cfg, collection, o.Force)
 
 	return err
 }

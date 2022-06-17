@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/citrusframework/yaks/pkg/util/strimzi"
+	"github.com/spf13/cobra"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/client"
@@ -35,6 +36,7 @@ import (
 	v1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubectl/pkg/cmd/set/env"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,16 +47,17 @@ type OperatorConfiguration struct {
 	Namespace             string
 	Global                bool
 	ClusterType           string
+	EnvVars               []string
 }
 
 // Operator installs the operator resources in the given namespace
-func Operator(ctx context.Context, c client.Client, cfg OperatorConfiguration, force bool) error {
-	return OperatorOrCollect(ctx, c, cfg, nil, force)
+func Operator(ctx context.Context, cmd *cobra.Command, c client.Client, cfg OperatorConfiguration, force bool) error {
+	return OperatorOrCollect(ctx, cmd, c, cfg, nil, force)
 }
 
 // OperatorOrCollect installs the operator resources or adds them to the collector if present
-func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
-	customizer := customizer(cfg)
+func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
+	customizer := customizer(cfg, cmd)
 
 	if isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType); err != nil {
 		return err
@@ -100,9 +103,16 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 		}
 	}
 
-	if errmtr := InstallServiceMonitors(ctx, c, cfg.Namespace, customizer, collection, force); errmtr != nil {
-		if k8serrors.IsAlreadyExists(errmtr) {
-			return errmtr
+	if err := installLeaseBindings(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		if k8serrors.IsAlreadyExists(err) {
+			return err
+		}
+		fmt.Fprintln(cmd.ErrOrStderr(), "Warning: the operator will not be able to create Leases. Try installing as cluster-admin to allow management of Lease resources.")
+	}
+
+	if err := installServiceMonitors(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		if k8serrors.IsAlreadyExists(err) {
+			return err
 		}
 		fmt.Println("Warning: the operator will not be able to create servicemonitors for metrics. Try installing as cluster-admin to allow the creation of servicemonitors.")
 	}
@@ -110,7 +120,7 @@ func OperatorOrCollect(ctx context.Context, c client.Client, cfg OperatorConfigu
 	return nil
 }
 
-func customizer(cfg OperatorConfiguration) ResourceCustomizer {
+func customizer(cfg OperatorConfiguration, cmd *cobra.Command) ResourceCustomizer {
 	return func(o ctrl.Object) ctrl.Object {
 		if cfg.CustomImage != "" {
 			if d, ok := o.(*appsv1.Deployment); ok {
@@ -124,6 +134,20 @@ func customizer(cfg OperatorConfiguration) ResourceCustomizer {
 			if d, ok := o.(*appsv1.Deployment); ok {
 				if d.Labels[config.ComponentLabel] == "operator" {
 					d.Spec.Template.Spec.Containers[0].ImagePullPolicy = corev1.PullPolicy(cfg.CustomImagePullPolicy)
+				}
+			}
+		}
+
+		if cfg.EnvVars != nil {
+			if d, ok := o.(*appsv1.Deployment); ok {
+				if d.Labels[config.ComponentLabel] == "operator" {
+					envVars, _, _, err := env.ParseEnv(cfg.EnvVars, nil)
+					if err != nil {
+						fmt.Fprintln(cmd.ErrOrStderr(), "Warning: could not parse environment variables!")
+					}
+					for i := 0; i < len(d.Spec.Template.Spec.Containers); i++ {
+						d.Spec.Template.Spec.Containers[i].Env = append(d.Spec.Template.Spec.Containers[i].Env, envVars...)
+					}
 				}
 			}
 		}
@@ -228,7 +252,14 @@ func InstallStrimzi(ctx context.Context, c client.Client, namespace string, cust
 	return nil
 }
 
-func InstallServiceMonitors(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func installLeaseBindings(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
+		"/rbac/operator-role-leases.yaml",
+		"/rbac/operator-role-binding-leases.yaml",
+	)
+}
+
+func installServiceMonitors(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/rbac/operator-role-servicemonitors.yaml",
 		"/rbac/operator-role-binding-servicemonitors.yaml",

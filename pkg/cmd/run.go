@@ -172,7 +172,7 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 	}
 
 	if runConfig.Config.Namespace.Temporary {
-		if namespace, err := o.createTempNamespace(runConfig, c); namespace != nil {
+		if namespace, err := o.createTempNamespace(runConfig, cmd, c); namespace != nil {
 			if runConfig.Config.Namespace.AutoRemove && o.Wait {
 				defer deleteTempNamespace(namespace, c, o.Context)
 			}
@@ -229,7 +229,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 	}
 
 	if runConfig.Config.Namespace.Temporary {
-		if namespace, err := o.createTempNamespace(runConfig, c); err != nil {
+		if namespace, err := o.createTempNamespace(runConfig, cmd, c); err != nil {
 			handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 			return
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove && o.Wait {
@@ -334,7 +334,7 @@ func (o *runCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 	return runConfig, nil
 }
 
-func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c client.Client) (metav1.Object, error) {
+func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, cmd *cobra.Command, c client.Client) (metav1.Object, error) {
 	namespaceName := "yaks-" + uuid.New().String()
 	namespace, err := initializeTempNamespace(namespaceName, c, o.Context)
 	if err != nil {
@@ -371,14 +371,14 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, c clien
 		return namespace, err
 	}
 
-	if err := o.setupOperator(runConfig, c); err != nil {
+	if err := o.setupOperator(runConfig, cmd, c); err != nil {
 		return namespace, err
 	}
 
 	return namespace, nil
 }
 
-func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, c client.Client) error {
+func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, cmd *cobra.Command, c client.Client) error {
 	namespace := runConfig.Config.Namespace.Name
 	var cluster v1alpha1.ClusterType
 	if isOpenshift, err := openshift.IsOpenShift(c); err != nil {
@@ -396,7 +396,7 @@ func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, c client.Clie
 		Global:                false,
 		ClusterType:           string(cluster),
 	}
-	err := install.OperatorOrCollect(o.Context, c, cfg, nil, true)
+	err := install.OperatorOrCollect(o.Context, cmd, c, cfg, nil, true)
 
 	for _, role := range runConfig.Config.Operator.Roles {
 		err = applyOperatorRole(o.Context, c, resolvePath(runConfig, role), namespace, install.IdentityResourceCustomizer)

@@ -21,8 +21,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/util/envvar"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	batchv1 "k8s.io/api/batch/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -40,11 +45,11 @@ import (
 	"github.com/citrusframework/yaks/pkg/event"
 	"github.com/citrusframework/yaks/pkg/install"
 	"github.com/citrusframework/yaks/pkg/util/defaults"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 
-	"github.com/operator-framework/operator-lib/leader"
+	coordination "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
@@ -69,7 +74,7 @@ func printVersion() {
 }
 
 // Run starts the YAKS operator
-func Run() {
+func Run(leaderElection bool, leaderElectionID string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	flag.Parse()
@@ -85,41 +90,43 @@ func Run() {
 	printVersion()
 
 	watchNamespace, err := getWatchNamespace()
-	if err != nil {
-		log.Error(err, "failed to get watch namespace")
-		os.Exit(1)
-	}
+	exitOnError(err, "failed to get watch namespace")
 
 	// Get a config to talk to the API server
 	cfg, err := config.GetConfig()
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
-	// Become the leader before proceeding
-	err = leader.Become(context.TODO(), OperatorLockName)
-	if err != nil {
-		if err == leader.ErrNoNamespace {
-			log.Info("Local run detected, leader election is disabled")
-		} else {
-			log.Error(err, "")
-			os.Exit(1)
-		}
-	}
+	exitOnError(err, "")
 
 	// Configure an event broadcaster
-	c, err := client.NewClient(false)
-	if err != nil {
-		log.Error(err, "cannot initialize client")
-		os.Exit(1)
-	}
+	c, err := client.NewClientWithConfig(false, cfg)
+	exitOnError(err, "cannot initialize client")
 
 	// We do not rely on the event broadcaster managed by controller runtime,
 	// so that we can check the operator has been granted permission to create
 	// Events. This is required for the operator to be installable by standard
 	// admin users, that are not granted create permission on Events by default.
 	broadcaster := record.NewBroadcaster()
+	defer broadcaster.Shutdown()
+
+	if ok, err := kubernetes.CheckPermission(context.TODO(), c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil || !ok {
+		// Do not sink Events to the server as they'll be rejected
+		broadcaster = event.NewSinkLessBroadcaster(broadcaster)
+		exitOnError(err, "cannot check permissions for creating Events")
+		log.Info("Event broadcasting is disabled because of missing permissions to create Events")
+	}
+
+	operatorNamespace, err := envvar.GetOperatorNamespace()
+	exitOnError(err, "failed to determine operator namespace")
+	if operatorNamespace == "" {
+		// Fallback to using the watch namespace when the operator is not in-cluster.
+		// It does not support local (off-cluster) operator watching resources globally,
+		// in which case it's not possible to determine a namespace.
+		operatorNamespace = watchNamespace
+		if operatorNamespace == "" {
+			leaderElection = false
+			log.Info("unable to determine namespace for leader election")
+		}
+	}
+
 	// nolint: gocritic
 	if ok, err := kubernetes.CheckPermission(context.TODO(), c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil || !ok {
 		// Do not sink Events to the server as they'll be rejected
@@ -131,48 +138,68 @@ func Run() {
 		}
 	}
 
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Namespace:        watchNamespace,
-		EventBroadcaster: broadcaster,
-	})
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
+	if ok, err := kubernetes.CheckPermission(context.TODO(), c, coordination.GroupName, "leases", operatorNamespace, "", "create"); err != nil || !ok {
+		leaderElection = false
+		exitOnError(err, "cannot check permissions for creating Leases")
+		log.Info("The operator is not granted permissions to create Leases")
 	}
+
+	if !leaderElection {
+		log.Info("Leader election is disabled!")
+	}
+
+	hasTestLabel, err := labels.NewRequirement(v1alpha1.TestLabel, selection.Exists, []string{})
+	exitOnError(err, "cannot create test label selector")
+	selector := labels.NewSelector().Add(*hasTestLabel)
+
+	// Create a new Cmd to provide shared dependencies and start components
+	mgr, err := manager.New(c.GetConfig(), manager.Options{
+		Namespace:                     watchNamespace,
+		EventBroadcaster:              broadcaster,
+		LeaderElection:                leaderElection,
+		LeaderElectionNamespace:       operatorNamespace,
+		LeaderElectionID:              leaderElectionID,
+		LeaderElectionResourceLock:    resourcelock.LeasesResourceLock,
+		LeaderElectionReleaseOnCancel: true,
+		NewCache: cache.BuilderWithOptions(
+			cache.Options{
+				SelectorsByObject: cache.SelectorsByObject{
+					&corev1.Pod{}:  {Label: selector},
+					&batchv1.Job{}: {Label: selector},
+				},
+			},
+		),
+	})
+	exitOnError(err, "")
+
+	exitOnError(
+		mgr.GetFieldIndexer().IndexField(context.Background(), &corev1.Pod{}, "status.phase",
+			func(obj k8sclient.Object) []string {
+				return []string{string(obj.(*corev1.Pod).Status.Phase)}
+			}),
+		"unable to set up field indexer for status.phase: %v",
+	)
 
 	log.Info("Registering Components.")
 
 	// Setup Scheme for all resources
-	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
+	exitOnError(apis.AddToScheme(mgr.GetScheme()), "")
 
 	// Try to register the OpenShift CLI Download link if possible
 	installCtx, installCancel := context.WithTimeout(context.TODO(), 1*time.Minute)
 	defer installCancel()
 	install.OperatorStartupOptionalTools(installCtx, c, log)
 
-	if err := installInstance(installCtx, c, watchNamespace == "", defaults.Version); err != nil {
-		log.Error(err, "failed to install yaks custom resource")
-		os.Exit(1)
-	}
+	err = installInstance(installCtx, c, watchNamespace == "", defaults.Version)
+	exitOnError(err, "failed to install yaks custom resource")
 
 	// Setup all Controllers
-	if err := controller.AddToManager(mgr); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
+	exitOnError(controller.AddToManager(mgr), "")
 
 	log.Info("Starting the Cmd.")
 
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "manager exited non-zero")
-		os.Exit(1)
-	}
-
-	broadcaster.Shutdown()
+	err = mgr.Start(signals.SetupSignalHandler())
+	exitOnError(err, "manager exited non-zero")
 }
 
 func installInstance(ctx context.Context, c client.Client, global bool, version string) error {
@@ -249,4 +276,11 @@ func getWatchNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", WatchNamespaceEnvVar)
 	}
 	return ns, nil
+}
+
+func exitOnError(err error, msg string) {
+	if err != nil {
+		log.Error(err, msg)
+		os.Exit(1)
+	}
 }

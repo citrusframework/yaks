@@ -98,6 +98,8 @@ spec:
                 properties:
                   image:
                     type: string
+                  runAsUser:
+                    type: integer
                 type: object
               resources:
                 items:
@@ -116,6 +118,8 @@ spec:
                 properties:
                   image:
                     type: string
+                  runAsUser:
+                    type: integer
                 type: object
               source:
                 description: SourceSpec
