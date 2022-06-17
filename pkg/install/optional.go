@@ -34,7 +34,7 @@ func OperatorStartupOptionalTools(ctx context.Context, c client.Client, log logr
 	}
 
 	// Try to register the cluster role for standard admin and edit users
-	if clusterRoleInstalled, err := isClusterRoleInstalled(ctx, c, "yaks:edit"); err != nil {
+	if clusterRoleInstalled, err := isClusterRoleInstalled(ctx, c, "yaks-edit"); err != nil {
 		log.Info("Cannot detect user cluster role: skipping.")
 		log.V(8).Info("Error while getting user cluster role", "error", err)
 	} else if !clusterRoleInstalled {

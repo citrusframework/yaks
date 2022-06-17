@@ -18,7 +18,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: yaks:edit
+  name: yaks-edit
   labels:
     app: "yaks"
     # Add these permissions to the "admin" and "edit" default roles.

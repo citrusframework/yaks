@@ -16,21 +16,36 @@
 VERSION := 0.11.0-SNAPSHOT
 SNAPSHOT_VERSION := 0.11.0-SNAPSHOT
 OPERATOR_VERSION := $(subst -SNAPSHOT,,$(VERSION))
+LAST_RELEASED_IMAGE_NAME := yaks-operator
+LAST_RELEASED_VERSION := 0.10.0
+
 CONTROLLER_GEN_VERSION := v0.6.1
+OPERATOR_SDK_VERSION := v1.14.0
+KUSTOMIZE_VERSION := v4.1.2
 DEFAULT_IMAGE := docker.io/citrusframework/yaks
 IMAGE_NAME ?= $(DEFAULT_IMAGE)
-METADATA_IMAGE_NAME := $(IMAGE_NAME)-metadata
+
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
 
-# OLM (Operator Lifecycle Manager and Operator Hub): uncomment to override operator settings at build time
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultOperatorName=yaks-operator
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultPackage=yaks
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultChannel=alpha
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultSource=community-operators
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultSourceNamespace=openshift-marketplace
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultStartingCSV=
-#GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/olm.DefaultGlobalNamespace=openshift-operators
+# olm bundle vars
+OLM_CHANNELS := alpha
+OLM_DEFAULT_CHANNEL := alpha
+OLM_PACKAGE := yaks
+
+CSV_VERSION := $(VERSION:-SNAPSHOT=)
+CSV_NAME := $(OLM_PACKAGE).v$(CSV_VERSION)
+# Final CSV name that replaces the name required by the operator-sdk
+# Has to be replaced after the bundle has been generated
+CSV_PRODUCTION_NAME := $(OLM_PACKAGE)-operator.v$(CSV_VERSION)
+CSV_DISPLAY_NAME := YAKS Operator
+CSV_SUPPORT := Citrus Framework
+CSV_REPLACES := $(LAST_RELEASED_IMAGE_NAME).v$(LAST_RELEASED_VERSION)
+CSV_FILENAME := $(OLM_PACKAGE).clusterserviceversion.yaml
+CSV_PATH := config/manifests/bases/$(CSV_FILENAME)
+CSV_GENERATED_PATH := bundle/manifests/$(CSV_FILENAME)
+
+BUNDLE_IMAGE_NAME := $(IMAGE_NAME)-bundle
 
 GOLDFLAGS += -X main.GitCommit=$(GIT_COMMIT)
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -gcflags=-trimpath=$(GO_PATH) -asmflags=-trimpath=$(GO_PATH)
@@ -169,21 +184,91 @@ else
 KUSTOMIZE=$(shell command -v kustomize 2> /dev/null)
 endif
 
-.PHONY: generate-crd bundle bundle-build
-
-bundle: generate-crd kustomize
-	@# Build kustomize manifests
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle --overwrite --version $(OPERATOR_VERSION) $(BUNDLE_METADATA_OPTS)
-	@# Move the dockerfile into the bundle directory
-ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
-	mv bundle.Dockerfile bundle/Dockerfile && sed -i '' 's/bundle\///g' bundle/Dockerfile
+operator-sdk:
+ifeq (, $(shell command -v operator-sdk 2> /dev/null))
+	@{ \
+	set -e ;\
+	if [ "$(shell uname -s 2>/dev/null || echo Unknown)" == "Darwin" ] ; then \
+		curl \
+			-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_darwin_amd64 \
+			-o operator-sdk ; \
+	else \
+		curl \
+			-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_linux_amd64 \
+			-o operator-sdk ; \
+	fi ;\
+	chmod +x operator-sdk ;\
+	mv operator-sdk $(GOBIN)/ ;\
+	}
+OPERATOR_SDK=$(GOBIN)/operator-sdk
 else
-	mv bundle.Dockerfile bundle/Dockerfile && sed -i 's/bundle\///g' bundle/Dockerfile
+	@{ \
+	echo -n "operator-sdk already installed: "; \
+  operator-sdk version | sed -n 's/.*"v\([^"]*\)".*/\1/p'; \
+	echo " If this is less than $(OPERATOR_SDK_VERSION) then please consider moving it aside and allowing the approved version to be downloaded."; \
+	}
+OPERATOR_SDK=$(shell command -v operator-sdk 2> /dev/null)
+endif
+
+.PHONY: generate-crd v1alpha1 pre-bundle bundle bundle-build
+
+v1alpha1: operator-sdk
+	@# operator-sdk generate ... cannot execute across separate modules so need to temporarily move api
+	$(OPERATOR_SDK) generate kustomize manifests --apis-dir pkg/apis/yaks/v1alpha1 -q
+	@# Adds the licence header to the csv file.
+	./script/add_license.sh config/manifests/bases ./script/headers/yaml.txt
+	./script/add_createdAt.sh config/manifests/bases
+
+#
+# Tailor the manifest according to default values for this project
+# Note. to successfully make the bundle the name must match that specified in the PROJECT file
+#
+pre-bundle:
+# bundle name must match that which appears in PROJECT file
+ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
+	@sed -i '' 's/projectName: .*/projectName: $(OLM_PACKAGE)/' PROJECT
+	@sed -i '' 's~^    containerImage: .*~    containerImage: $(IMAGE_NAME):$(VERSION)~' $(CSV_PATH)
+	@sed -i '' 's/^    support: .*/    support: $(CSV_SUPPORT)/' $(CSV_PATH)
+	@sed -i '' 's/^  name: .*.\(v.*\)/  name: $(CSV_NAME)/' $(CSV_PATH)
+	@sed -i '' 's/^  displayName: .*/  displayName: $(CSV_DISPLAY_NAME)/' $(CSV_PATH)
+	@sed -i '' 's/^  version: .*/  version: $(CSV_VERSION)/' $(CSV_PATH)
+	@sed -i '' 's/^  replaces: .*/  replaces: $(CSV_REPLACES)/' $(CSV_PATH)
+else
+	@sed -i 's/projectName: .*/projectName: $(OLM_PACKAGE)/' PROJECT
+	@sed -i 's~^    containerImage: .*~    containerImage: $(IMAGE_NAME):$(VERSION)~' $(CSV_PATH)
+	@sed -i 's/^    support: .*/    support: $(CSV_SUPPORT)/' $(CSV_PATH)
+	@sed -i 's/^  name: .*.\(v.*\)/  name: $(CSV_NAME)/' $(CSV_PATH)
+	@sed -i 's/^  displayName: .*/  displayName: $(CSV_DISPLAY_NAME)/' $(CSV_PATH)
+	@sed -i 's/^  version: .*/  version: $(CSV_VERSION)/' $(CSV_PATH)
+	@sed -i 's/^  replaces: .*/  replaces: $(CSV_REPLACES)/' $(CSV_PATH)
+endif
+
+bundle: generate-crd v1alpha1 kustomize pre-bundle
+	@# Sets the operator image to the preferred image:tag
+	@cd config/manifests && $(KUSTOMIZE) edit set image $(IMAGE_NAME)=$(IMAGE_NAME):$(VERSION)
+	@# Build kustomize manifests
+	@$(KUSTOMIZE) build config/manifests | \
+		$(OPERATOR_SDK) generate bundle \
+			-q --overwrite --version $(OPERATOR_VERSION) \
+			--kustomize-dir config/manifests \
+			--channels=$(OLM_CHANNELS) --default-channel=$(OLM_DEFAULT_CHANNEL) --package=$(OLM_PACKAGE)
+	@# Move the dockerfile into the bundle directory
+	@# Rename the CSV name to conform with the existing released operator versions
+	@# This cannot happen in pre-bundle as the operator-sdk generation expects a CSV name the same as PACKAGE
+ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
+	@mv bundle.Dockerfile bundle/Dockerfile && sed -i '' 's/bundle\///g' bundle/Dockerfile
+	@sed -i '' "s/^  name: $(CSV_NAME)/  name: $(CSV_PRODUCTION_NAME)/" $(CSV_GENERATED_PATH)
+else
+	@mv bundle.Dockerfile bundle/Dockerfile && sed -i 's/bundle\///g' bundle/Dockerfile
+	@sed -i "s/^  name: $(CSV_NAME)/  name: $(CSV_PRODUCTION_NAME)/" $(CSV_GENERATED_PATH)
 endif
 	@# Adds the licence headers to the csv file
 	./script/add_license.sh bundle/manifests ./script/headers/yaml.txt
-	operator-sdk bundle validate ./bundle
+	$(OPERATOR_SDK) bundle validate ./bundle
+
+	cp bundle/manifests/yaks.citrusframework.org_* deploy/olm-catalog/yaks/$(SNAPSHOT_VERSION)/
+	cp $(CSV_GENERATED_PATH) deploy/olm-catalog/yaks/$(SNAPSHOT_VERSION)/$(OLM_PACKAGE).v$(subst -SNAPSHOT,-snapshot,$(SNAPSHOT_VERSION)).clusterserviceversion.yaml
 
 # Build the bundle image.
 bundle-build: bundle
-	cd bundle && docker build -f Dockerfile -t $(METADATA_IMAGE_NAME) .
+	cd bundle && docker build -f Dockerfile -t $(BUNDLE_IMAGE_NAME) .

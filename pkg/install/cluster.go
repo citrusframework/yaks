@@ -108,7 +108,7 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 	}
 
 	// Installing ClusterRole
-	ok, err := isClusterRoleInstalled(ctx, c, "yaks:edit")
+	ok, err := isClusterRoleInstalled(ctx, c, "yaks-edit")
 	if err != nil {
 		return err
 	}

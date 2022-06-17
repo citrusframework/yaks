@@ -15,6 +15,12 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
+#
+# rbac resources applicable for all kubernetes platforms
+#
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
 resources:
 - deploy/viewer-service-account.yaml
 - rbac/viewer-role-camel-k.yaml
@@ -25,5 +31,5 @@ resources:
 - rbac/viewer-role-binding-knative.yaml
 - rbac/viewer-role-kubernetes.yaml
 - rbac/viewer-role-binding-kubernetes.yaml
-- rbac/viewer-role-openshift.yaml
-- rbac/viewer-role-binding-openshift.yaml
+- rbac/openshift/viewer-role-openshift.yaml
+- rbac/openshift/viewer-role-binding-openshift.yaml

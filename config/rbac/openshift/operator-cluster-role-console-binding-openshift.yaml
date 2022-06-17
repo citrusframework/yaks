@@ -15,30 +15,17 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-kind: ClusterRole
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: yaks-operator-olm
+  name: yaks-operator-console-openshift
   labels:
     app: "yaks"
-rules:
-- apiGroups:
-  - console.openshift.io
-  resources:
-  - consoleclidownloads
-  verbs:
-  - create
-  - delete
-  - deletecollection
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - yaks.citrusframework.org
-  - camel.apache.org
-  resources:
-  - "*"
-  verbs:
-  - "*"
+subjects:
+- kind: ServiceAccount
+  name: yaks-operator
+  namespace: placeholder
+roleRef:
+  kind: ClusterRole
+  name: yaks-operator-console-openshift
+  apiGroup: rbac.authorization.k8s.io

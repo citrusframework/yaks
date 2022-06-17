@@ -201,8 +201,8 @@ func customizer(cfg OperatorConfiguration, cmd *cobra.Command) ResourceCustomize
 func installOpenShift(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/manager/operator-service-account.yaml",
-		"/rbac/operator-role-openshift.yaml",
-		"/rbac/operator-role-binding-openshift.yaml",
+		"/rbac/openshift/operator-role-openshift.yaml",
+		"/rbac/openshift/operator-role-binding-openshift.yaml",
 		"/manager/operator-deployment.yaml",
 	)
 }
