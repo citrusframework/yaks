@@ -20,6 +20,7 @@ package digest
 import (
 	"crypto/sha256"
 	"encoding/base64"
+
 	"github.com/citrusframework/yaks/pkg/util/defaults"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"

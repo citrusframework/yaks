@@ -31,12 +31,12 @@ type InstanceSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
-	Operator  OperatorSpec   `json:"operator,omitempty"`
+	Operator OperatorSpec `json:"operator,omitempty"`
 }
 
 // OperatorSpec--
 type OperatorSpec struct {
-	Global    bool 	 `json:"global"`
+	Global    bool   `json:"global"`
 	Pod       string `json:"pod,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
 }
@@ -75,5 +75,5 @@ type Instance struct {
 type InstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items    []Instance `json:"items"`
+	Items           []Instance `json:"items"`
 }

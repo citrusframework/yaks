@@ -22,13 +22,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"time"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-	"io"
 	corev1 "k8s.io/api/core/v1"
-	"time"
 
 	k8slog "github.com/citrusframework/yaks/pkg/util/kubernetes/log"
 	"github.com/spf13/cobra"

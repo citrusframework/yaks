@@ -19,10 +19,11 @@ package cmd
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/spf13/cobra"

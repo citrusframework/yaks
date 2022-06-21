@@ -19,6 +19,7 @@ package test
 
 import (
 	"context"
+
 	"github.com/citrusframework/yaks/pkg/util/digest"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -190,7 +191,7 @@ func (r *ReconcileIntegrationTest) Reconcile(ctx context.Context, request reconc
 
 				if err := r.client.Status().Patch(ctx, newTarget, k8sclient.MergeFrom(&instance)); err != nil {
 					if k8serrors.IsConflict(err) {
-						targetLog.Error(err, "conflict in updating test to status " + string(target.Status.Phase))
+						targetLog.Error(err, "conflict in updating test to status "+string(target.Status.Phase))
 
 						return reconcile.Result{
 							Requeue: true,

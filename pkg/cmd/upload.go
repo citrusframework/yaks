@@ -33,13 +33,13 @@ func newCmdUpload(rootCmdOptions *RootCmdOptions) (*cobra.Command, *uploadCmdOpt
 	}
 
 	cmd := cobra.Command{
-		Use:             "upload artifact",
-		Short:           "Upload a local test artifact to the cluster",
-		Long:            `Upload a local test artifact to the cluster so that it can be used when running a test.`,
-		Args:            options.validateArgs,
-		PreRunE:		 decode(&options),
-		RunE:            options.run,
-		SilenceUsage:    true,
+		Use:          "upload artifact",
+		Short:        "Upload a local test artifact to the cluster",
+		Long:         `Upload a local test artifact to the cluster so that it can be used when running a test.`,
+		Args:         options.validateArgs,
+		PreRunE:      decode(&options),
+		RunE:         options.run,
+		SilenceUsage: true,
 	}
 
 	return &cmd, &options

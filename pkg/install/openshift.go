@@ -20,8 +20,9 @@ package install
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"reflect"
+
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 
 	"github.com/Masterminds/semver"
 

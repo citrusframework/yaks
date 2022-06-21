@@ -19,8 +19,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"text/tabwriter"
+
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

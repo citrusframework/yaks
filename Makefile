@@ -76,6 +76,9 @@ generate-deepcopy: controller-gen
 
 build: build-resources build-yaks
 
+go-imports:
+	goimports -w ./pkg
+
 test: build
 	go test ./...
 

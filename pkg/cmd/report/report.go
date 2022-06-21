@@ -21,13 +21,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"io/ioutil"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path"
+
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type OutputFormat string
@@ -64,23 +65,23 @@ func GenerateReport(results *v1alpha1.TestResults, output OutputFormat) (string,
 	}
 
 	switch output {
-		case SummaryOutput, DefaultOutput:
-			summaryReport := GetSummaryReport(results)
-			return summaryReport, nil
-		case JUnitOutput:
-			if junitReport, err := createJUnitReport(results, outputDir); err != nil {
-				return "", err
-			} else {
-				return junitReport, nil
-			}
-		case JsonOutput:
-			if jsonReport, err := createJsonReport(results, outputDir); err != nil {
-				return "", err
-			} else {
-				return jsonReport, nil
-			}
-		default:
-			return "", errors.New(fmt.Sprintf("Unsupported report output format '%s'. Please use one of 'summary', 'json', 'junit'", output))
+	case SummaryOutput, DefaultOutput:
+		summaryReport := GetSummaryReport(results)
+		return summaryReport, nil
+	case JUnitOutput:
+		if junitReport, err := createJUnitReport(results, outputDir); err != nil {
+			return "", err
+		} else {
+			return junitReport, nil
+		}
+	case JsonOutput:
+		if jsonReport, err := createJsonReport(results, outputDir); err != nil {
+			return "", err
+		} else {
+			return jsonReport, nil
+		}
+	default:
+		return "", errors.New(fmt.Sprintf("Unsupported report output format '%s'. Please use one of 'summary', 'json', 'junit'", output))
 	}
 }
 
@@ -230,16 +231,16 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 				Name: source,
 				Tests: []v1alpha1.TestResult{
 					{
-						Name: kubernetes.SanitizeName(source),
-						ClassName: source,
-						ErrorType: GetErrorType(err),
+						Name:         kubernetes.SanitizeName(source),
+						ClassName:    source,
+						ErrorType:    GetErrorType(err),
 						ErrorMessage: err.Error(),
 					},
 				},
 				Summary: v1alpha1.TestSummary{
 					Errors: 1,
 				},
-				Errors: []string{ fmt.Sprintf("%s - %s", GetErrorType(err), err.Error()) },
+				Errors: []string{fmt.Sprintf("%s - %s", GetErrorType(err), err.Error())},
 			},
 		},
 	}
@@ -247,7 +248,7 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 
 func GetErrorType(err error) string {
 	errReason := k8serrors.ReasonForError(err)
-	if  errReason == metav1.StatusReasonUnknown {
+	if errReason == metav1.StatusReasonUnknown {
 		return "InitializationError"
 	} else {
 		return string(errReason)

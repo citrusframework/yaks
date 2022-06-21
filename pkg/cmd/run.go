@@ -20,8 +20,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/util"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -30,6 +28,9 @@ import (
 	r "runtime"
 	"strings"
 	"time"
+
+	"github.com/citrusframework/yaks/pkg/util"
+	"gopkg.in/yaml.v2"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
