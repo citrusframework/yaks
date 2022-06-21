@@ -21,8 +21,9 @@ import (
 	"io"
 	"os"
 
-	"go.uber.org/multierr"
 	"path/filepath"
+
+	"go.uber.org/multierr"
 )
 
 // StringSliceContains --

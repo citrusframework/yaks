@@ -19,11 +19,12 @@ package report
 
 import (
 	"encoding/xml"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
 const (
-	JunitReportFile = "junit-reports.xml"
+	JunitReportFile          = "junit-reports.xml"
 	XmlProcessingInstruction = `<?xml version="1.0" encoding="UTF-8"?>`
 )
 
@@ -32,45 +33,45 @@ type JUnitReport struct {
 }
 
 type TestSuite struct {
-	Name string `xml:"name,attr"`
-	Errors int `xml:"errors,attr"`
-	Failures int `xml:"failures,attr"`
-	Skipped int `xml:"skipped,attr"`
-	Tests int `xml:"tests,attr"`
-	Time float32 `xml:"time,attr"`
+	Name     string     `xml:"name,attr"`
+	Errors   int        `xml:"errors,attr"`
+	Failures int        `xml:"failures,attr"`
+	Skipped  int        `xml:"skipped,attr"`
+	Tests    int        `xml:"tests,attr"`
+	Time     float32    `xml:"time,attr"`
 	TestCase []TestCase `xml:"testcase"`
 }
 
 type TestCase struct {
-	Name string `xml:"name,attr"`
-	ClassName string `xml:"classname,attr"`
-	Time float32 `xml:"time,attr"`
-	SystemOut string `xml:"system-out,omitempty"`
-	Failure *Failure
-	Error *Error
+	Name      string  `xml:"name,attr"`
+	ClassName string  `xml:"classname,attr"`
+	Time      float32 `xml:"time,attr"`
+	SystemOut string  `xml:"system-out,omitempty"`
+	Failure   *Failure
+	Error     *Error
 }
 
 type Failure struct {
-	XMLName xml.Name `xml:"failure,omitempty"`
-	Message string `xml:"message,attr,omitempty"`
-	Type string `xml:"type,attr,omitempty"`
-	Stacktrace string `xml:",chardata"`
+	XMLName    xml.Name `xml:"failure,omitempty"`
+	Message    string   `xml:"message,attr,omitempty"`
+	Type       string   `xml:"type,attr,omitempty"`
+	Stacktrace string   `xml:",chardata"`
 }
 
 type Error struct {
-	XMLName xml.Name `xml:"error,omitempty"`
-	Message string `xml:"message,attr,omitempty"`
-	Type string `xml:"type,attr,omitempty"`
-	Stacktrace string `xml:",chardata"`
+	XMLName    xml.Name `xml:"error,omitempty"`
+	Message    string   `xml:"message,attr,omitempty"`
+	Type       string   `xml:"type,attr,omitempty"`
+	Stacktrace string   `xml:",chardata"`
 }
 
 func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
-	var report = JUnitReport {
-		Suite: []TestSuite {},
+	var report = JUnitReport{
+		Suite: []TestSuite{},
 	}
 
 	for _, testSuite := range results.Suites {
-		var suite = TestSuite {
+		var suite = TestSuite{
 			Name:     testSuite.Name,
 			Failures: testSuite.Summary.Failed,
 			Skipped:  testSuite.Summary.Skipped,
@@ -80,7 +81,7 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 
 		for _, test := range testSuite.Tests {
 			testCase := TestCase{
-				Name: test.Name,
+				Name:      test.Name,
 				ClassName: test.ClassName,
 			}
 

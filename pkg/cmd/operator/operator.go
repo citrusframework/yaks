@@ -21,22 +21,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"math/rand"
+	"os"
+	"runtime"
+	"time"
+
 	batchv1 "k8s.io/api/batch/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
-	"math/rand"
-	"os"
-	"runtime"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"time"
 
 	"github.com/citrusframework/yaks/pkg/apis"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"

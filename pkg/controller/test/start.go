@@ -20,10 +20,11 @@ package test
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 	"k8s.io/apimachinery/pkg/api/resource"
-	"strings"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/config"

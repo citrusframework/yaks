@@ -21,12 +21,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -113,7 +114,7 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 			if err != nil {
 				return err
 			}
-			test.Status.Errors = string(bytes);
+			test.Status.Errors = string(bytes)
 		}
 	}
 

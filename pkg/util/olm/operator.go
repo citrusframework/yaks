@@ -20,8 +20,9 @@ package olm
 import (
 	"context"
 	"fmt"
-	"k8s.io/kubectl/pkg/cmd/set/env"
 	"strings"
+
+	"k8s.io/kubectl/pkg/cmd/set/env"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"

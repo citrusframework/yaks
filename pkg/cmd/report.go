@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/report"
 	"github.com/spf13/cobra"

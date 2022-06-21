@@ -19,6 +19,7 @@ package test
 
 import (
 	"fmt"
+
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 

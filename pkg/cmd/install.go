@@ -20,11 +20,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/util/kubernetes"
-	"github.com/citrusframework/yaks/pkg/util/olm"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/util/olm"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/install"

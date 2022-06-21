@@ -20,6 +20,7 @@ package install
 import (
 	"context"
 	"fmt"
+
 	"github.com/citrusframework/yaks/pkg/util/strimzi"
 
 	"github.com/citrusframework/yaks/pkg/client"

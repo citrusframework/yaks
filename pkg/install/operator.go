@@ -20,9 +20,10 @@ package install
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/citrusframework/yaks/pkg/util/strimzi"
 	"github.com/spf13/cobra"
-	"strings"
 
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/config"

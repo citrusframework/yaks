@@ -20,9 +20,10 @@ package log
 import (
 	"context"
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"io"
 	"io/ioutil"
+
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 
 	"k8s.io/client-go/kubernetes"
 )

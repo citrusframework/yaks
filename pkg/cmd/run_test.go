@@ -18,12 +18,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-	"github.com/citrusframework/yaks/pkg/cmd/config"
-	"gotest.tools/v3/assert"
 	"os"
 	r "runtime"
 	"testing"
+
+	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"gotest.tools/v3/assert"
 )
 
 func TestStepOsCheck(t *testing.T) {
