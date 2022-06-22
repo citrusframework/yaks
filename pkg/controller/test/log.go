@@ -19,5 +19,5 @@ package test
 
 import "github.com/citrusframework/yaks/pkg/util/log"
 
-// Log --
+// Log --.
 var Log = log.Log.WithName("controller").WithName("test")

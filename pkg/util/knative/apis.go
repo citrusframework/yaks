@@ -18,12 +18,11 @@ limitations under the License.
 package knative
 
 import (
-	"github.com/citrusframework/yaks/pkg/util"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
-	// KnownChannelKinds are known channel kinds belonging to Knative
+	// KnownChannelKinds are known channel kinds belonging to Knative.
 	KnownChannelKinds = []GroupVersionKindResource{
 		{
 			GroupVersionKind: schema.GroupVersionKind{
@@ -59,7 +58,7 @@ var (
 		},
 	}
 
-	// KnownEndpointKinds are known endpoint kinds belonging to Knative
+	// KnownEndpointKinds are known endpoint kinds belonging to Knative.
 	KnownEndpointKinds = []GroupVersionKindResource{
 		{
 			GroupVersionKind: schema.GroupVersionKind{
@@ -79,7 +78,7 @@ var (
 		},
 	}
 
-	// KnownBrokerKinds are known broker kinds belonging to Knative
+	// KnownBrokerKinds are known broker kinds belonging to Knative.
 	KnownBrokerKinds = []GroupVersionKindResource{
 		{
 			GroupVersionKind: schema.GroupVersionKind{
@@ -100,7 +99,7 @@ var (
 	}
 
 	// RequiredKinds are Knative kinds used by YAKS for testing Knative eventing.
-	// They must be present on the cluster
+	// They must be present on the cluster.
 	RequiredKinds = []GroupVersionKindResource{
 		{
 			GroupVersionKind: schema.GroupVersionKind{
@@ -113,7 +112,7 @@ var (
 	}
 )
 
-// GroupVersionKindResource --
+// GroupVersionKindResource --.
 type GroupVersionKindResource struct {
 	schema.GroupVersionKind
 	Resource string
@@ -124,24 +123,4 @@ func init() {
 	KnownEndpointKinds = append(KnownEndpointKinds, KnownChannelKinds...)
 	// Let's add the brokers as last
 	KnownEndpointKinds = append(KnownEndpointKinds, KnownBrokerKinds...)
-}
-
-func getGroupVersions(serviceTypes []GroupVersionKindResource, kind string) []string {
-	res := make([]string, 0)
-	for _, st := range serviceTypes {
-		if st.Kind == kind {
-			util.StringSliceUniqueAdd(&res, st.GroupVersion().String())
-		}
-	}
-	return res
-}
-
-func getKinds(serviceTypes []GroupVersionKindResource, apiVersion string) []string {
-	res := make([]string, 0)
-	for _, st := range serviceTypes {
-		if st.GroupVersion().String() == apiVersion {
-			util.StringSliceUniqueAdd(&res, st.Kind)
-		}
-	}
-	return res
 }

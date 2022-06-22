@@ -19,6 +19,7 @@ package kubernetes
 
 import (
 	"context"
+	"fmt"
 
 	batchv1 "k8s.io/api/batch/v1"
 
@@ -32,7 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ReplaceResources allows to completely replace a list of resources on Kubernetes, taking care of immutable fields and resource versions
+// ReplaceResources allows to completely replace a list of resources on Kubernetes, taking care of immutable fields and resource versions.
 func ReplaceResources(ctx context.Context, c client.Client, objects []ctrl.Object) error {
 	for _, object := range objects {
 		err := ReplaceResource(ctx, c, object)
@@ -43,18 +44,22 @@ func ReplaceResources(ctx context.Context, c client.Client, objects []ctrl.Objec
 	return nil
 }
 
-// ReplaceResource allows to completely replace a resource on Kubernetes, taking care of immutable fields and resource versions
+// ReplaceResource allows to completely replace a resource on Kubernetes, taking care of immutable fields and resource versions.
 func ReplaceResource(ctx context.Context, c client.Client, res ctrl.Object) error {
 	err := c.Create(ctx, res)
 	if err != nil && k8serrors.IsAlreadyExists(err) {
-		existing := res.DeepCopyObject().(ctrl.Object)
-		err = c.Get(ctx, ctrl.ObjectKeyFromObject(existing), existing)
-		if err != nil {
-			return err
+		if existing, ok := res.DeepCopyObject().(ctrl.Object); ok {
+			err = c.Get(ctx, ctrl.ObjectKeyFromObject(existing), existing)
+			if err != nil {
+				return err
+			}
+			mapRequiredMeta(existing, res)
+			mapRequiredServiceData(existing, res)
+			mapRequiredJobData(existing, res)
+		} else {
+			return fmt.Errorf("type assertion failed: %v", res.DeepCopyObject())
 		}
-		mapRequiredMeta(existing, res)
-		mapRequiredServiceData(existing, res)
-		mapRequiredJobData(existing, res)
+
 		err = c.Update(ctx, res)
 	}
 	if err != nil {

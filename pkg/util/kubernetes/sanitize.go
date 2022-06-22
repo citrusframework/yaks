@@ -29,7 +29,7 @@ import (
 var disallowedChars = regexp.MustCompile(`[^a-z0-9-]`)
 var disallowedCharsInFile = regexp.MustCompile(`[^A-Za-z0-9-_.]`)
 
-// SanitizeName sanitizes the given name to be compatible with k8s
+// SanitizeName sanitizes the given name to be compatible with k8s.
 func SanitizeName(name string) string {
 	name = path.Base(name)
 	name = strings.Split(name, ".")[0]
@@ -46,7 +46,7 @@ func SanitizeFileName(name string) string {
 	return name
 }
 
-// SanitizeLabel sanitizes the given name to be compatible with k8s
+// SanitizeLabel sanitizes the given name to be compatible with k8s.
 func SanitizeLabel(name string) string {
 	name = strings.ToLower(name)
 	name = disallowedChars.ReplaceAllString(name, "")
@@ -54,6 +54,6 @@ func SanitizeLabel(name string) string {
 	return name
 }
 
-func isDisallowedStartEndChar(rune rune) bool {
-	return !unicode.IsLetter(rune) && !unicode.IsNumber(rune)
+func isDisallowedStartEndChar(r rune) bool {
+	return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 }

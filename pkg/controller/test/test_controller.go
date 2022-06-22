@@ -22,7 +22,6 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/util/digest"
 	batchv1 "k8s.io/api/batch/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -56,7 +55,7 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr, c, mgr.GetConfig()))
 }
 
-// newReconciler returns a new reconcile.Reconciler
+// newReconciler returns a new reconcile.Reconciler.
 func newReconciler(mgr manager.Manager, c client.Client, cfg *rest.Config) reconcile.Reconciler {
 	return &ReconcileIntegrationTest{
 		client: c,
@@ -65,7 +64,7 @@ func newReconciler(mgr manager.Manager, c client.Client, cfg *rest.Config) recon
 	}
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
+// add adds a new Controller to mgr with r as the reconcile.Reconciler.
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
 	c, err := controller.New("test-controller", mgr, controller.Options{Reconciler: r})
@@ -76,8 +75,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for changes to primary resource Test
 	err = c.Watch(&source.Kind{Type: &v1alpha1.Test{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldTest := e.ObjectOld.(*v1alpha1.Test)
-			newTest := e.ObjectNew.(*v1alpha1.Test)
+			oldTest, ok := e.ObjectOld.(*v1alpha1.Test)
+			if !ok {
+				return false
+			}
+			newTest, ok := e.ObjectNew.(*v1alpha1.Test)
+			if !ok {
+				return false
+			}
 			// Ignore updates to the test status in which case metadata.Generation does not change,
 			// or except when the test phase changes as it's used to transition from one phase
 			// to another
@@ -96,16 +101,17 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Watch for related Jobs changing
 	err = c.Watch(&source.Kind{Type: &batchv1.Job{}},
 		handler.EnqueueRequestsFromMapFunc(func(a k8sclient.Object) []reconcile.Request {
-			job := a.(*batchv1.Job)
 			var requests []reconcile.Request
 
-			if testName, ok := job.Labels["yaks.citrusframework.org/test"]; ok {
-				requests = append(requests, reconcile.Request{
-					NamespacedName: types.NamespacedName{
-						Namespace: job.Namespace,
-						Name:      testName,
-					},
-				})
+			if job, ok := a.(*batchv1.Job); ok {
+				if testName, ok := job.Labels["yaks.citrusframework.org/test"]; ok {
+					requests = append(requests, reconcile.Request{
+						NamespacedName: types.NamespacedName{
+							Namespace: job.Namespace,
+							Name:      testName,
+						},
+					})
+				}
 			}
 
 			return requests
@@ -121,7 +127,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 var _ reconcile.Reconciler = &ReconcileIntegrationTest{}
 
-// ReconcileIntegrationTest reconciles a IntegrationTest object
+// ReconcileIntegrationTest reconciles a IntegrationTest object.
 type ReconcileIntegrationTest struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
@@ -143,7 +149,7 @@ func (r *ReconcileIntegrationTest) Reconcile(ctx context.Context, request reconc
 	var instance v1alpha1.Test
 
 	if err := r.client.Get(ctx, request.NamespacedName, &instance); err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -183,22 +189,21 @@ func (r *ReconcileIntegrationTest) Reconcile(ctx context.Context, request reconc
 			}
 
 			if newTarget != nil {
-				if dgst, err := digest.ComputeForTest(newTarget); err != nil {
+				dgst, err := digest.ComputeForTest(newTarget)
+				if err != nil {
 					return reconcile.Result{}, err
-				} else {
-					newTarget.Status.Digest = dgst
 				}
 
-				if err := r.client.Status().Patch(ctx, newTarget, k8sclient.MergeFrom(&instance)); err != nil {
-					if k8serrors.IsConflict(err) {
-						targetLog.Error(err, "conflict in updating test to status "+string(target.Status.Phase))
+				newTarget.Status.Digest = dgst
 
-						return reconcile.Result{
-							Requeue: true,
-						}, nil
-					} else {
-						return reconcile.Result{}, err
-					}
+				if err := r.client.Status().Patch(ctx, newTarget, k8sclient.MergeFrom(&instance)); err != nil && k8serrors.IsConflict(err) {
+					targetLog.Error(err, "conflict in updating test to status "+string(target.Status.Phase))
+
+					return reconcile.Result{
+						Requeue: true,
+					}, nil
+				} else if err != nil {
+					return reconcile.Result{}, err
 				}
 
 				if newTarget.Status.Phase != target.Status.Phase {

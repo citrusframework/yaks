@@ -27,17 +27,17 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ResourceRetrieveFunction --
+// ResourceRetrieveFunction --.
 type ResourceRetrieveFunction func() (interface{}, error)
 
-// ResourceCheckFunction --
+// ResourceCheckFunction --.
 type ResourceCheckFunction func(interface{}) (bool, error)
 
 const (
 	sleepTime = 400 * time.Millisecond
 )
 
-// WaitCondition --
+// WaitCondition --.
 func WaitCondition(ctx context.Context, c client.Client, obj ctrl.Object, condition ResourceCheckFunction, maxDuration time.Duration) error {
 	start := time.Now()
 	key := ctrl.ObjectKeyFromObject(obj)

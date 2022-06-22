@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-// GetClientFor returns a RESTClient for the given group and version
+// GetClientFor returns a RESTClient for the given group and version.
 func GetClientFor(c kubernetes.Interface, group string, version string) (*rest.RESTClient, error) {
 	inConfig, err := config.GetConfig()
 	if err != nil {
@@ -50,7 +50,7 @@ func GetClientFor(c kubernetes.Interface, group string, version string) (*rest.R
 	return rest.RESTClientFor(conf)
 }
 
-// GetDynamicClientFor returns a dynamic client for a given kind
+// GetDynamicClientFor returns a dynamic client for a given kind.
 func GetDynamicClientFor(group string, version string, kind string, namespace string) (dynamic.ResourceInterface, error) {
 	conf, err := config.GetConfig()
 	if err != nil {
@@ -67,7 +67,7 @@ func GetDynamicClientFor(group string, version string, kind string, namespace st
 	}).Namespace(namespace), nil
 }
 
-// GetDefaultDynamicClientFor returns a dynamic client for a given kind
+// GetDefaultDynamicClientFor returns a dynamic client for a given kind.
 func GetDefaultDynamicClientFor(kind string, namespace string) (dynamic.ResourceInterface, error) {
 	conf, err := config.GetConfig()
 	if err != nil {

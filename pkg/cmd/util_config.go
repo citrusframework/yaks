@@ -34,26 +34,26 @@ import (
 )
 
 const (
-	// DefaultConfigName is the default config name
+	// DefaultConfigName is the default config name.
 	DefaultConfigName = "yaks-config"
 
-	// DefaultConfigLocation is the main place where the yaks content is stored
+	// DefaultConfigLocation is the main place where the yaks content is stored.
 	DefaultConfigLocation = DefaultConfigName + ".yaml"
 
-	// YaksTagName ---
+	// YaksTagName ---.
 	YaksTagName = "yaks"
 
-	// MapstructureTagName ---
+	// MapstructureTagName ---.
 	MapstructureTagName = "mapstructure"
 )
 
-// Config is a helper class to manipulate yaks configuration files
+// Config is a helper class to manipulate yaks configuration files.
 type Config struct {
 	location string
 	content  map[string]interface{}
 }
 
-// LoadConfiguration loads a yaks configuration file
+// LoadConfiguration loads a yaks configuration file.
 func LoadConfiguration() (*Config, error) {
 	config := Config{
 		location: viper.ConfigFileUsed(),
@@ -81,7 +81,7 @@ func LoadConfiguration() (*Config, error) {
 	return &config, nil
 }
 
-// Update ---
+// Update ---.
 func (cfg *Config) Update(cmd *cobra.Command, nodeID string, data interface{}, changedOnly bool) {
 	values := make(map[string]interface{})
 
@@ -117,7 +117,7 @@ func (cfg *Config) Update(cmd *cobra.Command, nodeID string, data interface{}, c
 	}
 }
 
-// SetNode allows to replace a subtree with a given content
+// SetNode allows to replace a subtree with a given content.
 func (cfg *Config) SetNode(nodeID string, nodeValues map[string]interface{}) {
 	cfg.Delete(nodeID)
 	node := cfg.navigate(cfg.content, nodeID, true)
@@ -127,7 +127,7 @@ func (cfg *Config) SetNode(nodeID string, nodeValues map[string]interface{}) {
 	}
 }
 
-// Delete allows to remove a sub tree from the yaks content
+// Delete allows to remove a sub tree from the yaks content.
 func (cfg *Config) Delete(path string) {
 	leaf := cfg.navigate(cfg.content, path, false)
 	for k := range leaf {
@@ -135,7 +135,7 @@ func (cfg *Config) Delete(path string) {
 	}
 }
 
-// Save ---
+// Save ---.
 func (cfg *Config) Save() error {
 	root := filepath.Dir(cfg.location)
 	if _, err := os.Stat(root); os.IsNotExist(err) {
@@ -148,7 +148,7 @@ func (cfg *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(cfg.location, data, 0644)
+	return ioutil.WriteFile(cfg.location, data, 0600)
 }
 
 func (cfg *Config) navigate(values map[string]interface{}, prefix string, create bool) map[string]interface{} {

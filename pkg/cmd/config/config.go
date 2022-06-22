@@ -91,9 +91,9 @@ type SettingsConfig struct {
 }
 
 type RepositoryConfig struct {
-	Id        string       `yaml:"id"`
+	ID        string       `yaml:"id"`
 	Name      string       `yaml:"name,omitempty"`
-	Url       string       `yaml:"url"`
+	URL       string       `yaml:"url"`
 	Layout    string       `yaml:"layout,omitempty"`
 	Releases  PolicyConfig `yaml:"releases,omitempty"`
 	Snapshots PolicyConfig `yaml:"snapshots,omitempty"`
@@ -105,8 +105,8 @@ type PolicyConfig struct {
 }
 
 type DependencyConfig struct {
-	GroupId    string `yaml:"groupId"`
-	ArtifactId string `yaml:"artifactId"`
+	GroupID    string `yaml:"groupId"`
+	ArtifactID string `yaml:"artifactId"`
 	Version    string `yaml:"version"`
 }
 

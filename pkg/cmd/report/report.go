@@ -19,8 +19,8 @@ package report
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -33,18 +33,18 @@ import (
 
 type OutputFormat string
 
-// Set implements pflag/flag.Value
+// Set implements pflag/flag.Value.
 func (d *OutputFormat) Set(s string) error {
 	*d = OutputFormat(s)
 	return nil
 }
 
-// Type implements pflag.Value
+// Type implements pflag.Value.
 func (d *OutputFormat) Type() string {
 	return "string"
 }
 
-// Type implements pflag/flag.Value
+// Type implements pflag/flag.Value.
 func (d *OutputFormat) String() string {
 	return string(*d)
 }
@@ -53,35 +53,34 @@ const (
 	OutputDir = "_output"
 
 	DefaultOutput OutputFormat = ""
-	JsonOutput    OutputFormat = "json"
+	JSONOutput    OutputFormat = "json"
 	JUnitOutput   OutputFormat = "junit"
 	SummaryOutput OutputFormat = "summary"
 )
 
-func GenerateReport(results *v1alpha1.TestResults, output OutputFormat) (string, error) {
+func GenerateReport(out io.Writer, errorOut io.Writer, results *v1alpha1.TestResults, output OutputFormat) {
 	outputDir, err := createInWorkingDir(OutputDir)
 	if err != nil {
-		return "", err
+		printError(errorOut, err)
 	}
 
 	switch output {
 	case SummaryOutput, DefaultOutput:
-		summaryReport := GetSummaryReport(results)
-		return summaryReport, nil
+		printReport(out, GetSummaryReport(results))
 	case JUnitOutput:
 		if junitReport, err := createJUnitReport(results, outputDir); err != nil {
-			return "", err
+			printError(errorOut, err)
 		} else {
-			return junitReport, nil
+			printReport(out, junitReport)
 		}
-	case JsonOutput:
-		if jsonReport, err := createJsonReport(results, outputDir); err != nil {
-			return "", err
+	case JSONOutput:
+		if jsonReport, err := createJSONReport(results, outputDir); err != nil {
+			printError(errorOut, err)
 		} else {
-			return jsonReport, nil
+			printReport(out, jsonReport)
 		}
 	default:
-		return "", errors.New(fmt.Sprintf("Unsupported report output format '%s'. Please use one of 'summary', 'json', 'junit'", output))
+		printError(errorOut, fmt.Errorf("unsupported report output format '%s'. Please use one of 'summary', 'json', 'junit'", output))
 	}
 }
 
@@ -90,9 +89,7 @@ func AppendTestResults(suites *v1alpha1.TestSuite, suite v1alpha1.TestSuite) {
 
 	AppendSummary(&suites.Summary, &suite.Summary)
 
-	for _, test := range suite.Tests {
-		suites.Tests = append(suites.Tests, test)
-	}
+	suites.Tests = append(suites.Tests, suite.Tests...)
 }
 
 func AppendSummary(overall *v1alpha1.TestSummary, summary *v1alpha1.TestSummary) {
@@ -107,13 +104,20 @@ func AppendSummary(overall *v1alpha1.TestSummary, summary *v1alpha1.TestSummary)
 
 func SaveTestResults(test *v1alpha1.Test) error {
 	outputDir, err := createInWorkingDir(OutputDir)
+	if err != nil {
+		return err
+	}
 
 	reportFile, err := os.Create(path.Join(outputDir, kubernetes.SanitizeName(test.Name)) + ".json")
 	if err != nil {
 		return err
 	}
 
-	bytes, _ := json.Marshal(test.Status.Results)
+	bytes, err := json.Marshal(test.Status.Results)
+	if err != nil {
+		return err
+	}
+
 	if _, err := reportFile.Write(bytes); err != nil {
 		return err
 	}
@@ -129,12 +133,10 @@ func CleanReports() error {
 func LoadTestResults() (*v1alpha1.TestResults, error) {
 	results := v1alpha1.TestResults{}
 	outputDir, err := getInWorkingDir(OutputDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return &results, nil
-		} else {
-			return &results, err
-		}
+	if err != nil && os.IsNotExist(err) {
+		return &results, nil
+	} else if err != nil {
+		return &results, err
 	}
 
 	var files []os.FileInfo
@@ -144,7 +146,7 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 	}
 
 	for _, file := range files {
-		if path.Ext(file.Name()) != ".json" || file.Name() == JsonReportFile {
+		if path.Ext(file.Name()) != ".json" || file.Name() == JSONReportFile {
 			continue
 		}
 
@@ -160,9 +162,9 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 		}
 
 		isNew := true
-		for _, existing := range results.Suites {
-			if existing.Name == suite.Name {
-				AppendTestResults(&existing, suite)
+		for i := range results.Suites {
+			if results.Suites[i].Name == suite.Name {
+				AppendTestResults(&results.Suites[i], suite)
 				isNew = false
 				break
 			}
@@ -247,10 +249,17 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 }
 
 func GetErrorType(err error) string {
-	errReason := k8serrors.ReasonForError(err)
-	if errReason == metav1.StatusReasonUnknown {
-		return "InitializationError"
-	} else {
+	if errReason := k8serrors.ReasonForError(err); errReason != metav1.StatusReasonUnknown {
 		return string(errReason)
 	}
+
+	return "InitializationError"
+}
+
+func printReport(out io.Writer, report string) {
+	_, _ = fmt.Fprintf(out, "%s\n", report)
+}
+
+func printError(out io.Writer, err error) {
+	_, _ = fmt.Fprintf(out, "%v\n", err)
 }

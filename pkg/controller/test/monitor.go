@@ -25,7 +25,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
-// NewMonitorAction creates a new monitor action
+// NewMonitorAction creates a new monitor action.
 func NewMonitorAction() Action {
 	return &monitorAction{}
 }
@@ -34,19 +34,19 @@ type monitorAction struct {
 	baseAction
 }
 
-// Name returns a common name of the action
+// Name returns a common name of the action.
 func (action *monitorAction) Name() string {
 	return "monitor"
 }
 
-// CanHandle tells whether this action can handle the test
+// CanHandle tells whether this action can handle the test.
 func (action *monitorAction) CanHandle(build *v1alpha1.Test) bool {
 	return build.Status.Phase == v1alpha1.TestPhaseFailed ||
 		build.Status.Phase == v1alpha1.TestPhasePassed ||
 		build.Status.Phase == v1alpha1.TestPhaseError
 }
 
-// Handle handles the test
+// Handle handles the test.
 func (action *monitorAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
 
 	expectedDigest, err := digest.ComputeForTest(test)

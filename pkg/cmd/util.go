@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -144,8 +145,8 @@ func decodeKey(target interface{}, key string) error {
 
 func decode(target interface{}) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		path := pathToRoot(cmd)
-		if err := decodeKey(target, path); err != nil {
+		root := pathToRoot(cmd)
+		if err := decodeKey(target, root); err != nil {
 			return err
 		}
 
@@ -162,7 +163,11 @@ func stringToSliceHookFunc(comma rune) mapstructure.DecodeHookFunc {
 			return data, nil
 		}
 
-		s := data.(string)
+		s, ok := data.(string)
+		if !ok {
+			return nil, fmt.Errorf("type assertion failed %v", data)
+		}
+
 		s = strings.TrimPrefix(s, "[")
 		s = strings.TrimSuffix(s, "]")
 
@@ -210,10 +215,10 @@ func getBaseDir(source string) string {
 
 	if isDir(source) {
 		return source
-	} else {
-		dir, _ := path.Split(source)
-		return dir
 	}
+
+	dir, _ := path.Split(source)
+	return dir
 }
 
 func resolvePath(runConfig *config.RunConfig, resource string) string {
@@ -225,8 +230,8 @@ func resolvePath(runConfig *config.RunConfig, resource string) string {
 }
 
 func hasErrors(results *v1alpha1.TestResults) bool {
-	for _, suite := range results.Suites {
-		if hasSuiteErrors(&suite) {
+	for i := range results.Suites {
+		if hasSuiteErrors(&results.Suites[i]) {
 			return true
 		}
 	}
@@ -242,19 +247,25 @@ func hasSuiteErrors(suite *v1alpha1.TestSuite) bool {
 	return false
 }
 
-func loadData(fileName string) (string, error) {
+func loadData(ctx context.Context, fileName string) (string, error) {
 	var content []byte
 	var err error
 
 	if isRemoteFile(fileName) {
 		/* #nosec */
-		resp, err := http.Get(fileName)
+		var body io.Reader
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, fileName, body)
 		if err != nil {
 			return "", err
 		}
-		defer resp.Body.Close()
 
-		content, err = ioutil.ReadAll(resp.Body)
+		response, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer response.Body.Close()
+
+		content, err = ioutil.ReadAll(body)
 		if err != nil {
 			return "", err
 		}

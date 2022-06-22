@@ -29,12 +29,12 @@ import (
 //
 //go:generate go run ../../cmd/util/vfs-gen config
 //
-// ResourceAsString returns the named resource content as string
+// ResourceAsString returns the named resource content as string.
 func ResourceAsString(name string) string {
 	return string(Resource(name))
 }
 
-// Resource provides an easy access to embedded assets
+// Resource provides an easy access to embedded assets.
 func Resource(name string) []byte {
 	name = strings.Trim(name, " ")
 	if !strings.HasPrefix(name, "/") {
@@ -56,7 +56,7 @@ func Resource(name string) []byte {
 	return data
 }
 
-// TemplateResource loads a file resource as go template and processes it using the given parameters
+// TemplateResource loads a file resource as go template and processes it using the given parameters.
 func TemplateResource(name string, params interface{}) (string, error) {
 	rawData := ResourceAsString(name)
 	if rawData == "" {
@@ -74,7 +74,7 @@ func TemplateResource(name string, params interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-// Resources lists all file names in the given path (starts with '/')
+// Resources lists all file names in the given path (starts with '/').
 func Resources(dirName string) []string {
 	dir, err := assets.Open(dirName)
 	if err != nil {

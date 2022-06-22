@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// LoadResourceFromYaml loads a k8s resource from a yaml definition
+// LoadResourceFromYaml loads a k8s resource from a yaml definition.
 func LoadResourceFromYaml(scheme *runtime.Scheme, data string) (ctrl.Object, error) {
 	source := []byte(data)
 	jsonSource, err := yaml.ToJSON(source)
@@ -41,18 +41,16 @@ func LoadResourceFromYaml(scheme *runtime.Scheme, data string) (ctrl.Object, err
 	if err != nil {
 		return nil, err
 	}
-	ro, err := runtimeObjectFromUnstructured(scheme, &u)
-	if err != nil {
+	if ro, err := runtimeObjectFromUnstructured(scheme, &u); err != nil {
 		return nil, err
-	}
-	if o, ok := ro.(ctrl.Object); !ok {
-		return nil, err
+	} else if o, ok := ro.(ctrl.Object); !ok {
+		return nil, fmt.Errorf("type assertion failed: %v", ro)
 	} else {
 		return o, nil
 	}
 }
 
-// LoadRawResourceFromYaml loads a k8s resource from a yaml definition without making assumptions on the underlying type
+// LoadRawResourceFromYaml loads a k8s resource from a yaml definition without making assumptions on the underlying type.
 func LoadRawResourceFromYaml(data string) (ctrl.Object, error) {
 	source := []byte(data)
 	jsonSource, err := yaml.ToJSON(source)
@@ -75,11 +73,11 @@ func runtimeObjectFromUnstructured(scheme *runtime.Scheme, u *unstructured.Unstr
 
 	b, err := u.MarshalJSON()
 	if err != nil {
-		return nil, fmt.Errorf("error running MarshalJSON on unstructured object: %v", err)
+		return nil, fmt.Errorf("error running MarshalJSON on unstructured object: %w", err)
 	}
 	ro, _, err := decoder.Decode(b, &gvk, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode json data with gvk(%v): %v", gvk.String(), err)
+		return nil, fmt.Errorf("failed to decode json data with gvk(%v): %w", gvk.String(), err)
 	}
 	return ro, nil
 }

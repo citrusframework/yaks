@@ -23,7 +23,6 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/client"
 	snap "github.com/container-tools/snap/pkg/api"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -51,11 +50,10 @@ type uploadCmdOptions struct {
 
 func (o *uploadCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return errors.New(fmt.Sprintf("accepts exactly 1 local artifact to upload, received %d", len(args)))
+		return fmt.Errorf("accepts exactly 1 local artifact to upload, received %d", len(args))
 	}
 
-	_, err := os.Stat(args[0])
-	if err != nil {
+	if _, err := os.Stat(args[0]); err != nil {
 		return err
 	}
 

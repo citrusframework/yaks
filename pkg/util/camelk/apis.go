@@ -23,7 +23,7 @@ import (
 
 var (
 	// RequiredKinds are Camel K kinds used by YAKS for materializing integrations.
-	// They must be present on the cluster
+	// They must be present on the cluster.
 	RequiredKinds = []GroupVersionKindResource{
 		{
 			GroupVersionKind: schema.GroupVersionKind{
@@ -36,7 +36,7 @@ var (
 	}
 )
 
-// GroupVersionKindResource --
+// GroupVersionKindResource --.
 type GroupVersionKindResource struct {
 	schema.GroupVersionKind
 	Resource string

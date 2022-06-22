@@ -39,7 +39,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// SetupClusterWideResourcesOrCollect --
+// SetupClusterWideResourcesOrCollect --.
 func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider client.Provider, collection *kubernetes.Collection) error {
 	// Get a client to install the CRD
 	c, err := clientProvider.Get()
@@ -47,10 +47,10 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 		return err
 	}
 
-	isApiExtensionsV1 := true
+	isAPIExtensionsV1 := true
 	_, err = c.Discovery().ServerResourcesForGroupVersion("apiextensions.k8s.io/v1")
 	if err != nil && k8serrors.IsNotFound(err) {
-		isApiExtensionsV1 = false
+		isAPIExtensionsV1 = false
 	} else if err != nil {
 		return err
 	}
@@ -62,15 +62,18 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 	if err != nil {
 		return err
 	}
-	if !isApiExtensionsV1 {
+	if !isAPIExtensionsV1 {
 		err = apiextensionsv1beta1.AddToScheme(c.GetScheme())
 		if err != nil {
 			return err
 		}
 	}
 	downgradeToCRDv1beta1 := func(object ctrl.Object) ctrl.Object {
-		if !isApiExtensionsV1 {
-			v1Crd := object.(*apiextensionsv1.CustomResourceDefinition)
+		if !isAPIExtensionsV1 {
+			v1Crd, ok := object.(*apiextensionsv1.CustomResourceDefinition)
+			if !ok {
+				return nil
+			}
 			v1beta1Crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 			crd := &apiextensions.CustomResourceDefinition{}
 
@@ -128,7 +131,7 @@ func SetupClusterWideResourcesOrCollect(ctx context.Context, clientProvider clie
 	return nil
 }
 
-// WaitForAllCRDInstallation waits until all CRDs are installed
+// WaitForAllCRDInstallation waits until all CRDs are installed.
 func WaitForAllCRDInstallation(ctx context.Context, clientProvider client.Provider, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for {
@@ -151,7 +154,7 @@ func WaitForAllCRDInstallation(ctx context.Context, clientProvider client.Provid
 	}
 }
 
-// AreAllCRDInstalled check if all the required CRDs are installed
+// AreAllCRDInstalled check if all the required CRDs are installed.
 func AreAllCRDInstalled(ctx context.Context, c client.Client) (bool, error) {
 	if ok, err := IsCRDInstalled(ctx, c, "Instance", "v1alpha1"); err != nil {
 		return ok, err
@@ -161,7 +164,7 @@ func AreAllCRDInstalled(ctx context.Context, c client.Client) (bool, error) {
 	return IsCRDInstalled(ctx, c, "Test", "v1alpha1")
 }
 
-// IsCRDInstalled check if the given CRD kind is installed
+// IsCRDInstalled check if the given CRD kind is installed.
 func IsCRDInstalled(ctx context.Context, c client.Client, kind string, version string) (bool, error) {
 	lst, err := c.Discovery().ServerResourcesForGroupVersion(fmt.Sprintf("yaks.citrusframework.org/%s", version))
 	if err != nil && k8serrors.IsNotFound(err) {

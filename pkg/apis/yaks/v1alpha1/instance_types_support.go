@@ -29,7 +29,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/envvar"
 )
 
-// NewInstanceList --
+// NewInstanceList --.
 func NewInstanceList() InstanceList {
 	return InstanceList{
 		TypeMeta: metav1.TypeMeta{
@@ -39,7 +39,7 @@ func NewInstanceList() InstanceList {
 	}
 }
 
-// NewInstance --
+// NewInstance --.
 func NewInstance(namespace string, name string) Instance {
 	return Instance{
 		TypeMeta: metav1.TypeMeta{
@@ -57,17 +57,9 @@ func NewInstance(namespace string, name string) Instance {
 func GetOrFindInstance(ctx context.Context, client ctrl.Client, namespace string) (*Instance, error) {
 	instance, err := GetInstance(ctx, client, namespace)
 	if err != nil && k8serrors.IsNotFound(err) {
-		if operatorNamespace, envErr := envvar.GetOperatorNamespace(); envErr == nil {
-			if operatorNamespace != "" && operatorNamespace != namespace {
-				instance, err = GetInstance(ctx, client, operatorNamespace)
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				return nil, err
-			}
-		} else {
-			return nil, err
+		operatorNamespace := envvar.GetOperatorNamespace()
+		if operatorNamespace != "" && operatorNamespace != namespace {
+			return GetInstance(ctx, client, operatorNamespace)
 		}
 	}
 
@@ -108,7 +100,7 @@ func ListInstances(ctx context.Context, c ctrl.Client) (InstanceList, error) {
 	return instanceList, err
 }
 
-// IsGlobal returns true if the given instance is configured to watch all namespaces
+// IsGlobal returns true if the given instance is configured to watch all namespaces.
 func IsGlobal(instance *Instance) bool {
 	if instance == nil {
 		return false

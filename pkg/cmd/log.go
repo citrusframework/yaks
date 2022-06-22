@@ -56,6 +56,9 @@ func newCmdLog(rootCmdOptions *RootCmdOptions) (*cobra.Command, *logCmdOptions) 
 
 	cmd.Flags().String("timeout", "", "Time to wait for individual logs")
 
+	// completion support
+	configureKnownCompletions(&cmd)
+
 	return &cmd, &options
 }
 
@@ -104,7 +107,7 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 	waitTimeout, parseErr := time.ParseDuration(timeout)
 	if parseErr != nil {
-		fmt.Println(fmt.Sprintf("failed to parse test timeout setting - %s", parseErr.Error()))
+		fmt.Printf("failed to parse test timeout setting - %s\n", parseErr.Error())
 		waitTimeout, _ = time.ParseDuration(config.DefaultTimeout)
 	}
 
@@ -113,7 +116,7 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 	var newLogMsg = ""
 
 	ctx, cancel := context.WithCancel(o.Context)
-	err = wait.PollImmediate(pollInterval, waitTimeout, func() (done bool, err error) {
+	err = wait.PollImmediate(pollInterval, waitTimeout, func() (bool, error) {
 
 		//
 		// Reduce repetition of messages by tracking the last message
@@ -167,22 +170,20 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 			// Found the running test so step over to scraping its pod log
 			//
 			fmt.Printf("Test '%s' is now running. Showing log ...\n", name)
-			if err := k8slog.Print(ctx, c, o.Namespace, name, cmd.OutOrStdout()); err != nil {
-				return false, err
-			} else {
-				return true, nil
-			}
+			err := k8slog.Print(ctx, c, o.Namespace, name, cmd.OutOrStdout())
+			return err == nil, err
 		case v1alpha1.TestPhasePassed, v1alpha1.TestPhaseFailed, v1alpha1.TestPhaseError:
 			//
 			// Test is finished or even in error
 			//
 			fmt.Printf("Test '%s' is finished. Showing logs ...\n", name)
-			if err := printLogs(ctx, c, o.Namespace, name, test.Status.TestID, cmd.OutOrStdout()); err != nil {
+			err := printLogs(ctx, c, o.Namespace, name, test.Status.TestID, cmd.OutOrStdout())
+			if err != nil {
 				return false, err
-			} else {
-				cancel()
-				return true, nil
 			}
+
+			cancel()
+			return true, nil
 		default:
 			//
 			// Test is new or still pending
@@ -203,13 +204,16 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func printLogs(ctx context.Context, c client.Client, namespace string, name string, testId string, out io.Writer) error {
+func printLogs(ctx context.Context, c client.Client, namespace string, name string, testID string, out io.Writer) error {
 	pods, err := c.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: v1alpha1.TestIdLabel + "=" + testId,
+		LabelSelector: v1alpha1.TestIDLabel + "=" + testID,
 	})
+	if err != nil {
+		return err
+	}
 
 	if pods == nil || len(pods.Items) == 0 {
-		return errors.New(fmt.Sprintf("unable to locate test pod for name %s in namespace %s", name, namespace))
+		return fmt.Errorf("unable to locate test pod for name %s in namespace %s", name, namespace)
 	}
 
 	logOptions := corev1.PodLogOptions{
@@ -224,17 +228,15 @@ func printLogs(ctx context.Context, c client.Client, namespace string, name stri
 	reader := bufio.NewReader(byteReader)
 	for {
 		data, err := reader.ReadBytes('\n')
-		if err == io.EOF {
+		if err != nil && errors.Is(err, io.EOF) {
 			return nil
+		} else if err != nil {
+			return err
 		}
-		if err != nil {
-			break
-		}
+
 		_, err = out.Write(data)
 		if err != nil {
-			break
+			return err
 		}
 	}
-
-	return nil
 }

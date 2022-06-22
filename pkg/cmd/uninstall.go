@@ -197,7 +197,7 @@ func (o *uninstallCmdOptions) uninstallOperator(ctx context.Context, c client.Cl
 		},
 	}
 
-	if err := c.Delete(o.Context, &instance); err != nil && !k8serrors.IsNotFound(err) && !meta.IsNoMatchError(err) {
+	if err := c.Delete(ctx, &instance); err != nil && !k8serrors.IsNotFound(err) && !meta.IsNoMatchError(err) {
 		return err
 	}
 

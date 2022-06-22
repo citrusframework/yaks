@@ -34,7 +34,7 @@ type InstanceSpec struct {
 	Operator OperatorSpec `json:"operator,omitempty"`
 }
 
-// OperatorSpec--
+// OperatorSpec--.
 type OperatorSpec struct {
 	Global    bool   `json:"global"`
 	Pod       string `json:"pod,omitempty"`
@@ -60,7 +60,7 @@ type InstanceStatus struct {
 // +kubebuilder:printcolumn:name="Pod",type=string,JSONPath=`.spec.operator.pod`,description="The YAKS operator pod name"
 // +kubebuilder:printcolumn:name="Version",type=string,JSONPath=`.status.version`,description="The YAKS version"
 
-// Instance is the Schema for the yaks instance
+// Instance is the Schema for the yaks instance.
 type Instance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -71,7 +71,7 @@ type Instance struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// InstanceList contains a list of yaks instances
+// InstanceList contains a list of yaks instances.
 type InstanceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -29,13 +29,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/citrusframework/yaks/cmd/util/vfs-gen/multifs"
 	"github.com/citrusframework/yaks/pkg/base"
+	"github.com/citrusframework/yaks/pkg/util"
 	"github.com/shurcooL/httpfs/filter"
 	"github.com/shurcooL/vfsgen"
 )
 
 func main() {
-
 	var rootDir string
 	var destDir string
 
@@ -60,18 +61,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	dirName := flag.Args()[0]
-	absDir := filepath.Join(rootDir, dirName)
-	err = checkDir(absDir)
+	dirNames := flag.Args()
+	for _, dirName := range dirNames {
+		absDir := filepath.Join(rootDir, dirName)
+		err := checkDir(absDir)
+		if err != nil {
+			log.Fatalln(err)
+			os.Exit(1)
+		}
+	}
+
+	exclusions := calcExclusions(rootDir, dirNames)
+
+	//
+	// Destination file for the generated resources
+	//
+	resourceFile := path.Join(destDir, "resources.go")
+
+	mfs, err := multifs.New(rootDir, dirNames, exclusions)
 	if err != nil {
 		log.Fatalln(err)
 		os.Exit(1)
 	}
 
-	exclusions := calcExclusions(rootDir, []string{dirName})
-
 	var fs http.FileSystem = modTimeFS{
-		fs: http.Dir(absDir),
+		fs: mfs,
 	}
 
 	//
@@ -95,9 +109,8 @@ func main() {
 	})
 
 	//
-	// Destination file for the generated resources
+	// Generate the assets
 	//
-	resourceFile := path.Join(destDir, "resources.go")
 	err = vfsgen.Generate(fs, vfsgen.Options{
 		Filename:    resourceFile,
 		PackageName: path.Base(destDir),
@@ -106,6 +119,9 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	//
+	// Post-process the final resource file
+	//
 	header := `/*
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -124,17 +140,16 @@ limitations under the License.
 */
 
 `
-	content, err := ioutil.ReadFile(resourceFile)
+	content, err := util.ReadFile(resourceFile)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	var finalContent []byte
 	finalContent = append(finalContent, []byte(header)...)
 	finalContent = append(finalContent, content...)
-	if err := ioutil.WriteFile(resourceFile, finalContent, 0777); err != nil {
+	if err := ioutil.WriteFile(resourceFile, finalContent, 0o600); err != nil {
 		log.Fatalln(err)
 	}
-
 }
 
 func NamedFilesFilter(names ...string) func(path string, fi os.FileInfo) bool {
@@ -154,7 +169,7 @@ func NamedFilesFilter(names ...string) func(path string, fi os.FileInfo) bool {
 }
 
 //
-// BigFilesFilter if file is bigger than maximum size (in bytes) then exclude
+// BigFilesFilter if file is bigger than maximum size (in bytes) then exclude.
 //
 func BigFilesFilter(size int) func(path string, fi os.FileInfo) bool {
 	return func(path string, fi os.FileInfo) bool {
@@ -171,23 +186,11 @@ func BigFilesFilter(size int) func(path string, fi os.FileInfo) bool {
 	}
 }
 
-func IgnoreParentDirFilter(parentDirs ...string) func(path string, fi os.FileInfo) bool {
-	return func(path string, fi os.FileInfo) bool {
-		for _, parentDir := range parentDirs {
-			if ok := strings.HasPrefix(path, parentDir); ok {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
 func calcExclusions(root string, dirNames []string) []string {
 	var exclusions []string
 
-	for _, dirName := range dirNames {
-		dirName = filepath.Join(root, dirName)
+	for _, name := range dirNames {
+		dirName := filepath.Join(root, name)
 		if err := filepath.Walk(dirName, func(resPath string, info os.FileInfo, err error) error {
 			if info.IsDir() {
 				ignoreFileName := path.Join(resPath, ".vfsignore")
@@ -220,13 +223,13 @@ func checkDir(dirName string) error {
 		return err
 	}
 	if !dir.IsDir() {
-		return fmt.Errorf("path %s is not a directory\n", dirName)
+		return fmt.Errorf("path %s is not a directory", dirName)
 	}
 
 	return nil
 }
 
-// modTimeFS wraps http.FileSystem to set mod time to 0 for all files
+// modTimeFS wraps http.FileSystem to set mod time to 0 for all files.
 type modTimeFS struct {
 	fs http.FileSystem
 }

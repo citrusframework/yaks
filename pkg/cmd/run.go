@@ -102,6 +102,9 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	cmd.Flags().BoolP("wait", "w", true, "Wait for the test to be complete")
 	cmd.Flags().Bool("logs", true, "Print test logs")
 
+	// completion support
+	configureKnownCompletions(&cmd)
+
 	return &cmd, &options
 }
 
@@ -129,31 +132,30 @@ type runCmdOptions struct {
 
 func (o *runCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		return errors.New(fmt.Sprintf("accepts exactly 1 test name to execute, received %d", len(args)))
+		return fmt.Errorf("accepts exactly 1 test name to execute, received %d", len(args))
 	}
 
 	return nil
 }
 
 func (o *runCmdOptions) run(cmd *cobra.Command, args []string) error {
-	source := args[0]
 
 	results := v1alpha1.TestResults{}
 	if o.Wait {
 		defer report.PrintSummaryReport(&results)
 		if o.ReportFormat != report.DefaultOutput && o.ReportFormat != report.SummaryOutput {
-			defer report.GenerateReport(&results, o.ReportFormat)
+			defer report.GenerateReport(cmd.OutOrStdout(), cmd.OutOrStderr(), &results, o.ReportFormat)
 		}
 	}
 
-	if isDir(source) {
+	if source := args[0]; isDir(source) {
 		o.runTestGroup(cmd, source, &results)
 	} else {
 		o.runTest(cmd, source, &results)
 	}
 
 	if hasErrors(&results) {
-		return errors.New("There are test failures!")
+		return errors.New("test suite failed")
 	}
 
 	return nil
@@ -175,7 +177,7 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 	if runConfig.Config.Namespace.Temporary {
 		if namespace, err := o.createTempNamespace(runConfig, cmd, c); namespace != nil {
 			if runConfig.Config.Namespace.AutoRemove && o.Wait {
-				defer deleteTempNamespace(namespace, c, o.Context)
+				defer deleteTempNamespace(o.Context, c, namespace)
 			}
 
 			if err != nil {
@@ -203,7 +205,7 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 
 	suite := v1alpha1.TestSuite{}
 	var test *v1alpha1.Test
-	test, err = o.createAndRunTest(cmd, c, source, runConfig)
+	test, err = o.createAndRunTest(o.Context, c, cmd, source, runConfig)
 	if test != nil {
 		handleTestResult(test, &suite)
 		results.Suites = append(results.Suites, suite)
@@ -234,7 +236,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 			handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 			return
 		} else if namespace != nil && runConfig.Config.Namespace.AutoRemove && o.Wait {
-			defer deleteTempNamespace(namespace, c, o.Context)
+			defer deleteTempNamespace(o.Context, c, namespace)
 		}
 	}
 
@@ -264,7 +266,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 		} else if strings.HasSuffix(f.Name(), FileSuffix) {
 			suite := v1alpha1.TestSuite{}
 			var test *v1alpha1.Test
-			test, err = o.createAndRunTest(cmd, c, name, runConfig)
+			test, err = o.createAndRunTest(o.Context, c, cmd, name, runConfig)
 			if test != nil {
 				handleTestResult(test, &suite)
 				results.Suites = append(results.Suites, suite)
@@ -294,7 +296,7 @@ func handleTestResult(test *v1alpha1.Test, suite *v1alpha1.TestSuite) {
 	report.AppendTestResults(suite, test.Status.Results)
 
 	if saveErr := report.SaveTestResults(test); saveErr != nil {
-		fmt.Println(fmt.Sprintf("Failed to save test results: %s", saveErr.Error()))
+		fmt.Printf("Failed to save test results: %s\n", saveErr.Error())
 	}
 }
 
@@ -337,7 +339,7 @@ func (o *runCmdOptions) getRunConfig(source string) (*config.RunConfig, error) {
 
 func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, cmd *cobra.Command, c client.Client) (metav1.Object, error) {
 	namespaceName := "yaks-" + uuid.New().String()
-	namespace, err := initializeTempNamespace(namespaceName, c, o.Context)
+	namespace, err := initializeTempNamespace(o.Context, c, namespaceName)
 	if err != nil {
 		return nil, err
 	}
@@ -360,9 +362,9 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, cmd *co
 	if instance != nil && v1alpha1.IsGlobal(instance) {
 		// Using global operator to manage temporary namespaces, no action required
 		return namespace, nil
-	} else {
-		fmt.Println("Adding new operator instance to temporary namespace by default")
 	}
+
+	fmt.Println("Adding new operator instance to temporary namespace by default")
 
 	// no operator or non-global operator found, deploy into temp namespace
 	// Let's use a client provider during cluster installation, to eliminate the problem of CRD object caching
@@ -382,9 +384,12 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, cmd *co
 func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, cmd *cobra.Command, c client.Client) error {
 	namespace := runConfig.Config.Namespace.Name
 	var cluster v1alpha1.ClusterType
-	if isOpenshift, err := openshift.IsOpenShift(c); err != nil {
+	isOpenshift, err := openshift.IsOpenShift(c)
+	if err != nil {
 		return err
-	} else if isOpenshift {
+	}
+
+	if isOpenshift {
 		cluster = v1alpha1.ClusterTypeOpenShift
 	} else {
 		cluster = v1alpha1.ClusterTypeKubernetes
@@ -397,7 +402,7 @@ func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, cmd *cobra.Co
 		Global:                false,
 		ClusterType:           string(cluster),
 	}
-	err := install.OperatorOrCollect(o.Context, cmd, c, cfg, nil, true)
+	err = install.OperatorOrCollect(o.Context, cmd, c, cfg, nil, true)
 
 	for _, role := range runConfig.Config.Operator.Roles {
 		err = applyOperatorRole(o.Context, c, resolvePath(runConfig, role), namespace, install.IdentityResourceCustomizer)
@@ -409,7 +414,7 @@ func (o *runCmdOptions) setupOperator(runConfig *config.RunConfig, cmd *cobra.Co
 	return err
 }
 
-func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
+func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, cmd *cobra.Command, rawName string, runConfig *config.RunConfig) (*v1alpha1.Test, error) {
 	namespace := runConfig.Config.Namespace.Name
 	fileName := kubernetes.SanitizeFileName(rawName)
 	name := kubernetes.SanitizeName(rawName)
@@ -418,91 +423,14 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 		return nil, errors.New("unable to determine test name")
 	}
 
-	data, err := loadData(rawName)
+	data, err := loadData(ctx, rawName)
 	if err != nil {
 		return nil, err
 	}
 
-	test := v1alpha1.Test{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       v1alpha1.TestKind,
-			APIVersion: v1alpha1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-		},
-		Spec: v1alpha1.TestSpec{
-			Source: v1alpha1.SourceSpec{
-				Name:     fileName,
-				Content:  data,
-				Language: v1alpha1.LanguageGherkin,
-			},
-		},
-	}
-
-	for _, resource := range runConfig.Config.Runtime.Resources {
-		data, err := loadData(resolvePath(runConfig, resource))
-		if err != nil {
-			return nil, err
-		}
-
-		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
-			Name:    path.Base(resource),
-			Content: data,
-		})
-	}
-
-	for _, resource := range o.Resources {
-		data, err := loadData(resolvePath(runConfig, resource))
-		if err != nil {
-			return nil, err
-		}
-
-		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
-			Name:    path.Base(resource),
-			Content: data,
-		})
-	}
-
-	for _, propertyFile := range o.PropertyFiles {
-		data, err := loadData(resolvePath(runConfig, propertyFile))
-		if err != nil {
-			return nil, err
-		}
-
-		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
-			Name:    path.Base(propertyFile),
-			Content: data,
-		})
-	}
-
-	if settings, err := o.newSettings(runConfig); err != nil {
+	test, err := o.configureTest(ctx, namespace, fileName, name, data, runConfig)
+	if err != nil {
 		return nil, err
-	} else if settings != nil {
-		test.Spec.Settings = *settings
-	}
-
-	if err := o.setupEnvSettings(&test, runConfig); err != nil {
-		return nil, err
-	}
-
-	if runConfig.Config.Runtime.Secret != "" {
-		test.Spec.Secret = runConfig.Config.Runtime.Secret
-	}
-
-	if runConfig.Config.Runtime.Selenium.Image != "" {
-		test.Spec.Selenium = v1alpha1.SeleniumSpec{
-			Image:     runConfig.Config.Runtime.Selenium.Image,
-			RunAsUser: runConfig.Config.Runtime.Selenium.RunAsUser,
-		}
-	}
-
-	if runConfig.Config.Runtime.TestContainers.Enabled {
-		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
-			Image:     "joyrex2001/kubedock:0.8.1",
-			RunAsUser: runConfig.Config.Runtime.TestContainers.RunAsUser,
-		}
 	}
 
 	switch o.PrintFormat {
@@ -529,31 +457,30 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	existed := false
-	err = c.Create(o.Context, &test)
+	err = c.Create(ctx, &test)
 	if err != nil && k8serrors.IsAlreadyExists(err) {
 		existed = true
 		clone := test.DeepCopy()
-		var key ctrl.ObjectKey
-		key = ctrl.ObjectKeyFromObject(clone)
-		err = c.Get(o.Context, key, clone)
+		key := ctrl.ObjectKeyFromObject(clone)
+		err = c.Get(ctx, key, clone)
 		if err != nil {
 			return nil, err
 		}
 		// Hold the resource from the operator controller
 		clone.Status.Phase = v1alpha1.TestPhaseUpdating
-		err = c.Status().Update(o.Context, clone)
+		err = c.Status().Update(ctx, clone)
 		if err != nil {
 			return nil, err
 		}
 		// Update the spec
 		test.ResourceVersion = clone.ResourceVersion
-		err = c.Update(o.Context, &test)
+		err = c.Update(ctx, &test)
 		if err != nil {
 			return nil, err
 		}
 		// Reset status
 		test.Status = v1alpha1.TestStatus{}
-		err = c.Status().Update(o.Context, &test)
+		err = c.Status().Update(ctx, &test)
 	}
 
 	if err != nil {
@@ -561,61 +488,63 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	if !existed {
-		fmt.Println(fmt.Sprintf("Test '%s' created", name))
+		fmt.Printf("Test '%s\n' created", name)
 	} else {
-		fmt.Println(fmt.Sprintf("Test '%s' updated", name))
+		fmt.Printf("Test '%s\n' updated", name)
 	}
 
-	ctx, cancel := context.WithCancel(o.Context)
-	var status = v1alpha1.TestPhaseNew
-	go func() {
-		var timeout string
-		if o.Timeout != "" {
-			timeout = o.Timeout
-		} else if runConfig.Config.Timeout != "" {
-			timeout = runConfig.Config.Timeout
-		} else {
-			timeout = config.DefaultTimeout
-		}
-
-		waitTimeout, parseErr := time.ParseDuration(timeout)
-		if parseErr != nil {
-			fmt.Println(fmt.Sprintf("Failed to parse test timeout setting - %s", parseErr.Error()))
-			waitTimeout, _ = time.ParseDuration(config.DefaultTimeout)
-		}
-
-		err = kubernetes.WaitCondition(o.Context, c, &test, func(obj interface{}) (bool, error) {
-			if val, ok := obj.(*v1alpha1.Test); ok {
-				if val.Status.Phase != v1alpha1.TestPhaseNone {
-					status = val.Status.Phase
-				}
-
-				if val.Status.Phase == v1alpha1.TestPhaseDeleting ||
-					val.Status.Phase == v1alpha1.TestPhaseError ||
-					val.Status.Phase == v1alpha1.TestPhasePassed ||
-					val.Status.Phase == v1alpha1.TestPhaseFailed {
-					return true, nil
-				}
-			}
-			return false, nil
-		}, waitTimeout)
-
-		cancel()
-	}()
-
-	if o.Logs && o.Wait {
-		if err := k8slog.Print(ctx, c, namespace, name, cmd.OutOrStdout()); err != nil {
-			return nil, err
-		}
-	}
-
+	status := v1alpha1.TestPhaseNew
 	if o.Wait {
-		// Let's add a Wait point, otherwise the script terminates
-		<-ctx.Done()
+		ctxWithCancel, cancel := context.WithCancel(ctx)
 
-		fmt.Println(fmt.Sprintf("Test '%s' finished with status: %s", name, string(status)))
+		go func() {
+			timeout := config.DefaultTimeout
+
+			if runConfig.Config.Timeout != "" {
+				timeout = runConfig.Config.Timeout
+			}
+
+			if o.Timeout != "" {
+				timeout = o.Timeout
+			}
+
+			waitTimeout, parseErr := time.ParseDuration(timeout)
+			if parseErr != nil {
+				fmt.Printf("Failed to parse test timeout setting - %s\n", parseErr.Error())
+				waitTimeout, _ = time.ParseDuration(config.DefaultTimeout)
+			}
+
+			err = kubernetes.WaitCondition(ctxWithCancel, c, &test, func(obj interface{}) (bool, error) {
+				if val, ok := obj.(*v1alpha1.Test); ok {
+					if val.Status.Phase != v1alpha1.TestPhaseNone {
+						status = val.Status.Phase
+					}
+
+					if val.Status.Phase == v1alpha1.TestPhaseDeleting ||
+						val.Status.Phase == v1alpha1.TestPhaseError ||
+						val.Status.Phase == v1alpha1.TestPhasePassed ||
+						val.Status.Phase == v1alpha1.TestPhaseFailed {
+						return true, nil
+					}
+				}
+				return false, nil
+			}, waitTimeout)
+
+			cancel()
+		}()
+
+		if o.Logs {
+			if err := k8slog.Print(ctxWithCancel, c, namespace, name, cmd.OutOrStdout()); err != nil {
+				return nil, err
+			}
+		}
+
+		// Let's add a Wait point, otherwise the script terminates
+		<-ctxWithCancel.Done()
+
+		fmt.Printf("Test '%s' finished with status: %s\n", name, string(status))
 	} else {
-		fmt.Println(fmt.Sprintf("Test '%s' started", name))
+		fmt.Printf("Test '%s' started\n", name)
 	}
 
 	if runConfig.Config.Dump.Enabled {
@@ -631,7 +560,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 				fileName = fmt.Sprintf("%s-dump.log", test.Name)
 			}
 
-			fmt.Println(fmt.Sprintf("Dump test '%s' to file '%s'", name, fileName))
+			fmt.Printf("Dump test '%s' to file '%s'\n", name, fileName)
 
 			var flags int
 			if runConfig.Config.Dump.Append {
@@ -641,7 +570,7 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 			}
 
 			err = util.WithFile(path.Join(runConfig.Config.Dump.Directory, fileName), flags, 0o644, func(out io.Writer) error {
-				return dumpTest(o.Context, c, test.Name, namespace, out, runConfig.Config.Dump.Lines, runConfig.Config.Dump.Includes)
+				return dumpTest(ctx, c, test.Name, namespace, out, runConfig.Config.Dump.Lines, runConfig.Config.Dump.Includes)
 			})
 			if err != nil {
 				fmt.Println(err)
@@ -650,6 +579,90 @@ func (o *runCmdOptions) createAndRunTest(cmd *cobra.Command, c client.Client, ra
 	}
 
 	return &test, status.AsError(name)
+}
+
+func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fileName string, name string, data string, runConfig *config.RunConfig) (v1alpha1.Test, error) {
+	test := v1alpha1.Test{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       v1alpha1.TestKind,
+			APIVersion: v1alpha1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		},
+		Spec: v1alpha1.TestSpec{
+			Source: v1alpha1.SourceSpec{
+				Name:     fileName,
+				Content:  data,
+				Language: v1alpha1.LanguageGherkin,
+			},
+		},
+	}
+
+	for _, resource := range runConfig.Config.Runtime.Resources {
+		data, err := loadData(ctx, resolvePath(runConfig, resource))
+		if err != nil {
+			return test, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(resource),
+			Content: data,
+		})
+	}
+
+	for _, resource := range o.Resources {
+		data, err := loadData(ctx, resolvePath(runConfig, resource))
+		if err != nil {
+			return test, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(resource),
+			Content: data,
+		})
+	}
+
+	for _, propertyFile := range o.PropertyFiles {
+		data, err := loadData(ctx, resolvePath(runConfig, propertyFile))
+		if err != nil {
+			return test, err
+		}
+
+		test.Spec.Resources = append(test.Spec.Resources, v1alpha1.ResourceSpec{
+			Name:    path.Base(propertyFile),
+			Content: data,
+		})
+	}
+
+	if settings, err := o.newSettings(ctx, runConfig); err != nil {
+		return test, err
+	} else if settings != nil {
+		test.Spec.Settings = *settings
+	}
+
+	o.setupEnvSettings(&test, runConfig)
+
+	if runConfig.Config.Runtime.Secret != "" {
+		test.Spec.Secret = runConfig.Config.Runtime.Secret
+	}
+
+	if runConfig.Config.Runtime.Selenium.Image != "" {
+		test.Spec.Selenium = v1alpha1.SeleniumSpec{
+			Image:     runConfig.Config.Runtime.Selenium.Image,
+			RunAsUser: runConfig.Config.Runtime.Selenium.RunAsUser,
+		}
+	}
+
+	if runConfig.Config.Runtime.TestContainers.Enabled {
+		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
+			Image:     "joyrex2001/kubedock:0.8.1",
+			RunAsUser: runConfig.Config.Runtime.TestContainers.RunAsUser,
+		}
+	}
+
+	return test, nil
 }
 
 func (o *runCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
@@ -663,7 +676,7 @@ func (o *runCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 	return nil
 }
 
-func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) error {
+func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) {
 	env := make([]string, 0)
 
 	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
@@ -713,14 +726,12 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 	if len(env) > 0 {
 		test.Spec.Env = env
 	}
-
-	return nil
 }
 
-func (o *runCmdOptions) newSettings(runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
+func (o *runCmdOptions) newSettings(ctx context.Context, runConfig *config.RunConfig) (*v1alpha1.SettingsSpec, error) {
 	if o.Settings != "" {
 		rawName := o.Settings
-		configData, err := loadData(resolvePath(runConfig, rawName))
+		configData, err := loadData(ctx, resolvePath(runConfig, rawName))
 
 		if err != nil {
 			return nil, err
@@ -838,11 +849,7 @@ func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
 			keyValue = []string{condition}
 		}
 
-		if (keyValue)[0] == "os" {
-			skipStep = (keyValue)[1] != r.GOOS
-		} else if (keyValue)[0] == "failure()" {
-			skipStep = !hasErrors(results)
-		} else if strings.HasPrefix((keyValue)[0], "env:") {
+		if strings.HasPrefix((keyValue)[0], "env:") {
 			if value, ok := os.LookupEnv(strings.TrimPrefix((keyValue)[0], "env:")); ok {
 				// support env name check when no expected value is given
 				if len(keyValue) == 1 {
@@ -853,6 +860,13 @@ func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
 			} else {
 				skipStep = true
 			}
+		}
+
+		switch (keyValue)[0] {
+		case "os":
+			skipStep = (keyValue)[1] != r.GOOS
+		case "failure()":
+			skipStep = !hasErrors(results)
 		}
 
 		if skipStep {
@@ -880,7 +894,7 @@ func runScript(scriptFile string, desc string, namespace string, baseDir string,
 		executor = "/bin/bash"
 	}
 
-	command := exec.CommandContext(ctx, executor, resolve(scriptFile))
+	command := exec.CommandContext(ctx, executor, resolve(scriptFile)) //#nosec G204
 
 	command.Env = os.Environ()
 	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
@@ -896,9 +910,9 @@ func runScript(scriptFile string, desc string, namespace string, baseDir string,
 	command.Stderr = os.Stderr
 	command.Stdout = os.Stdout
 
-	fmt.Println(fmt.Sprintf("Running %s:", desc))
+	fmt.Printf("Running %s:\n", desc)
 	if err := command.Run(); err != nil {
-		fmt.Println(fmt.Sprintf("Failed to run %s: \n%v", desc, err))
+		fmt.Printf("Failed to run %s: \n%v\n", desc, err)
 		return err
 	}
 	return nil
@@ -910,12 +924,15 @@ func resolve(fileName string) string {
 	return resolved
 }
 
-func initializeTempNamespace(name string, c client.Client, context context.Context) (metav1.Object, error) {
+func initializeTempNamespace(context context.Context, c client.Client, name string) (metav1.Object, error) {
 	var obj ctrl.Object
 
-	if oc, err := openshift.IsOpenShift(c); err != nil {
+	oc, err := openshift.IsOpenShift(c)
+	if err != nil {
 		panic(err)
-	} else if oc {
+	}
+
+	if oc {
 		obj = &projectv1.ProjectRequest{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: projectv1.GroupVersion.String(),
@@ -936,15 +953,26 @@ func initializeTempNamespace(name string, c client.Client, context context.Conte
 			},
 		}
 	}
-	fmt.Println(fmt.Sprintf("Creating new test namespace %s", name))
-	err := c.Create(context, obj)
-	return obj.(metav1.Object), err
+
+	fmt.Printf("Creating new test namespace %s\n", name)
+	if err := c.Create(context, obj); err != nil {
+		return nil, err
+	}
+
+	if metaObj, ok := obj.(metav1.Object); ok {
+		return metaObj, nil
+	}
+
+	return nil, fmt.Errorf("type assertion failed %v", obj)
 }
 
-func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Context) {
-	if oc, err := openshift.IsOpenShift(c); err != nil {
+func deleteTempNamespace(context context.Context, c client.Client, ns metav1.Object) {
+	oc, err := openshift.IsOpenShift(c)
+	if err != nil {
 		panic(err)
-	} else if oc {
+	}
+
+	if oc {
 		prj := &projectv1.Project{
 			TypeMeta: metav1.TypeMeta{
 				APIVersion: projectv1.GroupVersion.String(),
@@ -958,9 +986,11 @@ func deleteTempNamespace(ns metav1.Object, c client.Client, context context.Cont
 			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
 		}
 	} else {
-		if err = c.Delete(context, ns.(ctrl.Object)); err != nil {
-			fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
+		if nsObj, ok := ns.(ctrl.Object); ok {
+			if err = c.Delete(context, nsObj); err != nil {
+				fmt.Fprintf(os.Stderr, "WARN: Failed to AutoRemove namespace %s\n", ns.GetName())
+			}
 		}
 	}
-	fmt.Println(fmt.Sprintf("AutoRemove namespace %s", ns.GetName()))
+	fmt.Printf("AutoRemove namespace %s\n", ns.GetName())
 }

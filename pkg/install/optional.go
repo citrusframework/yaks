@@ -24,7 +24,7 @@ import (
 	"github.com/go-logr/logr"
 )
 
-// OperatorStartupOptionalTools tries to install optional tools at operator startup and warns if something goes wrong
+// OperatorStartupOptionalTools tries to install optional tools at operator startup and warns if something goes wrong.
 func OperatorStartupOptionalTools(ctx context.Context, c client.Client, log logr.Logger) {
 
 	// Try to register the OpenShift CLI Download link if possible
