@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// NewEvaluateAction creates a new evaluate action
+// NewEvaluateAction creates a new evaluate action.
 func NewEvaluateAction() Action {
 	return &evaluateAction{}
 }
@@ -40,17 +40,17 @@ type evaluateAction struct {
 	baseAction
 }
 
-// Name returns a common name of the action
+// Name returns a common name of the action.
 func (action *evaluateAction) Name() string {
 	return "evaluate"
 }
 
-// CanHandle tells whether this action can handle the test
+// CanHandle tells whether this action can handle the test.
 func (action *evaluateAction) CanHandle(build *v1alpha1.Test) bool {
 	return build.Status.Phase == v1alpha1.TestPhaseRunning
 }
 
-// Handle handles the test
+// Handle handles the test.
 func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
 	jobStatus, err := action.getTestJobStatus(ctx, test)
 	if err != nil && k8serrors.IsNotFound(err) {
@@ -61,16 +61,16 @@ func (action *evaluateAction) Handle(ctx context.Context, test *v1alpha1.Test) (
 		return nil, err
 	}
 
-	if jobStatus.Active > 0 {
+	if jobStatus.Active > 0 || (jobStatus.Failed == 0 && jobStatus.Succeeded == 0) {
 		return test, nil
+	}
+
+	if jobStatus.Succeeded > 0 {
+		test.Status.Phase = v1alpha1.TestPhasePassed
 	}
 
 	if jobStatus.Failed > 0 {
 		test.Status.Phase = v1alpha1.TestPhaseFailed
-	} else if jobStatus.Succeeded > 0 {
-		test.Status.Phase = v1alpha1.TestPhasePassed
-	} else {
-		return test, nil
 	}
 
 	status, err := action.getTestPodStatus(ctx, test)
@@ -94,9 +94,9 @@ func (action *evaluateAction) addTestResults(status v1.PodStatus, test *v1alpha1
 	containerStatus := getTestContainerStatus(status.ContainerStatuses)
 
 	if containerStatus.State.Terminated != nil && len(containerStatus.State.Terminated.Message) > 0 {
-		reportJson := []byte(containerStatus.State.Terminated.Message)
+		reportJSON := []byte(containerStatus.State.Terminated.Message)
 
-		if err := json.Unmarshal(reportJson, &test.Status.Results); err != nil {
+		if err := json.Unmarshal(reportJSON, &test.Status.Results); err != nil {
 			return err
 		}
 
@@ -133,7 +133,7 @@ func getTestContainerStatus(statusList []v1.ContainerStatus) v1.ContainerStatus 
 
 func (action *evaluateAction) getTestPodStatus(ctx context.Context, test *v1alpha1.Test) (v1.PodStatus, error) {
 	pods, err := action.client.CoreV1().Pods(test.Namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: v1alpha1.TestIdLabel + "=" + test.Status.TestID,
+		LabelSelector: v1alpha1.TestIDLabel + "=" + test.Status.TestID,
 	})
 	if err != nil {
 		return v1.PodStatus{}, err
@@ -154,12 +154,12 @@ func (action *evaluateAction) getTestJobStatus(ctx context.Context, test *v1alph
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: test.Namespace,
-			Name:      TestJobNameFor(test),
+			Name:      JobNameFor(test),
 		},
 	}
 	key := client.ObjectKey{
 		Namespace: test.Namespace,
-		Name:      TestJobNameFor(test),
+		Name:      JobNameFor(test),
 	}
 	if err := action.client.Get(ctx, key, &job); err != nil {
 		return batchv1.JobStatus{}, err

@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// IsOpenShift returns true if we are connected to a OpenShift cluster or given cluster type marks cluster as OpenShift
+// IsOpenShift returns true if we are connected to a OpenShift cluster or given cluster type marks cluster as OpenShift.
 func IsOpenShiftClusterType(c kubernetes.Interface, clusterType string) (bool, error) {
 	var res bool
 	var err error
@@ -40,7 +40,7 @@ func IsOpenShiftClusterType(c kubernetes.Interface, clusterType string) (bool, e
 	return res, nil
 }
 
-// IsOpenShift returns true if we are connected to a OpenShift cluster
+// IsOpenShift returns true if we are connected to a OpenShift cluster.
 func IsOpenShift(client kubernetes.Interface) (bool, error) {
 	_, err := client.Discovery().ServerResourcesForGroupVersion("image.openshift.io/v1")
 	if err != nil && errors.IsNotFound(err) {

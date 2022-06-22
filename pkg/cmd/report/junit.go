@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	JunitReportFile          = "junit-reports.xml"
-	XmlProcessingInstruction = `<?xml version="1.0" encoding="UTF-8"?>`
+	JUnitReportFile          = "junit-reports.xml"
+	XMLProcessingInstruction = `<?xml version="1.0" encoding="UTF-8"?>`
 )
 
 type JUnitReport struct {
@@ -105,16 +105,13 @@ func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string,
 		XMLName struct{} `xml:"testsuites"`
 	}{JUnitReport: report}
 
-	if bytes, err := xml.MarshalIndent(tmp, "", "  "); err == nil {
-		report := XmlProcessingInstruction + string(bytes)
-
-		fileError := writeReport(report, JunitReportFile, outputDir)
-		if fileError != nil {
-			return "", fileError
-		}
-
-		return report, nil
-	} else {
+	bytes, err := xml.MarshalIndent(tmp, "", "  ")
+	if err != nil {
 		return "", err
 	}
+
+	xmlReport := XMLProcessingInstruction + string(bytes)
+
+	err = writeReport(xmlReport, JUnitReportFile, outputDir)
+	return xmlReport, err
 }

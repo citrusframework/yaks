@@ -28,12 +28,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// Print prints test logs to the given writer
+// Print prints test logs to the given writer.
 func Print(ctx context.Context, client kubernetes.Interface, namespace string, name string, out io.Writer) error {
 	return PrintUsingSelector(ctx, client, namespace, "test", v1alpha1.TestLabel+"="+name, out)
 }
 
-// PrintUsingSelector prints pod logs using a selector
+// PrintUsingSelector prints pod logs using a selector.
 func PrintUsingSelector(ctx context.Context, client kubernetes.Interface, namespace, defaultContainerName, selector string, out io.Writer) error {
 	scraper := NewSelectorScraper(client, namespace, defaultContainerName, selector)
 	reader := scraper.Start(ctx)

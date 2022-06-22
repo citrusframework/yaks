@@ -34,7 +34,7 @@ import (
 
 type registerFunction func(*runtime.Scheme) error
 
-// AddToScheme adds OpenShift types to the scheme
+// AddToScheme adds OpenShift types to the scheme.
 func AddToScheme(scheme *runtime.Scheme) error {
 	var err error
 

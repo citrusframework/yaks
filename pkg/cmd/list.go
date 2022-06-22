@@ -63,10 +63,8 @@ func (o *listCmdOptions) run(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	namespace := o.Namespace
-
 	options := []k8sclient.ListOption{
-		k8sclient.InNamespace(namespace),
+		k8sclient.InNamespace(o.Namespace),
 	}
 
 	err = c.List(o.Context, &testList, options...)
@@ -75,7 +73,7 @@ func (o *listCmdOptions) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(testList.Items) == 0 {
-		fmt.Printf("No tests found in %s namespace.\n", namespace)
+		fmt.Printf("No tests found in %s namespace.\n", o.Namespace)
 		return nil
 	}
 

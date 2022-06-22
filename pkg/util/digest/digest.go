@@ -26,7 +26,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
-// ComputeForTest returns a digest of the fields that are relevant for detecting changes
+// ComputeForTest returns a digest of the fields that are relevant for detecting changes.
 func ComputeForTest(test *v1alpha1.Test) (string, error) {
 	hash := sha256.New()
 	// Operator version is relevant

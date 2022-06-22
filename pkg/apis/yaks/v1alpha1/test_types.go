@@ -26,13 +26,13 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ClusterType is the kind of orchestration cluster the framework is installed into
+// ClusterType is the kind of orchestration cluster the framework is installed into.
 type ClusterType string
 
 const (
-	// ClusterTypeOpenShift is used when targeting a OpenShift cluster
+	// ClusterTypeOpenShift is used when targeting a OpenShift cluster.
 	ClusterTypeOpenShift ClusterType = "OpenShift"
-	// ClusterTypeKubernetes is used when targeting a Kubernetes cluster
+	// ClusterTypeKubernetes is used when targeting a Kubernetes cluster.
 	ClusterTypeKubernetes ClusterType = "Kubernetes"
 )
 
@@ -52,32 +52,32 @@ type TestSpec struct {
 	Secret    string         `json:"secret,omitempty"`
 }
 
-// SourceSpec
+// SourceSpec.
 type SourceSpec struct {
 	Name     string   `json:"name,omitempty"`
 	Content  string   `json:"content,omitempty"`
 	Language Language `json:"language,omitempty"`
 }
 
-// ResourceSpec
+// ResourceSpec.
 type ResourceSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
-// SettingsSpec
+// SettingsSpec.
 type SettingsSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
-// SeleniumSpec
+// SeleniumSpec.
 type SeleniumSpec struct {
 	Image     string `json:"image,omitempty"`
 	RunAsUser int    `json:"runAsUser,omitempty"`
 }
 
-// KubeDockSpec
+// KubeDockSpec.
 type KubeDockSpec struct {
 	Image     string `json:"image,omitempty"`
 	RunAsUser int    `json:"runAsUser,omitempty"`
@@ -110,7 +110,7 @@ type TestStatus struct {
 // +kubebuilder:printcolumn:name="Skipped",type=string,JSONPath=`.status.results.summary.skipped`,description="Skipped tests"
 // +kubebuilder:printcolumn:name="Errors",type=string,JSONPath=`.status.errors`,description="Test error details"
 
-// Test is the Schema for the tests API
+// Test is the Schema for the tests API.
 type Test struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -121,7 +121,7 @@ type Test struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TestList contains a list of Test
+// TestList contains a list of Test.
 type TestList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -157,36 +157,36 @@ type TestResult struct {
 	ErrorMessage string `json:"errorMessage,omitempty"`
 }
 
-// TestPhase
+// TestPhase.
 type TestPhase string
 
 const (
 	TestLabel              = "yaks.citrusframework.org/test"
-	TestIdLabel            = "yaks.citrusframework.org/test-id"
+	TestIDLabel            = "yaks.citrusframework.org/test-id"
 	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
 
-	// InstanceKind
+	// InstanceKind.
 	InstanceKind string = "Instance"
-	// TestKind
+	// TestKind.
 	TestKind string = "Test"
 
-	// TestPhaseNone
+	// TestPhaseNone.
 	TestPhaseNone TestPhase = ""
-	// TestPhaseNew
+	// TestPhaseNew.
 	TestPhaseNew TestPhase = "New"
-	// TestPhasePending
+	// TestPhasePending.
 	TestPhasePending TestPhase = "Pending"
-	// TestPhaseRunning
+	// TestPhaseRunning.
 	TestPhaseRunning TestPhase = "Running"
-	// TestPhasePassed
+	// TestPhasePassed.
 	TestPhasePassed TestPhase = "Passed"
-	// TestPhaseFailed
+	// TestPhaseFailed.
 	TestPhaseFailed TestPhase = "Failed"
-	// TestPhaseError
+	// TestPhaseError.
 	TestPhaseError TestPhase = "Error"
-	// TestPhaseDeleting
+	// TestPhaseDeleting.
 	TestPhaseDeleting TestPhase = "Deleting"
-	// TestPhaseUpdating is a phase where the operator is not supposed to interact with the resource
+	// TestPhaseUpdating is a phase where the operator is not supposed to interact with the resource.
 	TestPhaseUpdating TestPhase = "Updating"
 )
 
@@ -207,11 +207,11 @@ func (phase TestPhase) AsError(name string) error {
 type Language string
 
 const (
-	// LanguageGherkin
+	// LanguageGherkin.
 	LanguageGherkin Language = "feature"
 )
 
-// TestLanguages is the list of all supported test languages
+// TestLanguages is the list of all supported test languages.
 var TestLanguages = []Language{
 	LanguageGherkin,
 }

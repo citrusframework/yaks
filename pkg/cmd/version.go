@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// VersionVariant may be overridden at build time
+// VersionVariant may be overridden at build time.
 var VersionVariant = ""
 
 func newCmdVersion() *cobra.Command {

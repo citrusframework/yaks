@@ -38,7 +38,7 @@ func init() {
 	metav1.AddToGroupVersion(deleteScheme, versionV1)
 }
 
-// basicNegotiatedSerializer is used to handle discovery and error handling serialization
+// basicNegotiatedSerializer is used to handle discovery and error handling serialization.
 type basicNegotiatedSerializer struct{}
 
 func (s basicNegotiatedSerializer) SupportedMediaTypes() []runtime.SerializerInfo {

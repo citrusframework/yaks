@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Action --
+// Action --.
 type Action interface {
 	client.Injectable
 	log.Injectable

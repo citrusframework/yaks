@@ -139,20 +139,8 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 }
 
 func applyOperatorRole(ctx context.Context, c client.Client, role string, namespace string, customizer install.ResourceCustomizer) error {
-	if role == config.RoleKnative {
-		if err := install.InstallKnative(ctx, c, namespace, customizer, nil, true); err != nil {
-			return err
-		}
-	} else if role == config.RoleCamelK {
-		if err := install.InstallCamelK(ctx, c, namespace, customizer, nil, true); err != nil {
-			return err
-		}
-	} else if role == config.RoleStrimzi {
-		if err := install.InstallStrimzi(ctx, c, namespace, customizer, nil, true); err != nil {
-			return err
-		}
-	} else if strings.HasSuffix(role, ".yaml") {
-		data, err := loadData(role)
+	if strings.HasSuffix(role, ".yaml") {
+		data, err := loadData(ctx, role)
 		if err != nil {
 			return err
 		}
@@ -170,32 +158,25 @@ func applyOperatorRole(ctx context.Context, c client.Client, role string, namesp
 			return errors.New("unsupported resource type - expected Role or RoleBinding")
 		}
 
-		if err := install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, customizer(obj)); err != nil {
-			return err
-		}
-		fmt.Printf("Added role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
-	} else {
-		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi))
+		fmt.Printf("Adding role permission '%s' from file %s to YAKS operator in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
+		return install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, customizer(obj))
 	}
 
-	return nil
+	switch role {
+	case config.RoleKnative:
+		return install.KnativeResources(ctx, c, namespace, customizer, nil, true)
+	case config.RoleCamelK:
+		return install.CamelKResources(ctx, c, namespace, customizer, nil, true)
+	case config.RoleStrimzi:
+		return install.StrimziResources(ctx, c, namespace, customizer, nil, true)
+	default:
+		return fmt.Errorf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi)
+	}
 }
 
 func applyViewerRole(ctx context.Context, c client.Client, role string, namespace string) error {
-	if role == config.RoleKnative {
-		if err := install.InstallViewerServiceAccountRolesKnative(ctx, c, namespace); err != nil {
-			return err
-		}
-	} else if role == config.RoleCamelK {
-		if err := install.InstallViewerServiceAccountRolesCamelK(ctx, c, namespace); err != nil {
-			return err
-		}
-	} else if role == config.RoleStrimzi {
-		if err := install.InstallViewerServiceAccountRolesStrimzi(ctx, c, namespace); err != nil {
-			return err
-		}
-	} else if strings.HasSuffix(role, ".yaml") {
-		data, err := loadData(role)
+	if strings.HasSuffix(role, ".yaml") {
+		data, err := loadData(ctx, role)
 		if err != nil {
 			return err
 		}
@@ -213,15 +194,20 @@ func applyViewerRole(ctx context.Context, c client.Client, role string, namespac
 			return errors.New("unsupported resource type - expected Role or RoleBinding")
 		}
 
-		if err := install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, obj); err != nil {
-			return err
-		}
-		fmt.Printf("Added role permission '%s' from file %s to YAKS viewer service account in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
-	} else {
-		return errors.New(fmt.Sprintf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi))
+		fmt.Printf("Adding role permission '%s' from file %s to YAKS viewer service account in namespace '%s'\n", obj.GetName(), path.Base(role), namespace)
+		return install.RuntimeObjectOrCollect(ctx, c, namespace, nil, true, obj)
 	}
 
-	return nil
+	switch role {
+	case config.RoleKnative:
+		return install.ViewerServiceAccountRolesKnative(ctx, c, namespace)
+	case config.RoleCamelK:
+		return install.ViewerServiceAccountRolesCamelK(ctx, c, namespace)
+	case config.RoleStrimzi:
+		return install.ViewerServiceAccountRolesStrimzi(ctx, c, namespace)
+	default:
+		return fmt.Errorf("unsupported role definition - please use one of '%s', '%s', '%s' or 'role.yaml'", config.RoleCamelK, config.RoleKnative, config.RoleStrimzi)
+	}
 }
 
 func verifyRole(r *v1.Role, serviceAccount string) {

@@ -23,12 +23,12 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 )
 
-// TestJobNameFor returns the name to use for the testing pod
-func TestJobNameFor(test *v1alpha1.Test) string {
+// JobNameFor returns the name to use for the testing pod.
+func JobNameFor(test *v1alpha1.Test) string {
 	return fmt.Sprintf("test-%s-%s", test.Name, test.Status.TestID)
 }
 
-// TestResourceNameFor returns the name to use for generic testing resources
-func TestResourceNameFor(test *v1alpha1.Test) string {
+// ResourceNameFor returns the name to use for generic testing resources.
+func ResourceNameFor(test *v1alpha1.Test) string {
 	return fmt.Sprintf("test-%s", test.Name)
 }

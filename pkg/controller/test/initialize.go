@@ -26,7 +26,7 @@ import (
 	"github.com/rs/xid"
 )
 
-// NewInitializeAction creates a new initialize action
+// NewInitializeAction creates a new initialize action.
 func NewInitializeAction() Action {
 	return &initializeAction{}
 }
@@ -35,18 +35,18 @@ type initializeAction struct {
 	baseAction
 }
 
-// Name returns a common name of the action
+// Name returns a common name of the action.
 func (action *initializeAction) Name() string {
 	return "initialize"
 }
 
-// CanHandle tells whether this action can handle the test
+// CanHandle tells whether this action can handle the test.
 func (action *initializeAction) CanHandle(build *v1alpha1.Test) bool {
 	return build.Status.Phase == v1alpha1.TestPhaseNone ||
 		build.Status.Phase == v1alpha1.TestPhaseNew
 }
 
-// Handle handles the test
+// Handle handles the test.
 func (action *initializeAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
 	test.Status.Phase = v1alpha1.TestPhasePending
 	test.Status.TestID = xid.New().String()

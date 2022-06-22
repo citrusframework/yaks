@@ -22,6 +22,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
@@ -65,7 +67,7 @@ const (
 
 var log = logf.Log.WithName("cmd")
 
-// GitCommit --
+// GitCommit --.
 var GitCommit string
 
 func printVersion() {
@@ -75,7 +77,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("YAKS Git Commit: %v", GitCommit))
 }
 
-// Run starts the YAKS operator
+// Run starts the YAKS operator.
 func Run(leaderElection bool, leaderElectionID string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
@@ -116,8 +118,7 @@ func Run(leaderElection bool, leaderElectionID string) {
 		log.Info("Event broadcasting is disabled because of missing permissions to create Events")
 	}
 
-	operatorNamespace, err := envvar.GetOperatorNamespace()
-	exitOnError(err, "failed to determine operator namespace")
+	operatorNamespace := envvar.GetOperatorNamespace()
 	if operatorNamespace == "" {
 		// Fallback to using the watch namespace when the operator is not in-cluster.
 		// It does not support local (off-cluster) operator watching resources globally,
@@ -129,7 +130,6 @@ func Run(leaderElection bool, leaderElectionID string) {
 		}
 	}
 
-	// nolint: gocritic
 	if ok, err := kubernetes.CheckPermission(context.TODO(), c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil || !ok {
 		// Do not sink Events to the server as they'll be rejected
 		broadcaster = event.NewSinkLessBroadcaster(broadcaster)
@@ -177,7 +177,11 @@ func Run(leaderElection bool, leaderElectionID string) {
 	exitOnError(
 		mgr.GetFieldIndexer().IndexField(context.Background(), &corev1.Pod{}, "status.phase",
 			func(obj k8sclient.Object) []string {
-				return []string{string(obj.(*corev1.Pod).Status.Phase)}
+				if pod, ok := obj.(*corev1.Pod); ok {
+					return []string{string(pod.Status.Phase)}
+				}
+
+				return []string{}
 			}),
 		"unable to set up field indexer for status.phase: %v",
 	)
@@ -205,9 +209,9 @@ func Run(leaderElection bool, leaderElectionID string) {
 }
 
 func installInstance(ctx context.Context, c client.Client, global bool, version string) error {
-	operatorNamespace, err := envvar.GetOperatorNamespace()
-	if err != nil {
-		return err
+	operatorNamespace := envvar.GetOperatorNamespace()
+	if operatorNamespace == "" {
+		return errors.New("unable to install instance resource - failed to get operator namespace")
 	}
 
 	operatorPodName := getOperatorPodName()
@@ -232,8 +236,7 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 
 	if err := c.Create(ctx, &yaks); err != nil && k8serrors.IsAlreadyExists(err) {
 		clone := yaks.DeepCopy()
-		var key k8sclient.ObjectKey
-		key = k8sclient.ObjectKeyFromObject(clone)
+		key := k8sclient.ObjectKeyFromObject(clone)
 
 		err = c.Get(ctx, key, clone)
 		if err != nil {
@@ -253,8 +256,8 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 		Version: version,
 	}
 
-	//Update the status
-	err = c.Status().Update(ctx, &yaks)
+	// Update the status
+	err := c.Status().Update(ctx, &yaks)
 	if err != nil {
 		return err
 	}
@@ -262,13 +265,13 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 	return nil
 }
 
-// getOperatorPodName returns the name the operator pod
+// getOperatorPodName returns the name the operator pod.
 func getOperatorPodName() string {
 	podName, _ := os.LookupEnv(PodNameEnvVar)
 	return podName
 }
 
-// getWatchNamespace returns the Namespace the operator should be watching for changes
+// getWatchNamespace returns the Namespace the operator should be watching for changes.
 func getWatchNamespace() (string, error) {
 	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
 	// which specifies the Namespace to watch.

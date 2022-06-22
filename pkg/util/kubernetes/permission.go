@@ -31,7 +31,7 @@ import (
 // in the cluster.
 // E.g. checkPermission(client, olmv1alpha1.GroupName, "clusterserviceversions", namespace, "yaks", "get")
 //
-// nolint:unparam
+
 func CheckPermission(ctx context.Context, client client.Client, group, resource, namespace, name, verb string) (bool, error) {
 	sarReview := &authorizationv1.SelfSubjectAccessReview{
 		Spec: authorizationv1.SelfSubjectAccessReviewSpec{
@@ -45,13 +45,11 @@ func CheckPermission(ctx context.Context, client client.Client, group, resource,
 		},
 	}
 
-	sar, err := client.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, sarReview, metav1.CreateOptions{})
-	if err != nil {
-		if k8serrors.IsForbidden(err) {
-			return false, nil
-		}
-		return false, err
-	} else {
+	if sar, err := client.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, sarReview, metav1.CreateOptions{}); err == nil {
 		return sar.Status.Allowed, nil
+	} else if !k8serrors.IsForbidden(err) {
+		return false, err
 	}
+
+	return false, nil
 }

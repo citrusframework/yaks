@@ -18,7 +18,6 @@ limitations under the License.
 package envvar
 
 import (
-	"fmt"
 	"os"
 
 	corev1 "k8s.io/api/core/v1"
@@ -28,7 +27,7 @@ const (
 	NamespaceEnvVar = "NAMESPACE"
 )
 
-// Get --
+// Get --.
 func Get(vars []corev1.EnvVar, name string) *corev1.EnvVar {
 	for i := 0; i < len(vars); i++ {
 		if vars[i].Name == name {
@@ -39,23 +38,9 @@ func Get(vars []corev1.EnvVar, name string) *corev1.EnvVar {
 	return nil
 }
 
-// Remove --
-func Remove(vars *[]corev1.EnvVar, name string) {
-	v := *vars
-	for i := 0; i < len(v); i++ {
-		if v[i].Name == name {
-			v = append(v[:i], v[i+1:]...)
-			*vars = v
-			return
-		}
-	}
-}
-
-// SetVal --
+// SetVal --.
 func SetVal(vars *[]corev1.EnvVar, name string, value string) {
-	envVar := Get(*vars, name)
-
-	if envVar != nil {
+	if envVar := Get(*vars, name); envVar != nil {
 		envVar.Value = value
 		envVar.ValueFrom = nil
 	} else {
@@ -66,29 +51,9 @@ func SetVal(vars *[]corev1.EnvVar, name string, value string) {
 	}
 }
 
-// SetVar --
-func SetVar(vars *[]corev1.EnvVar, newEnvVar corev1.EnvVar) {
-	envVar := Get(*vars, newEnvVar.Name)
-
-	if envVar != nil {
-		envVar.Value = newEnvVar.Value
-		envVar.ValueFrom = nil
-
-		if newEnvVar.ValueFrom != nil {
-			from := *newEnvVar.ValueFrom
-			envVar.ValueFrom = &from
-		}
-
-	} else {
-		*vars = append(*vars, newEnvVar)
-	}
-}
-
-// SetValFrom --
+// SetValFrom --.
 func SetValFrom(vars *[]corev1.EnvVar, name string, path string) {
-	envVar := Get(*vars, name)
-
-	if envVar != nil {
+	if envVar := Get(*vars, name); envVar != nil {
 		envVar.Value = ""
 		envVar.ValueFrom = &corev1.EnvVarSource{
 			FieldRef: &corev1.ObjectFieldSelector{
@@ -107,11 +72,11 @@ func SetValFrom(vars *[]corev1.EnvVar, name string, path string) {
 	}
 }
 
-// GetOperatorNamespace returns the Namespace the operator is installed
-func GetOperatorNamespace() (string, error) {
-	ns, found := os.LookupEnv(NamespaceEnvVar)
-	if !found {
-		return "", fmt.Errorf("%s env must be set", NamespaceEnvVar)
+// GetOperatorNamespace returns the Namespace the operator is installed.
+func GetOperatorNamespace() string {
+	if ns, found := os.LookupEnv(NamespaceEnvVar); found {
+		return ns
 	}
-	return ns, nil
+
+	return ""
 }

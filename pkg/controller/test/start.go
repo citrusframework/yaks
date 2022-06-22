@@ -22,19 +22,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/citrusframework/yaks/pkg/util/envvar"
-	"github.com/citrusframework/yaks/pkg/util/openshift"
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/config"
 	"github.com/citrusframework/yaks/pkg/install"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	"github.com/citrusframework/yaks/pkg/util/openshift"
+
 	snap "github.com/container-tools/snap/pkg/api"
+	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -43,7 +44,7 @@ const (
 	RunAsUser = 1001 // non-root user must match id used in Dockerfile
 )
 
-// NewStartAction creates a new start action
+// NewStartAction creates a new start action.
 func NewStartAction() Action {
 	return &startAction{}
 }
@@ -52,24 +53,24 @@ type startAction struct {
 	baseAction
 }
 
-// Name returns a common name of the action
+// Name returns a common name of the action.
 func (action *startAction) Name() string {
 	return "start"
 }
 
-// CanHandle tells whether this action can handle the test
+// CanHandle tells whether this action can handle the test.
 func (action *startAction) CanHandle(test *v1alpha1.Test) bool {
 	return test.Status.Phase == v1alpha1.TestPhasePending
 }
 
-// Handle handles the test
+// Handle handles the test.
 func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1alpha1.Test, error) {
 	// Create the viewer service account
 	if err := action.ensureServiceAccountRoles(ctx, test.Namespace); err != nil {
 		return nil, err
 	}
 
-	configMap := action.newTestConfigMap(ctx, test)
+	configMap := action.newTestConfigMap(test)
 	job, err := action.newTestJob(ctx, test, configMap)
 	if err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
@@ -85,15 +86,11 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 
 	test.Status.Phase = v1alpha1.TestPhaseRunning
 
-	if operatorNamespace, err := envvar.GetOperatorNamespace(); err == nil {
-		if test.Labels == nil {
-			test.Labels = make(map[string]string)
-		}
-
-		test.Labels[config.OperatorLabel] = operatorNamespace
-	} else {
-		return nil, err
+	operatorNamespace := envvar.GetOperatorNamespace()
+	if test.Labels == nil {
+		test.Labels = make(map[string]string)
 	}
+	test.Labels[config.OperatorLabel] = operatorNamespace
 
 	return test, nil
 }
@@ -109,11 +106,11 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: test.Namespace,
-			Name:      TestJobNameFor(test),
+			Name:      JobNameFor(test),
 			Labels: map[string]string{
 				"app":                "yaks",
 				v1alpha1.TestLabel:   test.Name,
-				v1alpha1.TestIdLabel: test.Status.TestID,
+				v1alpha1.TestIDLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -134,7 +131,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 					Labels: map[string]string{
 						"app":                       "yaks",
 						v1alpha1.TestLabel:          test.Name,
-						v1alpha1.TestIdLabel:        test.Status.TestID,
+						v1alpha1.TestIDLabel:        test.Status.TestID,
 						"app.kubernetes.io/part-of": "yaks-tests",
 					},
 				},
@@ -268,7 +265,7 @@ func getMavenArgLine() []string {
 	return argLine
 }
 
-func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.Test) *v1.ConfigMap {
+func (action *startAction) newTestConfigMap(test *v1alpha1.Test) *v1.ConfigMap {
 	controller := true
 	blockOwnerDeletion := true
 
@@ -290,11 +287,11 @@ func (action *startAction) newTestConfigMap(ctx context.Context, test *v1alpha1.
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: test.Namespace,
-			Name:      TestResourceNameFor(test),
+			Name:      ResourceNameFor(test),
 			Labels: map[string]string{
 				"app":                "yaks",
 				v1alpha1.TestLabel:   test.Name,
-				v1alpha1.TestIdLabel: test.Status.TestID,
+				v1alpha1.TestIDLabel: test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -330,9 +327,9 @@ func (action *startAction) ensureServiceAccountRoles(ctx context.Context, namesp
 		return err
 	}
 
-	operatorNamespace, err := envvar.GetOperatorNamespace()
-	if err != nil {
-		return err
+	operatorNamespace := envvar.GetOperatorNamespace()
+	if operatorNamespace == "" {
+		return errors.New("unable to retrieve operator namespace")
 	}
 
 	labelSelector := metav1.ListOptions{

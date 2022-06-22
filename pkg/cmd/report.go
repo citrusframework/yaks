@@ -67,15 +67,7 @@ func (o *reportCmdOptions) run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	content, err := report.GenerateReport(&results, o.OutputFormat)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(cmd.OutOrStdout(), "%s\n", content)
-	if err != nil {
-		return err
-	}
-
+	report.GenerateReport(cmd.OutOrStdout(), cmd.OutOrStderr(), &results, o.OutputFormat)
 	return nil
 }
 
@@ -98,7 +90,8 @@ func (o *reportCmdOptions) FetchResults() (*v1alpha1.TestResults, error) {
 		return nil, err
 	}
 
-	for _, test := range testList.Items {
+	for i := range testList.Items {
+		test := testList.Items[i]
 		suite := v1alpha1.TestSuite{}
 
 		isNew := true

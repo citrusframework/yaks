@@ -20,12 +20,12 @@ package log
 import (
 	"bufio"
 	"context"
+	"errors"
 	"io"
 	"time"
 
 	"github.com/citrusframework/yaks/pkg/util/log"
 
-	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -40,7 +40,7 @@ var commonUserContainerNames = map[string]bool{
 	"user-container": true,
 }
 
-// PodScraper scrapes logs of a specific pod
+// PodScraper scrapes logs of a specific pod.
 type PodScraper struct {
 	namespace            string
 	podName              string
@@ -49,7 +49,7 @@ type PodScraper struct {
 	L                    log.Logger
 }
 
-// NewPodScraper creates a new pod scraper
+// NewPodScraper creates a new pod scraper.
 func NewPodScraper(c kubernetes.Interface, namespace string, podName string, defaultContainerName string) *PodScraper {
 	return &PodScraper{
 		namespace:            namespace,
@@ -60,7 +60,7 @@ func NewPodScraper(c kubernetes.Interface, namespace string, podName string, def
 	}
 }
 
-// Start returns a reader that streams the pod logs
+// Start returns a reader that streams the pod logs.
 func (s *PodScraper) Start(ctx context.Context) *bufio.Reader {
 	pipeIn, pipeOut := io.Pipe()
 	bufPipeIn := bufio.NewReader(pipeIn)
@@ -92,17 +92,18 @@ func (s *PodScraper) doScrape(ctx context.Context, out *bufio.Writer, clientClos
 	reader := bufio.NewReader(byteReader)
 	for {
 		data, err := reader.ReadBytes('\n')
-		if err == io.EOF {
+		if err != nil && errors.Is(err, io.EOF) {
+			_ = out.Flush()
 			return
-		}
-		if err != nil {
+		} else if err != nil {
 			break
 		}
+
 		_, err = out.Write(data)
 		if err != nil {
 			break
 		}
-		out.Flush()
+		_ = out.Flush()
 	}
 
 	s.handleAndRestart(ctx, err, 5*time.Second, out, clientCloser)
@@ -136,7 +137,7 @@ func (s *PodScraper) handleAndRestart(ctx context.Context, err error, wait time.
 }
 
 // waitForPodRunning waits for a given pod to reach the running state.
-// It may return the internal container to watch if present
+// It may return the internal container to watch if present.
 func (s *PodScraper) waitForPodRunning(ctx context.Context, namespace string, podName string, defaultContainerName string) (string, error) {
 	pod := corev1.Pod{
 		TypeMeta: metav1.TypeMeta{

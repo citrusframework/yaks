@@ -31,7 +31,7 @@ import (
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// newCmdDelete --
+// newCmdDelete --.
 func newCmdDelete(rootCmdOptions *RootCmdOptions) (*cobra.Command, *deleteCmdOptions) {
 	options := deleteCmdOptions{
 		RootCmdOptions: rootCmdOptions,
@@ -133,7 +133,7 @@ func deleteAllTests(ctx context.Context, c k8sclient.Client, namespace string, v
 		},
 	}
 
-	//Looks like Operator SDK doesn't support deletion of all objects with one command
+	// Looks like Operator SDK doesn't support deletion of all objects with one command
 	err := c.List(ctx, &testList, k8sclient.InNamespace(namespace))
 	if err != nil {
 		return err

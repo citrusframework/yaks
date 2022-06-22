@@ -64,25 +64,25 @@ type dumpCmdOptions struct {
 	Lines    int      `mapstructure:"lines"`
 }
 
-func (o *dumpCmdOptions) dump(cmd *cobra.Command, args []string) (err error) {
+func (o *dumpCmdOptions) dump(cmd *cobra.Command, args []string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
-		return
+		return err
 	}
 
 	createDump := func(out io.Writer) error {
 		if o.Test != "" {
 			return dumpTest(o.Context, c, o.Test, o.Namespace, out, o.Lines, o.Includes)
-		} else {
-			return dumpAll(o.Context, c, o.Namespace, out, o.Lines, o.Includes)
 		}
+
+		return dumpAll(o.Context, c, o.Namespace, out, o.Lines, o.Includes)
 	}
 
 	if len(args) == 1 {
 		return util.WithFile(args[0], os.O_RDWR|os.O_CREATE, 0o644, createDump)
-	} else {
-		return createDump(cmd.OutOrStdout())
 	}
+
+	return createDump(cmd.OutOrStdout())
 }
 
 func dumpTest(ctx context.Context, c client.Client, name string, namespace string, out io.Writer, logLines int, includes []string) error {
@@ -106,14 +106,14 @@ func dumpTest(ctx context.Context, c client.Client, name string, namespace strin
 		operatorNamespace = test.Labels[cfg.OperatorLabel]
 	}
 
-	err = dumpOperator(yaksClient, ctx, c, operatorNamespace, out, logLines)
+	err = dumpOperator(ctx, c, yaksClient, operatorNamespace, out, logLines)
 	if err != nil {
 		return err
 	}
 
 	testLabelSelector := metav1.ListOptions{}
 	if len(test.Status.TestID) > 0 {
-		testLabelSelector.LabelSelector = fmt.Sprintf("%s=%s", v1alpha1.TestIdLabel, test.Status.TestID)
+		testLabelSelector.LabelSelector = fmt.Sprintf("%s=%s", v1alpha1.TestIDLabel, test.Status.TestID)
 	} else {
 		testLabelSelector.LabelSelector = fmt.Sprintf("%s=%s", v1alpha1.TestLabel, test.Name)
 	}
@@ -123,8 +123,8 @@ func dumpTest(ctx context.Context, c client.Client, name string, namespace strin
 		return err
 	}
 	fmt.Fprintf(out, "Found %d configmap(s):\n", len(cms.Items))
-	for _, cm := range cms.Items {
-		err = printObject(&cm, out)
+	for i := range cms.Items {
+		err = printObject(&cms.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -135,8 +135,8 @@ func dumpTest(ctx context.Context, c client.Client, name string, namespace strin
 		return err
 	}
 	fmt.Fprintf(out, "Found %d job(s):\n", len(jobs.Items))
-	for _, job := range jobs.Items {
-		err = printObject(&job, out)
+	for i := range jobs.Items {
+		err = printObject(&jobs.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		LabelSelector: config.DefaultAppLabel,
 	}
 
-	err = dumpOperator(yaksClient, ctx, c, namespace, out, logLines)
+	err = dumpOperator(ctx, c, yaksClient, namespace, out, logLines)
 	if err != nil {
 		return err
 	}
@@ -182,8 +182,8 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		return err
 	}
 	fmt.Fprintf(out, "Found %d test(s):\n", len(tests.Items))
-	for _, test := range tests.Items {
-		err = printObject(&test, out)
+	for i := range tests.Items {
+		err = printObject(&tests.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -194,8 +194,8 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		return err
 	}
 	fmt.Fprintf(out, "Found %d configmap(s):\n", len(cms.Items))
-	for _, cm := range cms.Items {
-		err = printObject(&cm, out)
+	for i := range cms.Items {
+		err = printObject(&cms.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -206,8 +206,8 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		return err
 	}
 	fmt.Fprintf(out, "Found %d deployment(s):\n", len(deployments.Items))
-	for _, deployment := range deployments.Items {
-		err = printObject(&deployment, out)
+	for i := range deployments.Items {
+		err = printObject(&deployments.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -218,8 +218,8 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 		return err
 	}
 	fmt.Fprintf(out, "Found %d job(s):\n", len(jobs.Items))
-	for _, job := range jobs.Items {
-		err = printObject(&job, out)
+	for i := range jobs.Items {
+		err = printObject(&jobs.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -245,14 +245,14 @@ func dumpAll(ctx context.Context, c client.Client, namespace string, out io.Writ
 	return nil
 }
 
-func dumpOperator(yaksClient *versioned.Clientset, ctx context.Context, c client.Client, namespace string, out io.Writer, logLines int) error {
+func dumpOperator(ctx context.Context, c client.Client, yaksClient *versioned.Clientset, namespace string, out io.Writer, logLines int) error {
 	instances, err := yaksClient.YaksV1alpha1().Instances(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
 	fmt.Fprintf(out, "Found %d operator instance(s):\n", len(instances.Items))
-	for _, instance := range instances.Items {
-		err = printObject(&instance, out)
+	for i := range instances.Items {
+		err = printObject(&instances.Items[i], out)
 		if err != nil {
 			return err
 		}
@@ -333,8 +333,7 @@ func dumpLogs(ctx context.Context, c client.Client, prefix string, namespace str
 		Container: container,
 	}
 
-	lines := int64(logLines)
-	if lines > 0 {
+	if lines := int64(logLines); lines > 0 {
 		options.TailLines = &lines
 	}
 

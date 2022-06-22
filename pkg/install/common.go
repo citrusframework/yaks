@@ -29,20 +29,20 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ResourceCustomizer can be used to inject code that changes the objects before they are created
+// ResourceCustomizer can be used to inject code that changes the objects before they are created.
 type ResourceCustomizer func(object ctrl.Object) ctrl.Object
 
-// IdentityResourceCustomizer is a ResourceCustomizer that does nothing
+// IdentityResourceCustomizer is a ResourceCustomizer that does nothing.
 var IdentityResourceCustomizer = func(object ctrl.Object) ctrl.Object {
 	return object
 }
 
-// Resources installs named resources from the project resource directory
+// Resources installs named resources from the project resource directory.
 func Resources(ctx context.Context, c client.Client, namespace string, force bool, customizer ResourceCustomizer, names ...string) error {
 	return ResourcesOrCollect(ctx, c, namespace, nil, force, customizer, names...)
 }
 
-// ResourcesOrCollect --
+// ResourcesOrCollect --.
 func ResourcesOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection,
 	force bool, customizer ResourceCustomizer, names ...string) error {
 	for _, name := range names {
@@ -53,12 +53,12 @@ func ResourcesOrCollect(ctx context.Context, c client.Client, namespace string, 
 	return nil
 }
 
-// Resource installs a single named resource from the project resource directory
+// Resource installs a single named resource from the project resource directory.
 func Resource(ctx context.Context, c client.Client, namespace string, force bool, customizer ResourceCustomizer, name string) error {
 	return ResourceOrCollect(ctx, c, namespace, nil, force, customizer, name)
 }
 
-// ResourceOrCollect --
+// ResourceOrCollect --.
 func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection,
 	force bool, customizer ResourceCustomizer, name string) error {
 	obj, err := kubernetes.LoadResourceFromYaml(c.GetScheme(), resources.ResourceAsString(name))
@@ -69,12 +69,12 @@ func ResourceOrCollect(ctx context.Context, c client.Client, namespace string, c
 	return RuntimeObjectOrCollect(ctx, c, namespace, collection, force, customizer(obj))
 }
 
-// RuntimeObject installs a single runtime object
+// RuntimeObject installs a single runtime object.
 func RuntimeObject(ctx context.Context, c client.Client, namespace string, force bool, obj ctrl.Object) error {
 	return RuntimeObjectOrCollect(ctx, c, namespace, nil, force, obj)
 }
 
-// RuntimeObjectOrCollect --
+// RuntimeObjectOrCollect --.
 func RuntimeObjectOrCollect(ctx context.Context, c client.Client, namespace string, collection *kubernetes.Collection, force bool, obj ctrl.Object) error {
 	if collection != nil {
 		// Adding to the collection before setting the namespace

@@ -24,20 +24,16 @@ import (
 )
 
 const (
-	JsonReportFile = "test-reports.json"
+	JSONReportFile = "test-reports.json"
 )
 
-func createJsonReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
-	if bytes, err := json.MarshalIndent(results, "", "  "); err == nil {
-		report := string(bytes)
-
-		fileError := writeReport(report, JsonReportFile, outputDir)
-		if fileError != nil {
-			return "", fileError
-		}
-
-		return report, nil
-	} else {
+func createJSONReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
+	bytes, err := json.MarshalIndent(results, "", "  ")
+	if err != nil {
 		return "", err
 	}
+
+	report := string(bytes)
+	err = writeReport(report, JSONReportFile, outputDir)
+	return report, err
 }

@@ -30,12 +30,12 @@ import (
 	yaml2 "gopkg.in/yaml.v2"
 )
 
-// ToJSON --
+// ToJSON --.
 func ToJSON(value runtime.Object) ([]byte, error) {
 	return json.Marshal(value)
 }
 
-// ToYAML --
+// ToYAML --.
 func ToYAML(value runtime.Object) ([]byte, error) {
 	data, err := ToJSON(value)
 	if err != nil {
@@ -45,22 +45,22 @@ func ToYAML(value runtime.Object) ([]byte, error) {
 	return JSONToYAML(data)
 }
 
-// JSONToYAML --
+// JSONToYAML --.
 func JSONToYAML(src []byte) ([]byte, error) {
 	jsondata := map[string]interface{}{}
 	err := json.Unmarshal(src, &jsondata)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling json: %v", err)
+		return nil, fmt.Errorf("error unmarshalling json: %w", err)
 	}
 	yamldata, err := yaml2.Marshal(&jsondata)
 	if err != nil {
-		return nil, fmt.Errorf("error marshalling to yaml: %v", err)
+		return nil, fmt.Errorf("error marshalling to yaml: %w", err)
 	}
 
 	return yamldata, nil
 }
 
-// GetConfigMap --
+// GetConfigMap --.
 func GetConfigMap(context context.Context, client k8sclient.Reader, name string, namespace string) (*corev1.ConfigMap, error) {
 	key := k8sclient.ObjectKey{
 		Name:      name,
@@ -85,7 +85,7 @@ func GetConfigMap(context context.Context, client k8sclient.Reader, name string,
 	return &answer, nil
 }
 
-// GetSecret --
+// GetSecret --.
 func GetSecret(context context.Context, client k8sclient.Reader, name string, namespace string) (*corev1.Secret, error) {
 	key := k8sclient.ObjectKey{
 		Name:      name,

@@ -27,6 +27,8 @@ IMAGE_NAME ?= $(DEFAULT_IMAGE)
 
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell git rev-list -1 HEAD)
+LINT_GOGC := 20
+LINT_DEADLINE := 10m
 
 # olm bundle vars
 OLM_CHANNELS := alpha
@@ -73,6 +75,12 @@ generate-crd: controller-gen
 
 generate-deepcopy: controller-gen
 	cd pkg/apis/yaks && $(CONTROLLER_GEN) paths="./..." object
+
+lint:
+	GOGC=$(LINT_GOGC) golangci-lint run --config .golangci.yml --out-format tab --deadline $(LINT_DEADLINE) --verbose
+
+lint-fix:
+	GOGC=$(LINT_GOGC) golangci-lint run --config .golangci.yml --out-format tab --deadline $(LINT_DEADLINE) --fix
 
 build: build-resources build-yaks
 

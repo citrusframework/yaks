@@ -37,7 +37,7 @@ const (
 	commandLongDescription  = `YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.`
 )
 
-// RootCmdOptions --
+// RootCmdOptions --.
 type RootCmdOptions struct {
 	RootContext   context.Context    `mapstructure:"-"`
 	Context       context.Context    `mapstructure:"-"`
@@ -48,7 +48,7 @@ type RootCmdOptions struct {
 	Verbose       bool               `mapstructure:"verbose"`
 }
 
-// NewYaksCommand --
+// NewYaksCommand --.
 func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	childCtx, childCancel := context.WithCancel(ctx)
 	options := RootCmdOptions{
@@ -85,7 +85,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	cmd.AddCommand(cmdOnly(newCmdUpload(&options)))
 	cmd.AddCommand(cmdOnly(newCmdReport(&options)))
 
-	if err := addHelpSubCommands(&cmd, &options); err != nil {
+	if err := addHelpSubCommands(&cmd); err != nil {
 		return &cmd, err
 	}
 
@@ -123,16 +123,14 @@ func postAddCommandInit(cmd *cobra.Command) error {
 		"-", "_",
 	))
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return err
-		}
+	if err := viper.ReadInConfig(); err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
+		return err
 	}
 
 	return nil
 }
 
-func addHelpSubCommands(cmd *cobra.Command, options *RootCmdOptions) error {
+func addHelpSubCommands(cmd *cobra.Command) error {
 	cmd.InitDefaultHelpCmd()
 
 	var helpCmd *cobra.Command
@@ -169,7 +167,7 @@ func (command *RootCmdOptions) preRun(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-// GetCmdClient returns the client that can be used from command line tools
+// GetCmdClient returns the client that can be used from command line tools.
 func (command *RootCmdOptions) GetCmdClient() (client.Client, error) {
 	// Get the pre-computed client
 	if command._client != nil {
@@ -180,7 +178,7 @@ func (command *RootCmdOptions) GetCmdClient() (client.Client, error) {
 	return command._client, err
 }
 
-// NewCmdClient returns a new client that can be used from command line tools
+// NewCmdClient returns a new client that can be used from command line tools.
 func (command *RootCmdOptions) NewCmdClient() (client.Client, error) {
 	return client.NewOutOfClusterClient(command.KubeConfig)
 }

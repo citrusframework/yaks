@@ -40,23 +40,23 @@ const (
 	yaksVersionAnnotation = "yaks.citrusframework.org/version"
 )
 
-// The following variables may be overridden at build time
+// The following variables may be overridden at build time.
 var (
-	// YaksCLIDownloadName --
+	// YaksCLIDownloadName --.
 	YaksCLIDownloadName = "yaks-cli"
-	// YaksCLIDownloadDisplayName is the name as seen in the download page
+	// YaksCLIDownloadDisplayName is the name as seen in the download page.
 	YaksCLIDownloadDisplayName = "yaks - YAKS Command Line Interface"
-	// YaksCLIDownloadDescription is the description as seen in the download page
+	// YaksCLIDownloadDescription is the description as seen in the download page.
 	YaksCLIDownloadDescription = "YAKS is a integration testing tool to enable Cloud Native BDD testing.\n\n" +
 		"The `yaks` binary can be used to both configure the cluster and run tests. " +
 		"Once you've downloaded the `yaks` binary, log into the cluster using the `oc` client tool and start using the `yaks` CLI.\n\n" +
 		"You can run `yaks help` to list the available commands for more information."
 
-	// YaksCLIDownloadURLTemplate is the download template with 3 missing parameters (version, version, os)
+	// YaksCLIDownloadURLTemplate is the download template with 3 missing parameters (version, version, os).
 	YaksCLIDownloadURLTemplate = "https://github.com/citrusframework/yaks/releases/download/v%s/yaks-client-%s-%s-64bit.tar.gz"
 )
 
-// OpenShiftConsoleDownloadLink installs the download link for the OpenShift console
+// OpenShiftConsoleDownloadLink installs the download link for the OpenShift console.
 func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 	// Check the ConsoleCLIDownload CRD is present, which should be starting OpenShift version 4.2.
 	// That check is also enough to exclude Kubernetes clusters.

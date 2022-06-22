@@ -41,7 +41,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// OperatorConfiguration --
+// OperatorConfiguration --.
 type OperatorConfiguration struct {
 	CustomImage           string
 	CustomImagePullPolicy string
@@ -51,18 +51,21 @@ type OperatorConfiguration struct {
 	EnvVars               []string
 }
 
-// Operator installs the operator resources in the given namespace
+// Operator installs the operator resources in the given namespace.
 func Operator(ctx context.Context, cmd *cobra.Command, c client.Client, cfg OperatorConfiguration, force bool) error {
 	return OperatorOrCollect(ctx, cmd, c, cfg, nil, force)
 }
 
-// OperatorOrCollect installs the operator resources or adds them to the collector if present
+// OperatorOrCollect installs the operator resources or adds them to the collector if present.
 func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client, cfg OperatorConfiguration, collection *kubernetes.Collection, force bool) error {
 	customizer := customizer(cfg, cmd)
 
-	if isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType); err != nil {
+	isOpenShift, err := openshift.IsOpenShiftClusterType(c, cfg.ClusterType)
+	if err != nil {
 		return err
-	} else if isOpenShift {
+	}
+
+	if isOpenShift {
 		if err := installOpenShift(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
@@ -73,7 +76,7 @@ func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client,
 	}
 
 	// Make sure that instance CR installed in operator namespace can be used by others
-	if err := InstallInstanceViewerRole(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+	if err := InstanceViewerRole(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 		return err
 	}
 
@@ -81,7 +84,7 @@ func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client,
 	if isKnative, err := knative.IsInstalled(ctx, c); err != nil {
 		return err
 	} else if isKnative {
-		if err := InstallKnative(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		if err := KnativeResources(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
 	}
@@ -90,7 +93,7 @@ func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client,
 	if isCamelK, err := camelk.IsInstalled(ctx, c); err != nil {
 		return err
 	} else if isCamelK {
-		if err := InstallCamelK(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		if err := CamelKResources(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
 	}
@@ -99,7 +102,7 @@ func OperatorOrCollect(ctx context.Context, cmd *cobra.Command, c client.Client,
 	if isStrimzi, err := strimzi.IsInstalled(ctx, c); err != nil {
 		return err
 	} else if isStrimzi {
-		if err := InstallStrimzi(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
+		if err := StrimziResources(ctx, c, cfg.Namespace, customizer, collection, force); err != nil {
 			return err
 		}
 	}
@@ -217,7 +220,7 @@ func installKubernetes(ctx context.Context, c client.Client, namespace string, c
 	)
 }
 
-func InstallKnative(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func KnativeResources(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/rbac/operator-role-knative.yaml",
 		"/rbac/operator-role-binding-knative.yaml",
@@ -229,7 +232,7 @@ func InstallKnative(ctx context.Context, c client.Client, namespace string, cust
 	return nil
 }
 
-func InstallCamelK(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func CamelKResources(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/rbac/operator-role-camel-k.yaml",
 		"/rbac/operator-role-binding-camel-k.yaml",
@@ -241,7 +244,7 @@ func InstallCamelK(ctx context.Context, c client.Client, namespace string, custo
 	return nil
 }
 
-func InstallStrimzi(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+func StrimziResources(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	if err := ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/rbac/operator-role-strimzi.yaml",
 		"/rbac/operator-role-binding-strimzi.yaml",
@@ -267,8 +270,8 @@ func installServiceMonitors(ctx context.Context, c client.Client, namespace stri
 	)
 }
 
-// installs the role that allows any user ro access to instances in all namespaces
-func InstallInstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
+// InstanceViewerRole installs the role that allows any user ro access to instances in all namespaces.
+func InstanceViewerRole(ctx context.Context, c client.Client, namespace string, customizer ResourceCustomizer, collection *kubernetes.Collection, force bool) error {
 	return ResourcesOrCollect(ctx, c, namespace, collection, force, customizer,
 		"/rbac/user-global-instance-viewer-role.yaml",
 		"/rbac/user-global-instance-viewer-role-binding.yaml",

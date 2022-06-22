@@ -26,7 +26,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-// StringSliceContains --
+// StringSliceContains --.
 func StringSliceContains(slice []string, items []string) bool {
 	for i := 0; i < len(items); i++ {
 		if !StringSliceExists(slice, items[i]) {
@@ -37,7 +37,7 @@ func StringSliceContains(slice []string, items []string) bool {
 	return true
 }
 
-// StringSliceExists --
+// StringSliceExists --.
 func StringSliceExists(slice []string, item string) bool {
 	for i := 0; i < len(slice); i++ {
 		if slice[i] == item {
@@ -48,7 +48,7 @@ func StringSliceExists(slice []string, item string) bool {
 	return false
 }
 
-// StringSliceUniqueAdd append the given item if not already present in the slice
+// StringSliceUniqueAdd append the given item if not already present in the slice.
 func StringSliceUniqueAdd(slice *[]string, item string) bool {
 	if slice == nil {
 		newSlice := make([]string, 0)
@@ -63,6 +63,11 @@ func StringSliceUniqueAdd(slice *[]string, item string) bool {
 	*slice = append(*slice, item)
 
 	return true
+}
+
+// ReadFile a safe wrapper of os.ReadFile.
+func ReadFile(filename string) ([]byte, error) {
+	return os.ReadFile(filepath.Clean(filename))
 }
 
 // WithFile a safe wrapper to process a file.
