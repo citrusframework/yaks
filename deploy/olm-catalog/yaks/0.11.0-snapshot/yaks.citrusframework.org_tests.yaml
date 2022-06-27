@@ -64,7 +64,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Test is the Schema for the tests API
+        description: Test is the Schema for the tests API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -82,7 +82,7 @@ spec:
             description: TestSpec defines the desired state of Test
             properties:
               config:
-                description: SettingsSpec
+                description: SettingsSpec.
                 properties:
                   content:
                     type: string
@@ -94,7 +94,7 @@ spec:
                   type: string
                 type: array
               kubedock:
-                description: KubeDockSpec
+                description: KubeDockSpec.
                 properties:
                   image:
                     type: string
@@ -103,7 +103,7 @@ spec:
                 type: object
               resources:
                 items:
-                  description: ResourceSpec
+                  description: ResourceSpec.
                   properties:
                     content:
                       type: string
@@ -114,7 +114,7 @@ spec:
               secret:
                 type: string
               selenium:
-                description: SeleniumSpec
+                description: SeleniumSpec.
                 properties:
                   image:
                     type: string
@@ -122,7 +122,7 @@ spec:
                     type: integer
                 type: object
               source:
-                description: SourceSpec
+                description: SourceSpec.
                 properties:
                   content:
                     type: string
@@ -140,7 +140,7 @@ spec:
               errors:
                 type: string
               phase:
-                description: TestPhase
+                description: TestPhase.
                 type: string
               results:
                 properties:
