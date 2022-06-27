@@ -45,16 +45,9 @@ deploy_crd_file() {
   # Post-process source
   cat ./script/headers/yaml.txt > "$source"
   echo "" >> "$source"
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    cat "${source}.orig" | sed -n '/^---/,/^status/p;/^status/q' \
-      | sed '1d;$d' \
-      | sed 's/^metadata:/metadata:\n  labels:\n    app: yaks/' >> "$source"
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX
-    cat "${source}.orig" | sed -n '/^---/,/^status/p;/^status/q' \
-      | sed '1d;$d' \
-      | sed $'s/^metadata:/metadata:\\\n  labels:\\\n    app: yaks/' >> "$source"
-  fi
+  cat "${source}.orig" | sed -n '/^---/,/^status/p;/^status/q' \
+    | sed '1d;$d' \
+    | sed 's/^metadata:/metadata:\n  labels:\n    app: yaks/' >> "$source"
 
   for dest in "${@:2}"; do
     cp "$source" "$dest"

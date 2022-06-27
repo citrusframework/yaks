@@ -125,14 +125,8 @@ update_docs_version() {
 
     echo "Updating to version: $version"
 
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i "18p" $file
-        sed -i "18s/$version/$snapshot_version/g" $file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' "18p" $file
-        sed -i '' "18s/$version/$snapshot_version/g" $file
-    fi
+    sed -i "18p" $file
+    sed -i "18s/$version/$snapshot_version/g" $file
 }
 
 set_docs_version() {
@@ -146,12 +140,7 @@ set_docs_version() {
         return
     fi
 
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i "s/$snapshot_version/$version/g" $file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' "s/$snapshot_version/$version/g" $file
-    fi
+    sed -i "s/$snapshot_version/$version/g" $file
 }
 
 source "$location/util/common_funcs"
