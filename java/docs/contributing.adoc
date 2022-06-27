@@ -3,24 +3,31 @@
 
 Requirements:
 
-- Go 1.13+
-- Operator SDK 0.19.4+
-- Maven 3.6.2+
-- Git client
+- **Go 1.16+**: needed to compile and test the operator code. Refer to the https://golang.org/[Go website] for the installation.
+- **GNU Make**: used to define composite build actions. This should be already installed or available as a package if you have a good OS (https://www.gnu.org/software/make/).
+- **Operator SDK v1.22+**
+- **Maven 3.6.3+**: used as a build tool
+- **Java 11+**: needed for compile, test and build the YAKS runtime
+- **Git**: as a client for version control
 
-You can build the YAKS project and get the `yaks` CLI by running:
+NOTE: MacOS users will need to use *gnu-sed* to successfully run the Make build scripts (e.g. for generating the YAKS bundle).
+Please install gnu-sed on your machine (e.g. `brew install gnu-sed`) and set your PATH accordingly to use gnu-sed with: `export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"`
+
+You can build the YAKS project and get the `yaks` CLI binary by running:
 
 [source,shell script]
 ----
 make build
 ----
 
-If you want to build the operator image locally for development in Minishift for instance, then:
+If you want to build the operator image locally for development on Minikube for instance, then:
 
 [source,shell script]
 ----
-# Build binaries and images
-eval $(minishift docker-env)
+#Connect to Minikube Docker (only on non linux os)
+eval $(minikube docker-env)
+
+# Build binaries and images - skip tests
 make clean images-no-test
 ----
 
@@ -28,5 +35,5 @@ If the operator pod is running, just delete it to let it grab the new image.
 
 [source,shell script]
 ----
-oc delete pod yaks
+kubectl delete pod -l app=yaks
 ----

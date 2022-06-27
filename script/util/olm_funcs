@@ -36,22 +36,11 @@ update_olm() {
 
     for f in $(find ${olm_catalog}/yaks/${file_version} -type f -name "*-snapshot*");
     do
-      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i "s/$snapshot_version/$version/g" $f
-      elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' "s/$snapshot_version/$version/g" $f
-      fi
-
+      sed -i "s/$snapshot_version/$version/g" $f
       mv ${f} ${f//v*-snapshot/v${file_version}}
     done
 
     # Update package file
     local package_file=${olm_catalog}/yaks/yaks.package.yaml
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "s/$snapshot_version/$version/g" $package_file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' "s/$snapshot_version/$version/g" $package_file
-    fi
+    sed -i "s/$snapshot_version/$version/g" $package_file
 }

@@ -236,15 +236,6 @@ v1alpha1: operator-sdk
 #
 pre-bundle:
 # bundle name must match that which appears in PROJECT file
-ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
-	@sed -i '' 's/projectName: .*/projectName: $(OLM_PACKAGE)/' PROJECT
-	@sed -i '' 's~^    containerImage: .*~    containerImage: $(IMAGE_NAME):$(VERSION)~' $(CSV_PATH)
-	@sed -i '' 's/^    support: .*/    support: $(CSV_SUPPORT)/' $(CSV_PATH)
-	@sed -i '' 's/^  name: .*.\(v.*\)/  name: $(CSV_NAME)/' $(CSV_PATH)
-	@sed -i '' 's/^  displayName: .*/  displayName: $(CSV_DISPLAY_NAME)/' $(CSV_PATH)
-	@sed -i '' 's/^  version: .*/  version: $(CSV_VERSION)/' $(CSV_PATH)
-	@sed -i '' 's/^  replaces: .*/  replaces: $(CSV_REPLACES)/' $(CSV_PATH)
-else
 	@sed -i 's/projectName: .*/projectName: $(OLM_PACKAGE)/' PROJECT
 	@sed -i 's~^    containerImage: .*~    containerImage: $(IMAGE_NAME):$(VERSION)~' $(CSV_PATH)
 	@sed -i 's/^    support: .*/    support: $(CSV_SUPPORT)/' $(CSV_PATH)
@@ -252,7 +243,6 @@ else
 	@sed -i 's/^  displayName: .*/  displayName: $(CSV_DISPLAY_NAME)/' $(CSV_PATH)
 	@sed -i 's/^  version: .*/  version: $(CSV_VERSION)/' $(CSV_PATH)
 	@sed -i 's/^  replaces: .*/  replaces: $(CSV_REPLACES)/' $(CSV_PATH)
-endif
 
 bundle: generate-crd v1alpha1 kustomize pre-bundle
 	@# Sets the operator image to the preferred image:tag
@@ -266,13 +256,8 @@ bundle: generate-crd v1alpha1 kustomize pre-bundle
 	@# Move the dockerfile into the bundle directory
 	@# Rename the CSV name to conform with the existing released operator versions
 	@# This cannot happen in pre-bundle as the operator-sdk generation expects a CSV name the same as PACKAGE
-ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Darwin)
-	@mv bundle.Dockerfile bundle/Dockerfile && sed -i '' 's/bundle\///g' bundle/Dockerfile
-	@sed -i '' "s/^  name: $(CSV_NAME)/  name: $(CSV_PRODUCTION_NAME)/" $(CSV_GENERATED_PATH)
-else
 	@mv bundle.Dockerfile bundle/Dockerfile && sed -i 's/bundle\///g' bundle/Dockerfile
 	@sed -i "s/^  name: $(CSV_NAME)/  name: $(CSV_PRODUCTION_NAME)/" $(CSV_GENERATED_PATH)
-endif
 	@# Adds the licence headers to the csv file
 	./script/add_license.sh bundle/manifests ./script/headers/yaml.txt
 	$(OPERATOR_SDK) bundle validate ./bundle

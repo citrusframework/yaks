@@ -85,14 +85,8 @@ set_version_file() {
 
     # Update versions file
     local version_file=${working_dir}/pkg/util/defaults/defaults.go
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i -r "s/ImageName = .*/ImageName = \"${sanitized_image_name}\"/" $version_file
-      sed -i "s/Version = .*/Version = \"$version\"/g" $version_file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' -E "s/ImageName = .*/ImageName = \"${sanitized_image_name}\"/" $version_file
-      sed -i '' "s/Version = .*/Version = \"$version\"/g" $version_file
-    fi
+    sed -i -r "s/ImageName = .*/ImageName = \"${sanitized_image_name}\"/" $version_file
+    sed -i "s/Version = .*/Version = \"$version\"/g" $version_file
 }
 
 # Set version in sources
@@ -114,14 +108,8 @@ set_version() {
 
     for f in $(find $working_dir/config -type f -name "*.yaml");
     do
-      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
-        sed -i "s/$snapshot_version/$version/g" $f
-      elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        sed -i '' -E "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
-        sed -i '' "s/$snapshot_version/$version/g" $f
-      fi
+      sed -i -r "s/docker.io\/citrusframework\/yaks:([0-9]+[a-zA-Z0-9\-\.].*).*/${sanitized_image_name}:${version}/" $f
+      sed -i "s/$snapshot_version/$version/g" $f
     done
 
     # Update Java sources
@@ -154,12 +142,7 @@ set_version() {
 
       if [ "$check" = true ]; then
         #echo "update $file"
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-          sed -i "s/$snapshot_version/$version/g" $file
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
-          # Mac OSX
-          sed -i '' "s/$snapshot_version/$version/g" $file
-        fi
+        sed -i "s/$snapshot_version/$version/g" $file
       fi
     done
 
@@ -179,12 +162,7 @@ set_next_version() {
 
     version_rule="s/$version/$next_version/g"
 
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "$version_rule" $make_file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' "$version_rule" $make_file
-    fi
+    sed -i "$version_rule" $make_file
 }
 
 calc_timestamp_version() {

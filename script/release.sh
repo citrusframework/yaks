@@ -209,14 +209,8 @@ update_project_metadata() {
 
     echo "Update project metadata to version: $version"
 
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-      sed -i "s/current-version: .*/current-version: $version/" $file
-      sed -i "s/next-version: .*/next-version: $next_version/g" $file
-    elif [[ "$OSTYPE" == "darwin"* ]]; then
-      # Mac OSX
-      sed -i '' "s/current-version: .*/current-version: $version/" $file
-      sed -i '' "s/next-version: .*/next-version: $next_version/g" $file
-    fi
+    sed -i "s/current-version: .*/current-version: $version/" $file
+    sed -i "s/next-version: .*/next-version: $next_version/g" $file
 }
 
 source "$location/util/common_funcs"
