@@ -32,7 +32,14 @@ var disallowedCharsInFile = regexp.MustCompile(`[^A-Za-z0-9-_.]`)
 // SanitizeName sanitizes the given name to be compatible with k8s.
 func SanitizeName(name string) string {
 	name = path.Base(name)
-	name = strings.Split(name, ".")[0]
+
+	parts := strings.Split(name, ".")
+	if len(parts) > 2 {
+		name = strings.Join(parts[:len(parts)-1], "-")
+	} else {
+		name = parts[0]
+	}
+
 	name = scase.KebabCase(name)
 	name = strings.ToLower(name)
 	name = disallowedChars.ReplaceAllString(name, "")

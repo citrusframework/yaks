@@ -132,6 +132,7 @@ jobs:
         # Eventually `yaks run examples` should work
 
         # For now:
+        yaks run examples/groovy $YAKS_RUN_OPTIONS
         yaks run examples/camel $YAKS_RUN_OPTIONS
         yaks run examples/camel-k $YAKS_RUN_OPTIONS
         #yaks run examples/extension $YAKS_RUN_OPTIONS

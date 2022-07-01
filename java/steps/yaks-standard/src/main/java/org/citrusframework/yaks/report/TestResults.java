@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Local store for collected test results.
  */
-class TestResults {
+public class TestResults {
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(TestResults.class);
 

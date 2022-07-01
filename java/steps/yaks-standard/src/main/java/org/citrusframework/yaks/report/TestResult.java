@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 /**
  * Error details holding failure information.
  */
-class TestResult {
+public class TestResult {
 
     private final UUID id;
     private final String name;

@@ -91,25 +91,27 @@
     <project.docs.version>${project.version}</project.docs.version>
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.17.2</log4j2.version>
-    <groovy.version>3.0.9</groovy.version>
-    <citrus.version>3.2.1</citrus.version>
-    <spring.version>5.3.18</spring.version>
-    <cucumber.version>6.11.0</cucumber.version>
-    <camel.version>3.15.0</camel.version>
+    <snakeyaml.version>1.26</snakeyaml.version>
+    <groovy.version>3.0.10</groovy.version>
+    <citrus.version>3.3.0</citrus.version>
+    <spring.version>5.3.20</spring.version>
+    <cucumber.version>7.3.1</cucumber.version>
+    <apache.camel.version>3.16.0</apache.camel.version>
     <jackson.version>2.13.3</jackson.version>
     <junit.version>4.13.2</junit.version>
     <kubernetes-client.version>5.10.2</kubernetes-client.version>
     <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
     <postgresql.version>42.3.3</postgresql.version>
+    <commons.dbcp2.version>2.7.0</commons.dbcp2.version>
     <testcontainers.version>1.16.3</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.14.0</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
     <aws-java-sdk.version>1.12.146</aws-java-sdk.version>
-    <activemq.version>5.16.3</activemq.version>
+    <activemq.version>5.17.0</activemq.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
-    <mockito.version>3.12.4</mockito.version>
+    <mockito.version>4.5.0</mockito.version>
 
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
@@ -176,7 +178,17 @@
       </dependency>
       <dependency>
         <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-junit</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
         <artifactId>citrus-spring</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-groovy</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
@@ -288,19 +300,19 @@
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-bom</artifactId>
-        <version>${camel.version}</version>
+        <version>${apache.camel.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-spring</artifactId>
-        <version>${camel.version}</version>
+        <version>${apache.camel.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-xml-jaxb-dsl</artifactId>
-        <version>${camel.version}</version>
+        <version>${apache.camel.version}</version>
       </dependency>
 
       <dependency>
@@ -308,7 +320,6 @@
         <artifactId>jackson-core</artifactId>
         <version>${jackson.version}</version>
       </dependency>
-
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
@@ -327,7 +338,7 @@
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>1.26</version>
+        <version>${snakeyaml.version}</version>
       </dependency>
 
       <dependency>
@@ -344,7 +355,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-dbcp2</artifactId>
-        <version>2.7.0</version>
+        <version>${commons.dbcp2.version}</version>
       </dependency>
 
       <!-- Logging -->

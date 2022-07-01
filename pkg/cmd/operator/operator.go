@@ -60,9 +60,7 @@ import (
 )
 
 const (
-	OperatorLockName     = "yaks-lock"
-	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
-	PodNameEnvVar        = "POD_NAME"
+	LockName = "yaks-lock"
 )
 
 var log = logf.Log.WithName("cmd")
@@ -267,18 +265,18 @@ func installInstance(ctx context.Context, c client.Client, global bool, version 
 
 // getOperatorPodName returns the name the operator pod.
 func getOperatorPodName() string {
-	podName, _ := os.LookupEnv(PodNameEnvVar)
+	podName, _ := os.LookupEnv(envvar.PodNameEnv)
 	return podName
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes.
 func getWatchNamespace() (string, error) {
-	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
+	// WatchNamespaceEnv is the constant for env variable WATCH_NAMESPACE
 	// which specifies the Namespace to watch.
 	// An empty value means the operator is running with cluster scope.
-	ns, found := os.LookupEnv(WatchNamespaceEnvVar)
+	ns, found := os.LookupEnv(envvar.WatchNamespaceEnv)
 	if !found {
-		return "", fmt.Errorf("%s must be set", WatchNamespaceEnvVar)
+		return "", fmt.Errorf("%s must be set", envvar.WatchNamespaceEnv)
 	}
 	return ns, nil
 }

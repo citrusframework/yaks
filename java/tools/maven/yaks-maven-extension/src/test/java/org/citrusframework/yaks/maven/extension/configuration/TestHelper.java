@@ -102,7 +102,7 @@ public final class TestHelper {
             "<Configuration>" +
             "<Appenders>" +
                 "<Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" +
-                    "<PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" +
+                    "<PatternLayout pattern=\"%-5level| %msg%n\"/>" +
                 "</Console>" +
             "</Appenders>" +
             "</Configuration>";
@@ -121,7 +121,7 @@ public final class TestHelper {
             "<Configuration>" +
             "<Appenders>" +
                 "<Console name=\"STDOUT\" target=\"SYSTEM_OUT\">" +
-                    "<PatternLayout pattern=\"%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n\"/>" +
+                    "<PatternLayout pattern=\"%-5level| %msg%n\"/>" +
                 "</Console>" +
             "</Appenders>" +
             "<Loggers>" +

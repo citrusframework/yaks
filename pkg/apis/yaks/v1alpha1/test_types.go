@@ -43,6 +43,7 @@ type TestSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
+	Runtime   RuntimeSpec    `json:"runtime,omitempty"`
 	Source    SourceSpec     `json:"source,omitempty"`
 	Resources []ResourceSpec `json:"resources,omitempty"`
 	Settings  SettingsSpec   `json:"config,omitempty"`
@@ -52,32 +53,38 @@ type TestSpec struct {
 	Secret    string         `json:"secret,omitempty"`
 }
 
-// SourceSpec.
+// RuntimeSpec --.
+type RuntimeSpec struct {
+	Logger  []string `json:"logger,omitempty"`
+	Verbose bool     `json:"verbose,omitempty"`
+}
+
+// SourceSpec --.
 type SourceSpec struct {
 	Name     string   `json:"name,omitempty"`
 	Content  string   `json:"content,omitempty"`
 	Language Language `json:"language,omitempty"`
 }
 
-// ResourceSpec.
+// ResourceSpec --.
 type ResourceSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
-// SettingsSpec.
+// SettingsSpec --.
 type SettingsSpec struct {
 	Name    string `json:"name,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
-// SeleniumSpec.
+// SeleniumSpec --.
 type SeleniumSpec struct {
 	Image     string `json:"image,omitempty"`
 	RunAsUser int    `json:"runAsUser,omitempty"`
 }
 
-// KubeDockSpec.
+// KubeDockSpec --.
 type KubeDockSpec struct {
 	Image     string `json:"image,omitempty"`
 	RunAsUser int    `json:"runAsUser,omitempty"`
@@ -157,7 +164,7 @@ type TestResult struct {
 	ErrorMessage string `json:"errorMessage,omitempty"`
 }
 
-// TestPhase.
+// TestPhase --.
 type TestPhase string
 
 const (
@@ -165,26 +172,26 @@ const (
 	TestIDLabel            = "yaks.citrusframework.org/test-id"
 	TestConfigurationLabel = "yaks.citrusframework.org/test.configuration"
 
-	// InstanceKind.
+	// InstanceKind --.
 	InstanceKind string = "Instance"
-	// TestKind.
+	// TestKind --.
 	TestKind string = "Test"
 
-	// TestPhaseNone.
+	// TestPhaseNone --.
 	TestPhaseNone TestPhase = ""
-	// TestPhaseNew.
+	// TestPhaseNew --.
 	TestPhaseNew TestPhase = "New"
-	// TestPhasePending.
+	// TestPhasePending --.
 	TestPhasePending TestPhase = "Pending"
-	// TestPhaseRunning.
+	// TestPhaseRunning --.
 	TestPhaseRunning TestPhase = "Running"
-	// TestPhasePassed.
+	// TestPhasePassed --.
 	TestPhasePassed TestPhase = "Passed"
-	// TestPhaseFailed.
+	// TestPhaseFailed --.
 	TestPhaseFailed TestPhase = "Failed"
-	// TestPhaseError.
+	// TestPhaseError --.
 	TestPhaseError TestPhase = "Error"
-	// TestPhaseDeleting.
+	// TestPhaseDeleting --.
 	TestPhaseDeleting TestPhase = "Deleting"
 	// TestPhaseUpdating is a phase where the operator is not supposed to interact with the resource.
 	TestPhaseUpdating TestPhase = "Updating"
@@ -207,11 +214,14 @@ func (phase TestPhase) AsError(name string) error {
 type Language string
 
 const (
-	// LanguageGherkin.
+	// LanguageGherkin --.
 	LanguageGherkin Language = "feature"
+	// LanguageGroovy --.
+	LanguageGroovy Language = "groovy"
 )
 
-// TestLanguages is the list of all supported test languages.
-var TestLanguages = []Language{
+// KnownLanguages is the list of all supported test languages.
+var KnownLanguages = []Language{
 	LanguageGherkin,
+	LanguageGroovy,
 }

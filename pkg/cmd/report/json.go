@@ -21,13 +21,19 @@ import (
 	"encoding/json"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/util"
 )
 
 const (
 	JSONReportFile = "test-reports.json"
 )
 
-func createJSONReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
+func createJSONReport(results *v1alpha1.TestResults) (string, error) {
+	outputDir, err := util.CreateInWorkingDir(OutputDir)
+	if err != nil {
+		return "", err
+	}
+
 	bytes, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
 		return "", err

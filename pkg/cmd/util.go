@@ -294,3 +294,15 @@ func hasServiceAccount(ctx context.Context, c ctrl.Client, namespace string, ser
 
 	return !k8serrors.IsNotFound(err), err
 }
+
+func getLanguage(fileName string) v1alpha1.Language {
+	extension := path.Ext(fileName)
+
+	for _, language := range v1alpha1.KnownLanguages {
+		if extension == fmt.Sprintf(".%s", string(language)) {
+			return language
+		}
+	}
+
+	return v1alpha1.LanguageGherkin
+}

@@ -25,6 +25,7 @@ import io.cucumber.plugin.EventListener;
 import io.cucumber.plugin.SummaryPrinter;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.TestRunFinished;
+import org.citrusframework.yaks.YaksSettings;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,8 @@ public class ReportVerifyPlugin implements SummaryPrinter, EventListener {
     public void setEventPublisher(EventPublisher eventPublisher) {
         eventPublisher.registerHandlerFor(TestRunFinished.class, event -> {
             try {
-                Assert.assertTrue("Verify termination log exists", Files.exists(TestReporter.getTerminationLog()));
-                List<String> lines = Files.readAllLines(TestReporter.getTerminationLog());
+                Assert.assertTrue("Verify termination log exists", Files.exists(YaksSettings.getTerminationLog()));
+                List<String> lines = Files.readAllLines(YaksSettings.getTerminationLog());
                 Assert.assertEquals(1L, lines.size());
                 Assert.assertEquals("{" +
                             "\"suiteName\":\"Test reporter\"," +
