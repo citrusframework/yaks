@@ -141,7 +141,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 						{
 							Name:                     "test",
 							Image:                    config.GetTestBaseImage(),
-							Command:                  getMavenArgLine(),
+							Command:                  getMavenArgLine(test),
 							TerminationMessagePolicy: "FallbackToLogsOnError",
 							TerminationMessagePath:   "/dev/termination-log",
 							ImagePullPolicy:          v1.PullIfNotPresent,
@@ -158,15 +158,15 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 							},
 							Env: []v1.EnvVar{
 								{
-									Name:  "YAKS_TERMINATION_LOG",
+									Name:  envvar.TerminationLogEnv,
 									Value: "/dev/termination-log",
 								},
 								{
-									Name:  "YAKS_TESTS_PATH",
+									Name:  envvar.TestPathEnv,
 									Value: "/etc/yaks/tests",
 								},
 								{
-									Name:  "YAKS_SECRETS_PATH",
+									Name:  envvar.SecretsPathEnv,
 									Value: "/etc/yaks/secrets",
 								},
 							},
@@ -207,7 +207,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 
 	if test.Spec.Settings.Name != "" {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
-			Name:  "YAKS_SETTINGS_FILE",
+			Name:  envvar.SettingsFileEnv,
 			Value: "/etc/yaks/tests/" + test.Spec.Settings.Name,
 		})
 	}
@@ -220,13 +220,13 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 	}
 
 	job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
-		Name:  "YAKS_CLUSTER_TYPE",
+		Name:  envvar.ClusterTypeEnv,
 		Value: strings.ToUpper(string(clusterType)),
 	}, v1.EnvVar{
-		Name:  "YAKS_TEST_NAME",
+		Name:  envvar.TestNameEnv,
 		Value: test.Name,
 	}, v1.EnvVar{
-		Name:  "YAKS_TEST_ID",
+		Name:  envvar.TestIDEnv,
 		Value: test.Status.TestID,
 	})
 
@@ -238,17 +238,24 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		return nil, err
 	}
 
+	action.addLogger(test, &job)
+
 	action.addSelenium(test, &job)
 	action.addKubeDock(test, &job)
 
 	return &job, nil
 }
 
-func getMavenArgLine() []string {
+func getMavenArgLine(test *v1alpha1.Test) []string {
 	argLine := make([]string, 0)
 
 	// add base flags
-	argLine = append(argLine, "mvn", "-B", "-q", "--no-snapshot-updates", "--no-transfer-progress")
+	argLine = append(argLine, "mvn", "--no-snapshot-updates")
+
+	// add quiet mode flags
+	if !test.Spec.Runtime.Verbose {
+		argLine = append(argLine, "-B", "-q", "--no-transfer-progress")
+	}
 
 	// add pom file path
 	argLine = append(argLine, "-f", "/deployments/data/yaks-runtime-maven")
@@ -258,6 +265,9 @@ func getMavenArgLine() []string {
 
 	// add test goal
 	argLine = append(argLine, "verify")
+
+	// choose test to run based on given language
+	argLine = append(argLine, fmt.Sprintf("-Dit.test=org.citrusframework.yaks.%s.Yaks_IT", string(test.Spec.Source.Language)))
 
 	// add system property settings
 	argLine = append(argLine, "-Dmaven.repo.local=/deployments/artifacts/m2")
@@ -581,7 +591,7 @@ func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 			},
 		}
 
-		// Add kubedock profile that will shutdown the kubedock container when test is finished
+		// Add kubedock profile that will shut down the kubedock container when test is finished
 		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pkubedock")
 	}
 }
@@ -686,4 +696,18 @@ func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) err
 			})
 	}
 	return nil
+}
+
+func (action *startAction) addLogger(test *v1alpha1.Test, job *batchv1.Job) {
+	if len(test.Spec.Runtime.Logger) > 0 {
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  envvar.LoggersEnv,
+			Value: strings.Join(test.Spec.Runtime.Logger, ","),
+		})
+	} else if test.Spec.Source.Language != v1alpha1.LanguageGherkin {
+		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
+			Name:  envvar.LoggersEnv,
+			Value: "com.consol.citrus=INFO,org.citrusframework.yaks=INFO",
+		})
+	}
 }

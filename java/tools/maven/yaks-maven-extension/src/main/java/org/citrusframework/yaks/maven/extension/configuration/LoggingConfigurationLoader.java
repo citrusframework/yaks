@@ -27,6 +27,7 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
+import org.citrusframework.yaks.maven.extension.ExtensionSettings;
 import org.codehaus.plexus.logging.Logger;
 
 /**
@@ -72,7 +73,7 @@ public interface LoggingConfigurationLoader {
         AppenderComponentBuilder appenderBuilder = builder.newAppender("STDOUT", "Console").addAttribute("target",
                 ConsoleAppender.Target.SYSTEM_OUT);
         appenderBuilder.add(builder.newLayout("PatternLayout")
-                .addAttribute("pattern", "%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%t|%c{1} - %msg%n"));
+                .addAttribute("pattern", ExtensionSettings.getLogPatternLayout()));
         builder.add( appenderBuilder );
 
         return builder;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks;
+package org.citrusframework.yaks.feature;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
+        extraGlue = "org.citrusframework.yaks",
         plugin = { "pretty", "org.citrusframework.yaks.report.TestReporter" }
 )
 public class Yaks_IT {

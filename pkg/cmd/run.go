@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/citrusframework/yaks/pkg/util"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"gopkg.in/yaml.v2"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -51,17 +52,10 @@ import (
 )
 
 const (
-	FileSuffix = ".feature"
 	ConfigFile = "yaks-config.yaml"
 )
 
 const (
-	NamespaceEnv    = "YAKS_NAMESPACE"
-	RepositoriesEnv = "YAKS_REPOSITORIES"
-	DependenciesEnv = "YAKS_DEPENDENCIES"
-	LoggersEnv      = "YAKS_LOGGERS"
-	TestStatusEnv   = "YAKS_TEST_STATUS"
-
 	CucumberOptions    = "CUCUMBER_OPTIONS"
 	CucumberGlue       = "CUCUMBER_GLUE"
 	CucumberFeatures   = "CUCUMBER_FEATURES"
@@ -84,23 +78,26 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	}
 
 	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
-	cmd.Flags().StringArrayP("logger", "l", nil, "Adds logger configuration setting log levels.")
+	cmd.Flags().StringArrayP("logger", "l", nil, "Adds logger configuration by setting log levels. E.g \"-l org.example=INFO\"")
 	cmd.Flags().StringArrayP("dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringArrayP("upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringP("settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
 	cmd.Flags().StringArrayP("env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
-	cmd.Flags().StringArrayP("tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
-	cmd.Flags().StringArrayP("feature", "f", nil, "Feature file to include in the test run")
 	cmd.Flags().StringArray("resource", nil, "Add a resource")
 	cmd.Flags().StringArray("property-file", nil, "Bind a property file to the test. E.g. \"--property-file test.properties\"")
-	cmd.Flags().StringArrayP("glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
-	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
+	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
+
 	cmd.Flags().Bool("dump", false, "Dump all test resources in namespace after running the test.")
 	cmd.Flags().String("print", "", "Print output format. One of: json|yaml. If set the test CR is created and printed to the CLI output instead of running the test.")
 	cmd.Flags().StringP("report", "r", "junit", "Create test report in given output format")
-	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
 	cmd.Flags().BoolP("wait", "w", true, "Wait for the test to be complete")
 	cmd.Flags().Bool("logs", true, "Print test logs")
+
+	// Cucumber specific options
+	cmd.Flags().StringArrayP("feature", "f", nil, "Feature file to include in the test run")
+	cmd.Flags().StringArrayP("tag", "t", nil, "Specify a tag filter to only run tests that match given tag expression")
+	cmd.Flags().StringArrayP("glue", "g", nil, "Additional glue path to be added in the Cucumber runtime options")
+	cmd.Flags().StringP("options", "o", "", "Cucumber runtime options")
 
 	// completion support
 	configureKnownCompletions(&cmd)
@@ -143,9 +140,7 @@ func (o *runCmdOptions) run(cmd *cobra.Command, args []string) error {
 	results := v1alpha1.TestResults{}
 	if o.Wait {
 		defer report.PrintSummaryReport(&results)
-		if o.ReportFormat != report.DefaultOutput && o.ReportFormat != report.SummaryOutput {
-			defer report.GenerateReport(cmd.OutOrStdout(), cmd.OutOrStderr(), &results, o.ReportFormat)
-		}
+		defer report.GenerateReport(nil, cmd.OutOrStderr(), &results, o.ReportFormat)
 	}
 
 	if source := args[0]; isDir(source) {
@@ -263,7 +258,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 		name := path.Join(source, f.Name())
 		if f.IsDir() && runConfig.Config.Recursive {
 			o.runTestGroup(cmd, name, results)
-		} else if strings.HasSuffix(f.Name(), FileSuffix) {
+		} else if isKnownLanguage(f.Name()) {
 			suite := v1alpha1.TestSuite{}
 			var test *v1alpha1.Test
 			test, err = o.createAndRunTest(o.Context, c, cmd, name, runConfig)
@@ -279,6 +274,16 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 			}
 		}
 	}
+}
+
+func isKnownLanguage(fileName string) bool {
+	for _, language := range v1alpha1.KnownLanguages {
+		if strings.HasSuffix(fileName, fmt.Sprintf(".%s", string(language))) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func handleTestError(namespace string, source string, results *v1alpha1.TestResults, err error) {
@@ -428,7 +433,7 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 		return nil, err
 	}
 
-	test, err := o.configureTest(ctx, namespace, fileName, name, data, runConfig)
+	test, err := o.configureTest(ctx, namespace, fileName, name, getLanguage(rawName), data, runConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -488,9 +493,9 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 	}
 
 	if !existed {
-		fmt.Printf("Test '%s\n' created", name)
+		fmt.Printf("Test '%s' created\n", name)
 	} else {
-		fmt.Printf("Test '%s\n' updated", name)
+		fmt.Printf("Test '%s' updated\n", name)
 	}
 
 	status := v1alpha1.TestPhaseNew
@@ -582,7 +587,7 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 	return &test, status.AsError(name)
 }
 
-func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fileName string, name string, data string, runConfig *config.RunConfig) (v1alpha1.Test, error) {
+func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fileName string, name string, language v1alpha1.Language, data string, runConfig *config.RunConfig) (v1alpha1.Test, error) {
 	test := v1alpha1.Test{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.TestKind,
@@ -593,10 +598,14 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 			Name:      name,
 		},
 		Spec: v1alpha1.TestSpec{
+			Runtime: v1alpha1.RuntimeSpec{
+				Logger:  o.Logger,
+				Verbose: o.Verbose,
+			},
 			Source: v1alpha1.SourceSpec{
 				Name:     fileName,
 				Content:  data,
-				Language: v1alpha1.LanguageGherkin,
+				Language: language,
 			},
 		},
 	}
@@ -680,7 +689,7 @@ func (o *runCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.RunConfig) {
 	env := make([]string, 0)
 
-	env = append(env, NamespaceEnv+"="+runConfig.Config.Namespace.Name)
+	env = append(env, envvar.NamespaceEnv+"="+runConfig.Config.Namespace.Name)
 
 	if len(o.Tags) > 0 {
 		env = append(env, CucumberFilterTags+"="+strings.Join(o.Tags, ","))
@@ -705,15 +714,11 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 	}
 
 	if len(o.Repositories) > 0 {
-		env = append(env, RepositoriesEnv+"="+strings.Join(o.Repositories, ","))
+		env = append(env, envvar.RepositoriesEnv+"="+strings.Join(o.Repositories, ","))
 	}
 
 	if len(o.Dependencies) > 0 {
-		env = append(env, DependenciesEnv+"="+strings.Join(o.Dependencies, ","))
-	}
-
-	if len(o.Logger) > 0 {
-		env = append(env, LoggersEnv+"="+strings.Join(o.Logger, ","))
+		env = append(env, envvar.DependenciesEnv+"="+strings.Join(o.Dependencies, ","))
 	}
 
 	for _, envConfig := range runConfig.Config.Runtime.Env {
@@ -898,12 +903,12 @@ func runScript(scriptFile string, desc string, namespace string, baseDir string,
 	command := exec.CommandContext(ctx, executor, resolve(scriptFile)) //#nosec G204
 
 	command.Env = os.Environ()
-	command.Env = append(command.Env, fmt.Sprintf("%s=%s", NamespaceEnv, namespace))
+	command.Env = append(command.Env, fmt.Sprintf("%s=%s", envvar.NamespaceEnv, namespace))
 
 	if failed {
-		command.Env = append(command.Env, fmt.Sprintf("%s=%s", TestStatusEnv, "FAILED"))
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", envvar.TestStatusEnv, "FAILED"))
 	} else {
-		command.Env = append(command.Env, fmt.Sprintf("%s=%s", TestStatusEnv, "SUCCESS"))
+		command.Env = append(command.Env, fmt.Sprintf("%s=%s", envvar.TestStatusEnv, "SUCCESS"))
 	}
 
 	command.Dir = baseDir

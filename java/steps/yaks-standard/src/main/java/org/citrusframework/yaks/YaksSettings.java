@@ -19,8 +19,9 @@ package org.citrusframework.yaks;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,10 @@ public class YaksSettings {
     private static final String TEST_ID_PROPERTY = YAKS_PROPERTY_PREFIX + "test.id";
     private static final String TEST_ID_ENV = YAKS_ENV_PREFIX + "TEST_ID";
 
+    private static final String TERMINATION_LOG_PROPERTY = YAKS_PROPERTY_PREFIX + "termination.log";
+    private static final String TERMINATION_LOG_ENV = YAKS_ENV_PREFIX + "TERMINATION_LOG";
+    private static final String TERMINATION_LOG_DEFAULT = "target/termination.log";
+
     /**
      * Namespace to work on when performing Kubernetes/Knative client operations on resources.
      * @return
@@ -65,7 +70,7 @@ public class YaksSettings {
         final File namespace = new File("/var/run/secrets/kubernetes.io/serviceaccount/namespace");
         if (namespace.exists()){
             try {
-                return new String(Files.readAllBytes(namespace.toPath()), StandardCharsets.UTF_8);
+                return Files.readString(namespace.toPath());
             } catch (IOException e) {
                 LOG.warn("Failed to read Kubernetes namespace from filesystem {}", namespace, e);
             }
@@ -90,6 +95,15 @@ public class YaksSettings {
     public static YaksClusterType getClusterType() {
         return YaksClusterType.valueOf(System.getProperty(CLUSTER_TYPE_PROPERTY,
                 System.getenv(CLUSTER_TYPE_ENV) != null ? System.getenv(CLUSTER_TYPE_ENV) : CLUSTER_TYPE_DEFAULT));
+    }
+
+    /**
+     * Termination log file path.
+     * @return
+     */
+    public static Path getTerminationLog() {
+        return Paths.get(System.getProperty(TERMINATION_LOG_PROPERTY,
+                System.getenv(TERMINATION_LOG_ENV) != null ? System.getenv(TERMINATION_LOG_ENV) : TERMINATION_LOG_DEFAULT));
     }
 
     /**

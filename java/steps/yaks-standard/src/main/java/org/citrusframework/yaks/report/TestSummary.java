@@ -24,12 +24,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class TestSummary {
 
-    int passed = 0;
-    int failed = 0;
-    int errors = 0;
-    int skipped = 0;
-    int pending = 0;
-    int undefined = 0;
+    public int passed = 0;
+    public int failed = 0;
+    public int errors = 0;
+    public int skipped = 0;
+    public int pending = 0;
+    public int undefined = 0;
 
     public int getPassed() {
         return passed;

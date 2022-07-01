@@ -110,7 +110,16 @@
 
     <dependency>
       <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-junit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-groovy</artifactId>
     </dependency>
     <dependency>
       <groupId>com.consol.citrus</groupId>

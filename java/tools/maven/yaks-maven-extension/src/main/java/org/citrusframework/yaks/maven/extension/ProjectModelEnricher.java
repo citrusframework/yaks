@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
@@ -57,7 +59,10 @@ import org.codehaus.plexus.logging.Logger;
 public class ProjectModelEnricher implements ProjectExecutionListener {
 
     @Requirement
-    private Logger logger;
+    Logger logger;
+
+    /** Set of supported source test types */
+    private static final String[] SOURCE_TYPES = new String[] {".feature", "it.groovy", "test.groovy"};
 
     @Override
     public void beforeProjectExecution(ProjectExecutionEvent projectExecutionEvent) throws LifecycleExecutionException {
@@ -75,22 +80,34 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
      */
     private void injectTestResources(Model projectModel) {
         if (ExtensionSettings.hasMountedTests()) {
-            Resource mountedTests = new Resource();
-            mountedTests.setDirectory(ExtensionSettings.getMountedTestsPath() + "/..data");
-            mountedTests.setTargetPath(projectModel.getBuild().getTestOutputDirectory() + "/org/citrusframework/yaks");
-            mountedTests.setFiltering(false);
-            mountedTests.setIncludes(Collections.singletonList("*.feature"));
-            projectModel.getBuild().getTestResources().add(mountedTests);
+            logger.info("Add mounted test resources from directory: " + ExtensionSettings.getMountedTestsPath());
+
+            Arrays.stream(SOURCE_TYPES).forEach(sourceType -> projectModel.getBuild().getTestResources().add(
+                    getMountedTests(projectModel, sourceType)));
 
             Resource mountedResources = new Resource();
             mountedResources.setDirectory(ExtensionSettings.getMountedTestsPath() + "/..data");
             mountedResources.setTargetPath(projectModel.getBuild().getTestOutputDirectory());
             mountedResources.setFiltering(false);
-            mountedResources.setExcludes(Collections.singletonList("*.feature"));
+            mountedResources.setExcludes(Arrays.stream(SOURCE_TYPES).map(sourceType -> String.format("*%s", sourceType)).collect(Collectors.toList()));
             projectModel.getBuild().getTestResources().add(mountedResources);
-
-            logger.info("Add mounted test resources in directory: " + ExtensionSettings.getMountedTestsPath());
         }
+    }
+
+    /**
+     * Dynamically adds Maven test resources from container volume mount to the Maven test output directory.
+     * @param projectModel
+     * @param type
+     * @return
+     */
+    private static Resource getMountedTests(Model projectModel, String type) {
+        Resource mountedTests = new Resource();
+        mountedTests.setDirectory(ExtensionSettings.getMountedTestsPath() + "/..data");
+        mountedTests.setTargetPath(String.format("%s/org/citrusframework/yaks/%s", projectModel.getBuild().getTestOutputDirectory(), type.substring(type.lastIndexOf(".") + 1)));
+        mountedTests.setFiltering(false);
+        mountedTests.setIncludes(Collections.singletonList(String.format("*%s", type)));
+
+        return mountedTests;
     }
 
     /**
@@ -100,13 +117,13 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
      */
     private void injectSecrets(Model projectModel) {
         if (ExtensionSettings.hasMountedSecrets()) {
+            logger.info("Add mounted secrets from directory: " + ExtensionSettings.getMountedSecretsPath());
+
             Resource mountedSecrets = new Resource();
             mountedSecrets.setDirectory(ExtensionSettings.getMountedSecretsPath() + "/..data");
             mountedSecrets.setTargetPath(projectModel.getBuild().getTestOutputDirectory() + "/secrets");
             mountedSecrets.setFiltering(false);
             projectModel.getBuild().getTestResources().add(mountedSecrets);
-
-            logger.info("Add mounted secret resources in directory: " + ExtensionSettings.getMountedSecretsPath());
         }
     }
 
@@ -145,8 +162,9 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
         try {
             ByteArrayOutputStream configuration = new ByteArrayOutputStream();
             builder.writeXmlConfiguration(configuration);
+            Files.createDirectories(Paths.get(project.getBasedir().toURI()).resolve("src/test/resources"));
             Files.write(Paths.get(project.getBasedir().toURI()).resolve("src/test/resources/log4j2-test.xml"),
-                        configuration.toByteArray(), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                        configuration.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new LifecycleExecutionException("Failed to write Log4j2 configuration file", e);
         }

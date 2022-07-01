@@ -24,7 +24,21 @@ import (
 )
 
 const (
-	NamespaceEnvVar = "NAMESPACE"
+	WatchNamespaceEnv    = "WATCH_NAMESPACE"
+	PodNameEnv           = "POD_NAME"
+	OperatorNamespaceEnv = "NAMESPACE"
+	NamespaceEnv         = "YAKS_NAMESPACE"
+	LoggersEnv           = "YAKS_LOGGERS"
+	TestIDEnv            = "YAKS_TEST_ID"
+	TestNameEnv          = "YAKS_TEST_NAME"
+	TestPathEnv          = "YAKS_TESTS_PATH"
+	TestStatusEnv        = "YAKS_TEST_STATUS"
+	SecretsPathEnv       = "YAKS_SECRETS_PATH" // nolint: gosec
+	SettingsFileEnv      = "YAKS_SETTINGS_FILE"
+	ClusterTypeEnv       = "YAKS_CLUSTER_TYPE"
+	TerminationLogEnv    = "YAKS_TERMINATION_LOG"
+	RepositoriesEnv      = "YAKS_REPOSITORIES"
+	DependenciesEnv      = "YAKS_DEPENDENCIES"
 )
 
 // Get --.
@@ -74,7 +88,7 @@ func SetValFrom(vars *[]corev1.EnvVar, name string, path string) {
 
 // GetOperatorNamespace returns the Namespace the operator is installed.
 func GetOperatorNamespace() string {
-	if ns, found := os.LookupEnv(NamespaceEnvVar); found {
+	if ns, found := os.LookupEnv(OperatorNamespaceEnv); found {
 		return ns
 	}
 

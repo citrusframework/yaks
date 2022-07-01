@@ -60,22 +60,17 @@ const (
 )
 
 func GenerateReport(out io.Writer, errorOut io.Writer, results *v1alpha1.TestResults, output OutputFormat) {
-	outputDir, err := util.CreateInWorkingDir(OutputDir)
-	if err != nil {
-		printError(errorOut, err)
-	}
-
 	switch output {
 	case SummaryOutput, DefaultOutput:
 		printReport(out, GetSummaryReport(results))
 	case JUnitOutput:
-		if junitReport, err := createJUnitReport(results, outputDir); err != nil {
+		if junitReport, err := createJUnitReport(results); err != nil {
 			printError(errorOut, err)
 		} else {
 			printReport(out, junitReport)
 		}
 	case JSONOutput:
-		if jsonReport, err := createJSONReport(results, outputDir); err != nil {
+		if jsonReport, err := createJSONReport(results); err != nil {
 			printError(errorOut, err)
 		} else {
 			printReport(out, jsonReport)
@@ -258,9 +253,13 @@ func GetErrorType(err error) string {
 }
 
 func printReport(out io.Writer, report string) {
-	_, _ = fmt.Fprintf(out, "%s\n", report)
+	if out != nil {
+		_, _ = fmt.Fprintf(out, "%s\n", report)
+	}
 }
 
 func printError(out io.Writer, err error) {
-	_, _ = fmt.Fprintf(out, "%v\n", err)
+	if out != nil {
+		_, _ = fmt.Fprintf(out, "%v\n", err)
+	}
 }

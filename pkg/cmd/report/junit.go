@@ -21,6 +21,7 @@ import (
 	"encoding/xml"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/util"
 )
 
 const (
@@ -65,7 +66,12 @@ type Error struct {
 	Stacktrace string   `xml:",chardata"`
 }
 
-func createJUnitReport(results *v1alpha1.TestResults, outputDir string) (string, error) {
+func createJUnitReport(results *v1alpha1.TestResults) (string, error) {
+	outputDir, err := util.CreateInWorkingDir(OutputDir)
+	if err != nil {
+		return "", err
+	}
+
 	var report = JUnitReport{
 		Suite: []TestSuite{},
 	}

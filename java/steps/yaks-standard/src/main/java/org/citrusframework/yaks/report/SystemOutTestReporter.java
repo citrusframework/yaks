@@ -40,7 +40,12 @@ public class SystemOutTestReporter extends AbstractTestSuiteListener implements 
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(SystemOutTestReporter.class);
 
-    private OutputStreamReporter delegate = new OutputStreamReporter(new BufferedWriter(new OutputStreamWriter(System.out)));
+    private final OutputStreamReporter delegate;
+
+    public SystemOutTestReporter() {
+        this.delegate = new OutputStreamReporter(new BufferedWriter(new OutputStreamWriter(System.out)));
+        this.delegate.setFormat("%s | %s%n");
+    }
 
     @Override
     public void onStart() {

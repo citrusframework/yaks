@@ -18,11 +18,11 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  labels:
+    app: yaks
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  labels:
-    app: yaks
   name: tests.yaks.citrusframework.org
 spec:
   group: yaks.citrusframework.org
@@ -82,7 +82,7 @@ spec:
             description: TestSpec defines the desired state of Test
             properties:
               config:
-                description: SettingsSpec.
+                description: SettingsSpec --.
                 properties:
                   content:
                     type: string
@@ -94,7 +94,7 @@ spec:
                   type: string
                 type: array
               kubedock:
-                description: KubeDockSpec.
+                description: KubeDockSpec --.
                 properties:
                   image:
                     type: string
@@ -103,7 +103,7 @@ spec:
                 type: object
               resources:
                 items:
-                  description: ResourceSpec.
+                  description: ResourceSpec --.
                   properties:
                     content:
                       type: string
@@ -111,10 +111,20 @@ spec:
                       type: string
                   type: object
                 type: array
+              runtime:
+                description: RuntimeSpec --.
+                properties:
+                  logger:
+                    items:
+                      type: string
+                    type: array
+                  verbose:
+                    type: boolean
+                type: object
               secret:
                 type: string
               selenium:
-                description: SeleniumSpec.
+                description: SeleniumSpec --.
                 properties:
                   image:
                     type: string
@@ -122,7 +132,7 @@ spec:
                     type: integer
                 type: object
               source:
-                description: SourceSpec.
+                description: SourceSpec --.
                 properties:
                   content:
                     type: string
@@ -140,7 +150,7 @@ spec:
               errors:
                 type: string
               phase:
-                description: TestPhase.
+                description: TestPhase --.
                 type: string
               results:
                 properties:
@@ -191,9 +201,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: null
-  storedVersions: null

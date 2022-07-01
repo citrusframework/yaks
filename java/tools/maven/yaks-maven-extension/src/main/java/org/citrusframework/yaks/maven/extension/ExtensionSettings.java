@@ -44,6 +44,10 @@ public final class ExtensionSettings {
     public static final String LOGGERS_SETTING_ENV = "YAKS_LOGGERS";
     public static final String LOGGING_LEVEL_PREFIX = "logging.level.";
 
+    public static final String LOG_PATTERN_LAYOUT_SETTING_KEY = "yaks.log.pattern.layout";
+    public static final String LOG_PATTERN_LAYOUT_SETTING_ENV = "YAKS_LOG_PATTERN_LAYOUT";
+    public static final String LOG_PATTERN_LAYOUT_SETTING_DEFAULT = "%-5level| %msg%n";
+
     /**
      * Prevent instantiation of utility class.
      */
@@ -67,6 +71,15 @@ public final class ExtensionSettings {
     public static String getMountedSecretsPath() {
         return System.getProperty(ExtensionSettings.SECRETS_PATH_KEY, System.getenv(ExtensionSettings.SECRETS_PATH_ENV) != null ?
                 System.getenv(ExtensionSettings.SECRETS_PATH_ENV) : "");
+    }
+
+    /**
+     * Gets the log pattern layout configured via environment settings or using a default.
+     * @return
+     */
+    public static String getLogPatternLayout() {
+        return System.getProperty(ExtensionSettings.LOG_PATTERN_LAYOUT_SETTING_KEY, System.getenv(ExtensionSettings.LOG_PATTERN_LAYOUT_SETTING_ENV) != null ?
+                System.getenv(ExtensionSettings.LOG_PATTERN_LAYOUT_SETTING_ENV) : LOG_PATTERN_LAYOUT_SETTING_DEFAULT);
     }
 
     /**

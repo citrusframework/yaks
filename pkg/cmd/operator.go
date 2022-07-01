@@ -53,7 +53,7 @@ func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
 		if defaults.OperatorID() != "" {
 			leaderElectionID = defaults.GetOperatorLockName(defaults.OperatorID())
 		} else {
-			leaderElectionID = operator.OperatorLockName
+			leaderElectionID = operator.LockName
 		}
 	}
 
