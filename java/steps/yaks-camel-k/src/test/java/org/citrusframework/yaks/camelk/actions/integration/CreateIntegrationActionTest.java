@@ -133,4 +133,24 @@ public class CreateIntegrationActionTest {
         Assert.assertEquals("quarkus.foo=bar", values.get(0));
         Assert.assertEquals("quarkus.verbose=true", values.get(1));
     }
+
+    @Test
+    public void shouldCreateIntegrationWithConfigModeline() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("foo")
+                .source("// camel-k: config=secret:my-secret\n" +
+                        "// camel-k: config=configmap:tokens\n" +
+                        "// camel-k: config=foo=bar\n" +
+                        "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).withName("foo").get();
+        Assert.assertEquals(3, integration.getSpec().getConfiguration().size());
+        Assert.assertEquals("secret", integration.getSpec().getConfiguration().get(0).getType());
+        Assert.assertEquals("configmap", integration.getSpec().getConfiguration().get(1).getType());
+        Assert.assertEquals("property", integration.getSpec().getConfiguration().get(2).getType());
+    }
 }

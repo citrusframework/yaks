@@ -102,6 +102,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
         addPropertyConfigurationSpec(integrationBuilder, context);
         addBuildPropertyConfigurationSpec(integrationBuilder, resolvedSource, context);
+        addRuntimeConfigurationSpec(integrationBuilder, resolvedSource, context);
         addTraitSpec(integrationBuilder, resolvedSource, context);
         addOpenApiSpec(integrationBuilder, context);
 
@@ -262,6 +263,25 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         if (!traitConfigMap.isEmpty()) {
             integrationBuilder.traits(traitConfigMap);
+        }
+    }
+
+    private void addRuntimeConfigurationSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
+        final List<IntegrationSpec.Configuration> configurationList = new ArrayList<>();
+
+        Pattern pattern = getModelinePattern("config");
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            String[] config = depMatcher.group(1).split(":", 2);
+            if (config.length == 2) {
+                configurationList.add(new IntegrationSpec.Configuration(config[0], config[1]));
+            } else {
+                configurationList.add(new IntegrationSpec.Configuration("property", depMatcher.group(1)));
+            }
+        }
+
+        if (!configurationList.isEmpty()) {
+            integrationBuilder.configuration(configurationList);
         }
     }
 
