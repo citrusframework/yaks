@@ -52,6 +52,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final String fileName;
     private final String source;
     private final List<String> dependencies;
+    private final List<String> buildProperties;
+    private final List<String> buildPropertyFiles;
     private final List<String> properties;
     private final List<String> propertyFiles;
     private final List<String> traits;
@@ -68,6 +70,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.fileName = builder.fileName;
         this.source = builder.source;
         this.dependencies = builder.dependencies;
+        this.buildProperties = builder.buildProperties;
+        this.buildPropertyFiles = builder.buildPropertyFiles;
         this.properties = builder.properties;
         this.propertyFiles = builder.propertyFiles;
         this.traits = builder.traits;
@@ -97,6 +101,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             integrationBuilder.dependencies(resolvedDependencies);
         }
         addPropertyConfigurationSpec(integrationBuilder, context);
+        addBuildPropertyConfigurationSpec(integrationBuilder, resolvedSource, context);
         addTraitSpec(integrationBuilder, resolvedSource, context);
         addOpenApiSpec(integrationBuilder, context);
 
@@ -122,7 +127,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             }
         }
 
-        Pattern pattern = Pattern.compile("^// camel-k: ?trait=(.+)$", Pattern.MULTILINE);
+        Pattern pattern = getModelinePattern("trait");
         Matcher depMatcher = pattern.matcher(source);
         while (depMatcher.find()) {
             addTraitSpec(depMatcher.group(1), traitConfigMap);
@@ -144,7 +149,20 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         final String traitKey = traitConfig[0];
         final Object traitValue = resolveTraitValue(traitKey, traitConfig[1].trim());
         if (configMap.containsKey(trait[0])) {
-            configMap.get(trait[0]).add(traitKey, traitValue);
+            IntegrationSpec.TraitConfig config = configMap.get(trait[0]);
+
+            if (config.getConfiguration().containsKey(traitKey)) {
+                Object existingValue = config.getConfiguration().get(traitKey);
+
+                if (existingValue instanceof List) {
+                    List<String> values = (List<String>) existingValue;
+                    values.add(traitValue.toString());
+                } else {
+                    config.add(traitKey, Arrays.asList(existingValue.toString(), traitValue.toString()));
+                }
+            } else {
+                config.add(traitKey, traitValue);
+            }
         } else {
             configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitKey, traitValue));
         }
@@ -165,7 +183,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return VariableUtils.cutOffSingleQuotes(value);
         }
 
-        if (traitKey.equalsIgnoreCase("enabled")) {
+        if (traitKey.equalsIgnoreCase("enabled") ||
+                traitKey.equalsIgnoreCase("verbose")) {
             return Boolean.valueOf(value);
         }
 
@@ -177,12 +196,13 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         if (properties != null && !properties.isEmpty()) {
             for (String p : context.resolveDynamicValuesInList(properties)){
                 //key=value
-                if (!validatePropertyFormat(p)) {
+                if (isValidPropertyFormat(p)) {
+                    final String[] property = p.split("=",2);
+                    configurationList.add(
+                            new IntegrationSpec.Configuration("property", createPropertySpec(property[0], property[1], context)));
+                } else {
                     throw new IllegalArgumentException("Property " + p + " does not match format key=value");
                 }
-                final String[] property = p.split("=",2);
-                configurationList.add(
-                        new IntegrationSpec.Configuration("property", createPropertySpec(property[0], property[1], context)));
             }
         }
 
@@ -204,6 +224,47 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
     }
 
+    private void addBuildPropertyConfigurationSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
+        final String traitName = "builder.properties";
+        final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
+
+        if (buildProperties != null && !buildProperties.isEmpty()) {
+            for (String p : context.resolveDynamicValuesInList(buildProperties)){
+                //key=value
+                if (isValidPropertyFormat(p)) {
+                    final String[] property = p.split("=", 2);
+                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap);
+                } else {
+                    throw new IllegalArgumentException("Property " + p + " does not match format key=value");
+                }
+            }
+        }
+
+        if (buildPropertyFiles != null && !buildPropertyFiles.isEmpty()) {
+            for (String pf : buildPropertyFiles){
+                try {
+                    Properties props = new Properties();
+                    props.load(FileUtils.getFileResource(pf, context).getInputStream());
+                    props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
+                            traitName,
+                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));
+                } catch (IOException e) {
+                    throw new CitrusRuntimeException("Failed to load property file", e);
+                }
+            }
+        }
+
+        Pattern pattern = getModelinePattern("build-property");
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            addTraitSpec(String.format("%s=%s", traitName, depMatcher.group(1)), traitConfigMap);
+        }
+
+        if (!traitConfigMap.isEmpty()) {
+            integrationBuilder.traits(traitConfigMap);
+        }
+    }
+
     private String createPropertySpec(String key, String value, TestContext context) {
         return escapePropertyItem(key) + "=" + escapePropertyItem(context.replaceDynamicContentInString(value));
     }
@@ -213,7 +274,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     }
 
     private boolean validateTraitFormat(String trait) {
-        String patternString = "[A-Za-z-0-9]+\\.[A-Za-z-0-9]+=[A-Za-z-0-9]+";
+        String patternString = "[A-Za-z-0-9]+\\.[A-Za-z-0-9]+=[A-Za-z-0-9]+[A-Za-z -0-9.=]*";
 
         Pattern pattern = Pattern.compile(patternString);
 
@@ -221,7 +282,12 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         return matcher.matches();
     }
 
-    private boolean validatePropertyFormat(String property) {
+    /**
+     * Verify property expression format key=value
+     * @param property
+     * @return
+     */
+    private static boolean isValidPropertyFormat(String property) {
         String patternString = "[^\\s]+=.*";
 
         Pattern pattern = Pattern.compile(patternString);
@@ -239,7 +305,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private static List<String> resolveDependencies(String source, List<String> dependencies) {
         List<String> resolved = new ArrayList<>(dependencies);
 
-        Pattern pattern = Pattern.compile("^// camel-k: ?dependency=(.+)$", Pattern.MULTILINE);
+        Pattern pattern = getModelinePattern("dependency");
         Matcher depMatcher = pattern.matcher(source);
         while (depMatcher.find()) {
             String dependency = depMatcher.group(1);
@@ -259,6 +325,15 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     }
 
     /**
+     * Create regexp pattern to match Camel K modeling instruction with given name.
+     * @param name
+     * @return
+     */
+    private static Pattern getModelinePattern(String name) {
+        return Pattern.compile(String.format("^// camel-k: ?%s=(.+)$", name), Pattern.MULTILINE);
+    }
+
+    /**
      * Action builder.
      */
     public static final class Builder extends AbstractCamelKAction.Builder<CreateIntegrationAction, Builder> {
@@ -267,6 +342,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private String fileName;
         private String source;
         private final List<String> dependencies = new ArrayList<>();
+        private final List<String> buildProperties = new ArrayList<>();
+        private final List<String> buildPropertyFiles = new ArrayList<>();
         private final List<String> properties = new ArrayList<>();
         private final List<String> propertyFiles = new ArrayList<>();
         private final List<String> traits = new ArrayList<>();
@@ -340,6 +417,34 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return this;
         }
 
+        public Builder buildPropertyFile(String propertyFile) {
+            this.buildPropertyFiles.add(propertyFile);
+            return this;
+        }
+
+        public Builder buildPropertyFiles(List<String> propertyFiles) {
+            this.buildPropertyFiles.addAll(propertyFiles);
+            return this;
+        }
+
+        public Builder buildProperties(String properties) {
+            if (properties != null && properties.length() > 0) {
+                buildProperties(Arrays.asList(properties.split(",")));
+            }
+
+            return this;
+        }
+
+        public Builder buildProperties(List<String> properties) {
+            this.buildProperties.addAll(properties);
+            return this;
+        }
+
+        public Builder buildProperties(Map<String, String> properties) {
+            properties.forEach(this::buildProperty);
+            return this;
+        }
+
         public Builder dependencies(List<String> dependencies) {
             this.dependencies.addAll(dependencies);
             return this;
@@ -352,6 +457,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder property(String name, String value) {
             this.properties.add(name + "=" + value);
+            return this;
+        }
+
+        public Builder buildProperty(String name, String value) {
+            this.buildProperties.add(name + "=" + value);
             return this;
         }
 

@@ -185,14 +185,13 @@ public class IntegrationSpec implements KubernetesResource {
     @JsonPropertyOrder({"configuration"})
     public static class TraitConfig {
         @JsonProperty("configuration")
-        private Map<String, Object> configuration;
+        private Map<String, Object> configuration = new HashMap<>();
 
         public TraitConfig() {
-            this.configuration = new HashMap<>();
+            // default constructor
         }
 
         public TraitConfig(String key, Object value) {
-            this.configuration = new HashMap<>();
             add(key, value);
         }
 
