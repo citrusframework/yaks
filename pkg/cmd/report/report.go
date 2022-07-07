@@ -26,6 +26,7 @@ import (
 	"path"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
+	"github.com/citrusframework/yaks/pkg/util"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,7 +60,7 @@ const (
 )
 
 func GenerateReport(out io.Writer, errorOut io.Writer, results *v1alpha1.TestResults, output OutputFormat) {
-	outputDir, err := createInWorkingDir(OutputDir)
+	outputDir, err := util.CreateInWorkingDir(OutputDir)
 	if err != nil {
 		printError(errorOut, err)
 	}
@@ -103,7 +104,7 @@ func AppendSummary(overall *v1alpha1.TestSummary, summary *v1alpha1.TestSummary)
 }
 
 func SaveTestResults(test *v1alpha1.Test) error {
-	outputDir, err := createInWorkingDir(OutputDir)
+	outputDir, err := util.CreateInWorkingDir(OutputDir)
 	if err != nil {
 		return err
 	}
@@ -126,13 +127,13 @@ func SaveTestResults(test *v1alpha1.Test) error {
 }
 
 func CleanReports() error {
-	err := removeFromWorkingDir(OutputDir)
+	err := util.RemoveFromWorkingDir(OutputDir)
 	return err
 }
 
 func LoadTestResults() (*v1alpha1.TestResults, error) {
 	results := v1alpha1.TestResults{}
-	outputDir, err := getInWorkingDir(OutputDir)
+	outputDir, err := util.GetInWorkingDir(OutputDir)
 	if err != nil && os.IsNotExist(err) {
 		return &results, nil
 	} else if err != nil {

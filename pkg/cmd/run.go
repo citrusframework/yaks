@@ -560,7 +560,7 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 				fileName = fmt.Sprintf("%s-dump.log", test.Name)
 			}
 
-			fmt.Printf("Dump test '%s' to file '%s'\n", name, fileName)
+			fmt.Printf("Dump test '%s' to file '%s'\n", name, path.Join(runConfig.Config.Dump.Directory, fileName))
 
 			var flags int
 			if runConfig.Config.Dump.Append {
@@ -569,10 +569,11 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 				flags = os.O_RDWR | os.O_CREATE
 			}
 
-			err = util.WithFile(path.Join(runConfig.Config.Dump.Directory, fileName), flags, 0o644, func(out io.Writer) error {
+			if outputDir, err := util.CreateInWorkingDir(runConfig.Config.Dump.Directory); err != nil {
+				fmt.Println(err)
+			} else if err = util.WithFile(path.Join(outputDir, fileName), flags, 0o644, func(out io.Writer) error {
 				return dumpTest(ctx, c, test.Name, namespace, out, runConfig.Config.Dump.Lines, runConfig.Config.Dump.Includes)
-			})
-			if err != nil {
+			}); err != nil {
 				fmt.Println(err)
 			}
 		}

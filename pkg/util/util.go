@@ -20,6 +20,7 @@ package util
 import (
 	"io"
 	"os"
+	"path"
 
 	"path/filepath"
 
@@ -83,4 +84,60 @@ func WithFile(name string, flag int, perm os.FileMode, consumer func(out io.Writ
 
 func Close(err error, closer io.Closer) error {
 	return multierr.Append(err, closer.Close())
+}
+
+// GetInWorkingDir --.
+func GetInWorkingDir(dir string) (string, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	outputDir := path.Join(workingDir, dir)
+	_, err = os.Stat(outputDir)
+
+	return outputDir, err
+}
+
+// CreateInWorkingDir --.
+func CreateInWorkingDir(dir string) (string, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	newDir := path.Join(workingDir, dir)
+	err = CreateIfNotExists(newDir)
+	return newDir, err
+}
+
+// RemoveFromWorkingDir --.
+func RemoveFromWorkingDir(dir string) error {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	toDelete := path.Join(workingDir, dir)
+	if _, err := os.Stat(dir); err == nil {
+		err = os.RemoveAll(toDelete)
+		if err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	return nil
+}
+
+// CreateIfNotExists --.
+func CreateIfNotExists(dir string) error {
+	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
+		if err := os.Mkdir(dir, 0755); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
