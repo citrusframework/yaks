@@ -78,6 +78,10 @@ public class IntegrationBuilderTest {
 		traits.put("quarkus", quarkus);
 		traits.put("route", new IntegrationSpec.TraitConfig("enabled", true));
 
+		IntegrationSpec.TraitConfig builder = new IntegrationSpec.TraitConfig("properties", Arrays.asList("quarkus.foo=bar", "quarkus.verbose=true"));
+		builder.add("verbose", true);
+		traits.put("builder", builder);
+
 		List<String> dependencies = Arrays.asList("mvn:fake.dependency:id:version-1", "camel:jackson");
 		Integration i = new Integration.Builder()
 				.name("bar.groovy")

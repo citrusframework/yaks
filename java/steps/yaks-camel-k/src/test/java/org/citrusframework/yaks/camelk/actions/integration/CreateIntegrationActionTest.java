@@ -17,7 +17,9 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
@@ -84,5 +86,51 @@ public class CreateIntegrationActionTest {
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("route"));
         Assert.assertEquals(1, integration.getSpec().getTraits().get("route").getConfiguration().size());
         Assert.assertEquals(true, integration.getSpec().getTraits().get("route").getConfiguration().get("enabled"));
+    }
+
+    @Test
+    public void shouldCreateIntegrationWithBuildProperties() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("helloworld")
+                .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .buildProperty("quarkus.foo", "bar")
+                .buildProperty("quarkus.verbose", "true")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).withName("helloworld").get();
+        Assert.assertEquals(1, integration.getSpec().getTraits().size());
+        Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
+        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("builder").getConfiguration().get("properties").getClass());
+        List<String> values = (List<String>) integration.getSpec().getTraits().get("builder").getConfiguration().get("properties");
+        Assert.assertEquals(2, values.size());
+        Assert.assertEquals("quarkus.foo=bar", values.get(0));
+        Assert.assertEquals("quarkus.verbose=true", values.get(1));
+    }
+
+    @Test
+    public void shouldCreateIntegrationWithBuildPropertyModeline() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("foo")
+                .source("// camel-k: build-property=quarkus.foo=bar\n" +
+                        "// camel-k: build-property=quarkus.verbose=true\n" +
+                        "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).withName("foo").get();
+        Assert.assertEquals(1, integration.getSpec().getTraits().size());
+        Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
+        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("builder").getConfiguration().get("properties").getClass());
+        List<String> values = (List<String>) integration.getSpec().getTraits().get("builder").getConfiguration().get("properties");
+        Assert.assertEquals(2, values.size());
+        Assert.assertEquals("quarkus.foo=bar", values.get(0));
+        Assert.assertEquals("quarkus.verbose=true", values.get(1));
     }
 }

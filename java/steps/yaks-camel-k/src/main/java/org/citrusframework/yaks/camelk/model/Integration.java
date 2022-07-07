@@ -19,6 +19,7 @@ package org.citrusframework.yaks.camelk.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,10 +50,10 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 	 * Fluent builder
 	 */
 	public static class Builder {
-		private Map<String, IntegrationSpec.TraitConfig> traits;
+		private final Map<String, IntegrationSpec.TraitConfig> traits = new LinkedHashMap<>();
 		private final List<IntegrationSpec.Resource> resources = new ArrayList<>();
-		private List<String> dependencies;
-		private List<IntegrationSpec.Configuration> configuration;
+		private final List<String> dependencies = new ArrayList<>();
+		private final List<IntegrationSpec.Configuration> configuration = new ArrayList<>();
 		private String source;
 		private String fileName;
 		private String name;
@@ -84,17 +85,22 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 		}
 
 		public Builder dependencies(List<String> dependencies) {
-			this.dependencies = Collections.unmodifiableList(dependencies);
+			this.dependencies.addAll(dependencies);
 			return this;
 		}
 
 		public Builder traits(Map<String, IntegrationSpec.TraitConfig> traits) {
-			this.traits = Collections.unmodifiableMap(traits);
+			this.traits.putAll(traits);
+			return this;
+		}
+
+		public Builder trait(String name, IntegrationSpec.TraitConfig config) {
+			this.traits.put(name ,config);
 			return this;
 		}
 
 		public Builder configuration(List<IntegrationSpec.Configuration> configuration) {
-			this.configuration = Collections.unmodifiableList(configuration);
+			this.configuration.addAll(configuration);
 			return this;
 		}
 
@@ -102,9 +108,18 @@ public class Integration extends CustomResource<IntegrationSpec, IntegrationStat
 			Integration i = new Integration();
 			i.getMetadata().setName(sanitizeIntegrationName(name));
 			i.getSpec().setSources(Collections.singletonList(new IntegrationSpec.Source(fileName, source)));
-			i.getSpec().setDependencies(dependencies);
-			i.getSpec().setTraits(traits);
-			i.getSpec().setConfiguration(configuration);
+
+			if (!dependencies.isEmpty()) {
+				i.getSpec().setDependencies(dependencies);
+			}
+
+			if (!traits.isEmpty()) {
+				i.getSpec().setTraits(traits);
+			}
+
+			if (!configuration.isEmpty()) {
+				i.getSpec().setConfiguration(configuration);
+			}
 
 			if (!resources.isEmpty()) {
 				i.getSpec().setResources(resources);

@@ -26,6 +26,12 @@
           "native": "true",
           "enabled": true
         }
+      },
+      "builder":{
+        "configuration": {
+          "properties": ["quarkus.foo=bar","quarkus.verbose=true"],
+          "verbose": true
+        }
       }
     }
   }

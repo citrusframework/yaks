@@ -62,6 +62,8 @@ public class CamelKSteps {
 
     private List<String> propertyFiles;
     private Map<String, String> properties;
+    private List<String> buildPropertyFiles;
+    private Map<String, String> buildProperties;
 
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
 
@@ -73,6 +75,8 @@ public class CamelKSteps {
 
         propertyFiles = new ArrayList<>();
         properties = new LinkedHashMap<>();
+        buildPropertyFiles = new ArrayList<>();
+        buildProperties = new LinkedHashMap<>();
     }
 
     @Given("^Disable auto removal of Camel K resources$")
@@ -123,6 +127,22 @@ public class CamelKSteps {
         properties.putAll(propertyTable.asMap(String.class, String.class));
     }
 
+    @Given("^Camel K integration build property file ([^\\s]+)$")
+    public void addBuildPropertyFile(String filePath) {
+        buildPropertyFiles.add(filePath);
+    }
+
+	@Given("^Camel K integration build property ([^\\s]+)=\"([^\"]*)\"$")
+    @Given("^Camel K integration build property ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
+    public void addBuildProperty(String name, String value) {
+        buildProperties.put(name, value);
+    }
+
+	@Given("^Camel K integration build properties$")
+    public void addBuildProperties(DataTable propertyTable) {
+        buildProperties.putAll(propertyTable.asMap(String.class, String.class));
+    }
+
 	@Given("^(?:create|new) Camel K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void createIntegration(String name, String language, Map<String, String> configuration) {
 		if (configuration.get("source") == null) {
@@ -157,7 +177,10 @@ public class CamelKSteps {
         runner.run(camelk()
                     .client(k8sClient)
                     .createIntegration(name + "." + language)
+                    .properties(properties)
                     .propertyFiles(propertyFiles)
+                    .buildProperties(buildProperties)
+                    .buildPropertyFiles(buildPropertyFiles)
                     .supportVariables(supportVariablesInSources)
                     .source(source));
 
@@ -225,6 +248,9 @@ public class CamelKSteps {
                 .createIntegration(configuration.getOrDefault("name", name + "." + language))
                 .source(name + "." + language, source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
+                .buildProperties(configuration.getOrDefault("build-properties", "").trim())
+                .buildProperties(buildProperties)
+                .buildPropertyFiles(buildPropertyFiles)
                 .properties(configuration.getOrDefault("properties", "").trim())
                 .properties(properties)
                 .propertyFiles(propertyFiles)
