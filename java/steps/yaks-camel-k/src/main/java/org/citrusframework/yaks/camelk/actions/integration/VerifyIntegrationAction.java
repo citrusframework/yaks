@@ -74,8 +74,9 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * @param message
      */
     private void verifyIntegrationLogs(Pod pod, String name, String namespace, String message) {
+        String log = "";
         for (int i = 0; i < maxAttempts; i++) {
-            String log = getIntegrationPodLogs(pod, namespace);
+            log = getIntegrationPodLogs(pod, namespace);
             if (log.contains(message)) {
                 LOG.info("Verified integration logs - All values OK!");
                 return;
@@ -87,6 +88,11 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
             } catch (InterruptedException e) {
                 LOG.warn("Interrupted while waiting for integration pod logs", e);
             }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(String.format("Failed to verify log message for integration '%s':", name));
+            LOG.debug(log);
         }
 
         throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),

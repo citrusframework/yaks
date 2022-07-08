@@ -77,8 +77,9 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * @param message
      */
     private void verifyPodLogs(Pod pod, String nameOrLabel, String namespace, String message) {
+        String log = "";
         for (int i = 0; i < maxAttempts; i++) {
-            String log = getPodLogs(pod, namespace);
+            log = getPodLogs(pod, namespace);
             if (log.contains(message)) {
                 LOG.info("Verified pod logs - All values OK!");
                 return;
@@ -90,6 +91,11 @@ public class VerifyPodAction extends AbstractKubernetesAction {
             } catch (InterruptedException e) {
                 LOG.warn("Interrupted while waiting for pod logs", e);
             }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(String.format("Failed to verify log message for pod '%s':", nameOrLabel));
+            LOG.debug(log);
         }
 
         throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
