@@ -141,9 +141,6 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
     private void addTraitSpec(String traitExpression, Map<String, IntegrationSpec.TraitConfig> configMap) {
         //traitName.key=value
-        if (!validateTraitFormat(traitExpression)) {
-            throw new IllegalArgumentException("Trait " + traitExpression + " does not match format traitName.key=value");
-        }
         final String[] trait = traitExpression.split("\\.",2);
         final String[] traitConfig = trait[1].split("=", 2);
 
@@ -291,15 +288,6 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
     private String escapePropertyItem(String item) {
         return item.replaceAll(":", "\\:").replaceAll("=", "\\=");
-    }
-
-    private boolean validateTraitFormat(String trait) {
-        String patternString = "[A-Za-z-0-9]+\\.[A-Za-z-0-9]+=[A-Za-z-0-9]+[A-Za-z -0-9.=]*";
-
-        Pattern pattern = Pattern.compile(patternString);
-
-        Matcher matcher = pattern.matcher(trait);
-        return matcher.matches();
     }
 
     /**
