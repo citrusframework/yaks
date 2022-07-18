@@ -67,6 +67,14 @@ public class KubernetesSettings {
     private static final String DELAY_BETWEEN_ATTEMPTS_ENV = KUBERNETES_ENV_PREFIX + "DELAY_BETWEEN_ATTEMPTS";
     private static final String DELAY_BETWEEN_ATTEMPTS_DEFAULT = "2000";
 
+    private static final String PRINT_POD_LOGS_PROPERTY = KUBERNETES_PROPERTY_PREFIX + "print.pod.logs";
+    private static final String PRINT_POD_LOGS_ENV = KUBERNETES_ENV_PREFIX + "PRINT_POD_LOGS";
+    private static final String PRINT_POD_LOGS_DEFAULT = "true";
+
+    private static final String WATCH_LOGS_TIMEOUT_PROPERTY = KUBERNETES_PROPERTY_PREFIX + "watch.logs.timeout";
+    private static final String WATCH_LOGS_TIMEOUT_ENV = KUBERNETES_ENV_PREFIX + "WATCH_LOGS_TIMEOUT";
+    private static final String WATCH_LOGS_TIMEOUT_DEFAULT = "60000";
+
     private KubernetesSettings() {
         // prevent instantiation of utility class
     }
@@ -142,6 +150,15 @@ public class KubernetesSettings {
     }
 
     /**
+     * When set to true test will print pod logs e.g. while waiting for a pod log message.
+     * @return
+     */
+    public static boolean isPrintPodLogs() {
+        return Boolean.parseBoolean(System.getProperty(PRINT_POD_LOGS_PROPERTY,
+                System.getenv(PRINT_POD_LOGS_ENV) != null ? System.getenv(PRINT_POD_LOGS_ENV) : PRINT_POD_LOGS_DEFAULT));
+    }
+
+    /**
      * Maximum number of attempts when polling for running state and log messages.
      * @return
      */
@@ -157,5 +174,14 @@ public class KubernetesSettings {
     public static long getDelayBetweenAttempts() {
         return Long.parseLong(System.getProperty(DELAY_BETWEEN_ATTEMPTS_PROPERTY,
                 System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) != null ? System.getenv(DELAY_BETWEEN_ATTEMPTS_ENV) : DELAY_BETWEEN_ATTEMPTS_DEFAULT));
+    }
+
+    /**
+     * Duration in milliseconds to watch pod logs.
+     * @return
+     */
+    public static long getWatchLogsTimeout() {
+        return Long.parseLong(System.getProperty(WATCH_LOGS_TIMEOUT_PROPERTY,
+                System.getenv(WATCH_LOGS_TIMEOUT_ENV) != null ? System.getenv(WATCH_LOGS_TIMEOUT_ENV) : WATCH_LOGS_TIMEOUT_DEFAULT));
     }
 }

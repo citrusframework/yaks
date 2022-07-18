@@ -223,6 +223,31 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
         }
 
         /**
+         * Watch pod logs for given pod identified by its name.
+         * @param podName the name of the Camel K pod.
+         */
+        public WatchPodLogsAction.Builder watchLogs(String podName) {
+            WatchPodLogsAction.Builder builder = new WatchPodLogsAction.Builder()
+                    .client(kubernetesClient)
+                    .podName(podName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Watch pod logs for given pod identified by label selector.
+         * @param label the name of the pod label to filter on.
+         * @param value the value of the pod label to match.
+         */
+        public WatchPodLogsAction.Builder watchLogs(String label, String value) {
+            WatchPodLogsAction.Builder builder = new WatchPodLogsAction.Builder()
+                    .client(kubernetesClient)
+                    .label(label, value);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
          * Add annotation on pod instance.
          * @param podName the name of the Kubernetes pod.
          */

@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.kubernetes;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +72,8 @@ public class KubernetesSteps {
     private boolean autoRemoveResources = KubernetesSettings.isAutoRemoveResources();
     private int maxAttempts = KubernetesSettings.getMaxAttempts();
     private long delayBetweenAttempts = KubernetesSettings.getDelayBetweenAttempts();
+
+    private Duration watchLogsTimeout = Duration.ofMillis(KubernetesSettings.getWatchLogsTimeout());
 
     @Before
     public void before(Scenario scenario) {
@@ -415,6 +418,7 @@ public class KubernetesSteps {
         VerifyPodAction.Builder action = kubernetes().client(k8sClient)
                 .pods()
                 .verify(name)
+                .printLogs(KubernetesSettings.isPrintPodLogs())
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts);
 
@@ -438,6 +442,7 @@ public class KubernetesSteps {
         VerifyPodAction.Builder action = kubernetes().client(k8sClient)
                 .pods()
                 .verify(label, value)
+                .printLogs(KubernetesSettings.isPrintPodLogs())
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts);
 
@@ -492,6 +497,37 @@ public class KubernetesSteps {
                         .maxAttempts(maxAttempts)
                         .delayBetweenAttempts(delayBetweenAttempts)
                         .waitForLogMessage(message)));
+    }
+
+    @Given("^watch logs timeout is ([\\d]+)(ms|s|min)$")
+    public void watchPodLogs(Long time, String timeUnit) {
+        switch (timeUnit) {
+            case "ms":
+                watchLogsTimeout = Duration.ofMillis(time);
+                break;
+            case "s":
+                watchLogsTimeout = Duration.ofSeconds(time);
+                break;
+            case "min":
+                watchLogsTimeout = Duration.ofMinutes(time);
+                break;
+        }
+    }
+
+    @Given("^watch logs for Kubernetes pod ([a-z\\.0-9-]+)$")
+    public void watchPodLogs(String name) {
+        runner.run(kubernetes().client(k8sClient)
+                .pods()
+                .watchLogs(name)
+                .timeout(watchLogsTimeout));
+    }
+
+    @Given("^watch logs for Kubernetes pod labeled with ([^\\s]+)=([^\\s]+)$")
+    public void watchPodLogs(String label, String value) {
+        runner.run(kubernetes().client(k8sClient)
+                .pods()
+                .watchLogs(label, value)
+                .timeout(watchLogsTimeout));
     }
 
     @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
