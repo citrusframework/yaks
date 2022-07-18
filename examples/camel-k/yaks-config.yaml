@@ -17,12 +17,12 @@
 
 config:
   namespace:
-    temporary: true
+    temporary: false
   runtime:
     resources:
       - timer-to-log.groovy
       - application.properties
-pre:
-  - name: Camel K setup
-    run: |
-      kamel install -w -n ${YAKS_NAMESPACE}
+post:
+  - name: print dump
+    if: env:CI=true && failure()
+    run: kamel dump
