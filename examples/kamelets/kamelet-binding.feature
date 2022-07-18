@@ -24,4 +24,7 @@ Feature: Kamelet resource
     And HTTP server timeout is 60000 ms
     Then expect HTTP request body: Hello World
     And receive POST /greeting
-    And delete KameletBinding timer-source-uri
+
+  Scenario: Remove Camel K resources
+    Given delete Kamelet timer-source
+    Given delete KameletBinding timer-source-uri

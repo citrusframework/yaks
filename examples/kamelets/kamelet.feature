@@ -18,7 +18,7 @@ Feature: Kamelet
       | type     | integer       |
       | default  | 1000          |
     And Kamelet type out="text/plain"
-    When create Kamelet timer-source with flow
+    When create Kamelet timer-source with template
 """
 from:
   uri: timer:tick
@@ -39,4 +39,7 @@ from:
     """
     Then Camel K integration timer-to-log should be running
     Then Camel K integration timer-to-log should print Hello Kamelets
-    Then delete Camel K integration timer-to-log
+
+  Scenario: Remove Camel K resources
+    Given delete Kamelet timer-source
+    Given delete Camel K integration timer-to-log

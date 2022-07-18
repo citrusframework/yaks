@@ -17,6 +17,16 @@
 
 config:
   runtime:
+    settings:
+      loggers:
+      - name: INTEGRATION_STATUS
+        level: INFO
+      - name: INTEGRATION_LOGS
+        level: INFO
     resources:
     - timer-source.kamelet.yaml
     - timer-to-log.groovy
+post:
+  - name: print dump
+    if: env:CI=true && failure()
+    run: kamel dump
