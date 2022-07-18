@@ -55,6 +55,10 @@ public final class CamelKSettings {
     private static final String SUPPORT_VARIABLES_IN_SOURCES_ENV = CAMELK_ENV_PREFIX + "SUPPORT_VARIABLES_IN_SOURCES";
     private static final String SUPPORT_VARIABLES_IN_SOURCES_DEFAULT = "true";
 
+    private static final String PRINT_POD_LOGS_PROPERTY = CAMELK_PROPERTY_PREFIX + "print.pod.logs";
+    private static final String PRINT_POD_LOGS_ENV = CAMELK_ENV_PREFIX + "PRINT_POD_LOGS";
+    private static final String PRINT_POD_LOGS_DEFAULT = String.valueOf(KubernetesSettings.isPrintPodLogs());
+
     public static final String INTEGRATION_LABEL = "camel.apache.org/integration";
 
     private CamelKSettings() {
@@ -124,5 +128,14 @@ public final class CamelKSettings {
     public static boolean isSupportVariablesInSources() {
         return Boolean.parseBoolean(System.getProperty(SUPPORT_VARIABLES_IN_SOURCES_PROPERTY,
                 System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) != null ? System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) : SUPPORT_VARIABLES_IN_SOURCES_DEFAULT));
+    }
+
+    /**
+     * When set to true test will print pod logs e.g. while waiting for a pod log message.
+     * @return
+     */
+    public static boolean isPrintPodLogs() {
+        return Boolean.parseBoolean(System.getProperty(PRINT_POD_LOGS_PROPERTY,
+                System.getenv(PRINT_POD_LOGS_ENV) != null ? System.getenv(PRINT_POD_LOGS_ENV) : PRINT_POD_LOGS_DEFAULT));
     }
 }

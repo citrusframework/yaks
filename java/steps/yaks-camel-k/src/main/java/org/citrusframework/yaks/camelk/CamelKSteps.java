@@ -225,6 +225,7 @@ public class CamelKSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .verifyIntegration(name)
+                .printLogs(CamelKSettings.isPrintPodLogs())
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
@@ -237,6 +238,7 @@ public class CamelKSteps {
                 .when(camelk()
                     .client(k8sClient)
                     .verifyIntegration(name)
+                    .printLogs(CamelKSettings.isPrintPodLogs())
                     .maxAttempts(maxAttempts)
                     .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
