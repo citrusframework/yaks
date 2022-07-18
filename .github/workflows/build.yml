@@ -146,7 +146,7 @@ jobs:
         yaks run examples/openapi $YAKS_RUN_OPTIONS
         yaks run examples/openapi-server $YAKS_RUN_OPTIONS
         yaks run examples/run-scripts $YAKS_RUN_OPTIONS
-        #yaks run examples/secrets $YAKS_RUN_OPTIONS
+        yaks run examples/secrets $YAKS_RUN_OPTIONS
         yaks run examples/settings $YAKS_RUN_OPTIONS
         yaks run examples/test-group $YAKS_RUN_OPTIONS
         yaks run examples/helloworld.feature $YAKS_RUN_OPTIONS
