@@ -45,7 +45,7 @@ func TestStepOsCheck(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", "foo", &v1alpha1.TestResults{}, saveErr)
 
 	assert.NilError(t, scriptError)
 }
@@ -81,7 +81,7 @@ func TestStepEnvCheck(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", "foo", &v1alpha1.TestResults{}, saveErr)
 
 	assert.NilError(t, scriptError)
 }
@@ -117,7 +117,7 @@ func TestStepCheckCombinations(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", "foo", &v1alpha1.TestResults{}, saveErr)
 
 	assert.NilError(t, scriptError)
 }
@@ -146,7 +146,36 @@ func TestStepOnFailure(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+
+	results := v1alpha1.TestResults{
+		Suites: []v1alpha1.TestSuite{
+			{
+				Tests: []v1alpha1.TestResult{
+					{
+						Name:         "foo",
+						ErrorType:    "",
+						ErrorMessage: "",
+					},
+				},
+			},
+		},
+	}
+
+	runSteps(steps, "default", "", "foo", &results, saveErr)
 
 	assert.NilError(t, scriptError)
+
+	results.Suites[0].Tests = append(results.Suites[0].Tests, v1alpha1.TestResult{
+		Name:         "bar",
+		ErrorType:    "error",
+		ErrorMessage: "Something went wrong",
+	})
+
+	runSteps(steps, "default", "", "foo", &results, saveErr)
+
+	assert.NilError(t, scriptError)
+
+	runSteps(steps, "default", "", "bar", &results, saveErr)
+
+	assert.Equal(t, scriptError.Error(), "Failed to run failure-check-fail: exit status 127")
 }

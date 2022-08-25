@@ -198,8 +198,8 @@ func (o *runCmdOptions) runTest(cmd *cobra.Command, source string, results *v1al
 	handleError := func(err error) {
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError) {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, source, results, handleError)
+	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, source, results, handleError) {
 		return
 	}
 
@@ -254,8 +254,8 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 	handleError := func(err error) {
 		handleTestError(runConfig.Config.Namespace.Name, source, results, err)
 	}
-	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError)
-	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, results, handleError) {
+	defer runSteps(runConfig.Post, runConfig.Config.Namespace.Name, runConfig.BaseDir, source, results, handleError)
+	if !runSteps(runConfig.Pre, runConfig.Config.Namespace.Name, runConfig.BaseDir, source, results, handleError) {
 		return
 	}
 
@@ -352,7 +352,7 @@ func (o *runCmdOptions) createTempNamespace(runConfig *config.RunConfig, cmd *co
 		instance, err = v1alpha1.FindGlobalInstance(o.Context, c)
 
 		if err != nil && k8serrors.IsForbidden(err) {
-			// not allowed to list all instances on the clusterr
+			// not allowed to list all instances on the cluster
 			return namespace, nil
 		} else if err != nil {
 			return namespace, err
@@ -548,9 +548,7 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 	}
 
 	if runConfig.Config.Dump.Enabled {
-		if runConfig.Config.Dump.FailedOnly &&
-			test.Status.Phase != v1alpha1.TestPhaseFailed && test.Status.Phase != v1alpha1.TestPhaseError &&
-			len(test.Status.Errors) == 0 && !hasSuiteErrors(&test.Status.Results) {
+		if runConfig.Config.Dump.FailedOnly && !isFailed(&test) {
 			fmt.Println("Skip dump for successful test")
 		} else {
 			var fileName string
@@ -766,13 +764,24 @@ func (o *runCmdOptions) newSettings(ctx context.Context, runConfig *config.RunCo
 	return nil, nil
 }
 
-func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1alpha1.TestResults, handleError func(err error)) bool {
+func runSteps(steps []config.StepConfig, namespace, baseDir string, name string, results *v1alpha1.TestResults, handleError func(err error)) bool {
+	fileNames := make([]string, 0)
+
+	defer func() {
+		for _, fileName := range fileNames {
+			err := os.Remove(fileName)
+			if err != nil {
+				handleError(fmt.Errorf(fmt.Sprintf("Failed to remove temporary script file %s: %v", fileName, err)))
+			}
+		}
+	}()
+
 	for idx, step := range steps {
 		if len(step.Name) == 0 {
 			step.Name = fmt.Sprintf("step-%d", idx)
 		}
 
-		if skipStep(step, results) {
+		if skipStep(step, name, results) {
 			fmt.Printf("Skip %s\n", step.Name)
 			continue
 		}
@@ -782,7 +791,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 			if desc == "" {
 				desc = fmt.Sprintf("script %s", step.Script)
 			}
-			if err := runScript(step.Script, desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
+			if err := runScript(step.Script, desc, namespace, baseDir, hasError(name, results), step.Timeout); err != nil {
 				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
 				return false
 			}
@@ -795,7 +804,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 				handleError(err)
 				return false
 			}
-			defer os.Remove(file.Name())
+			fileNames = append(fileNames, file.Name())
 
 			_, err = file.WriteString("#!/bin/bash\n\nset -e\n\n")
 			if err != nil {
@@ -824,7 +833,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 			if desc == "" {
 				desc = fmt.Sprintf("inline command %d", idx)
 			}
-			if err := runScript(file.Name(), desc, namespace, baseDir, hasErrors(results), step.Timeout); err != nil {
+			if err := runScript(file.Name(), desc, namespace, baseDir, hasError(name, results), step.Timeout); err != nil {
 				handleError(fmt.Errorf(fmt.Sprintf("Failed to run %s: %v", desc, err)))
 				return false
 			}
@@ -834,7 +843,7 @@ func runSteps(steps []config.StepConfig, namespace, baseDir string, results *v1a
 	return true
 }
 
-func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
+func skipStep(step config.StepConfig, name string, results *v1alpha1.TestResults) bool {
 	if step.If == "" {
 		return false
 	}
@@ -867,7 +876,7 @@ func skipStep(step config.StepConfig, results *v1alpha1.TestResults) bool {
 		case "os":
 			skipStep = (keyValue)[1] != r.GOOS
 		case "failure()":
-			skipStep = !hasErrors(results)
+			skipStep = !hasError(name, results)
 		}
 
 		if skipStep {
