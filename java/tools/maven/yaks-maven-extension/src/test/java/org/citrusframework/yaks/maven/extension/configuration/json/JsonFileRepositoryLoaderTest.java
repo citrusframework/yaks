@@ -33,9 +33,9 @@ import org.junit.Test;
  */
 public class JsonFileRepositoryLoaderTest {
 
-    private JsonFileRepositoryLoader loader = new JsonFileRepositoryLoader();
+    private final JsonFileRepositoryLoader loader = new JsonFileRepositoryLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
     public void shouldLoadFromJson() throws LifecycleExecutionException, URISyntaxException {

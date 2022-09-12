@@ -32,8 +32,8 @@ import org.codehaus.plexus.logging.Logger;
 @FunctionalInterface
 public interface DependencyLoader {
 
-    Pattern COORDINATE_PATTERN = Pattern.compile("^(?:(?<groupId>[^:]+?):(?<artifactId>[^:]+?):(?<version>[@.0-9][^:]+?))$");
-    Pattern VERSION_PROPERTY_PATTERN = Pattern.compile("^(?:@(?<propertyName>[^@]+?)@)$");
+    Pattern COORDINATE_PATTERN = Pattern.compile("^(?<groupId>[^:]+?):(?<artifactId>[^:]+?):(?<version>[@.0-9][^:]+?)$");
+    Pattern VERSION_PROPERTY_PATTERN = Pattern.compile("^@(?<propertyName>[^@]+?)@$");
 
     /**
      * Load dependencies from configuration source.

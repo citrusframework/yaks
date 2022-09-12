@@ -37,9 +37,9 @@ import org.junit.Test;
  */
 public class PropertyFileLoggingConfigurationLoaderTest {
 
-    private PropertyFileLoggingConfigurationLoader loader = new PropertyFileLoggingConfigurationLoader();
+    private final PropertyFileLoggingConfigurationLoader loader = new PropertyFileLoggingConfigurationLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test

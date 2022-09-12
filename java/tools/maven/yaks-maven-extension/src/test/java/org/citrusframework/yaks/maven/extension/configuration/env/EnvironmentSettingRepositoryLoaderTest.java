@@ -31,7 +31,8 @@ import org.junit.Test;
  */
 public class EnvironmentSettingRepositoryLoaderTest {
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
+
     @Test
     public void shouldLoadFromEnv() throws LifecycleExecutionException {
         EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader() {

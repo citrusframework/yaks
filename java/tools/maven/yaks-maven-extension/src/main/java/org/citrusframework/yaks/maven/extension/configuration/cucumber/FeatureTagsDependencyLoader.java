@@ -49,7 +49,7 @@ import org.springframework.util.StreamUtils;
  */
 public class FeatureTagsDependencyLoader implements DependencyLoader {
 
-    private static final Pattern TAG_PATTERN = Pattern.compile("^(?:@require\\('?(?<coordinate>[^']+?)'?\\))$");
+    private static final Pattern TAG_PATTERN = Pattern.compile("^@require\\('?(?<coordinate>[^']+?)'?\\)$");
 
     @Override
     public List<Dependency> load(Properties properties, Logger logger) throws LifecycleExecutionException {
@@ -71,7 +71,7 @@ public class FeatureTagsDependencyLoader implements DependencyLoader {
      */
     private void loadFromClasspath(List<Dependency> dependencyList, Properties properties, Logger logger) throws LifecycleExecutionException {
         try {
-            Stream.of(new PathMatchingResourcePatternResolver().getResources("classpath*:*.feature"))
+            Stream.of(new PathMatchingResourcePatternResolver().getResources(String.format("classpath*:*%s", ExtensionSettings.FEATURE_FILE_EXTENSION)))
                     .forEach(resource -> {
                         try {
                             dependencyList.addAll(loadDependencyTags(new String(StreamUtils.copyToByteArray(resource.getInputStream()), StandardCharsets.UTF_8), properties, logger));
@@ -101,7 +101,7 @@ public class FeatureTagsDependencyLoader implements DependencyLoader {
                         .filter(file -> file.getFileName().toString().endsWith(ExtensionSettings.FEATURE_FILE_EXTENSION))
                         .forEach(file -> {
                             try {
-                                dependencyList.addAll(loadDependencyTags(new String(Files.readAllBytes(file), StandardCharsets.UTF_8), properties, logger));
+                                dependencyList.addAll(loadDependencyTags(Files.readString(file), properties, logger));
                             } catch (IOException e) {
                                 logger.warn("Failed to read BDD feature", e);
                             }

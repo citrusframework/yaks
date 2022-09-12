@@ -37,9 +37,9 @@ import org.junit.Test;
  */
 public class JsonFileLoggingConfigurationLoaderTest {
 
-    private JsonFileLoggingConfigurationLoader loader = new JsonFileLoggingConfigurationLoader();
+    private final JsonFileLoggingConfigurationLoader loader = new JsonFileLoggingConfigurationLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test

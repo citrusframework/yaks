@@ -32,8 +32,8 @@ import org.junit.Test;
  */
 public class EnvironmentSettingDependencyLoaderTest {
 
-    private ConsoleLogger logger = new ConsoleLogger();
-    private Properties properties = new Properties();
+    private final ConsoleLogger logger = new ConsoleLogger();
+    private final Properties properties = new Properties();
 
     @Test
     public void shouldLoadFromEnv() throws LifecycleExecutionException {

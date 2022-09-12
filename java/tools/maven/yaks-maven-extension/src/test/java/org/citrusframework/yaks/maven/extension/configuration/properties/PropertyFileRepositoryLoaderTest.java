@@ -33,9 +33,9 @@ import org.junit.Test;
  */
 public class PropertyFileRepositoryLoaderTest {
 
-    private PropertyFileRepositoryLoader loader = new PropertyFileRepositoryLoader();
+    private final PropertyFileRepositoryLoader loader = new PropertyFileRepositoryLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
     public void shouldLoadFromPropertyFile() throws LifecycleExecutionException, URISyntaxException {
