@@ -35,9 +35,9 @@ import org.junit.Test;
  */
 public class SystemPropertyLoggingConfigurationLoaderTest {
 
-    private SystemPropertyLoggingConfigurationLoader loader = new SystemPropertyLoggingConfigurationLoader();
+    private final SystemPropertyLoggingConfigurationLoader loader = new SystemPropertyLoggingConfigurationLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test

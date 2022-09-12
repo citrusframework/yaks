@@ -61,30 +61,34 @@ public class ProjectModelEnricherTest {
         when(mavenProject.getBasedir()).thenReturn(new File("target"));
 
         modelEnricher.logger = new ConsoleLogger();
-
-        System.setProperty(ExtensionSettings.TESTS_PATH_KEY, "target");
     }
 
     @Test
     public void shouldAddTestResources() throws LifecycleExecutionException {
-        modelEnricher.beforeProjectExecution(executionEvent);
+        try {
+            System.setProperty(ExtensionSettings.TESTS_PATH_KEY, "target");
 
-        Assert.assertEquals(4L, projectModel.getBuild().getTestResources().size());
-        Assert.assertEquals("test-classes/org/citrusframework/yaks/feature", projectModel.getBuild().getTestResources().get(0).getTargetPath());
-        Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(0).getIncludes().size());
-        Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(0).getIncludes().get(0));
-        Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(1).getTargetPath());
-        Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(1).getIncludes().size());
-        Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(1).getIncludes().get(0));
-        Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(2).getTargetPath());
-        Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(2).getIncludes().size());
-        Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(2).getIncludes().get(0));
+            modelEnricher.beforeProjectExecution(executionEvent);
 
-        Assert.assertEquals("test-classes", projectModel.getBuild().getTestResources().get(3).getTargetPath());
-        Assert.assertEquals(3L, projectModel.getBuild().getTestResources().get(3).getExcludes().size());
-        Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(3).getExcludes().get(0));
-        Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(1));
-        Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(2));
+            Assert.assertEquals(4L, projectModel.getBuild().getTestResources().size());
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/feature", projectModel.getBuild().getTestResources().get(0).getTargetPath());
+            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(0).getIncludes().size());
+            Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(0).getIncludes().get(0));
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(1).getTargetPath());
+            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(1).getIncludes().size());
+            Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(1).getIncludes().get(0));
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(2).getTargetPath());
+            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(2).getIncludes().size());
+            Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(2).getIncludes().get(0));
+
+            Assert.assertEquals("test-classes", projectModel.getBuild().getTestResources().get(3).getTargetPath());
+            Assert.assertEquals(3L, projectModel.getBuild().getTestResources().get(3).getExcludes().size());
+            Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(3).getExcludes().get(0));
+            Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(1));
+            Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(2));
+        } finally {
+            System.setProperty(ExtensionSettings.TESTS_PATH_KEY, "");
+        }
     }
 
 }

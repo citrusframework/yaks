@@ -28,6 +28,10 @@
   <artifactId>yaks-runtime-maven</artifactId>
   <name>YAKS :: Runtime :: Maven</name>
 
+  <properties>
+    <camel.version>${apache.camel.version}</camel.version>
+  </properties>
+
   <dependencies>
 
     <!-- ****************************** -->

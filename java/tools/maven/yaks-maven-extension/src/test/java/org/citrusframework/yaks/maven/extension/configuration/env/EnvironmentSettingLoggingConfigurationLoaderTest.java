@@ -35,7 +35,7 @@ import org.junit.Test;
  */
 public class EnvironmentSettingLoggingConfigurationLoaderTest {
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test

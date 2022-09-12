@@ -31,9 +31,9 @@ import org.junit.Test;
  */
 public class FileBasedRepositoryLoaderTest {
 
-    private FileBasedRepositoryLoader loader = new FileBasedRepositoryLoader();
+    private final FileBasedRepositoryLoader loader = new FileBasedRepositoryLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
     public void shouldLoadFromPropertyFile() throws LifecycleExecutionException {

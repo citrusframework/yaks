@@ -37,9 +37,9 @@ import org.junit.Test;
  */
 public class YamlFileLoggingConfigurationLoaderTest {
 
-    private YamlFileLoggingConfigurationLoader loader = new YamlFileLoggingConfigurationLoader();
+    private final YamlFileLoggingConfigurationLoader loader = new YamlFileLoggingConfigurationLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private final ConfigurationBuilder<BuiltConfiguration> builder = LoggingConfigurationLoader.newConfigurationBuilder();
 
     @Test

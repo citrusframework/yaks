@@ -33,9 +33,9 @@ import org.junit.Test;
  */
 public class FileBasedLoggingConfigurationLoaderTest {
 
-    private FileBasedLoggingConfigurationLoader loader = new FileBasedLoggingConfigurationLoader();
+    private final FileBasedLoggingConfigurationLoader loader = new FileBasedLoggingConfigurationLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
     private ConfigurationBuilder<BuiltConfiguration> builder;
 
     @Test

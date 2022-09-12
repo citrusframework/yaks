@@ -32,9 +32,9 @@ import org.junit.Test;
  */
 public class SystemPropertyRepositoryLoaderTest {
 
-    private SystemPropertyRepositoryLoader loader = new SystemPropertyRepositoryLoader();
+    private final SystemPropertyRepositoryLoader loader = new SystemPropertyRepositoryLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
     public void shouldLoadFromSystemProperties() throws LifecycleExecutionException {

@@ -33,9 +33,9 @@ import org.junit.Test;
  */
 public class YamlFileRepositoryLoaderTest {
 
-    private YamlFileRepositoryLoader loader = new YamlFileRepositoryLoader();
+    private final YamlFileRepositoryLoader loader = new YamlFileRepositoryLoader();
 
-    private ConsoleLogger logger = new ConsoleLogger();
+    private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
     public void shouldLoadFromYaml() throws LifecycleExecutionException, URISyntaxException {
