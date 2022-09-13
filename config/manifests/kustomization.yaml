@@ -32,4 +32,4 @@ resources:
 images:
 - name: docker.io/citrusframework/yaks
   newName: docker.io/citrusframework/yaks
-  newTag: 0.11.0-SNAPSHOT
+  newTag: 0.11.0
