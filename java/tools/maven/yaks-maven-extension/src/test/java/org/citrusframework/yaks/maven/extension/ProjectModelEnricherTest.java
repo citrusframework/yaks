@@ -18,11 +18,13 @@
 package org.citrusframework.yaks.maven.extension;
 
 import java.io.File;
+import java.util.List;
 
 import org.apache.maven.execution.ProjectExecutionEvent;
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Resource;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 import org.junit.Assert;
@@ -70,22 +72,40 @@ public class ProjectModelEnricherTest {
 
             modelEnricher.beforeProjectExecution(executionEvent);
 
-            Assert.assertEquals(4L, projectModel.getBuild().getTestResources().size());
-            Assert.assertEquals("test-classes/org/citrusframework/yaks/feature", projectModel.getBuild().getTestResources().get(0).getTargetPath());
-            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(0).getIncludes().size());
-            Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(0).getIncludes().get(0));
-            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(1).getTargetPath());
-            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(1).getIncludes().size());
-            Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(1).getIncludes().get(0));
-            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", projectModel.getBuild().getTestResources().get(2).getTargetPath());
-            Assert.assertEquals(1L, projectModel.getBuild().getTestResources().get(2).getIncludes().size());
-            Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(2).getIncludes().get(0));
+            List<Resource> testResources = projectModel.getBuild().getTestResources();
+            Assert.assertEquals(6L, testResources.size());
 
-            Assert.assertEquals("test-classes", projectModel.getBuild().getTestResources().get(3).getTargetPath());
-            Assert.assertEquals(3L, projectModel.getBuild().getTestResources().get(3).getExcludes().size());
-            Assert.assertEquals("*.feature", projectModel.getBuild().getTestResources().get(3).getExcludes().get(0));
-            Assert.assertEquals("*it.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(1));
-            Assert.assertEquals("*test.groovy", projectModel.getBuild().getTestResources().get(3).getExcludes().get(2));
+            Resource gherkinResource = testResources.get(0);
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/feature", gherkinResource.getTargetPath());
+            Assert.assertEquals(1L, gherkinResource.getIncludes().size());
+            Assert.assertEquals("*.feature", gherkinResource.getIncludes().get(0));
+
+            Resource groovyResource = testResources.get(1);
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", groovyResource.getTargetPath());
+            Assert.assertEquals(1L, groovyResource.getIncludes().size());
+            Assert.assertEquals("*it.groovy", groovyResource.getIncludes().get(0));
+            groovyResource = testResources.get(2);
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/groovy", groovyResource.getTargetPath());
+            Assert.assertEquals(1L, groovyResource.getIncludes().size());
+            Assert.assertEquals("*test.groovy", groovyResource.getIncludes().get(0));
+
+            Resource xmlResource = testResources.get(3);
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/xml", xmlResource.getTargetPath());
+            Assert.assertEquals(1L, xmlResource.getIncludes().size());
+            Assert.assertEquals("*it.xml", xmlResource.getIncludes().get(0));
+            xmlResource = testResources.get(4);
+            Assert.assertEquals("test-classes/org/citrusframework/yaks/xml", xmlResource.getTargetPath());
+            Assert.assertEquals(1L, xmlResource.getIncludes().size());
+            Assert.assertEquals("*test.xml", xmlResource.getIncludes().get(0));
+
+            Resource otherResource = testResources.get(5);
+            Assert.assertEquals("test-classes", otherResource.getTargetPath());
+            Assert.assertEquals(5L, otherResource.getExcludes().size());
+            Assert.assertEquals("*.feature", otherResource.getExcludes().get(0));
+            Assert.assertEquals("*it.groovy", otherResource.getExcludes().get(1));
+            Assert.assertEquals("*test.groovy", otherResource.getExcludes().get(2));
+            Assert.assertEquals("*it.xml", otherResource.getExcludes().get(3));
+            Assert.assertEquals("*test.xml", otherResource.getExcludes().get(4));
         } finally {
             System.setProperty(ExtensionSettings.TESTS_PATH_KEY, "");
         }

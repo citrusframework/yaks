@@ -127,6 +127,10 @@
     </dependency>
     <dependency>
       <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-validation-json</artifactId>
     </dependency>
     <dependency>

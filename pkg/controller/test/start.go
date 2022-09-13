@@ -267,7 +267,7 @@ func getMavenArgLine(test *v1alpha1.Test) []string {
 	argLine = append(argLine, "verify")
 
 	// choose test to run based on given language
-	argLine = append(argLine, fmt.Sprintf("-Dit.test=org.citrusframework.yaks.%s.Yaks_IT", string(test.Spec.Source.Language)))
+	argLine = append(argLine, fmt.Sprintf("-Dit.test=org.citrusframework.yaks.%s.Yaks_IT", test.Spec.Source.Language))
 
 	// add system property settings
 	argLine = append(argLine, "-Dmaven.repo.local=/deployments/artifacts/m2")
@@ -704,7 +704,7 @@ func (action *startAction) addLogger(test *v1alpha1.Test, job *batchv1.Job) {
 			Name:  envvar.LoggersEnv,
 			Value: strings.Join(test.Spec.Runtime.Logger, ","),
 		})
-	} else if test.Spec.Source.Language != v1alpha1.LanguageGherkin {
+	} else if test.Spec.Source.Language != v1alpha1.Gherkin.GetName() {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  envvar.LoggersEnv,
 			Value: "com.consol.citrus=INFO,org.citrusframework.yaks=INFO",

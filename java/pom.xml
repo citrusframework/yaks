@@ -193,6 +193,11 @@
       </dependency>
       <dependency>
         <groupId>com.consol.citrus</groupId>
+        <artifactId>citrus-xml</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.consol.citrus</groupId>
         <artifactId>citrus-validation-json</artifactId>
         <version>${citrus.version}</version>
       </dependency>
