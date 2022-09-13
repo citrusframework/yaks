@@ -62,7 +62,7 @@ public class ProjectModelEnricher implements ProjectExecutionListener {
     Logger logger;
 
     /** Set of supported source test types */
-    private static final String[] SOURCE_TYPES = new String[] {".feature", "it.groovy", "test.groovy"};
+    private static final String[] SOURCE_TYPES = new String[] {".feature", "it.groovy", "test.groovy", "it.xml", "test.xml"};
 
     @Override
     public void beforeProjectExecution(ProjectExecutionEvent projectExecutionEvent) throws LifecycleExecutionException {

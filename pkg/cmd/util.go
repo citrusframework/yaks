@@ -299,10 +299,10 @@ func getLanguage(fileName string) v1alpha1.Language {
 	extension := path.Ext(fileName)
 
 	for _, language := range v1alpha1.KnownLanguages {
-		if extension == fmt.Sprintf(".%s", string(language)) {
+		if extension == fmt.Sprintf(".%s", language.GetName()) {
 			return language
 		}
 	}
 
-	return v1alpha1.LanguageGherkin
+	return &v1alpha1.Gherkin
 }

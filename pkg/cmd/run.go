@@ -278,7 +278,7 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 
 func isKnownLanguage(fileName string) bool {
 	for _, language := range v1alpha1.KnownLanguages {
-		if strings.HasSuffix(fileName, fmt.Sprintf(".%s", string(language))) {
+		if language.SupportsFile(fileName) {
 			return true
 		}
 	}
@@ -605,7 +605,7 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 			Source: v1alpha1.SourceSpec{
 				Name:     fileName,
 				Content:  data,
-				Language: language,
+				Language: language.GetName(),
 			},
 		},
 	}
