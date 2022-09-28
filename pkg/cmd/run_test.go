@@ -24,7 +24,7 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
-	"gotest.tools/v3/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStepOsCheck(t *testing.T) {
@@ -47,12 +47,12 @@ func TestStepOsCheck(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, scriptError)
+	assert.Nil(t, scriptError)
 }
 
 func TestStepEnvCheck(t *testing.T) {
 	err := os.Setenv("foo", "bar")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	steps := []config.StepConfig{
 		{
@@ -83,12 +83,12 @@ func TestStepEnvCheck(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, scriptError)
+	assert.Nil(t, scriptError)
 }
 
 func TestStepCheckCombinations(t *testing.T) {
 	err := os.Setenv("foo", "bar")
-	assert.NilError(t, err)
+	assert.Nil(t, err)
 
 	steps := []config.StepConfig{
 		{
@@ -119,7 +119,7 @@ func TestStepCheckCombinations(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, scriptError)
+	assert.Nil(t, scriptError)
 }
 
 func TestResolveScriptFileName(t *testing.T) {
@@ -148,5 +148,5 @@ func TestStepOnFailure(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
 
-	assert.NilError(t, scriptError)
+	assert.Nil(t, scriptError)
 }

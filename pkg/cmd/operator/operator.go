@@ -21,26 +21,22 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"math/rand"
-	"os"
-	"runtime"
-	"time"
-
-	batchv1 "k8s.io/api/batch/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/citrusframework/yaks/pkg/apis"
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -51,11 +47,18 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/defaults"
 	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+	logutil "github.com/citrusframework/yaks/pkg/util/log"
+	batchv1 "k8s.io/api/batch/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	coordination "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	zapctrl "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
@@ -63,16 +66,14 @@ const (
 	LockName = "yaks-lock"
 )
 
-var log = logf.Log.WithName("cmd")
-
-// GitCommit --.
-var GitCommit string
+var log = logutil.Log.WithName("cmd")
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("YAKS Operator Version: %v", defaults.Version))
-	log.Info(fmt.Sprintf("YAKS Git Commit: %v", GitCommit))
+	log.Info(fmt.Sprintf("YAKS Image: %v", defaults.ImageName))
+	log.Info(fmt.Sprintf("YAKS Git Commit: %v", defaults.GitCommit))
 }
 
 // Run starts the YAKS operator.
@@ -85,8 +86,33 @@ func Run(leaderElection bool, leaderElectionID string) {
 	// implementing the logr.Logger interface. This logger will
 	// be propagated through the whole operator, generating
 	// uniform and structured logs.
-	logf.SetLogger(zap.New(func(o *zap.Options) {
+
+	// The constants specified here are zap specific
+	var logLevel zapcore.Level
+	logLevelVal, ok := os.LookupEnv("LOG_LEVEL")
+	if ok {
+		switch strings.ToLower(logLevelVal) {
+		case "error":
+			logLevel = zapcore.ErrorLevel
+		case "info":
+			logLevel = zapcore.InfoLevel
+		case "debug":
+			logLevel = zapcore.DebugLevel
+		default:
+			customLevel, err := strconv.Atoi(strings.ToLower(logLevelVal))
+			exitOnError(err, "Invalid log-level")
+			// Need to multiply by -1 to turn logr expected level into zap level
+			logLevel = zapcore.Level(int8(customLevel) * -1)
+		}
+	} else {
+		logLevel = zapcore.InfoLevel
+	}
+
+	// Use and set atomic level that all following log events are compared with
+	// in order to evaluate if a given log level on the event is enabled.
+	logf.SetLogger(zapctrl.New(func(o *zapctrl.Options) {
 		o.Development = false
+		o.Level = zap.NewAtomicLevelAt(logLevel)
 	}))
 
 	printVersion()

@@ -22,14 +22,15 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/kubectl/pkg/cmd/set/env"
-
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
+
+	"github.com/operator-framework/api/pkg/operators"
 	operatorsv1 "github.com/operator-framework/api/pkg/operators/v1"
 	operatorsv1alpha1 "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/pkg/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubectl/pkg/cmd/set/env"
 	runtime "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -113,7 +114,7 @@ func HasPermissionToInstall(ctx context.Context, client client.Client, namespace
 	}
 
 	if !global {
-		if ok, err := kubernetes.CheckPermission(ctx, client, operatorsv1.GroupName, "operatorgroups", namespace, options.Package, "list"); err != nil {
+		if ok, err := kubernetes.CheckPermission(ctx, client, operators.GroupName, "operatorgroups", namespace, options.Package, "list"); err != nil {
 			return false, err
 		} else if !ok {
 			return false, nil
@@ -124,7 +125,7 @@ func HasPermissionToInstall(ctx context.Context, client client.Client, namespace
 			return false, err
 		}
 		if group == nil {
-			if ok, err := kubernetes.CheckPermission(ctx, client, operatorsv1.GroupName, "operatorgroups", namespace, options.Package, "create"); err != nil {
+			if ok, err := kubernetes.CheckPermission(ctx, client, operators.GroupName, "operatorgroups", namespace, options.Package, "create"); err != nil {
 				return false, err
 			} else if !ok {
 				return false, nil
