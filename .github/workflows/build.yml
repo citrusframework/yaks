@@ -37,7 +37,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Set up JDK 11
@@ -69,8 +69,9 @@ jobs:
         make check-licenses test package-artifacts
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
+      CAMEL_K_VERSION: 1.9.2
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
       YAKS_RUN_OPTIONS: "--timeout=180s"
@@ -102,8 +103,8 @@ jobs:
     - name: Kind Cluster
       uses: container-tools/kind-action@v1
       with:
-        version: v0.11.0
-        node_image: kindest/node:v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad
+        version: v0.14.0
+        node_image: kindest/node:v1.23.6@sha256:b1fa224cc6c7ff32455e0b1fd9cbfd3d3bc87ecaa8fcb06961ed1afb3db0f9ae
     - name: Info
       run: |
         kubectl version
@@ -111,6 +112,8 @@ jobs:
         kubectl describe nodes
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1
+      with:
+        version: v${{ env.CAMEL_K_VERSION }}
     - name: Build
       run: |
         make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
