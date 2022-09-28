@@ -15,14 +15,12 @@
 
 FROM adoptopenjdk/openjdk11:slim
 
-ARG MAVEN_VERSION="3.6.3"
-ARG SHA="c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0"
-ARG BASE_URL="https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries"
+ARG MAVEN_VERSION="3.8.4"
+ARG MAVEN_HOME="/usr/share/maven"
+ARG SHA="a9b2d825eacf2e771ed5d6b0e01398589ac1bfa4171f36154d1b5787879605507802f699da6f7cfc80732a5282fd31b28e4cd6052338cbef0fa1358b48a5e3c8"
+ARG BASE_URL="https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries"
 
-ENV OPERATOR=/usr/local/bin/yaks \
-    OPERATOR_ARGS=operator \
-    USER_UID=1001 \
-    USER_NAME=yaks \
+ENV USER_UID=1001 \
     HOME=/root \
     APP_DIR=/deployments/data/yaks-runtime-maven \
     APP_SETTINGS=/deployments/artifacts \
@@ -35,8 +33,7 @@ RUN mkdir -p /usr/share/maven \
     && rm -v /tmp/maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
-# install operator binary
-COPY build/_output/bin/yaks ${OPERATOR}
+USER 0
 
 COPY build/bin /usr/local/bin
 
@@ -48,7 +45,6 @@ COPY build/_maven_project/yaks-runtime-maven ${APP_DIR}
 
 COPY build/settings.xml ${APP_SETTINGS}/
 
-USER 0
 RUN  /usr/local/bin/user_setup
 
 RUN chgrp -R 0 ${APP_LIBS} && \
@@ -58,6 +54,7 @@ RUN chgrp -R 0 ${APP_LIBS} && \
     chgrp -R 0 ${APP_SETTINGS} && \
     chmod -R g=u ${APP_SETTINGS}
 
-# Let's not use ENTRYPOINT so we can override libs in the base image
-
 USER ${USER_UID}
+
+# install operator binary
+COPY build/_output/bin/yaks /usr/local/bin/yaks
