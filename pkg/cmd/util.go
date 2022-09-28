@@ -33,6 +33,7 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	p "github.com/gertd/go-pluralize"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
@@ -230,8 +231,8 @@ func resolvePath(runConfig *config.RunConfig, resource string) string {
 }
 
 func hasErrors(results *v1alpha1.TestResults) bool {
-	for i := range results.Suites {
-		if hasSuiteErrors(&results.Suites[i]) {
+	for _, suite := range results.Suites {
+		if len(suite.Errors) > 0 || suite.Summary.Errors > 0 || suite.Summary.Failed > 0 {
 			return true
 		}
 	}
@@ -239,12 +240,21 @@ func hasErrors(results *v1alpha1.TestResults) bool {
 	return false
 }
 
-func hasSuiteErrors(suite *v1alpha1.TestSuite) bool {
-	if len(suite.Errors) > 0 || suite.Summary.Errors > 0 || suite.Summary.Failed > 0 {
-		return true
+func hasError(name string, results *v1alpha1.TestResults) bool {
+	for _, suite := range results.Suites {
+		for _, test := range suite.Tests {
+			if test.Name == kubernetes.SanitizeName(name) && (test.ErrorType != "" || test.ErrorMessage != "") {
+				return true
+			}
+		}
 	}
 
 	return false
+}
+
+func isFailed(test *v1alpha1.Test) bool {
+	return test.Status.Phase == v1alpha1.TestPhaseFailed ||
+		test.Status.Phase == v1alpha1.TestPhaseError && len(test.Status.Errors) > 0
 }
 
 func loadData(ctx context.Context, fileName string) (string, error) {
