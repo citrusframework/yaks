@@ -70,7 +70,7 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 		return nil, err
 	}
 
-	configMap := action.newTestConfigMap(test)
+	configMap := newTestConfigMap(test)
 	job, err := action.newTestJob(ctx, test, configMap)
 	if err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
@@ -238,12 +238,67 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		return nil, err
 	}
 
-	action.addLogger(test, &job)
+	addLogger(test, &job)
 
-	action.addSelenium(test, &job)
-	action.addKubeDock(test, &job)
+	addSelenium(test, &job)
+	addKubeDock(test, &job)
+
+	setPodSecurityContext(&job)
 
 	return &job, nil
+}
+
+func setPodSecurityContext(job *batchv1.Job) {
+	allowPrivilegeEscalation := false
+	runAsNonRoot := true
+	readOnlyRootFilesystem := true
+
+	if job.Spec.Template.Spec.SecurityContext == nil {
+		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
+			RunAsNonRoot:   &runAsNonRoot,
+			SeccompProfile: &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault},
+		}
+	} else {
+		if job.Spec.Template.Spec.SecurityContext.RunAsNonRoot == nil {
+			job.Spec.Template.Spec.SecurityContext.RunAsNonRoot = &runAsNonRoot
+		}
+
+		if job.Spec.Template.Spec.SecurityContext.SeccompProfile == nil {
+			job.Spec.Template.Spec.SecurityContext.SeccompProfile = &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault}
+		}
+	}
+
+	for _, container := range job.Spec.Template.Spec.Containers {
+		if container.SecurityContext == nil {
+			container.SecurityContext = &v1.SecurityContext{
+				AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+				ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
+				RunAsNonRoot:             &runAsNonRoot,
+				Capabilities:             &v1.Capabilities{Drop: []v1.Capability{"ALL"}},
+				SeccompProfile:           &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault},
+			}
+		} else {
+			if container.SecurityContext.RunAsNonRoot == nil {
+				container.SecurityContext.RunAsNonRoot = &runAsNonRoot
+			}
+
+			if container.SecurityContext.ReadOnlyRootFilesystem == nil {
+				container.SecurityContext.ReadOnlyRootFilesystem = &readOnlyRootFilesystem
+			}
+
+			if container.SecurityContext.AllowPrivilegeEscalation == nil {
+				container.SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
+			}
+
+			if container.SecurityContext.Capabilities == nil {
+				container.SecurityContext.Capabilities = &v1.Capabilities{Drop: []v1.Capability{"ALL"}}
+			}
+
+			if container.SecurityContext.SeccompProfile == nil {
+				container.SecurityContext.SeccompProfile = &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault}
+			}
+		}
+	}
 }
 
 func getMavenArgLine(test *v1alpha1.Test) []string {
@@ -275,7 +330,7 @@ func getMavenArgLine(test *v1alpha1.Test) []string {
 	return argLine
 }
 
-func (action *startAction) newTestConfigMap(test *v1alpha1.Test) *v1.ConfigMap {
+func newTestConfigMap(test *v1alpha1.Test) *v1.ConfigMap {
 	controller := true
 	blockOwnerDeletion := true
 
@@ -499,7 +554,7 @@ func (action *startAction) applyOperatorClusterRoles(ctx context.Context, namesp
 	return nil
 }
 
-func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
+func addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
 	if test.Spec.Selenium.Image != "" {
 		shareProcessNamespace := true
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
@@ -536,18 +591,19 @@ func (action *startAction) addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
 			},
 		})
 
+		// require system ptrace capability for killing the supervisord process later
 		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{
 				Add: []v1.Capability{"SYS_PTRACE"},
 			},
 		}
 
-		// Add selenium profile that will shutdown the selenium container when test is finished
+		// Add selenium profile that will shut down the selenium container when test is finished
 		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pselenium")
 	}
 }
 
-func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
+func addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 	if test.Spec.KubeDock.Image != "" {
 		shareProcessNamespace := true
 		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
@@ -585,6 +641,7 @@ func (action *startAction) addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 				Value: "true",
 			})
 
+		// require system ptrace capability for killing the supervisord process later
 		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{
 				Add: []v1.Capability{"SYS_PTRACE"},
@@ -698,7 +755,7 @@ func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) err
 	return nil
 }
 
-func (action *startAction) addLogger(test *v1alpha1.Test, job *batchv1.Job) {
+func addLogger(test *v1alpha1.Test, job *batchv1.Job) {
 	if len(test.Spec.Runtime.Logger) > 0 {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  envvar.LoggersEnv,
