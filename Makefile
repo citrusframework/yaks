@@ -26,7 +26,7 @@ DEFAULT_IMAGE := docker.io/citrusframework/yaks
 IMAGE_NAME ?= $(DEFAULT_IMAGE)
 
 RELEASE_GIT_REMOTE := upstream
-GIT_COMMIT := $(shell git rev-list -1 HEAD)
+GIT_COMMIT := $(shell if [ -d .git ]; then git rev-list -1 HEAD; else echo "$(CUSTOM_VERSION)"; fi)
 LINT_GOGC := 20
 LINT_DEADLINE := 10m
 
@@ -49,8 +49,14 @@ CSV_GENERATED_PATH := bundle/manifests/$(CSV_FILENAME)
 
 BUNDLE_IMAGE_NAME := $(IMAGE_NAME)-bundle
 
-GOLDFLAGS += -X main.GitCommit=$(GIT_COMMIT)
-GOFLAGS = -ldflags "$(GOLDFLAGS)" -gcflags=-trimpath=$(GO_PATH) -asmflags=-trimpath=$(GO_PATH)
+# Build
+ifdef GIT_COMMIT
+GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/defaults.GitCommit=$(GIT_COMMIT)
+else
+$(warning Could not retrieve a valid Git Commit)
+endif
+
+GOFLAGS = -ldflags "$(GOLDFLAGS)" -trimpath
 
 .DEFAULT_GOAL := default
 
