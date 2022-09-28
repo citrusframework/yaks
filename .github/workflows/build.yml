@@ -71,7 +71,6 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     env:
-      CAMEL_K_VERSION: 1.9.2
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
       YAKS_RUN_OPTIONS: "--timeout=180s"
@@ -112,8 +111,6 @@ jobs:
         kubectl describe nodes
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1
-      with:
-        version: v${{ env.CAMEL_K_VERSION }}
     - name: Build
       run: |
         make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
