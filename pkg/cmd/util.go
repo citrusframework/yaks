@@ -33,6 +33,7 @@ import (
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"github.com/citrusframework/yaks/pkg/language"
 	p "github.com/gertd/go-pluralize"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/cobra"
@@ -295,14 +296,14 @@ func hasServiceAccount(ctx context.Context, c ctrl.Client, namespace string, ser
 	return !k8serrors.IsNotFound(err), err
 }
 
-func getLanguage(fileName string) v1alpha1.Language {
+func getLanguage(fileName string) language.Language {
 	extension := path.Ext(fileName)
 
-	for _, language := range v1alpha1.KnownLanguages {
-		if extension == fmt.Sprintf(".%s", language.GetName()) {
-			return language
+	for _, lang := range language.KnownLanguages {
+		if extension == fmt.Sprintf(".%s", lang.GetName()) {
+			return lang
 		}
 	}
 
-	return &v1alpha1.Gherkin
+	return &language.Gherkin{}
 }

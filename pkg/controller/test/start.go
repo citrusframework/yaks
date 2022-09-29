@@ -25,6 +25,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/config"
 	"github.com/citrusframework/yaks/pkg/install"
+	"github.com/citrusframework/yaks/pkg/language"
 	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
@@ -756,12 +757,14 @@ func (action *startAction) injectSnap(ctx context.Context, job *batchv1.Job) err
 }
 
 func addLogger(test *v1alpha1.Test, job *batchv1.Job) {
+	gherkin := language.Gherkin{}
+
 	if len(test.Spec.Runtime.Logger) > 0 {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  envvar.LoggersEnv,
 			Value: strings.Join(test.Spec.Runtime.Logger, ","),
 		})
-	} else if test.Spec.Source.Language != v1alpha1.Gherkin.GetName() {
+	} else if test.Spec.Source.Language != gherkin.GetName() {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  envvar.LoggersEnv,
 			Value: "com.consol.citrus=INFO,org.citrusframework.yaks=INFO",

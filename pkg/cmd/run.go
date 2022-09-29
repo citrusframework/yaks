@@ -29,22 +29,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/citrusframework/yaks/pkg/util"
-	"github.com/citrusframework/yaks/pkg/util/envvar"
-	"gopkg.in/yaml.v2"
-
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/client"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/citrusframework/yaks/pkg/cmd/report"
 	"github.com/citrusframework/yaks/pkg/install"
+	"github.com/citrusframework/yaks/pkg/language"
+	"github.com/citrusframework/yaks/pkg/util"
+	"github.com/citrusframework/yaks/pkg/util/envvar"
 	"github.com/citrusframework/yaks/pkg/util/kubernetes"
 	k8slog "github.com/citrusframework/yaks/pkg/util/kubernetes/log"
 	"github.com/citrusframework/yaks/pkg/util/openshift"
+
 	"github.com/google/uuid"
 	projectv1 "github.com/openshift/api/project/v1"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -277,8 +278,8 @@ func (o *runCmdOptions) runTestGroup(cmd *cobra.Command, source string, results 
 }
 
 func isKnownLanguage(fileName string) bool {
-	for _, language := range v1alpha1.KnownLanguages {
-		if language.SupportsFile(fileName) {
+	for _, lang := range language.KnownLanguages {
+		if lang.SupportsFile(fileName) {
 			return true
 		}
 	}
@@ -587,7 +588,7 @@ func (o *runCmdOptions) createAndRunTest(ctx context.Context, c client.Client, c
 	return &test, status.AsError(name)
 }
 
-func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fileName string, name string, language v1alpha1.Language, data string, runConfig *config.RunConfig) (v1alpha1.Test, error) {
+func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fileName string, name string, lang language.Language, data string, runConfig *config.RunConfig) (v1alpha1.Test, error) {
 	test := v1alpha1.Test{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.TestKind,
@@ -605,7 +606,7 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 			Source: v1alpha1.SourceSpec{
 				Name:     fileName,
 				Content:  data,
-				Language: language.GetName(),
+				Language: lang.GetName(),
 			},
 		},
 	}

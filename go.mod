@@ -30,6 +30,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.23.8
 	k8s.io/apimachinery v0.23.8
 	k8s.io/client-go v0.23.8
+	k8s.io/code-generator v0.23.8 // indirect
 	k8s.io/klog/v2 v2.60.1-0.20220317184644-43cc75f9ae89
 	k8s.io/kubectl v0.23.5
 	knative.dev/eventing v0.33.0
@@ -94,6 +95,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
+	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
@@ -101,6 +103,8 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/tools v0.1.8 // indirect
+	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/api v0.81.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -111,6 +115,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/component-base v0.23.8 // indirect
+	k8s.io/gengo v0.0.0-20220307231824-4627b89bbf1b // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	knative.dev/pkg v0.0.0-20220705130606-e60d250dc637 // indirect

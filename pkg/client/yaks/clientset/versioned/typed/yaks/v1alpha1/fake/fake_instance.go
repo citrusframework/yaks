@@ -118,7 +118,7 @@ func (c *FakeInstances) UpdateStatus(ctx context.Context, instance *v1alpha1.Ins
 // Delete takes name of the instance and deletes it. Returns an error if one occurs.
 func (c *FakeInstances) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(instancesResource, c.ns, name), &v1alpha1.Instance{})
+		Invokes(testing.NewDeleteActionWithOptions(instancesResource, c.ns, name, opts), &v1alpha1.Instance{})
 
 	return err
 }
