@@ -91,7 +91,7 @@
     <project.docs.version>${project.version}</project.docs.version>
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.17.2</log4j2.version>
-    <snakeyaml.version>1.26</snakeyaml.version>
+    <snakeyaml.version>1.32</snakeyaml.version>
     <groovy.version>3.0.10</groovy.version>
     <citrus.version>3.3.0</citrus.version>
     <spring.version>5.3.20</spring.version>
@@ -99,8 +99,8 @@
     <apache.camel.version>3.16.0</apache.camel.version>
     <jackson.version>2.13.3</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <kubernetes-client.version>5.10.2</kubernetes-client.version>
-    <knative-client.version>5.10.2</knative-client.version>
+    <kubernetes-client.version>5.11.2</kubernetes-client.version>
+    <knative-client.version>5.11.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
     <postgresql.version>42.3.3</postgresql.version>
     <commons.dbcp2.version>2.7.0</commons.dbcp2.version>
