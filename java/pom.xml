@@ -102,7 +102,7 @@
     <kubernetes-client.version>5.10.2</kubernetes-client.version>
     <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
-    <postgresql.version>42.3.3</postgresql.version>
+    <postgresql.version>42.3.7</postgresql.version>
     <commons.dbcp2.version>2.7.0</commons.dbcp2.version>
     <testcontainers.version>1.16.3</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
