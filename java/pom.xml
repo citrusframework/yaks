@@ -99,7 +99,7 @@
     <apache.camel.version>3.16.0</apache.camel.version>
     <jackson.version>2.13.3</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <kubernetes-client.version>5.10.2</kubernetes-client.version>
+    <kubernetes-client.version>5.11.2</kubernetes-client.version>
     <knative-client.version>5.10.2</knative-client.version>
     <okhttp.version>4.9.3</okhttp.version>
     <postgresql.version>42.3.3</postgresql.version>
