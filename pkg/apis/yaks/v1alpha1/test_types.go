@@ -19,7 +19,6 @@ package v1alpha1
 
 import (
 	"fmt"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -211,48 +210,3 @@ func (phase TestPhase) AsError(name string) error {
 	}
 	return nil
 }
-
-type Language interface {
-	GetName() string
-	SupportsFile(fileName string) bool
-}
-
-type LanguageGherkin struct {
-}
-type LanguageGroovy struct {
-}
-type LanguageXML struct {
-}
-
-func (language *LanguageGherkin) GetName() string {
-	return "feature"
-}
-
-func (language *LanguageGherkin) SupportsFile(fileName string) bool {
-	return strings.HasSuffix(fileName, fmt.Sprintf(".%s", language.GetName()))
-}
-
-func (language *LanguageGroovy) GetName() string {
-	return "groovy"
-}
-
-func (language *LanguageGroovy) SupportsFile(fileName string) bool {
-	return strings.HasSuffix(fileName, fmt.Sprintf("it.%s", language.GetName())) ||
-		strings.HasSuffix(fileName, fmt.Sprintf("test.%s", language.GetName()))
-}
-
-func (language *LanguageXML) GetName() string {
-	return "xml"
-}
-
-func (language *LanguageXML) SupportsFile(fileName string) bool {
-	return strings.HasSuffix(fileName, fmt.Sprintf("it.%s", language.GetName())) ||
-		strings.HasSuffix(fileName, fmt.Sprintf("test.%s", language.GetName()))
-}
-
-var Gherkin = LanguageGherkin{}
-var Groovy = LanguageGroovy{}
-var XML = LanguageXML{}
-
-// KnownLanguages is the list of all supported test languages.
-var KnownLanguages = []Language{&Gherkin, &Groovy, &XML}
