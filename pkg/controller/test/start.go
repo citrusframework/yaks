@@ -252,7 +252,7 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 func setPodSecurityContext(job *batchv1.Job) {
 	allowPrivilegeEscalation := false
 	runAsNonRoot := true
-	readOnlyRootFilesystem := true
+	readOnlyRootFilesystem := false
 
 	if job.Spec.Template.Spec.SecurityContext == nil {
 		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
@@ -269,9 +269,9 @@ func setPodSecurityContext(job *batchv1.Job) {
 		}
 	}
 
-	for _, container := range job.Spec.Template.Spec.Containers {
-		if container.SecurityContext == nil {
-			container.SecurityContext = &v1.SecurityContext{
+	for i := 0; i < len(job.Spec.Template.Spec.Containers); i++ {
+		if job.Spec.Template.Spec.Containers[i].SecurityContext == nil {
+			job.Spec.Template.Spec.Containers[i].SecurityContext = &v1.SecurityContext{
 				AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 				ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 				RunAsNonRoot:             &runAsNonRoot,
@@ -279,24 +279,24 @@ func setPodSecurityContext(job *batchv1.Job) {
 				SeccompProfile:           &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault},
 			}
 		} else {
-			if container.SecurityContext.RunAsNonRoot == nil {
-				container.SecurityContext.RunAsNonRoot = &runAsNonRoot
+			if job.Spec.Template.Spec.Containers[i].SecurityContext.RunAsNonRoot == nil {
+				job.Spec.Template.Spec.Containers[i].SecurityContext.RunAsNonRoot = &runAsNonRoot
 			}
 
-			if container.SecurityContext.ReadOnlyRootFilesystem == nil {
-				container.SecurityContext.ReadOnlyRootFilesystem = &readOnlyRootFilesystem
+			if job.Spec.Template.Spec.Containers[i].SecurityContext.ReadOnlyRootFilesystem == nil {
+				job.Spec.Template.Spec.Containers[i].SecurityContext.ReadOnlyRootFilesystem = &readOnlyRootFilesystem
 			}
 
-			if container.SecurityContext.AllowPrivilegeEscalation == nil {
-				container.SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
+			if job.Spec.Template.Spec.Containers[i].SecurityContext.AllowPrivilegeEscalation == nil {
+				job.Spec.Template.Spec.Containers[i].SecurityContext.AllowPrivilegeEscalation = &allowPrivilegeEscalation
 			}
 
-			if container.SecurityContext.Capabilities == nil {
-				container.SecurityContext.Capabilities = &v1.Capabilities{Drop: []v1.Capability{"ALL"}}
+			if job.Spec.Template.Spec.Containers[i].SecurityContext.Capabilities == nil {
+				job.Spec.Template.Spec.Containers[i].SecurityContext.Capabilities = &v1.Capabilities{Drop: []v1.Capability{"ALL"}}
 			}
 
-			if container.SecurityContext.SeccompProfile == nil {
-				container.SecurityContext.SeccompProfile = &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault}
+			if job.Spec.Template.Spec.Containers[i].SecurityContext.SeccompProfile == nil {
+				job.Spec.Template.Spec.Containers[i].SecurityContext.SeccompProfile = &v1.SeccompProfile{Type: v1.SeccompProfileTypeRuntimeDefault}
 			}
 		}
 	}
