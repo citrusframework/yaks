@@ -25,6 +25,7 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 
 /**
  * @author Christoph Deppisch
@@ -47,6 +48,7 @@ public class CreateLabelsAction extends AbstractKubernetesAction implements Kube
      * Enumeration of supported Kubernetes resources this action is capable of adding labels to.
      */
     public enum ResourceType {
+        DEPLOYMENT,
         POD,
         SECRET,
         SERVICE
@@ -57,6 +59,16 @@ public class CreateLabelsAction extends AbstractKubernetesAction implements Kube
         Map<String, String> resolvedLabels = context.resolveDynamicValuesInMap(labels);
 
         switch (resourceType) {
+            case DEPLOYMENT:
+                getKubernetesClient().apps().deployments()
+                        .inNamespace(namespace(context))
+                        .withName(resourceName)
+                        .edit(d -> new DeploymentBuilder(d)
+                                    .editMetadata()
+                                        .addToLabels(resolvedLabels)
+                                    .endMetadata()
+                                .build());
+                break;
             case POD:
                 getKubernetesClient().pods()
                         .inNamespace(namespace(context))
@@ -104,6 +116,11 @@ public class CreateLabelsAction extends AbstractKubernetesAction implements Kube
         public Builder name(String resourceName) {
             this.resourceName = resourceName;
             return this;
+        }
+
+        public Builder deployment(String name) {
+            this.resourceName = name;
+            return type(ResourceType.DEPLOYMENT);
         }
 
         public Builder pod(String name) {

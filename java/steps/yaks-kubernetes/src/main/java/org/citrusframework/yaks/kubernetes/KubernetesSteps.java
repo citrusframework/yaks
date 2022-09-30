@@ -530,7 +530,7 @@ public class KubernetesSteps {
                 .timeout(watchLogsTimeout));
     }
 
-    @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
+    @Then("^create annotation ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service|deployment) ([a-z\\.0-9-]+)$")
     public void createAnnotationOnResource(String annotation, String value, String resourceType, String resourceName) {
         runner.run(kubernetes().client(k8sClient)
                         .resources()
@@ -538,7 +538,7 @@ public class KubernetesSteps {
                         .annotation(annotation, value));
     }
 
-    @Then("^create annotations on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
+    @Then("^create annotations on Kubernetes (pod|secret|service|deployment) ([a-z\\.0-9-]+)$")
     public void createAnnotationOnResource(String resourceType, String resourceName, DataTable table) {
         Map<String, String> annotations = table.asMap(String.class, String.class);
         runner.run(kubernetes().client(k8sClient)
@@ -547,7 +547,7 @@ public class KubernetesSteps {
                 .annotations(annotations));
     }
 
-    @Then("^create label ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
+    @Then("^create label ([^\\s]+)=([^\\s]+) on Kubernetes (pod|secret|service|deployment) ([a-z\\.0-9-]+)$")
     public void createLabelOnResource(String label, String value, String resourceType, String resourceName) {
         runner.run(kubernetes().client(k8sClient)
                         .resources()
@@ -555,9 +555,12 @@ public class KubernetesSteps {
                         .label(label, value));
     }
 
-    @Then("^create labels on Kubernetes (pod|secret|service) ([a-z\\.0-9-]+)$")
+    @Then("^create labels on Kubernetes (pod|secret|service|deployment) ([a-z\\.0-9-]+)$")
     public void createLabelOnResource(String resourceType, String resourceName, DataTable table) {
-        Map<String, String> labels = table.asMap(String.class, String.class);
+        createLabelsOnResource(resourceType, resourceName, table.asMap(String.class, String.class));
+    }
+
+    public void createLabelsOnResource(String resourceType, String resourceName, Map<String, String> labels) {
         runner.run(kubernetes().client(k8sClient)
                 .resources()
                 .addLabel(resourceName, resourceType.toUpperCase(Locale.US))

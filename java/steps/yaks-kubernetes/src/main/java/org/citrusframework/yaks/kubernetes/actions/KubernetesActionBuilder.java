@@ -76,6 +76,14 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
      * Performs actions on Kubernetes pods.
      * @return
      */
+    public KubernetesActionBuilder.DeploymentActionBuilder deployments() {
+        return new DeploymentActionBuilder();
+    }
+
+    /**
+     * Performs actions on Kubernetes pods.
+     * @return
+     */
     public KubernetesActionBuilder.PodActionBuilder pods() {
         return new PodActionBuilder();
     }
@@ -207,6 +215,33 @@ public class KubernetesActionBuilder implements TestActionBuilder.DelegatingTest
             delegate = builder;
             return builder;
         }
+    }
+
+    public class DeploymentActionBuilder {
+        /**
+         * Add annotation on deployment instance.
+         * @param deploymentName the name of the Kubernetes deployment.
+         */
+        public CreateAnnotationsAction.Builder addAnnotation(String deploymentName) {
+            CreateAnnotationsAction.Builder builder = new CreateAnnotationsAction.Builder()
+                    .client(kubernetesClient)
+                    .deployment(deploymentName);
+            delegate = builder;
+            return builder;
+        }
+
+        /**
+         * Add label on deployment instance.
+         * @param deploymentName the name of the Kubernetes deployment.
+         */
+        public CreateLabelsAction.Builder addLabel(String deploymentName) {
+            CreateLabelsAction.Builder builder = new CreateLabelsAction.Builder()
+                    .client(kubernetesClient)
+                    .deployment(deploymentName);
+            delegate = builder;
+            return builder;
+        }
+
     }
 
     public class PodActionBuilder {

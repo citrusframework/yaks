@@ -55,7 +55,8 @@ import (
 const (
 	ConfigFile    = "yaks-config.yaml"
 	SettingsFile  = "yaks.settings.yaml"
-	KubeDockImage = "joyrex2001/kubedock:0.9.0"
+	KubeDockImage = "joyrex2001/kubedock:0.9.1"
+	SeleniumImage = "selenium/standalone-chrome:106.0"
 )
 
 const (
@@ -661,16 +662,28 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 		test.Spec.Secret = runConfig.Config.Runtime.Secret
 	}
 
-	if runConfig.Config.Runtime.Selenium.Image != "" {
+	if runConfig.Config.Runtime.Selenium.Enabled {
+		image := SeleniumImage
+
+		if runConfig.Config.Runtime.Selenium.Image != "" {
+			image = runConfig.Config.Runtime.Selenium.Image
+		}
+
 		test.Spec.Selenium = v1alpha1.SeleniumSpec{
-			Image:     runConfig.Config.Runtime.Selenium.Image,
+			Image:     image,
 			RunAsUser: runConfig.Config.Runtime.Selenium.RunAsUser,
 		}
 	}
 
 	if runConfig.Config.Runtime.TestContainers.Enabled {
+		image := KubeDockImage
+
+		if runConfig.Config.Runtime.TestContainers.Image != "" {
+			image = runConfig.Config.Runtime.TestContainers.Image
+		}
+
 		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
-			Image:     KubeDockImage,
+			Image:     image,
 			RunAsUser: runConfig.Config.Runtime.TestContainers.RunAsUser,
 		}
 	}
