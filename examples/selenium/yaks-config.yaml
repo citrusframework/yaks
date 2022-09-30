@@ -18,7 +18,7 @@
 config:
   runtime:
     selenium:
-      image: selenium/standalone-chrome:88.0
+      image: selenium/standalone-chrome:106.0
     env:
       - name: YAKS_SELENIUM_BROWSER_TYPE
         value: chrome

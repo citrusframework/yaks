@@ -71,6 +71,11 @@ public class MongoDBSteps {
     @Given("^start MongoDB container$")
     public void startMongo() {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
+                .withLabel("app", "yaks")
+                .withLabel("app.kubernetes.io/name", "mongodb")
+                .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
+                .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
+                .withNetworkAliases("mongodb")
                 .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 

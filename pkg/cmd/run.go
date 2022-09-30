@@ -53,7 +53,9 @@ import (
 )
 
 const (
-	ConfigFile = "yaks-config.yaml"
+	ConfigFile    = "yaks-config.yaml"
+	SettingsFile  = "yaks.settings.yaml"
+	KubeDockImage = "joyrex2001/kubedock:0.9.0"
 )
 
 const (
@@ -668,7 +670,7 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 
 	if runConfig.Config.Runtime.TestContainers.Enabled {
 		test.Spec.KubeDock = v1alpha1.KubeDockSpec{
-			Image:     "joyrex2001/kubedock:0.8.1",
+			Image:     KubeDockImage,
 			RunAsUser: runConfig.Config.Runtime.TestContainers.RunAsUser,
 		}
 	}
@@ -762,7 +764,7 @@ func (o *runCmdOptions) newSettings(ctx context.Context, runConfig *config.RunCo
 		}
 
 		settings := v1alpha1.SettingsSpec{
-			Name:    "yaks.settings.yaml",
+			Name:    SettingsFile,
 			Content: string(configData),
 		}
 

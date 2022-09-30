@@ -99,6 +99,11 @@ public class PostgreSQLSteps {
                 .withUsername(username)
                 .withPassword(password)
                 .withDatabaseName(databaseName)
+                .withLabel("app", "yaks")
+                .withLabel("app.kubernetes.io/name", "postgresql")
+                .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
+                .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
+                .withNetworkAliases("postgresql")
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 

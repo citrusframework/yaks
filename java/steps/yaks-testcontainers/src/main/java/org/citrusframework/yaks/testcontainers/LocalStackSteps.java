@@ -84,6 +84,11 @@ public class LocalStackSteps {
     public void startLocalStack() {
         localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack").withTag(localStackVersion))
                 .withServices(services.toArray(LocalStackContainer.Service[]::new))
+                .withLabel("app", "yaks")
+                .withLabel("app.kubernetes.io/name", "build")
+                .withLabel("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
+                .withNetworkAliases("localstack")
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
