@@ -30,6 +30,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-kubernetes</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
     </dependency>
@@ -144,6 +150,16 @@
     <dependency>
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-validation-text</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-server-mock</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -30,12 +30,17 @@ import com.consol.citrus.context.TestContext;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import static com.consol.citrus.container.Catch.Builder.catchException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
 public class LocalStackSteps {
 
@@ -54,6 +59,8 @@ public class LocalStackSteps {
     private LocalStackContainer localStackContainer;
     private Set<LocalStackContainer.Service> services;
 
+    private KubernetesClient k8sClient;
+
     @Before
     public void before(Scenario scenario) {
         if (localStackContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(LocalStackContainer.class)) {
@@ -62,6 +69,10 @@ public class LocalStackSteps {
             exposeConnectionSettings(localStackContainer, context);
         } else {
             services = new HashSet<>();
+        }
+
+        if (k8sClient == null) {
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 
@@ -85,8 +96,6 @@ public class LocalStackSteps {
         localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack").withTag(localStackVersion))
                 .withServices(services.toArray(LocalStackContainer.Service[]::new))
                 .withLabel("app", "yaks")
-                .withLabel("app.kubernetes.io/name", "build")
-                .withLabel("app.openshift.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("localstack")
                 .waitingFor(Wait.forListeningPort()
@@ -98,6 +107,14 @@ public class LocalStackSteps {
         citrus.getCitrusContext().bind("localStackEnabledServices", services);
 
         exposeConnectionSettings(localStackContainer, context);
+
+        runner.run(catchException()
+                .exception(KubernetesClientException.class)
+                .when(kubernetes().client(k8sClient).deployments()
+                        .addLabel(localStackContainer.getContainerId())
+                        .label("app.kubernetes.io/name", "build")
+                        .label("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                ));
 
         if (TestContainersSteps.autoRemoveResources) {
             runner.run(doFinally()

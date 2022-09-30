@@ -29,15 +29,20 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
+import static com.consol.citrus.container.Catch.Builder.catchException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
 public class PostgreSQLSteps {
 
@@ -60,11 +65,17 @@ public class PostgreSQLSteps {
 
     private int startupTimeout = PostgreSQLSettings.getStartupTimeout();
 
+    private KubernetesClient k8sClient;
+
     @Before
     public void before(Scenario scenario) {
         if (postgreSQLContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(PostgreSQLContainer.class)) {
             postgreSQLContainer = citrus.getCitrusContext().getReferenceResolver().resolve("postgreSQLContainer", PostgreSQLContainer.class);
             setConnectionSettings(postgreSQLContainer, context);
+        }
+
+        if (k8sClient == null) {
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 
@@ -100,14 +111,20 @@ public class PostgreSQLSteps {
                 .withPassword(password)
                 .withDatabaseName(databaseName)
                 .withLabel("app", "yaks")
-                .withLabel("app.kubernetes.io/name", "postgresql")
-                .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("postgresql")
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
         postgreSQLContainer.start();
+
+        runner.run(catchException()
+                .exception(KubernetesClientException.class)
+                .when(kubernetes().client(k8sClient).deployments()
+                        .addLabel(postgreSQLContainer.getContainerId())
+                        .label("app.kubernetes.io/name", "postgresql")
+                        .label("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                ));
 
         String initScript = DatabaseContainerSteps.getInitScript(context);
         if (!initScript.isEmpty()) {

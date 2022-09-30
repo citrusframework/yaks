@@ -18,6 +18,7 @@
 config:
   runtime:
     selenium:
+      enabled: true
       image: selenium/standalone-chrome:106.0
     env:
       - name: YAKS_SELENIUM_BROWSER_TYPE

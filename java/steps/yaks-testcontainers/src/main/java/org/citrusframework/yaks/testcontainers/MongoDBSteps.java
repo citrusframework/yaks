@@ -27,12 +27,17 @@ import com.consol.citrus.context.TestContext;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import static com.consol.citrus.container.Catch.Builder.catchException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
 public class MongoDBSteps {
 
@@ -50,11 +55,17 @@ public class MongoDBSteps {
 
     private MongoDBContainer mongoDBContainer;
 
+    private KubernetesClient k8sClient;
+
     @Before
     public void before(Scenario scenario) {
         if (mongoDBContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(MongoDBContainer.class)) {
             mongoDBContainer = citrus.getCitrusContext().getReferenceResolver().resolve("mongoDBContainer", MongoDBContainer.class);
             setConnectionSettings(mongoDBContainer, context);
+        }
+
+        if (k8sClient == null) {
+            k8sClient = KubernetesSupport.getKubernetesClient(citrus);
         }
     }
 
@@ -72,8 +83,6 @@ public class MongoDBSteps {
     public void startMongo() {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
                 .withLabel("app", "yaks")
-                .withLabel("app.kubernetes.io/name", "mongodb")
-                .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("mongodb")
                 .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
@@ -84,6 +93,14 @@ public class MongoDBSteps {
         citrus.getCitrusContext().bind("mongoDBContainer", mongoDBContainer);
 
         setConnectionSettings(mongoDBContainer, context);
+
+        runner.run(catchException()
+                .exception(KubernetesClientException.class)
+                .when(kubernetes().client(k8sClient).deployments()
+                        .addLabel(mongoDBContainer.getContainerId())
+                        .label("app.kubernetes.io/name", "mongodb")
+                        .label("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                ));
 
         if (TestContainersSteps.autoRemoveResources) {
             runner.run(doFinally()
