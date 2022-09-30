@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public class YaksSettings {
 
     private static final String TEST_ID_PROPERTY = YAKS_PROPERTY_PREFIX + "test.id";
     private static final String TEST_ID_ENV = YAKS_ENV_PREFIX + "TEST_ID";
+    private static final String TEST_ID_DEFAULT = "yaks-test";
 
     private static final String TERMINATION_LOG_PROPERTY = YAKS_PROPERTY_PREFIX + "termination.log";
     private static final String TERMINATION_LOG_ENV = YAKS_ENV_PREFIX + "TERMINATION_LOG";
@@ -111,7 +113,7 @@ public class YaksSettings {
      * @return
      */
     public static String getTestId() {
-        return System.getProperty(TEST_ID_PROPERTY, System.getenv(TEST_ID_ENV));
+        return System.getProperty(TEST_ID_PROPERTY, Optional.ofNullable(System.getenv(TEST_ID_ENV)).orElse(TEST_ID_DEFAULT));
     }
 
     /**

@@ -55,9 +55,9 @@ install and get started working with YAKS.
 
 Requirements:
 
-- Go 1.13+
+- Go 1.17+
 - Operator SDK 0.19.4+
-- Maven 3.6.2+
+- Maven 3.8.4+
 - Git client
 
 You can build the YAKS project and get the `yaks` CLI by running:

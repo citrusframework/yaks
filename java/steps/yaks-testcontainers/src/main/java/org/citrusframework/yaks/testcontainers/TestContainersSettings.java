@@ -17,6 +17,8 @@
 
 package org.citrusframework.yaks.testcontainers;
 
+import java.util.Optional;
+
 /**
  * @author Christoph Deppisch
  */
@@ -28,6 +30,14 @@ public class TestContainersSettings {
     private static final String AUTO_REMOVE_RESOURCES_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "auto.remove.resources";
     private static final String AUTO_REMOVE_RESOURCES_ENV = TESTCONTAINERS_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
+
+    private static final String TEST_ID_PROPERTY = "yaks.test.id";
+    private static final String TEST_ID_ENV = "YAKS_TEST_ID";
+    private static final String TEST_ID_DEFAULT = "yaks-test";
+
+    private static final String TEST_NAME_PROPERTY = "yaks.test.name";
+    private static final String TEST_NAME_ENV = "YAKS_TEST_NAME";
+    private static final String TEST_NAME_DEFAULT = "yaks";
 
     private TestContainersSettings() {
         // prevent instantiation of utility class
@@ -43,4 +53,19 @@ public class TestContainersSettings {
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
     }
 
+    /**
+     * Current test id that is also set as label on the Pod running the test.
+     * @return
+     */
+    public static String getTestId() {
+        return System.getProperty(TEST_ID_PROPERTY, Optional.ofNullable(System.getenv(TEST_ID_ENV)).orElse(TEST_ID_DEFAULT));
+    }
+
+    /**
+     * Current test id that is also set as label on the Pod running the test.
+     * @return
+     */
+    public static String getTestName() {
+        return System.getProperty(TEST_NAME_PROPERTY, Optional.ofNullable(System.getenv(TEST_NAME_ENV)).orElse(TEST_NAME_DEFAULT));
+    }
 }

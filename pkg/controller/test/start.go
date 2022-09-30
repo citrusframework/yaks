@@ -109,9 +109,10 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 			Namespace: test.Namespace,
 			Name:      JobNameFor(test),
 			Labels: map[string]string{
-				"app":                "yaks",
-				v1alpha1.TestLabel:   test.Name,
-				v1alpha1.TestIDLabel: test.Status.TestID,
+				"app":                        "yaks",
+				v1alpha1.TestLabel:           test.Name,
+				v1alpha1.TestIDLabel:         test.Status.TestID,
+				"app.kubernetes.io/instance": test.Status.TestID,
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -130,10 +131,9 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: test.Namespace,
 					Labels: map[string]string{
-						"app":                       "yaks",
-						v1alpha1.TestLabel:          test.Name,
-						v1alpha1.TestIDLabel:        test.Status.TestID,
-						"app.kubernetes.io/part-of": "yaks-tests",
+						"app":                "yaks",
+						v1alpha1.TestLabel:   test.Name,
+						v1alpha1.TestIDLabel: test.Status.TestID,
 					},
 				},
 				Spec: v1.PodSpec{
@@ -651,6 +651,9 @@ func addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {
 
 		// Add kubedock profile that will shut down the kubedock container when test is finished
 		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pkubedock")
+
+		// Set logical to level group all kubedock containers will belong to
+		job.ObjectMeta.Labels["app.kubernetes.io/part-of"] = test.Name
 	}
 }
 
