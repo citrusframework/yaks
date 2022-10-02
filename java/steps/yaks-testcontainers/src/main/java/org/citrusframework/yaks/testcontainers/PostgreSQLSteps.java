@@ -41,6 +41,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import static com.consol.citrus.container.Catch.Builder.catchException;
 import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static com.consol.citrus.container.RepeatOnErrorUntilTrue.Builder.repeatOnError;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
@@ -120,11 +121,15 @@ public class PostgreSQLSteps {
 
         runner.run(catchException()
                 .exception(KubernetesClientException.class)
-                .when(kubernetes().client(k8sClient).deployments()
-                        .addLabel(postgreSQLContainer.getContainerId())
-                        .label("app.kubernetes.io/name", "postgresql")
-                        .label("app.openshift.io/part-of", TestContainersSettings.getTestName())
-                ));
+                .when(repeatOnError()
+                    .until((index, context) -> index >= 25)
+                    .autoSleep(1000L)
+                    .actions(
+                        kubernetes().client(k8sClient).deployments()
+                            .addLabel(postgreSQLContainer.getContainerId())
+                            .label("app.kubernetes.io/name", "postgresql")
+                            .label("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                )));
 
         String initScript = DatabaseContainerSteps.getInitScript(context);
         if (!initScript.isEmpty()) {
