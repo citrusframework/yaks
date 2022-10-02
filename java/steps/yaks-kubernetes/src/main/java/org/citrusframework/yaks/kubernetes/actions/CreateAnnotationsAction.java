@@ -64,9 +64,9 @@ public class CreateAnnotationsAction extends AbstractKubernetesAction implements
                         .inNamespace(namespace(context))
                         .withName(resourceName)
                         .edit(d -> new DeploymentBuilder(d)
-                                .editMetadata()
-                                .addToAnnotations(resolvedAnnotations)
-                                .endMetadata()
+                                    .editMetadata()
+                                        .addToAnnotations(resolvedAnnotations)
+                                    .endMetadata()
                                 .build());
                 break;
             case POD:
