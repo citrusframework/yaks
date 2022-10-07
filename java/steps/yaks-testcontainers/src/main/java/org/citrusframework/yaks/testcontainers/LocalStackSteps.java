@@ -18,8 +18,10 @@
 package org.citrusframework.yaks.testcontainers;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import com.consol.citrus.Citrus;
@@ -27,6 +29,7 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
@@ -54,6 +57,8 @@ public class LocalStackSteps {
     private LocalStackContainer localStackContainer;
     private Set<LocalStackContainer.Service> services;
 
+    private Map<String, String> env = new HashMap<>();
+
     @Before
     public void before(Scenario scenario) {
         if (localStackContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(LocalStackContainer.class)) {
@@ -68,6 +73,11 @@ public class LocalStackSteps {
     @Given("^LocalStack version (^\\s+)$")
     public void setLocalStackVersion(String version) {
         this.localStackVersion = version;
+    }
+
+    @Given("^LocalStack env settings$")
+    public void setEnvSettings(DataTable settings) {
+        this.env.putAll(settings.asMap());
     }
 
     @Given("^LocalStack startup timeout is (\\d+)(?: s| seconds)$")
@@ -89,6 +99,7 @@ public class LocalStackSteps {
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("localstack")
+                .withEnv(env)
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
@@ -110,6 +121,8 @@ public class LocalStackSteps {
         if (localStackContainer != null) {
             localStackContainer.stop();
         }
+
+        env = new HashMap<>();
     }
 
     /**

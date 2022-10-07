@@ -18,12 +18,15 @@
 package org.citrusframework.yaks.testcontainers;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
@@ -50,6 +53,8 @@ public class MongoDBSteps {
 
     private MongoDBContainer mongoDBContainer;
 
+    private Map<String, String> env = new HashMap<>();
+
     @Before
     public void before(Scenario scenario) {
         if (mongoDBContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(MongoDBContainer.class)) {
@@ -68,6 +73,11 @@ public class MongoDBSteps {
         this.startupTimeout = timeout;
     }
 
+    @Given("^MongoDB env settings$")
+    public void setEnvSettings(DataTable settings) {
+        this.env.putAll(settings.asMap());
+    }
+
     @Given("^start MongoDB container$")
     public void startMongo() {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
@@ -76,6 +86,7 @@ public class MongoDBSteps {
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("mongodb")
+                .withEnv(env)
                 .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
@@ -96,6 +107,8 @@ public class MongoDBSteps {
         if (mongoDBContainer != null) {
             mongoDBContainer.stop();
         }
+
+        env = new HashMap<>();
     }
 
     /**

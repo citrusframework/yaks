@@ -19,6 +19,8 @@ package org.citrusframework.yaks.testcontainers;
 
 import javax.script.ScriptException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
@@ -26,6 +28,7 @@ import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
@@ -60,6 +63,8 @@ public class PostgreSQLSteps {
 
     private int startupTimeout = PostgreSQLSettings.getStartupTimeout();
 
+    private Map<String, String> env = new HashMap<>();
+
     @Before
     public void before(Scenario scenario) {
         if (postgreSQLContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(PostgreSQLContainer.class)) {
@@ -93,8 +98,15 @@ public class PostgreSQLSteps {
         this.password = password;
     }
 
+    @Given("^PostgreSQL env settings$")
+    public void setEnvSettings(DataTable settings) {
+        this.env.putAll(settings.asMap());
+    }
+
     @Given("^start PostgreSQL container$")
     public void startPostgresql() {
+        env.putIfAbsent("PGDATA", "/var/lib/postgresql/data/mydata");
+
         postgreSQLContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres").withTag(postgreSQLVersion))
                 .withUsername(username)
                 .withPassword(password)
@@ -104,6 +116,7 @@ public class PostgreSQLSteps {
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("postgresql")
+                .withEnv(env)
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
 
@@ -140,6 +153,8 @@ public class PostgreSQLSteps {
         if (postgreSQLContainer != null) {
             postgreSQLContainer.stop();
         }
+
+        env = new HashMap<>();
     }
 
     /**
