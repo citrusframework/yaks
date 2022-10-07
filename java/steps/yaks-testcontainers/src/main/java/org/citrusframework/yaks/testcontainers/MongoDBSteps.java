@@ -73,7 +73,7 @@ public class MongoDBSteps {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
                 .withLabel("app", "yaks")
                 .withLabel("app.kubernetes.io/name", "mongodb")
-                .withLabel("app.openshift.io/part-of", TestContainersSettings.getTestName())
+                .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
                 .withNetworkAliases("mongodb")
                 .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
