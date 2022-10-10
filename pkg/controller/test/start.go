@@ -38,11 +38,13 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
-	RunAsUser = 1001 // non-root user must match id used in Dockerfile
+	RunAsUser         = 1001 // non-root user must match id used in Dockerfile
+	SeleniumNoVNCPort = 7900 // Default NoVNC port exposed as service when enabled
 )
 
 // NewStartAction creates a new start action.
@@ -71,14 +73,12 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 		return nil, err
 	}
 
-	configMap := newTestConfigMap(test)
-	job, err := action.newTestJob(ctx, test, configMap)
+	resources, err := action.newTestResources(ctx, test)
 	if err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = err.Error()
 		return nil, err
 	}
-	resources := []ctrl.Object{configMap, job}
 	if err := kubernetes.ReplaceResources(ctx, action.client, resources); err != nil {
 		test.Status.Phase = v1alpha1.TestPhaseError
 		test.Status.Errors = err.Error()
@@ -96,7 +96,9 @@ func (action *startAction) Handle(ctx context.Context, test *v1alpha1.Test) (*v1
 	return test, nil
 }
 
-func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, configMap *v1.ConfigMap) (*batchv1.Job, error) {
+func (action *startAction) newTestResources(ctx context.Context, test *v1alpha1.Test) ([]ctrl.Object, error) {
+	configMap := newTestConfigMap(test)
+
 	controller := true
 	blockOwnerDeletion := true
 	retries := int32(0)
@@ -239,14 +241,19 @@ func (action *startAction) newTestJob(ctx context.Context, test *v1alpha1.Test, 
 		return nil, err
 	}
 
+	resources := []ctrl.Object{&job, configMap}
+
 	addLogger(test, &job)
 
-	addSelenium(test, &job)
+	if service := addSelenium(test, &job); service != nil {
+		resources = append(resources, service)
+	}
+
 	addKubeDock(test, &job)
 
 	setPodSecurityContext(&job)
 
-	return &job, nil
+	return resources, nil
 }
 
 func setPodSecurityContext(job *batchv1.Job) {
@@ -555,53 +562,126 @@ func (action *startAction) applyOperatorClusterRoles(ctx context.Context, namesp
 	return nil
 }
 
-func addSelenium(test *v1alpha1.Test, job *batchv1.Job) {
-	if test.Spec.Selenium.Image != "" {
-		shareProcessNamespace := true
-		job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
-
-		// set explicit non-root user for all containers - required for killing the supervisord process later
-		uid := int64(RunAsUser)
-		if test.Spec.Selenium.RunAsUser > 0 {
-			uid = int64(test.Spec.Selenium.RunAsUser)
-		}
-
-		job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
-			RunAsUser: &uid,
-		}
-
-		job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, v1.Container{
-			Name:            "selenium",
-			Image:           test.Spec.Selenium.Image,
-			ImagePullPolicy: v1.PullIfNotPresent,
-			VolumeMounts: []v1.VolumeMount{
-				{
-					Name:      "dshm",
-					MountPath: "/dev/shm",
-				},
-			},
-		})
-
-		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: "dshm",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{
-					Medium:    v1.StorageMediumMemory,
-					SizeLimit: resource.NewScaledQuantity(2, resource.Giga),
-				},
-			},
-		})
-
-		// require system ptrace capability for killing the supervisord process later
-		job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
-			Capabilities: &v1.Capabilities{
-				Add: []v1.Capability{"SYS_PTRACE"},
-			},
-		}
-
-		// Add selenium profile that will shut down the selenium container when test is finished
-		job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pselenium")
+func addSelenium(test *v1alpha1.Test, job *batchv1.Job) *v1.Service {
+	if test.Spec.Selenium.Image == "" {
+		return nil
 	}
+
+	shareProcessNamespace := true
+	job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
+
+	// set explicit non-root user for all containers - required for killing the supervisord process later
+	uid := int64(RunAsUser)
+	if test.Spec.Selenium.RunAsUser > 0 {
+		uid = int64(test.Spec.Selenium.RunAsUser)
+	}
+
+	job.Spec.Template.Spec.SecurityContext = &v1.PodSecurityContext{
+		RunAsUser: &uid,
+	}
+
+	job.Spec.Template.Spec.Containers = append(job.Spec.Template.Spec.Containers, v1.Container{
+		Name:            "selenium",
+		Image:           test.Spec.Selenium.Image,
+		ImagePullPolicy: v1.PullIfNotPresent,
+		VolumeMounts: []v1.VolumeMount{
+			{
+				Name:      "dshm",
+				MountPath: "/dev/shm",
+			},
+		},
+		Env: []v1.EnvVar{},
+	})
+
+	// set env var settings according to selenium config
+	for _, value := range test.Spec.Selenium.Env {
+		pair := strings.SplitN(value, "=", 2)
+		if len(pair) == 2 {
+			k := strings.TrimSpace(pair[0])
+			v := strings.TrimSpace(pair[1])
+
+			if len(k) > 0 && len(v) > 0 {
+				job.Spec.Template.Spec.Containers[1].Env = append(job.Spec.Template.Spec.Containers[1].Env, v1.EnvVar{
+					Name:  k,
+					Value: v,
+				})
+			}
+		}
+	}
+
+	job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
+		Name: "dshm",
+		VolumeSource: v1.VolumeSource{
+			EmptyDir: &v1.EmptyDirVolumeSource{
+				Medium:    v1.StorageMediumMemory,
+				SizeLimit: resource.NewScaledQuantity(2, resource.Giga),
+			},
+		},
+	})
+
+	// require system ptrace capability for killing the supervisord process later
+	job.Spec.Template.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
+		Capabilities: &v1.Capabilities{
+			Add: []v1.Capability{"SYS_PTRACE"},
+		},
+	}
+
+	// Add selenium profile that will shut down the selenium container when test is finished
+	job.Spec.Template.Spec.Containers[0].Command = append(job.Spec.Template.Spec.Containers[0].Command, "-Pselenium")
+
+	// Setup NoVNC service if enabled
+	if test.Spec.Selenium.NoVNC {
+		// Set logical group that the selenium service will belong to
+		job.ObjectMeta.Labels["app.kubernetes.io/part-of"] = test.Name
+
+		job.Spec.Template.Spec.Containers[0].Ports = []v1.ContainerPort{
+			{
+				Name:          "se-no-vnc",
+				ContainerPort: SeleniumNoVNCPort,
+			},
+		}
+
+		controller := true
+		blockOwnerDeletion := true
+		service := v1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: test.Namespace,
+				Name:      strings.Join([]string{ResourceNameFor(test), "se-no-vnc"}, "-"),
+				Labels: map[string]string{
+					"app":                       "yaks",
+					v1alpha1.TestLabel:          test.Name,
+					v1alpha1.TestIDLabel:        test.Status.TestID,
+					"app.kubernetes.io/part-of": test.Name,
+				},
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion:         test.APIVersion,
+						Kind:               test.Kind,
+						Name:               test.Name,
+						UID:                test.UID,
+						Controller:         &controller,
+						BlockOwnerDeletion: &blockOwnerDeletion,
+					},
+				},
+			},
+			Spec: v1.ServiceSpec{
+				Type:     v1.ServiceTypeNodePort,
+				Selector: map[string]string{v1alpha1.TestIDLabel: test.Status.TestID},
+				Ports: []v1.ServicePort{
+					{
+						Name: "se-no-vnc",
+						Port: 80,
+						TargetPort: intstr.IntOrString{
+							IntVal: SeleniumNoVNCPort,
+						},
+					},
+				},
+			},
+		}
+		return &service
+	}
+
+	return nil
 }
 
 func addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {

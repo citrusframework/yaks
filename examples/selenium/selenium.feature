@@ -12,8 +12,22 @@ Feature: Selenium feature
     | text   | Welcome!       |
     | styles | font-size=40px |
     And browser page should display element with id="hello-text" having
-    | text   | Hello!         |
+    | text   | Hello! |
     | styles | background-color=rgba(0, 0, 0, 0) |
+    And browser page should display element with id="counter" having
+      | text   | 0 |
+    Then sleep 1000 ms
+    When user clicks element with id="count"
+    Then browser page should display element with id="counter" having
+      | text   | 1 |
+    When user clicks element with id="count"
+    Then sleep 1000 ms
+    When user clicks element with id="count"
+    Then sleep 1000 ms
+    When user clicks element with id="count"
+    Then sleep 1000 ms
+    When user clicks element with id="count"
+    Then sleep 1000 ms
     When user clicks element with id="open-alert"
     And sleep 500 ms
     Then browser page should display alert with text "Hello"
