@@ -80,8 +80,10 @@ type SettingsSpec struct {
 
 // SeleniumSpec --.
 type SeleniumSpec struct {
-	Image     string `json:"image,omitempty"`
-	RunAsUser int    `json:"runAsUser,omitempty"`
+	Image     string   `json:"image,omitempty"`
+	NoVNC     bool     `json:"noVNC,omitempty"`
+	RunAsUser int      `json:"runAsUser,omitempty"`
+	Env       []string `json:"env,omitempty"`
 }
 
 // KubeDockSpec --.

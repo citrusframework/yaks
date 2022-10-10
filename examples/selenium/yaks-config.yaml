@@ -20,6 +20,10 @@ config:
     selenium:
       enabled: true
       image: selenium/standalone-chrome:106.0
+      noVNC: true
+      env:
+        - name: SE_VNC_NO_PASSWORD
+          value: 1
     env:
       - name: YAKS_SELENIUM_BROWSER_TYPE
         value: chrome

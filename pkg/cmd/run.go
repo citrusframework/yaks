@@ -671,7 +671,12 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 
 		test.Spec.Selenium = v1alpha1.SeleniumSpec{
 			Image:     image,
+			NoVNC:     runConfig.Config.Runtime.Selenium.NoVNC,
 			RunAsUser: runConfig.Config.Runtime.Selenium.RunAsUser,
+		}
+
+		for _, envConfig := range runConfig.Config.Runtime.Selenium.Env {
+			test.Spec.Selenium.Env = append(test.Spec.Selenium.Env, envConfig.Name+"="+envConfig.Value)
 		}
 	}
 

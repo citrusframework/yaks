@@ -70,9 +70,11 @@ type CucumberConfig struct {
 }
 
 type SeleniumConfig struct {
-	Enabled   bool   `yaml:"enabled"`
-	Image     string `yaml:"image"`
-	RunAsUser int    `yaml:"runAsUser"`
+	Enabled   bool        `yaml:"enabled"`
+	Image     string      `yaml:"image"`
+	NoVNC     bool        `yaml:"noVNC"`
+	RunAsUser int         `yaml:"runAsUser"`
+	Env       []EnvConfig `yaml:"env"`
 }
 
 type TestContainersConfig struct {

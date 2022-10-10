@@ -126,8 +126,14 @@ spec:
               selenium:
                 description: SeleniumSpec --.
                 properties:
+                  env:
+                    items:
+                      type: string
+                    type: array
                   image:
                     type: string
+                  noVNC:
+                    type: boolean
                   runAsUser:
                     type: integer
                 type: object
