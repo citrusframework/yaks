@@ -247,9 +247,7 @@ func (action *startAction) newTestResources(ctx context.Context, test *v1alpha1.
 	addLogger(test, &job)
 
 	seResources := addSelenium(test, &job, clusterType)
-	for _, res := range seResources {
-		resources = append(resources, res)
-	}
+	resources = append(resources, seResources...)
 
 	addKubeDock(test, &job)
 
