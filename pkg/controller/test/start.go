@@ -712,7 +712,7 @@ func addSelenium(test *v1alpha1.Test, job *batchv1.Job, clusterType v1alpha1.Clu
 					},
 					Port: &routev1.RoutePort{
 						TargetPort: intstr.IntOrString{
-							StrVal: "se-no-vnc",
+							IntVal: 80,
 						},
 					},
 				},
