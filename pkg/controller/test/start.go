@@ -671,11 +671,9 @@ func addSelenium(test *v1alpha1.Test, job *batchv1.Job, clusterType v1alpha1.Clu
 				Selector: map[string]string{v1alpha1.TestIDLabel: test.Status.TestID},
 				Ports: []v1.ServicePort{
 					{
-						Name: "se-no-vnc",
-						Port: 80,
-						TargetPort: intstr.IntOrString{
-							IntVal: SeleniumNoVNCPort,
-						},
+						Name:       "se-no-vnc",
+						Port:       80,
+						TargetPort: intstr.FromInt(SeleniumNoVNCPort),
 					},
 				},
 			},
@@ -711,9 +709,7 @@ func addSelenium(test *v1alpha1.Test, job *batchv1.Job, clusterType v1alpha1.Clu
 						Name: serviceName,
 					},
 					Port: &routev1.RoutePort{
-						TargetPort: intstr.IntOrString{
-							IntVal: 80,
-						},
+						TargetPort: intstr.FromString("se-no-vnc"),
 					},
 				},
 			}
