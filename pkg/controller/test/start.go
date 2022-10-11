@@ -31,6 +31,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/util/openshift"
 
 	snap "github.com/container-tools/snap/pkg/api"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -245,8 +246,9 @@ func (action *startAction) newTestResources(ctx context.Context, test *v1alpha1.
 
 	addLogger(test, &job)
 
-	if service := addSelenium(test, &job); service != nil {
-		resources = append(resources, service)
+	seResources := addSelenium(test, &job, clusterType)
+	for _, res := range seResources {
+		resources = append(resources, res)
 	}
 
 	addKubeDock(test, &job)
@@ -562,11 +564,12 @@ func (action *startAction) applyOperatorClusterRoles(ctx context.Context, namesp
 	return nil
 }
 
-func addSelenium(test *v1alpha1.Test, job *batchv1.Job) *v1.Service {
+func addSelenium(test *v1alpha1.Test, job *batchv1.Job, clusterType v1alpha1.ClusterType) []ctrl.Object {
 	if test.Spec.Selenium.Image == "" {
-		return nil
+		return []ctrl.Object{}
 	}
 
+	var seResources []ctrl.Object
 	shareProcessNamespace := true
 	job.Spec.Template.Spec.ShareProcessNamespace = &shareProcessNamespace
 
@@ -641,12 +644,13 @@ func addSelenium(test *v1alpha1.Test, job *batchv1.Job) *v1.Service {
 			},
 		}
 
+		serviceName := strings.Join([]string{ResourceNameFor(test), "se-no-vnc"}, "-")
 		controller := true
 		blockOwnerDeletion := true
 		service := v1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: test.Namespace,
-				Name:      strings.Join([]string{ResourceNameFor(test), "se-no-vnc"}, "-"),
+				Name:      serviceName,
 				Labels: map[string]string{
 					"app":                       "yaks",
 					v1alpha1.TestLabel:          test.Name,
@@ -678,10 +682,49 @@ func addSelenium(test *v1alpha1.Test, job *batchv1.Job) *v1.Service {
 				},
 			},
 		}
-		return &service
+
+		seResources = append(seResources, &service)
+
+		if clusterType == v1alpha1.ClusterTypeOpenShift {
+			route := routev1.Route{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: test.Namespace,
+					Name:      serviceName,
+					Labels: map[string]string{
+						"app":                       "yaks",
+						v1alpha1.TestLabel:          test.Name,
+						v1alpha1.TestIDLabel:        test.Status.TestID,
+						"app.kubernetes.io/part-of": test.Name,
+					},
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion:         test.APIVersion,
+							Kind:               test.Kind,
+							Name:               test.Name,
+							UID:                test.UID,
+							Controller:         &controller,
+							BlockOwnerDeletion: &blockOwnerDeletion,
+						},
+					},
+				},
+				Spec: routev1.RouteSpec{
+					To: routev1.RouteTargetReference{
+						Kind: "Service",
+						Name: serviceName,
+					},
+					Port: &routev1.RoutePort{
+						TargetPort: intstr.IntOrString{
+							StrVal: "se-no-vnc",
+						},
+					},
+				},
+			}
+
+			seResources = append(seResources, &route)
+		}
 	}
 
-	return nil
+	return seResources
 }
 
 func addKubeDock(test *v1alpha1.Test, job *batchv1.Job) {

@@ -58,14 +58,14 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: docker.io/citrusframework/yaks:0.12.0-SNAPSHOT
-    createdAt: "2022-06-27T07:56:06Z"
+    createdAt: "2022-10-11T09:44:34Z"
     description: YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
     operators.operatorframework.io/builder: operator-sdk-v1.22.0
     operators.operatorframework.io/internal-objects: '["instances.yaks.citrusframework.org"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/citrusframework/yaks
     support: Citrus Framework
-  name: yaks-operator.v0.11.0
+  name: yaks-operator.v0.12.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -286,27 +286,6 @@ spec:
           - update
           - watch
         - apiGroups:
-          - apps
-          resources:
-          - daemonsets
-          verbs:
-          - get
-          - list
-          - watch
-        - apiGroups:
-          - extensions
-          resources:
-          - ingresses
-          verbs:
-          - create
-          - delete
-          - deletecollection
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
           - coordination.k8s.io
           resources:
           - leases
@@ -420,6 +399,7 @@ spec:
           - ""
           resources:
           - pods
+          - pods/exec
           - services
           - endpoints
           - persistentvolumeclaims
@@ -505,6 +485,19 @@ spec:
           - update
           - watch
         - apiGroups:
+          - route.openshift.io
+          resources:
+          - routes
+          verbs:
+          - create
+          - delete
+          - deletecollection
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
           - monitoring.coreos.com
           resources:
           - servicemonitors
@@ -564,8 +557,8 @@ spec:
   minKubeVersion: 1.16.0
   provider:
     name: Citrus Framework
-  replaces: yaks-operator.v0.10.0
+  replaces: yaks-operator.v0.11.0
   selector:
     matchLabels:
       name: yaks-operator
-  version: 0.11.0
+  version: 0.12.0
