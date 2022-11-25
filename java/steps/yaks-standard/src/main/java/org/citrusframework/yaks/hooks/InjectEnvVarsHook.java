@@ -61,6 +61,8 @@ public class InjectEnvVarsHook {
                 }
 
                 domainEnv.ifPresent(var -> context.setVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value(), var));
+
+                context.setVariable(YaksVariableNames.OPERATOR_NAMESPACE.value(), YaksSettings.getOperatorNamespace());
             }
         });
     }

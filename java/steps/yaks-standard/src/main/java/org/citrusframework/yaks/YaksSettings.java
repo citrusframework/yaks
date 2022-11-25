@@ -46,6 +46,9 @@ public class YaksSettings {
     private static final String NAMESPACE_ENV = YAKS_ENV_PREFIX + "NAMESPACE";
     private static final String NAMESPACE_DEFAULT = "default";
 
+    private static final String OPERATOR_NAMESPACE_PROPERTY = YAKS_PROPERTY_PREFIX + "namespace";
+    private static final String OPERATOR_NAMESPACE_ENV = YAKS_ENV_PREFIX + "NAMESPACE";
+
     private static final String CLUSTER_TYPE_PROPERTY = YAKS_PROPERTY_PREFIX + "cluster.type";
     private static final String CLUSTER_TYPE_ENV = YAKS_ENV_PREFIX + "CLUSTER_TYPE";
     private static final String CLUSTER_TYPE_DEFAULT = YaksClusterType.KUBERNETES.name();
@@ -57,6 +60,15 @@ public class YaksSettings {
     private static final String TERMINATION_LOG_PROPERTY = YAKS_PROPERTY_PREFIX + "termination.log";
     private static final String TERMINATION_LOG_ENV = YAKS_ENV_PREFIX + "TERMINATION_LOG";
     private static final String TERMINATION_LOG_DEFAULT = "target/termination.log";
+
+    /**
+     * Default YAKS operator namespace. If not set in environment vars use default according to the cluster type.
+     * @return
+     */
+    public static String getOperatorNamespace() {
+        return Optional.ofNullable(System.getProperty(OPERATOR_NAMESPACE_PROPERTY, System.getenv(OPERATOR_NAMESPACE_ENV)))
+                .orElseGet(() -> getClusterType().operatorNamespace());
+    }
 
     /**
      * Namespace to work on when performing Kubernetes/Knative client operations on resources.

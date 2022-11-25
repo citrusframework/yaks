@@ -46,8 +46,8 @@ public interface CamelKAction extends TestAction {
      * @return
      */
     default String namespace(TestContext context) {
-        if (context.getVariables().containsKey(VariableNames.CAMEL_K_NAMESPACE.value())) {
-            return context.getVariable(VariableNames.CAMEL_K_NAMESPACE.value());
+        if (context.getVariables().containsKey(VariableNames.CAMELK_NAMESPACE.value())) {
+            return context.getVariable(VariableNames.CAMELK_NAMESPACE.value());
         }
 
         return KubernetesSettings.getNamespace();

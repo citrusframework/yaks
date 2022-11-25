@@ -17,6 +17,9 @@
 
 package org.citrusframework.yaks.camelk;
 
+import java.util.Optional;
+
+import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 
@@ -38,6 +41,10 @@ public final class CamelKSettings {
 
     private static final String NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "namespace";
     private static final String NAMESPACE_ENV = CAMELK_ENV_PREFIX + "NAMESPACE";
+
+    private static final String OPERATOR_NAMESPACE_PROPERTY = CAMELK_PROPERTY_PREFIX + "operator.namespace";
+    private static final String OPERATOR_NAMESPACE_ENV = CAMELK_ENV_PREFIX + "OPERATOR_NAMESPACE";
+    private static final String OPERATOR_NAMESPACE_DEFAULT = "camel-system";
 
     private static final String API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
     private static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
@@ -108,6 +115,17 @@ public final class CamelKSettings {
     public static String getNamespace() {
         return System.getProperty(NAMESPACE_PROPERTY,
                 System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : YaksSettings.getDefaultNamespace());
+    }
+
+    /**
+     * Camel K operator namespace.
+     * @return
+     */
+    public static String getOperatorNamespace() {
+        return Optional.ofNullable(System.getProperty(OPERATOR_NAMESPACE_PROPERTY, System.getenv(OPERATOR_NAMESPACE_ENV)))
+                .orElseGet(() -> YaksSettings.getClusterType().equals(YaksClusterType.KUBERNETES) ?
+                        OPERATOR_NAMESPACE_DEFAULT : YaksSettings.getOperatorNamespace());
+
     }
 
     /**

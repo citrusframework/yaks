@@ -15,24 +15,30 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks;
+package org.citrusframework.yaks.camelk;
 
 /**
- * Cluster type determines where YAKS is being hosted on.
  * @author Christoph Deppisch
  */
-public enum YaksClusterType {
+public final class KameletSettings {
 
-    KUBERNETES("yaks-system"),
-    OPENSHIFT("openshift-operators");
+    private static final String KAMELET_PROPERTY_PREFIX = "yaks.kamelet.";
+    private static final String KAMELET_ENV_PREFIX = "YAKS_KAMELET_";
 
-    private final String operatorNamespace;
+    private static final String NAMESPACE_PROPERTY = KAMELET_PROPERTY_PREFIX + "namespace";
+    private static final String NAMESPACE_ENV = KAMELET_ENV_PREFIX + "NAMESPACE";
 
-    YaksClusterType(String operatorNamespace) {
-        this.operatorNamespace = operatorNamespace;
+    private KameletSettings() {
+        // prevent instantiation of utility class
     }
 
-    public String operatorNamespace() {
-        return operatorNamespace;
+    /**
+     * Default namespace for Kamelets.
+     * @return
+     */
+    public static String getNamespace() {
+        return System.getProperty(NAMESPACE_PROPERTY,
+                System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : CamelKSettings.getNamespace());
     }
+
 }

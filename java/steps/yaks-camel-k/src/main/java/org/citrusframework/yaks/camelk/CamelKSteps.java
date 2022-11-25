@@ -27,6 +27,7 @@ import com.consol.citrus.Citrus;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusFramework;
 import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
@@ -50,6 +51,9 @@ public class CamelKSteps {
 
     @CitrusResource
     private TestCaseRunner runner;
+
+    @CitrusResource
+    private TestContext context;
 
     @CitrusFramework
     private Citrus citrus;
@@ -77,6 +81,10 @@ public class CamelKSteps {
         properties = new LinkedHashMap<>();
         buildPropertyFiles = new ArrayList<>();
         buildProperties = new LinkedHashMap<>();
+
+        if (!context.getVariables().containsKey(VariableNames.OPERATOR_NAMESPACE.value())) {
+            context.setVariable(VariableNames.OPERATOR_NAMESPACE.value(), CamelKSettings.getOperatorNamespace());
+        }
     }
 
     @Given("^Disable auto removal of Camel K resources$")
@@ -108,7 +116,7 @@ public class CamelKSteps {
     @Given("^Camel K namespace ([^\\s]+)$")
     public void setNamespace(String namespace) {
         // update the test variable that points to the namespace
-        runner.run(createVariable(VariableNames.CAMEL_K_NAMESPACE.value(), namespace));
+        runner.run(createVariable(VariableNames.CAMELK_NAMESPACE.value(), namespace));
     }
 
 	@Given("^Camel K integration property file ([^\\s]+)$")

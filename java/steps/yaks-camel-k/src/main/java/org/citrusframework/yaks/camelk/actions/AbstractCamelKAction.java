@@ -19,6 +19,7 @@ package org.citrusframework.yaks.camelk.actions;
 
 import com.consol.citrus.AbstractTestActionBuilder;
 import com.consol.citrus.actions.AbstractTestAction;
+import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,17 +32,29 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
     /** Logger */
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
+    private final String namespace;
+
     private final KubernetesClient kubernetesClient;
 
     public AbstractCamelKAction(String name, Builder<?, ?> builder) {
         super("camel-k:" + name, builder);
 
+        this.namespace = builder.namespace;
         this.kubernetesClient = builder.kubernetesClient;
     }
 
     @Override
     public KubernetesClient getKubernetesClient() {
         return kubernetesClient;
+    }
+
+    @Override
+    public String namespace(TestContext context) {
+        if (namespace != null) {
+            return context.replaceDynamicContentInString(namespace);
+        }
+
+        return CamelKAction.super.namespace(context);
     }
 
     /**
@@ -51,11 +64,21 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
 
         private KubernetesClient kubernetesClient;
 
+        private String namespace;
+
         /**
          * Use a custom Kubernetes client.
          */
         public B client(KubernetesClient kubernetesClient) {
             this.kubernetesClient = kubernetesClient;
+            return self;
+        }
+
+        /**
+         * Explicitly set namespace for this action.
+         */
+        public B namespace(String namespace) {
+            this.namespace = namespace;
             return self;
         }
 

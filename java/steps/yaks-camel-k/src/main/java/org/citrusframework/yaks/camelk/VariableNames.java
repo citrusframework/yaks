@@ -22,8 +22,9 @@ package org.citrusframework.yaks.camelk;
  */
 public enum VariableNames {
 
-    CAMEL_K_NAMESPACE("CAMEL_K_NAMESPACE"),
-    KAMELET_NAMESPACE("KAMELET_NAMESPACE");
+    CAMELK_NAMESPACE("CAMELK_NAMESPACE"),
+    KAMELET_NAMESPACE("KAMELET_NAMESPACE"),
+    OPERATOR_NAMESPACE("CAMELK_OPERATOR_NAMESPACE");
 
     private final String variableName;
 

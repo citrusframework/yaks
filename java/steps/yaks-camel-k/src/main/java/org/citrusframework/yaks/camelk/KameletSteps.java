@@ -68,7 +68,7 @@ public class KameletSteps {
     private Map<String, Object> sourceProperties;
     private Map<String, Object> sinkProperties;
 
-    private String namespace = CamelKSettings.getNamespace();
+    private String namespace = KameletSettings.getNamespace();
 
     private boolean autoRemoveResources = CamelKSettings.isAutoRemoveResources();
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
@@ -310,6 +310,16 @@ public class KameletSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .verifyKamelet(name)
+                .isAvailable());
+    }
+
+    @Given("^Kamelet ([a-z0-9-]+) is available in namespace ([a-z0-9-]+)$")
+    @Then("^Kamelet ([a-z0-9-]+) should be available in namespace ([a-z0-9-]+)$")
+    public void kameletShouldBeAvailable(String name, String namespace) {
+        runner.run(camelk()
+                .client(k8sClient)
+                .verifyKamelet(name)
+                .namespace(namespace)
                 .isAvailable());
     }
 
