@@ -137,7 +137,7 @@ public class CreateKameletAction extends AbstractKameletAction {
 
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
         getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
-                .inNamespace(namespace(context))
+                .inNamespace(kameletNamespace(context))
                 .createOrReplace(kamelet);
 
         LOG.info(String.format("Successfully created Kamelet '%s'", kamelet.getMetadata().getName()));
@@ -249,9 +249,9 @@ public class CreateKameletAction extends AbstractKameletAction {
             }
 
             if (kamelet.getSpec().getTemplate() != null) {
-                template = KubernetesSupport.yaml().dump(kamelet.getSpec().getTemplate());
+                template = KubernetesSupport.yaml().dumpAsMap(kamelet.getSpec().getTemplate());
             } else if (kamelet.getSpec().getFlow() != null) {
-                template = KubernetesSupport.yaml().dump(kamelet.getSpec().getFlow());
+                template = KubernetesSupport.yaml().dumpAsMap(kamelet.getSpec().getFlow());
             }
 
             return this;

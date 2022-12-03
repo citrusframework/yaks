@@ -20,6 +20,9 @@ package org.citrusframework.yaks.camelk.actions;
 import com.consol.citrus.TestAction;
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.VariableNames;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 
@@ -51,6 +54,42 @@ public interface CamelKAction extends TestAction {
         }
 
         return KubernetesSettings.getNamespace();
+    }
+
+    /**
+     * Resolves Camel K operator namespace name from given test context using the stored test variable.
+     * Fallback to the namespace given in Camel K environment settings when no test variable is present.
+     *
+     * @param context
+     * @return
+     */
+    default String operatorNamespace(TestContext context) {
+        if (context.getVariables().containsKey(VariableNames.OPERATOR_NAMESPACE.value())) {
+            return context.getVariable(VariableNames.OPERATOR_NAMESPACE.value());
+        }
+
+        return CamelKSettings.getOperatorNamespace();
+    }
+
+    /**
+     * Resolves cluster type from given test context using the stored test variable.
+     * Fallback to retreiving the cluster type from environment settings when no test variable is present.
+     *
+     * @param context
+     * @return
+     */
+    default YaksClusterType clusterType(TestContext context) {
+        if (context.getVariables().containsKey(VariableNames.CLUSTER_TYPE.value())) {
+            Object clusterType = context.getVariableObject(VariableNames.CLUSTER_TYPE.value());
+
+            if (clusterType instanceof YaksClusterType) {
+                return (YaksClusterType) clusterType;
+            } else {
+                return YaksClusterType.valueOf(clusterType.toString());
+            }
+        }
+
+        return YaksSettings.getClusterType();
     }
 }
 

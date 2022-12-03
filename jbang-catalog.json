@@ -1,0 +1,9 @@
+{
+  "catalogs": {},
+  "aliases": {
+    "yaks": {
+      "script-ref": "java/tools/yaks-jbang/dist/YaksJBang.java",
+      "description": "Run YAKS tests locally"
+    }
+  }
+}

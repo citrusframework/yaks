@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks;
+package org.citrusframework.yaks.config;
 
 import java.io.File;
 import java.net.URL;
 import java.util.stream.Stream;
 
+import com.consol.citrus.functions.DefaultFunctionLibrary;
+import com.consol.citrus.functions.FunctionLibrary;
 import com.consol.citrus.variable.GlobalVariables;
 import com.consol.citrus.variable.GlobalVariablesPropertyLoader;
 import org.citrusframework.yaks.report.SystemOutTestReporter;
@@ -62,5 +64,13 @@ public class YaksAutoConfiguration {
     @Bean(destroyMethod = "destroy")
     public SystemOutTestReporter systemOutReporter() {
         return new SystemOutTestReporter();
+    }
+
+    @Bean
+    public FunctionLibrary yaksFunctionLibrary() {
+        FunctionLibrary lib = new FunctionLibrary();
+        lib.setPrefix("yaks:");
+        lib.getMembers().putAll(new DefaultFunctionLibrary().getMembers());
+        return lib;
     }
 }

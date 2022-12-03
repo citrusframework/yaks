@@ -18,7 +18,6 @@ limitations under the License.
 package cmd
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -68,7 +67,7 @@ func LoadConfiguration() (*Config, error) {
 		return &config, nil
 	}
 
-	data, err := ioutil.ReadFile(config.location)
+	data, err := os.ReadFile(config.location)
 	if err != nil {
 		return &config, err
 	}
@@ -148,7 +147,7 @@ func (cfg *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(cfg.location, data, 0600)
+	return os.WriteFile(cfg.location, data, 0600)
 }
 
 func (cfg *Config) navigate(values map[string]interface{}, prefix string, create bool) map[string]interface{} {

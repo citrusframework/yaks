@@ -30,6 +30,7 @@
   <packaging>pom</packaging>
 
   <modules>
+    <module>yaks-runtime-core</module>
     <module>yaks-runtime-maven</module>
   </modules>
 </project>

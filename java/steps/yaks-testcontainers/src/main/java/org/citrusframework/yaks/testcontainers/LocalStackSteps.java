@@ -33,6 +33,7 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import org.citrusframework.yaks.YaksSettings;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
@@ -137,14 +138,24 @@ public class LocalStackSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_IP", localStackContainer.getContainerIpAddress());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_ID", containerId);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_CONTAINER_NAME", localStackContainer.getContainerName());
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_NAME", "kd-" + containerId);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_PORT", String.valueOf(localStackContainer.getMappedPort(4566)));
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_REGION", localStackContainer.getRegion());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_ACCESS_KEY", localStackContainer.getAccessKey());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SECRET_KEY", localStackContainer.getSecretKey());
 
+            if (YaksSettings.isLocal()) {
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_NAME", "localstack");
+            } else {
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "LOCALSTACK_SERVICE_NAME", "kd-" + containerId);
+            }
+
             services.forEach(service -> {
-                context.setVariable(String.format("%sLOCALSTACK_%s_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), String.format("http://kd-%s:%s", containerId, localStackContainer.getEndpointOverride(service).getPort()));
+                if (YaksSettings.isLocal()) {
+                    context.setVariable(String.format("%sLOCALSTACK_%s_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).toString());
+                } else {
+                    context.setVariable(String.format("%sLOCALSTACK_%s_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), String.format("http://kd-%s:%s", containerId, localStackContainer.getEndpointOverride(service).getPort()));
+                }
+
                 context.setVariable(String.format("%sLOCALSTACK_%s_LOCAL_URL", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).toString());
                 context.setVariable(String.format("%sLOCALSTACK_%s_PORT", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, service.getName().toUpperCase(Locale.US)), localStackContainer.getEndpointOverride(service).getPort());
             });

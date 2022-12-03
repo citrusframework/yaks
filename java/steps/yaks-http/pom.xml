@@ -30,6 +30,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-standard</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>io.cucumber</groupId>
       <artifactId>cucumber-java</artifactId>
     </dependency>
@@ -62,12 +68,6 @@
     <dependency>
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-validation-json</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-standard</artifactId>
-      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

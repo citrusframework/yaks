@@ -19,17 +19,16 @@ package resources
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"strings"
 	"text/template"
 
 	"github.com/citrusframework/yaks/pkg/util/log"
 )
 
+// ResourceAsString returns the named resource content as string.
 //
 //go:generate go run ../../cmd/util/vfs-gen config
-//
-// ResourceAsString returns the named resource content as string.
 func ResourceAsString(name string) string {
 	return string(Resource(name))
 }
@@ -48,7 +47,7 @@ func Resource(name string) []byte {
 	}
 	defer file.Close()
 
-	data, err := ioutil.ReadAll(file)
+	data, err := io.ReadAll(file)
 	if err != nil {
 		log.Error(err, "error while reading resource file", "file", name)
 		return nil

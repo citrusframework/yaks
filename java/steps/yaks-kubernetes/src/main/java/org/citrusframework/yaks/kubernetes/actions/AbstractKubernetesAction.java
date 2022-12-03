@@ -20,6 +20,7 @@ package org.citrusframework.yaks.kubernetes.actions;
 import com.consol.citrus.AbstractTestActionBuilder;
 import com.consol.citrus.actions.AbstractTestAction;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.kubernetes.KubernetesActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ public abstract class AbstractKubernetesAction extends AbstractTestAction implem
         super("k8s:" + name, builder);
 
         this.kubernetesClient = builder.kubernetesClient;
+        this.setActor(builder.getActor());
     }
 
     @Override
@@ -50,6 +52,10 @@ public abstract class AbstractKubernetesAction extends AbstractTestAction implem
     public static abstract class Builder<T extends KubernetesAction, B extends Builder<T, B>> extends AbstractTestActionBuilder<T, B> {
 
         private KubernetesClient kubernetesClient;
+
+        public Builder() {
+            actor(new KubernetesActor());
+        }
 
         /**
          * Use a custom Kubernetes client.

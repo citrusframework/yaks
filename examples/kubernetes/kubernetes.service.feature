@@ -2,25 +2,24 @@
 Feature: Kubernetes service
 
   Background:
-    Given Disable auto removal of Camel K resources
     Given HTTP server "greeting-service"
-    And HTTP server timeout is 10000 ms
+    And HTTP server timeout is 60000 ms
     And HTTP server listening on port 8080
-
-  Scenario: Create service
-    Given create Kubernetes service greeting-service with target port 8080
+    And Kubernetes timeout is 60000 ms
 
   Scenario: Call service from Camel K integration
+    Given create Kubernetes service greeting-service with target port 8080
     Given create Camel K integration hello-world.groovy
     """
     from('timer:tick?period=5000')
       .setHeader("CamelHttpMethod", constant("POST"))
       .setBody().constant('YAKS rocks!')
-      .to('http://greeting-service.${YAKS_NAMESPACE}')
+      .to('yaks:resolveURL(greeting-service)')
+      .to('log:info?showStreams=true')
     """
     When Camel K integration hello-world is running
     Then expect HTTP request body: YAKS rocks!
     And receive POST
-
-  Scenario: Remove Camel K resources
-    Given delete Camel K integration hello-world
+    And HTTP response body: Thank You!
+    And send HTTP 200 OK
+    When Camel K integration hello-world should print Thank You!

@@ -20,7 +20,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -147,7 +146,7 @@ limitations under the License.
 	var finalContent []byte
 	finalContent = append(finalContent, []byte(header)...)
 	finalContent = append(finalContent, content...)
-	if err := ioutil.WriteFile(resourceFile, finalContent, 0o600); err != nil {
+	if err := os.WriteFile(resourceFile, finalContent, 0o600); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -168,9 +167,7 @@ func NamedFilesFilter(names ...string) func(path string, fi os.FileInfo) bool {
 	}
 }
 
-//
 // BigFilesFilter if file is bigger than maximum size (in bytes) then exclude.
-//
 func BigFilesFilter(size int) func(path string, fi os.FileInfo) bool {
 	return func(path string, fi os.FileInfo) bool {
 		if fi.IsDir() {

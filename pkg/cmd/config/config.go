@@ -17,17 +17,22 @@ limitations under the License.
 
 package config
 
-import (
-	"io/ioutil"
-	"os"
-
-	"gopkg.in/yaml.v2"
-)
-
 const (
 	DefaultTimeout  = "30m"
 	DefaultAppLabel = "app=yaks"
 )
+
+var DefaultVersions = Versions{
+	"citrus.version":           "3.3.0",
+	"camel.version":            "3.16.0",
+	"spring.version":           "5.3.20",
+	"cucumber.version":         "7.3.1",
+	"postgresql.version":       "42.5.0",
+	"testcontainers.version":   "1.17.4",
+	"aws-java-sdk.version":     "1.12.146",
+	"activemq.version":         "5.17.0",
+	"activemq.artemis.version": "2.17.0",
+}
 
 type RunConfig struct {
 	BaseDir string       `yaml:"baseDir"`
@@ -61,6 +66,7 @@ type RuntimeConfig struct {
 	Settings       SettingsConfig       `yaml:"settings"`
 	Env            []EnvConfig          `yaml:"env"`
 	Secret         string               `yaml:"secret"`
+	ClusterType    string               `yaml:"clusterType"`
 }
 
 type CucumberConfig struct {
@@ -140,34 +146,4 @@ type DumpConfig struct {
 	Includes   []string `yaml:"includes"`
 }
 
-func NewWithDefaults() *RunConfig {
-	ns := NamespaceConfig{
-		AutoRemove: true,
-		Temporary:  false,
-	}
-
-	var config = Config{
-		Recursive: true,
-		Namespace: ns,
-		Timeout:   DefaultTimeout,
-		Dump: DumpConfig{
-			Enabled:    false,
-			Append:     false,
-			FailedOnly: true,
-			Directory:  "_output",
-		},
-	}
-	return &RunConfig{Config: config, BaseDir: ""}
-}
-
-func LoadConfig(file string) (*RunConfig, error) {
-	config := NewWithDefaults()
-	data, err := ioutil.ReadFile(file)
-	if err != nil && os.IsNotExist(err) {
-		return config, nil
-	}
-	if err = yaml.Unmarshal(data, config); err != nil {
-		return nil, err
-	}
-	return config, nil
-}
+type Versions map[string]string

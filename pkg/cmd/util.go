@@ -22,13 +22,14 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	r "runtime"
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
@@ -266,12 +267,12 @@ func loadData(ctx context.Context, fileName string) (string, error) {
 		}
 		defer response.Body.Close()
 
-		content, err = ioutil.ReadAll(body)
+		content, err = io.ReadAll(body)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		content, err = ioutil.ReadFile(fileName)
+		content, err = os.ReadFile(fileName)
 		if err != nil {
 			return "", err
 		}
@@ -306,4 +307,34 @@ func getLanguage(fileName string) language.Language {
 	}
 
 	return &language.Gherkin{}
+}
+
+func getModelineDeps(code string) []string {
+	pattern := regexp.MustCompile(`@require\((.+)\)`)
+	matches := pattern.FindAllStringSubmatch(code, -1)
+
+	if matches != nil {
+		result := make([]string, len(matches))
+		for i, v := range matches {
+			result[i] = v[1]
+		}
+
+		return result
+	}
+
+	return []string{}
+}
+
+func resolve(fileName string) string {
+	resolved := strings.ReplaceAll(fileName, "{{os.type}}", r.GOOS)
+	resolved = strings.ReplaceAll(resolved, "{{os.arch}}", r.GOARCH)
+	return resolved
+}
+
+func getShellCommand() (string, []string) {
+	if r.GOOS == "windows" {
+		return "powershell.exe", []string{}
+	}
+
+	return "/bin/sh", []string{"-c"}
 }

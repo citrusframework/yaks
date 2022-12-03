@@ -273,7 +273,7 @@ func findCSV(ctx context.Context, client client.Client, namespace string, option
 	return nil, nil
 }
 
-// nolint:unparam
+//nolint:unparam
 func findOperatorGroup(ctx context.Context, client client.Client, namespace string, options Options) (*operatorsv1.OperatorGroup, error) {
 	opGroupList := operatorsv1.OperatorGroupList{}
 	if err := client.List(ctx, &opGroupList, runtime.InNamespace(namespace)); err != nil {

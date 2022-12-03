@@ -49,6 +49,8 @@ CSV_GENERATED_PATH := bundle/manifests/$(CSV_FILENAME)
 
 BUNDLE_IMAGE_NAME := $(IMAGE_NAME)-bundle
 
+YAKS_JBANG := yaks@citrusframework/yaks
+
 # Build
 ifdef GIT_COMMIT
 GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/util/defaults.GitCommit=$(GIT_COMMIT)
@@ -56,6 +58,7 @@ else
 $(warning Could not retrieve a valid Git Commit)
 endif
 
+GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/cmd/jbang.YaksApp=$(YAKS_JBANG)
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -trimpath
 
 .DEFAULT_GOAL := default

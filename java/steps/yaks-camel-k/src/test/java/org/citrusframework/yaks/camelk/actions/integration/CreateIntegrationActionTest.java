@@ -20,6 +20,8 @@ package org.citrusframework.yaks.camelk.actions.integration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
@@ -28,14 +30,24 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
+import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.awaitility.Awaitility.await;
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * @author Christoph Deppisch
  */
 public class CreateIntegrationActionTest {
+
+    /** Logger */
+    private static final Logger LOG = LoggerFactory.getLogger(CreateIntegrationActionTest.class);
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -70,6 +82,7 @@ public class CreateIntegrationActionTest {
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .integration("foo")
+                .fileName("foo.groovy")
                 .source("// camel-k: trait=quarkus.enabled=true\n" +
                         "// camel-k: trait=quarkus.native=true\n" +
                         "// camel-k: trait=route.enabled=true\n" +
@@ -93,6 +106,7 @@ public class CreateIntegrationActionTest {
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .integration("helloworld")
+                .fileName("helloworld.groovy")
                 .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
                 .buildProperty("quarkus.foo", "bar")
                 .buildProperty("quarkus.verbose", "true")
@@ -116,6 +130,7 @@ public class CreateIntegrationActionTest {
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .integration("foo")
+                .fileName("foo.groovy")
                 .source("// camel-k: build-property=quarkus.foo=bar\n" +
                         "// camel-k: build-property=quarkus.verbose=true\n" +
                         "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
@@ -139,6 +154,7 @@ public class CreateIntegrationActionTest {
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .integration("foo")
+                .fileName("foo.groovy")
                 .source("// camel-k: config=secret:my-secret\n" +
                         "// camel-k: config=configmap:tokens\n" +
                         "// camel-k: config=foo=bar\n" +
@@ -152,5 +168,45 @@ public class CreateIntegrationActionTest {
         Assert.assertEquals("secret", integration.getSpec().getConfiguration().get(0).getType());
         Assert.assertEquals("configmap", integration.getSpec().getConfiguration().get(1).getType());
         Assert.assertEquals("property", integration.getSpec().getConfiguration().get(2).getType());
+    }
+
+    @Test
+    public void shouldCreateLocalJBangIntegration() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("foo")
+                .clusterType(YaksClusterType.LOCAL)
+                .fileName("foo.groovy")
+                .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .build();
+
+        action.execute(context);
+
+        Assert.assertNotNull(context.getVariable("foo:pid"));
+
+        Long pid = context.getVariable("foo:pid", Long.class);
+
+        Assert.assertNotNull(context.getVariable("foo:process:" + pid));
+        ProcessAndOutput pao = context.getVariable("foo:process:" + pid, ProcessAndOutput.class);
+
+        try {
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> {
+                Map<String, String> integration = camel().get(pid);
+
+                if (integration.isEmpty() || integration.get("STATUS").equals("Starting")) {
+                    LOG.info("Waiting for Camel integration to start ...");
+                    return false;
+                }
+
+                Assert.assertEquals("foo", integration.get("NAME"));
+                Assert.assertEquals("Running", integration.get("STATUS"));
+
+                return true;
+            });
+
+            Assert.assertEquals(true, pao.getProcess().isAlive());
+        } finally {
+            camel().stop(pid);
+        }
     }
 }

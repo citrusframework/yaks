@@ -42,7 +42,7 @@ public class DatabaseContainerSteps {
 
     @Given("^load database init script (^\\s+)$")
     public void loadInitScript(String file) throws IOException {
-        DatabaseContainerSteps.saveInitScript(context, FileUtils.readToString(FileUtils.getFileResource(file, context)));
+        DatabaseContainerSteps.saveInitScript(context, FileUtils.readToString(FileUtils.getFileResource(context.replaceDynamicContentInString(file))));
     }
 
     /**

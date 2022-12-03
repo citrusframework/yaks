@@ -54,7 +54,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
         Map<String, String> data = new LinkedHashMap<>();
         if (filePath != null) {
             try {
-                Resource file = FileUtils.getFileResource(context.replaceDynamicContentInString(filePath), context);
+                Resource file = FileUtils.getFileResource(context.replaceDynamicContentInString(filePath));
                 String resolvedFileContent = context.replaceDynamicContentInString(FileUtils.readToString(file, StandardCharsets.UTF_8));
                 data.put(Optional.ofNullable(file.getFilename()).orElse("application.properties"),
                         Base64.getEncoder().encodeToString(resolvedFileContent.getBytes(StandardCharsets.UTF_8)));

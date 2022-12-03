@@ -30,8 +30,7 @@ public abstract class AbstractKameletAction extends AbstractCamelKAction {
         super(name, builder);
     }
 
-    @Override
-    public String namespace(TestContext context) {
+    public String kameletNamespace(TestContext context) {
         if (context.getVariables().containsKey(VariableNames.KAMELET_NAMESPACE.value())) {
             return context.getVariable(VariableNames.KAMELET_NAMESPACE.value());
         }

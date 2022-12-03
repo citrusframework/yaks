@@ -18,12 +18,17 @@
 package org.citrusframework.yaks.camelk.actions.integration;
 
 import com.consol.citrus.context.TestContext;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
+
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * @author Christoph Deppisch
@@ -40,11 +45,50 @@ public class DeleteIntegrationAction extends AbstractCamelKAction {
 
     @Override
     public void doExecute(TestContext context) {
+        String name = context.replaceDynamicContentInString(integrationName);
+
+        LOG.info(String.format("Deleting Camel K integration '%s'", name));
+
+        if (YaksSettings.isLocal(clusterType(context))) {
+            deleteLocalIntegration(name, context);
+        } else {
+            deleteIntegration(getKubernetesClient(), namespace(context), name);
+        }
+
+        LOG.info(String.format("Successfully deleted Camel K integration '%s'", name));
+    }
+
+    /**
+     * Deletes the Camel K integration custom resource in given namespace.
+     * @param k8sClient
+     * @param namespace
+     * @param name
+     */
+    private static void deleteIntegration(KubernetesClient k8sClient, String namespace, String name) {
         CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class)
-                .inNamespace(namespace(context))
-                .withName(integrationName)
+        k8sClient.customResources(ctx, Integration.class, IntegrationList.class)
+                .inNamespace(namespace)
+                .withName(name)
                 .delete();
+    }
+
+    /**
+     * Deletes the Camel K integration from local JBang runtime.
+     * @param name
+     * @param context
+     */
+    private static void deleteLocalIntegration(String name, TestContext context) {
+        Long pid;
+        if (context.getVariables().containsKey(name + ":pid")) {
+            pid = context.getVariable(name + ":pid", Long.class);
+        } else {
+            pid = camel().getAll().stream()
+                    .filter(props -> name.equals(props.get("NAME")) && !props.getOrDefault("PID", "").isBlank())
+                    .map(props -> Long.valueOf(props.get("PID"))).findFirst()
+                    .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to retrieve integration process id %s:pid", name)));
+        }
+
+        camel().stop(pid);
     }
 
     /**

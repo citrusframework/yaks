@@ -16,16 +16,14 @@
  */
 
 import com.consol.citrus.endpoint.EndpointAdapter
-import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter
 import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter
+import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter
 import com.consol.citrus.endpoint.adapter.mapping.HeaderMappingKeyExtractor
 import com.consol.citrus.endpoint.adapter.mapping.SimpleMappingStrategy
 import com.consol.citrus.http.message.HttpMessage
 import com.consol.citrus.http.message.HttpMessageHeaders
 import com.consol.citrus.message.Message
 import com.consol.citrus.util.FileUtils
-
-import org.springframework.core.io.ClassPathResource
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 
@@ -54,7 +52,7 @@ static EndpointAdapter handleGet() {
         protected Message handleMessageInternal(Message message) {
             String requestUri = message.getHeader(HttpMessageHeaders.HTTP_REQUEST_URI)
             if (requestUri.endsWith("/openapi")) {
-                String spec = FileUtils.readToString(new ClassPathResource("fruitstore-v1.json"))
+                String spec = FileUtils.readToString(FileUtils.getFileResource("fruitstore-v1.json"))
                 return new HttpMessage(spec)
                         .contentType("application/json")
                         .status(HttpStatus.OK)

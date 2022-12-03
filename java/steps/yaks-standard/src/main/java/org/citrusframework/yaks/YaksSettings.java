@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class YaksSettings {
 
     /** Logger */
-    private static Logger LOG = LoggerFactory.getLogger(YaksSettings.class);
+    private static final Logger LOG = LoggerFactory.getLogger(YaksSettings.class);
 
     private static final String YAKS_PROPERTY_PREFIX = "yaks.";
     private static final String YAKS_ENV_PREFIX = "YAKS_";
@@ -108,7 +109,7 @@ public class YaksSettings {
      */
     public static YaksClusterType getClusterType() {
         return YaksClusterType.valueOf(System.getProperty(CLUSTER_TYPE_PROPERTY,
-                System.getenv(CLUSTER_TYPE_ENV) != null ? System.getenv(CLUSTER_TYPE_ENV) : CLUSTER_TYPE_DEFAULT));
+                System.getenv(CLUSTER_TYPE_ENV) != null ? System.getenv(CLUSTER_TYPE_ENV) : CLUSTER_TYPE_DEFAULT).toUpperCase(Locale.US));
     }
 
     /**
@@ -126,6 +127,22 @@ public class YaksSettings {
      */
     public static String getTestId() {
         return System.getProperty(TEST_ID_PROPERTY, Optional.ofNullable(System.getenv(TEST_ID_ENV)).orElse(TEST_ID_DEFAULT));
+    }
+
+    /**
+     * True when running on localhost.
+     * @return
+     */
+    public static boolean isLocal() {
+        return isLocal(getClusterType());
+    }
+
+    /**
+     * True when running on localhost.
+     * @return
+     */
+    public static boolean isLocal(YaksClusterType clusterType) {
+        return YaksClusterType.LOCAL.equals(clusterType);
     }
 
     /**

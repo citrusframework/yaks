@@ -31,5 +31,6 @@
 
   <modules>
     <module>maven</module>
+    <module>yaks-jbang</module>
   </modules>
 </project>

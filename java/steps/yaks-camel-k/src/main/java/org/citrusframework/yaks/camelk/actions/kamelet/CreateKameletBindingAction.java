@@ -18,21 +18,32 @@
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
+import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
+import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * Test action creates new Camel K integration with given name and source code. Uses given Kubernetes client to
@@ -42,7 +53,10 @@ import org.springframework.core.io.Resource;
  */
 public class CreateKameletBindingAction extends AbstractKameletAction {
 
-    private final String name;
+    /** Logger */
+    private static final Logger LOG = LoggerFactory.getLogger(CreateKameletBindingAction.class);
+
+    private final String bindingName;
     private final Integration integration;
     private final KameletBindingSpec.Endpoint source;
     private final KameletBindingSpec.Endpoint sink;
@@ -54,7 +68,7 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
      */
     public CreateKameletBindingAction(Builder builder) {
         super("create-kamelet-binding", builder);
-        this.name = builder.name;
+        this.bindingName = builder.bindingName;
         this.integration = builder.integration;
         this.source = builder.source;
         this.sink = builder.sink;
@@ -63,22 +77,21 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
 
     @Override
     public void doExecute(TestContext context) {
-        createKameletBinding(context);
-    }
-
-    private void createKameletBinding(TestContext context) {
         final KameletBinding binding;
+
+        String bindingName = context.replaceDynamicContentInString(this.bindingName);
+        LOG.info(String.format("Creating Kamelet binding '%s'", bindingName));
 
         if (resource != null) {
             try {
                 binding = KubernetesSupport.yaml().loadAs(
                         context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
             } catch (IOException e) {
-                throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", name + ".kamelet.yaml"));
+                throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", bindingName + ".kamelet.yaml"));
             }
         } else {
             final KameletBinding.Builder builder = new KameletBinding.Builder()
-                    .name(context.replaceDynamicContentInString(name));
+                    .name(bindingName);
 
             if (integration != null) {
                 builder.integration(integration);
@@ -101,20 +114,69 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
             binding = builder.build();
         }
 
+        if (YaksSettings.isLocal(clusterType(context))) {
+            createLocalKameletBinding(binding, bindingName, context);
+        } else {
+            createKameletBinding(getKubernetesClient(), namespace(context), binding);
+        }
+
+        LOG.info(String.format("Successfully created Kamelet binding '%s'", binding.getMetadata().getName()));
+    }
+
+    /**
+     * Creates the Kamelet binding as a custom resource in given namespace.
+     * @param k8sClient
+     * @param namespace
+     * @param binding
+     */
+    private static void createKameletBinding(KubernetesClient k8sClient, String namespace, KameletBinding binding) {
         if (LOG.isDebugEnabled()) {
-            try {
-                LOG.debug(KubernetesSupport.json().writeValueAsString(binding));
-            } catch (JsonProcessingException e) {
-                LOG.warn("Unable to dump KameletBinding data", e);
-            }
+            LOG.debug(KubernetesSupport.yaml().dumpAsMap(binding));
         }
 
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
-        getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(namespace(context))
+        k8sClient.customResources(ctx, KameletBinding.class, KameletBindingList.class)
+                .inNamespace(namespace)
                 .createOrReplace(binding);
+    }
 
-        LOG.info(String.format("Successfully created KameletBinding '%s'", binding.getMetadata().getName()));
+    /**
+     * Creates the Kamelet binding with local JBang runtime.
+     * @param binding
+     * @param name
+     * @param context
+     */
+    private void createLocalKameletBinding(KameletBinding binding, String name, TestContext context) {
+        try {
+            String bindingYaml = KubernetesSupport.yaml().dumpAsMap(binding);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(bindingYaml);
+            }
+
+            Path workDir = CamelJBangSettings.getWorkDir();
+            Files.createDirectories(workDir);
+            Path file = workDir.resolve(String.format("i-%s.yaml", name));
+            Files.write(file, bindingYaml.getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+            ProcessAndOutput pao = camel().run(name, file);
+
+            if (!pao.getProcess().isAlive()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(pao.getOutput());
+                }
+
+                throw new CitrusRuntimeException(String.format("Failed to create Kamelet binding - exit code %s", pao.getProcess().exitValue()));
+            }
+
+            Long pid = pao.getCamelProcessId();
+            context.setVariable(name + ":pid", pid);
+            context.setVariable(name + ":process:" + pid, pao);
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to create Kamelet binding file", e);
+        }
     }
 
     /**
@@ -122,14 +184,14 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
      */
     public static final class Builder extends AbstractKameletAction.Builder<CreateKameletBindingAction, Builder> {
 
-        private String name;
+        private String bindingName;
         private Integration integration;
         private KameletBindingSpec.Endpoint source;
         private KameletBindingSpec.Endpoint sink;
         private Resource resource;
 
-        public Builder binding(String kameletName) {
-            this.name = kameletName;
+        public Builder binding(String bindingName) {
+            this.bindingName = bindingName;
             return this;
         }
 
@@ -177,7 +239,7 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
         public Builder fromBuilder(KameletBinding.Builder builder) {
             KameletBinding binding = builder.build();
 
-            name = binding.getMetadata().getName();
+            bindingName = binding.getMetadata().getName();
             integration = binding.getSpec().getIntegration();
             source = binding.getSpec().getSource();
             sink = binding.getSpec().getSink();

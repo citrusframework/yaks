@@ -35,5 +35,5 @@ const (
 	InstanceName = "yaks"
 )
 
-//GitCommit must be provided during application build.
+// GitCommit must be provided during application build.
 var GitCommit string

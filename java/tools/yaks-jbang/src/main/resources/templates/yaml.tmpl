@@ -1,0 +1,10 @@
+name: {{ .Name }}
+author: YAKS
+status: FINAL
+description: Sample test in YAML
+variables:
+  - name: message
+    value: YAKS rocks!
+actions:
+  - echo:
+      message: "${message}"
