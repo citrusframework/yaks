@@ -19,7 +19,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -34,14 +33,14 @@ func main() {
 	fileName := os.Args[1]
 	licenseName := os.Args[2]
 
-	fileBin, err := ioutil.ReadFile(fileName)
+	fileBin, err := os.ReadFile(fileName)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("cannot read file %s: %v\n", fileName, err))
 		os.Exit(1)
 	}
 	file := string(fileBin)
 
-	licenseBin, err := ioutil.ReadFile(licenseName)
+	licenseBin, err := os.ReadFile(licenseName)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("cannot read file %s: %v\n", licenseName, err))
 		os.Exit(1)

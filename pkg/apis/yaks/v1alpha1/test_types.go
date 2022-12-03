@@ -30,6 +30,8 @@ import (
 type ClusterType string
 
 const (
+	// ClusterTypeLocal is used when running tests locally.
+	ClusterTypeLocal ClusterType = "Local"
 	// ClusterTypeOpenShift is used when targeting a OpenShift cluster.
 	ClusterTypeOpenShift ClusterType = "OpenShift"
 	// ClusterTypeKubernetes is used when targeting a Kubernetes cluster.

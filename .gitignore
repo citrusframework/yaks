@@ -30,3 +30,8 @@ target/
 # cask packages
 .cask/
 dist/
+
+# JBang
+.camel-jbang/
+.yaks-jbang/
+.jbang/

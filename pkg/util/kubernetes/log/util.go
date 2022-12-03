@@ -21,10 +21,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
-
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -38,7 +36,7 @@ func PrintUsingSelector(ctx context.Context, client kubernetes.Interface, namesp
 	scraper := NewSelectorScraper(client, namespace, defaultContainerName, selector)
 	reader := scraper.Start(ctx)
 
-	if _, err := io.Copy(out, ioutil.NopCloser(reader)); err != nil {
+	if _, err := io.Copy(out, io.NopCloser(reader)); err != nil {
 		fmt.Println(err.Error())
 	}
 

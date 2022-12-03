@@ -76,8 +76,7 @@ public final class KubernetesSupport {
                 // if value of property is null, ignore it.
                 if (propertyValue == null) {
                     return null;
-                }
-                else {
+                } else {
                     return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
                 }
             }
@@ -114,7 +113,7 @@ public final class KubernetesSupport {
 
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
                                    CustomResourceDefinitionContext context, T resource) {
-        createResource(k8sClient, namespace, context, yaml().dump(resource));
+        createResource(k8sClient, namespace, context, yaml().dumpAsMap(resource));
     }
 
     public static void createResource(KubernetesClient k8sClient, String namespace,

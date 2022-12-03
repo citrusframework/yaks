@@ -22,6 +22,11 @@ import java.util.Optional;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 /**
  * @author Christoph Deppisch
@@ -155,5 +160,22 @@ public final class CamelKSettings {
     public static boolean isPrintPodLogs() {
         return Boolean.parseBoolean(System.getProperty(PRINT_POD_LOGS_PROPERTY,
                 System.getenv(PRINT_POD_LOGS_ENV) != null ? System.getenv(PRINT_POD_LOGS_ENV) : PRINT_POD_LOGS_DEFAULT));
+    }
+
+    public static Yaml yaml() {
+        Representer representer = new Representer() {
+            @Override
+            protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+                // if value of property is null, ignore it.
+                if (propertyValue == null) {
+                    return null;
+                }
+                else {
+                    return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+                }
+            }
+        };
+        representer.getPropertyUtils().setSkipMissingProperties(true);
+        return new Yaml(representer);
     }
 }

@@ -39,7 +39,6 @@ import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
@@ -119,6 +118,12 @@ public class CamelKSteps {
         runner.run(createVariable(VariableNames.CAMELK_NAMESPACE.value(), namespace));
     }
 
+	@Given("^Camel K operator namespace ([^\\s]+)$")
+    public void setOperatorNamespace(String namespace) {
+        // update the test variable that points to the Camel K operator namespace
+        runner.run(createVariable(VariableNames.OPERATOR_NAMESPACE.value(), namespace));
+    }
+
 	@Given("^Camel K integration property file ([^\\s]+)$")
     public void addPropertyFile(String filePath) {
         propertyFiles.add(filePath);
@@ -162,9 +167,8 @@ public class CamelKSteps {
 
 	@Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+)$")
 	public void loadIntegrationFromFile(String name, String language) {
-        Resource resource = new ClassPathResource(name + "." + language);
         try {
-            createIntegration(name, language, FileUtils.readToString(resource));
+            createIntegration(name, language, FileUtils.readToString(FileUtils.getFileResource(name + "." + language)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
@@ -173,8 +177,7 @@ public class CamelKSteps {
     @Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void loadIntegrationFromFile(String name, String language, Map<String, String> configuration) {
         try {
-            Resource resource = new ClassPathResource(name + "." + language);
-            createIntegration(name, language, FileUtils.readToString(resource), configuration);
+            createIntegration(name, language, FileUtils.readToString(FileUtils.getFileResource(name + "." + language)), configuration);
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
@@ -184,13 +187,13 @@ public class CamelKSteps {
 	public void createIntegration(String name, String language, String source) {
         runner.run(camelk()
                     .client(k8sClient)
-                    .createIntegration(name + "." + language)
+                    .createIntegration(name)
                     .properties(properties)
                     .propertyFiles(propertyFiles)
                     .buildProperties(buildProperties)
                     .buildPropertyFiles(buildPropertyFiles)
                     .supportVariables(supportVariablesInSources)
-                    .source(source));
+                    .source(name + "." + language, source));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
@@ -255,7 +258,7 @@ public class CamelKSteps {
     private void createIntegration(String name, String language, String source, Map<String, String> configuration) {
         CreateIntegrationAction.Builder create = camelk()
                 .client(k8sClient)
-                .createIntegration(configuration.getOrDefault("name", name + "." + language))
+                .createIntegration(configuration.getOrDefault("name", name))
                 .source(name + "." + language, source)
                 .dependencies(configuration.getOrDefault("dependencies", "").trim())
                 .buildProperties(configuration.getOrDefault("build-properties", "").trim())

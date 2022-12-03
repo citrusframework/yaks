@@ -23,6 +23,7 @@ package org.citrusframework.yaks;
  */
 public enum YaksClusterType {
 
+    LOCAL(""),
     KUBERNETES("yaks-system"),
     OPENSHIFT("openshift-operators");
 

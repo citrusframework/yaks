@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -135,8 +134,8 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 		return &results, err
 	}
 
-	var files []os.FileInfo
-	files, err = ioutil.ReadDir(outputDir)
+	var files []os.DirEntry
+	files, err = os.ReadDir(outputDir)
 	if err != nil {
 		return &results, err
 	}
@@ -146,7 +145,7 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 			continue
 		}
 
-		content, err := ioutil.ReadFile(path.Join(outputDir, file.Name()))
+		content, err := os.ReadFile(path.Join(outputDir, file.Name()))
 		if err != nil {
 			return &results, err
 		}
@@ -214,6 +213,8 @@ func GetSummaryReport(results *v1alpha1.TestResults) string {
 }
 
 func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
+	name := kubernetes.SanitizeName(source)
+
 	return &v1alpha1.Test{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.TestKind,
@@ -221,15 +222,16 @@ func GetErrorResult(namespace string, source string, err error) *v1alpha1.Test {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      source,
+			Name:      name,
 		},
 		Status: v1alpha1.TestStatus{
+			Phase:  v1alpha1.TestPhaseError,
 			Errors: err.Error(),
 			Results: v1alpha1.TestSuite{
 				Name: source,
 				Tests: []v1alpha1.TestResult{
 					{
-						Name:         kubernetes.SanitizeName(source),
+						Name:         name,
 						ClassName:    source,
 						ErrorType:    GetErrorType(err),
 						ErrorMessage: err.Error(),

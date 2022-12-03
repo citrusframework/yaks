@@ -17,9 +17,10 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
+import java.util.Arrays;
+
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
@@ -34,7 +35,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  */
 public class VerifyKameletAction extends AbstractKameletAction {
 
-    private final String name;
+    private final String kameletName;
 
     /**
      * Constructor using given builder.
@@ -42,30 +43,47 @@ public class VerifyKameletAction extends AbstractKameletAction {
      */
     public VerifyKameletAction(Builder builder) {
         super("verify-kamelet", builder);
-        this.name = builder.name;
+        this.kameletName = builder.kameletName;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        String kameletName = context.replaceDynamicContentInString(name);
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
-        Kamelet kamelet = getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
-                .inNamespace(namespace(context))
-                .withName(kameletName)
-                .get();
+        String name = context.replaceDynamicContentInString(this.kameletName);
 
-        if (kamelet == null) {
-            throw new ValidationException(String.format("Failed to retrieve Kamelet '%s' in namespace '%s'", name, namespace(context)));
+        if (findKamelet(name, kameletNamespace(context), operatorNamespace(context), namespace(context)))  {
+            LOG.info("Kamlet validation successful - All values OK!");
+        } else {
+            throw new ValidationException(String.format("Failed to retrieve Kamelet '%s'", name));
         }
+    }
 
-        LOG.info("Kamlet validation successful - All values OK!");
-        if (LOG.isDebugEnabled()) {
-            try {
-                LOG.debug(KubernetesSupport.json().writeValueAsString(kamelet));
-            } catch (JsonProcessingException e) {
-                LOG.warn("Unable to dump Kamelet data", e);
+    /**
+     * Find Kamelet with specified name in one of the given namespaces.
+     * @param name
+     * @param namespaces
+     * @return
+     */
+    private boolean findKamelet(String name, String ... namespaces) {
+        return Arrays.stream(namespaces).distinct().anyMatch(namespace -> {
+            LOG.info(String.format("Verify Kamlet '%s' exists in namespace '%s'", name, namespace));
+
+            CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
+            Kamelet kamelet = getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .get();
+
+            if (LOG.isDebugEnabled()) {
+                if (kamelet == null) {
+                    LOG.debug(String.format("Kamelet '%s' is not present in namespace '%s'", name, namespace));
+                } else {
+                    LOG.debug(String.format("Found Kamelet in namespace '%s'", namespace));
+                    LOG.debug(KubernetesSupport.yaml().dumpAsMap(kamelet));
+                }
             }
-        }
+
+            return kamelet != null;
+        });
     }
 
     /**
@@ -73,14 +91,14 @@ public class VerifyKameletAction extends AbstractKameletAction {
      */
     public static final class Builder extends AbstractKameletAction.Builder<VerifyKameletAction, Builder> {
 
-        private String name;
+        private String kameletName;
 
         public Builder isAvailable() {
             return this;
         }
 
         public Builder kameletName(String kameletName) {
-            this.name = kameletName;
+            this.kameletName = kameletName;
             return this;
         }
 

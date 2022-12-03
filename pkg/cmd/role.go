@@ -20,7 +20,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -95,8 +94,8 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 
 			for _, role := range o.Add {
 				if isDir(role) {
-					var files []os.FileInfo
-					if files, err = ioutil.ReadDir(role); err != nil {
+					var files []os.DirEntry
+					if files, err = os.ReadDir(role); err != nil {
 						return err
 					}
 
@@ -117,8 +116,8 @@ func (o *roleCmdOptions) run(cmd *cobra.Command, args []string) error {
 		} else if viewerSA {
 			for _, role := range o.Add {
 				if isDir(role) {
-					var files []os.FileInfo
-					if files, err = ioutil.ReadDir(role); err != nil {
+					var files []os.DirEntry
+					if files, err = os.ReadDir(role); err != nil {
 						return err
 					}
 

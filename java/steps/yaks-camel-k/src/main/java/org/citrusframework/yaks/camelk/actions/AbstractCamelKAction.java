@@ -21,6 +21,7 @@ import com.consol.citrus.AbstractTestActionBuilder;
 import com.consol.citrus.actions.AbstractTestAction;
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.YaksClusterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +37,14 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
 
     private final KubernetesClient kubernetesClient;
 
+    private final YaksClusterType clusterType;
+
     public AbstractCamelKAction(String name, Builder<?, ?> builder) {
         super("camel-k:" + name, builder);
 
         this.namespace = builder.namespace;
         this.kubernetesClient = builder.kubernetesClient;
+        this.clusterType = builder.clusterType;
     }
 
     @Override
@@ -57,6 +61,15 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
         return CamelKAction.super.namespace(context);
     }
 
+    @Override
+    public YaksClusterType clusterType(TestContext context) {
+        if (clusterType != null) {
+            return clusterType;
+        }
+
+        return CamelKAction.super.clusterType(context);
+    }
+
     /**
      * Action builder.
      */
@@ -65,6 +78,8 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
         private KubernetesClient kubernetesClient;
 
         private String namespace;
+
+        private YaksClusterType clusterType;
 
         /**
          * Use a custom Kubernetes client.
@@ -79,6 +94,14 @@ public abstract class AbstractCamelKAction extends AbstractTestAction implements
          */
         public B namespace(String namespace) {
             this.namespace = namespace;
+            return self;
+        }
+
+        /**
+         * Explicitly set cluster type for this action.
+         */
+        public B clusterType(YaksClusterType clusterType) {
+            this.clusterType = clusterType;
             return self;
         }
 

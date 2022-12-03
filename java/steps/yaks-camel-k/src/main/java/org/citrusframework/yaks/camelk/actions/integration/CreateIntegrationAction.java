@@ -18,6 +18,10 @@
 package org.citrusframework.yaks.camelk.actions.integration;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,13 +36,22 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.variable.VariableUtils;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
+import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
+import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
 import org.citrusframework.yaks.camelk.model.IntegrationSpec;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * Test action creates new Camel K integration with given name and source code. Uses given Kubernetes client to
@@ -47,6 +60,9 @@ import org.citrusframework.yaks.camelk.model.IntegrationSpec;
  * @author Christoph Deppisch
  */
 public class CreateIntegrationAction extends AbstractCamelKAction {
+
+    /** Logger */
+    private static final Logger LOG = LoggerFactory.getLogger(CreateIntegrationAction.class);
 
     private final String integrationName;
     private final String fileName;
@@ -81,10 +97,10 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
     @Override
     public void doExecute(TestContext context) {
-        createIntegration(context);
-    }
+        String name = context.replaceDynamicContentInString(integrationName);
 
-    private void createIntegration(TestContext context) {
+        LOG.info(String.format("Creating Camel K integration '%s'", name));
+
         String resolvedSource;
         if (supportVariables) {
             resolvedSource = context.replaceDynamicContentInString(source);
@@ -93,7 +109,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         final Integration.Builder integrationBuilder = new Integration.Builder()
-                .name(context.replaceDynamicContentInString(integrationName))
+                .name(name)
                 .source(context.replaceDynamicContentInString(fileName), resolvedSource);
 
         List<String> resolvedDependencies = resolveDependencies(resolvedSource, context.resolveDynamicValuesInList(dependencies));
@@ -106,13 +122,73 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         addTraitSpec(integrationBuilder, resolvedSource, context);
         addOpenApiSpec(integrationBuilder, context);
 
-        final Integration i = integrationBuilder.build();
-        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        getKubernetesClient().customResources(ctx, Integration.class, IntegrationList.class)
-                .inNamespace(namespace(context))
-                .createOrReplace(i);
+        final Integration integration = integrationBuilder.build();
+        if (YaksSettings.isLocal(clusterType(context))) {
+            createLocalIntegration(integration, name, context);
+        } else {
+            createIntegration(getKubernetesClient(), namespace(context), integration);
+        }
 
-        LOG.info(String.format("Successfully created Camel K integration '%s'", i.getMetadata().getName()));
+        LOG.info(String.format("Successfully created Camel K integration '%s'", integration.getMetadata().getName()));
+    }
+
+    /**
+     * Creates the Camel K integration as a custom resource in given namespace.
+     * @param k8sClient
+     * @param namespace
+     * @param integration
+     */
+    private static void createIntegration(KubernetesClient k8sClient, String namespace, Integration integration) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(KubernetesSupport.yaml().dumpAsMap(integration));
+        }
+
+        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
+        k8sClient.customResources(ctx, Integration.class, IntegrationList.class)
+                .inNamespace(namespace)
+                .createOrReplace(integration);
+    }
+
+    /**
+     * Creates the Camel K integration with local JBang runtime.
+     * @param integration
+     * @param name
+     * @param context
+     */
+    private static void createLocalIntegration(Integration integration, String name, TestContext context) {
+        try {
+            String integrationYaml = KubernetesSupport.yaml().dumpAsMap(integration);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(integrationYaml);
+            }
+
+            // CAMEL-18802: Workaround for Camel JBang not supporting integration custom resources at the moment
+            integrationYaml += "#KameletBinding";
+
+            Path workDir = CamelJBangSettings.getWorkDir();
+            Files.createDirectories(workDir);
+            Path file = workDir.resolve(String.format("i-%s.yaml", name));
+            Files.write(file, integrationYaml.getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.WRITE,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
+            ProcessAndOutput pao = camel().run(name, file);
+
+            if (!pao.getProcess().isAlive()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(pao.getOutput());
+                }
+
+                throw new CitrusRuntimeException(String.format("Failed to create Camel K integration - exit code %s", pao.getProcess().exitValue()));
+            }
+
+            Long pid = pao.getCamelProcessId();
+            context.setVariable(name + ":pid", pid);
+            context.setVariable(name + ":process:" + pid, pao);
+        } catch (IOException e) {
+            throw new CitrusRuntimeException("Failed to create integration file", e);
+        }
     }
 
     private void addOpenApiSpec(Integration.Builder integrationBuilder, TestContext context) {
@@ -208,7 +284,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             for (String pf : propertyFiles){
                 try {
                     Properties props = new Properties();
-                    props.load(FileUtils.getFileResource(pf, context).getInputStream());
+                    props.load(FileUtils.getFileResource(context.replaceDynamicContentInString(pf)).getInputStream());
                     props.forEach((key, value) -> configurationList.add(
                             new IntegrationSpec.Configuration("property", createPropertySpec(key.toString(), value.toString(), context))));
                 } catch (IOException e) {
@@ -242,7 +318,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             for (String pf : buildPropertyFiles){
                 try {
                     Properties props = new Properties();
-                    props.load(FileUtils.getFileResource(pf, context).getInputStream());
+                    props.load(FileUtils.getFileResource(context.replaceDynamicContentInString(pf)).getInputStream());
                     props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
                             traitName,
                             createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));
@@ -375,6 +451,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder source(String source) {
             this.source = source;
+            return this;
+        }
+
+        public Builder fileName(String fileName) {
+            this.fileName = fileName;
             return this;
         }
 

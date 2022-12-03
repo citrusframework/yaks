@@ -26,11 +26,11 @@ public class HttpSettings {
     private static final String HTTP_ENV_PREFIX = "YAKS_HTTP_";
 
     private static final String TIMEOUT_PROPERTY = HTTP_PROPERTY_PREFIX + ".timeout";
-    private static final String TIMEOUT_ENV = HTTP_ENV_PREFIX + "_TIMEOUT";
+    private static final String TIMEOUT_ENV = HTTP_ENV_PREFIX + "TIMEOUT";
     private static final String TIMEOUT_DEFAULT = "2000";
 
     private static final String FORK_MODE_PROPERTY = HTTP_PROPERTY_PREFIX + ".fork.mode";
-    private static final String FORK_MODE_ENV = HTTP_ENV_PREFIX + "_FORK_MODE";
+    private static final String FORK_MODE_ENV = HTTP_ENV_PREFIX + "FORK_MODE";
     private static final String FORK_MODE_DEFAULT = "false";
 
     private static final String SERVER_NAME_PROPERTY = HTTP_PROPERTY_PREFIX + "server.name";

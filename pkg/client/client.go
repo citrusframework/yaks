@@ -19,7 +19,6 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -211,7 +210,7 @@ func GetCurrentNamespace(kubeconfig string) (string, error) {
 		return "default", nil
 	}
 
-	data, err := ioutil.ReadFile(kubeconfig)
+	data, err := os.ReadFile(kubeconfig)
 	if err != nil {
 		return "", err
 	}
@@ -265,7 +264,7 @@ func shouldUseContainerMode() (bool, error) {
 func getNamespaceFromKubernetesContainer() (string, error) {
 	var nsba []byte
 	var err error
-	if nsba, err = ioutil.ReadFile(inContainerNamespaceFile); err != nil {
+	if nsba, err = os.ReadFile(inContainerNamespaceFile); err != nil {
 		return "", err
 	}
 	return string(nsba), nil

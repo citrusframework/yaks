@@ -120,9 +120,16 @@ public class KnativeSettings {
      * @return
      */
     public static String getBrokerHost() {
-        String brokerHostDefault = YaksSettings.isOpenshiftCluster() ?
-                BROKER_HOST_OPENSHIFT_DEFAULT :
-                BROKER_HOST_KUBERNETES_DEFAULT;
+        String brokerHostDefault;
+
+        if (YaksSettings.isOpenshiftCluster()) {
+            brokerHostDefault = BROKER_HOST_OPENSHIFT_DEFAULT;
+        } else if (YaksSettings.isKubernetesCluster()) {
+            brokerHostDefault = BROKER_HOST_KUBERNETES_DEFAULT;
+        } else {
+            brokerHostDefault = "localhost";
+        }
+
         return System.getProperty(BROKER_HOST_PROPERTY,
                 System.getenv(BROKER_HOST_ENV) != null ? System.getenv(BROKER_HOST_ENV) : brokerHostDefault);
     }
@@ -141,9 +148,15 @@ public class KnativeSettings {
      * @return
      */
     public static String getBrokerUrl() {
-        String brokerUrlDefault = YaksSettings.isOpenshiftCluster() ?
-                String.format("http://%s", getBrokerHost()) :
-                String.format("http://%s/%s/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
+        String brokerUrlDefault;
+        if (YaksSettings.isOpenshiftCluster()) {
+            brokerUrlDefault = String.format("http://%s", getBrokerHost());
+        } else if (YaksSettings.isKubernetesCluster()) {
+            brokerUrlDefault = String.format("http://%s/%s/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
+        } else {
+            brokerUrlDefault = String.format("http://%s", getBrokerHost());
+        }
+
         return System.getProperty(BROKER_URL_PROPERTY,
                 System.getenv(BROKER_URL_ENV) != null ? System.getenv(BROKER_URL_ENV) : brokerUrlDefault);
     }

@@ -17,17 +17,23 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
+import java.util.Map;
+
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ActionTimeoutException;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
+import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * Test action verifies integration Pod running/stopped state and optionally waits for a log message to be present. Raises errors
@@ -65,11 +71,97 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
 
     @Override
     public void doExecute(TestContext context) {
-        String podName = context.replaceDynamicContentInString(integrationName);
-        Pod pod = verifyIntegrationPod(podName, context.replaceDynamicContentInString(phase), namespace(context));
+        String name = context.replaceDynamicContentInString(integrationName);
+
+        LOG.info(String.format("Verify Camel K integration '%s'", name));
+
+        if (YaksSettings.isLocal(clusterType(context))) {
+            verifyLocalIntegration(name, context);
+        } else {
+            verifyIntegration(namespace(context), name, context);
+        }
+
+        LOG.info(String.format("Successfully verified Camel K integration '%s'", name));
+    }
+
+    private void verifyLocalIntegration(String integration, TestContext context) {
+        Long pid = verifyLocalIntegrationStatus(integration, context.replaceDynamicContentInString(phase), context);
 
         if (logMessage != null) {
-            verifyIntegrationLogs(pod, podName, namespace(context), context.replaceDynamicContentInString(logMessage));
+            verifyLocalIntegrationLogs(pid, integration, context.replaceDynamicContentInString(logMessage), context);
+        }
+    }
+
+    private void verifyLocalIntegrationLogs(Long pid, String integration, String message, TestContext context) {
+        if (printLogs) {
+            INTEGRATION_LOG.info(String.format("Waiting for integration '%s' to log message", integration));
+        }
+
+        String log;
+        int offset = 0;
+
+        ProcessAndOutput pao = context.getVariable(integration + ":process:" + pid, ProcessAndOutput.class);
+        for (int i = 0; i < maxAttempts; i++) {
+            log = pao.getOutput();
+
+            if (printLogs && (offset < log.length())) {
+                INTEGRATION_LOG.info(log.substring(offset));
+                offset = log.length();
+            }
+
+            if (log.contains(message)) {
+                LOG.info("Verified integration logs - All values OK!");
+                return;
+            }
+
+            if (!printLogs) {
+                LOG.warn(String.format("Waiting for integration '%s' to log message - retry in %s ms", integration, delayBetweenAttempts));
+            }
+
+            try {
+                Thread.sleep(delayBetweenAttempts);
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for integration logs", e);
+            }
+        }
+
+        throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
+                new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
+                        "has not printed message '%s' after %d attempts", integration, message, maxAttempts)));
+    }
+
+    private Long verifyLocalIntegrationStatus(String integration, String phase, TestContext context) {
+        INTEGRATION_STATUS_LOG.info(String.format("Waiting for integration '%s' to be in state '%s'", integration, phase));
+
+        for (int i = 0; i < maxAttempts; i++) {
+            if (context.getVariables().containsKey(integration + ":pid")) {
+                Long pid = context.getVariable(integration + ":pid", Long.class);
+                Map<String, String> properties = camel().get(pid);
+                if ((phase.equals("Stopped") && properties.isEmpty()) || (!properties.isEmpty() && properties.get("STATUS").equals(phase))) {
+                    LOG.info(String.format("Verified integration '%s' state '%s' - All values OK!", integration, phase));
+                    return pid;
+                }
+            }
+
+            LOG.info(String.format("Waiting for integration '%s' to be in state '%s'- retry in %s ms", integration, phase, delayBetweenAttempts));
+            try {
+                Thread.sleep(delayBetweenAttempts);
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for integration state", e);
+            }
+        }
+
+        throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
+                new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
+                        "is not in state '%s' after %d attempts", integration, phase, maxAttempts)));
+
+    }
+
+    private void verifyIntegration(String namespace, String integration, TestContext context) {
+        Pod pod = verifyIntegrationPod(integration, context.replaceDynamicContentInString(phase), namespace);
+
+        if (logMessage != null) {
+            verifyIntegrationLogs(pod, integration, namespace, context.replaceDynamicContentInString(logMessage));
         }
     }
 
@@ -114,7 +206,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
 
         throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
                 new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
-                        "has not printed message '%s' after %d attempts", name, logMessage, maxAttempts)));
+                        "has not printed message '%s' after %d attempts", name, message, maxAttempts)));
     }
 
     /**

@@ -42,100 +42,19 @@
 
     <dependency>
       <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-camel</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-camel-k</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-kubernetes</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-knative</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-http</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-jdbc</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-testcontainers</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-jms</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-kafka</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-openapi</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-groovy</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-selenium</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-standard</artifactId>
+      <artifactId>yaks-runtime-core</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <!-- ****************************** -->
     <!--                                -->
-    <!-- DEFAULT VALIDATION MODULES     -->
+    <!-- UNIT TEST FRAMEWORK     -->
     <!--                                -->
     <!-- ****************************** -->
 
     <dependency>
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-junit</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-spring</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-groovy</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-xml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-validation-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.consol.citrus</groupId>
-      <artifactId>citrus-validation-text</artifactId>
     </dependency>
 
     <!-- ****************************** -->

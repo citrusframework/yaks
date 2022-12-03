@@ -46,6 +46,7 @@ type RootCmdOptions struct {
 	KubeConfig    string             `mapstructure:"kube-config"`
 	Namespace     string             `mapstructure:"namespace"`
 	Verbose       bool               `mapstructure:"verbose"`
+	Local         bool               `mapstructure:"local"`
 }
 
 // NewYaksCommand --.
@@ -70,6 +71,7 @@ func NewYaksCommand(ctx context.Context) (*cobra.Command, error) {
 	cmd.PersistentFlags().StringVar(&options.KubeConfig, "config", os.Getenv("KUBECONFIG"), "Path to the config file to use for CLI requests")
 	cmd.PersistentFlags().StringVarP(&options.Namespace, "namespace", "n", "", "Namespace to use for all operations")
 	cmd.PersistentFlags().BoolVarP(&options.Verbose, "verbose", "v", false, "Print details while performing an operation")
+	cmd.PersistentFlags().BoolVar(&options.Local, "local", false, "Run command in local mode")
 
 	cmd.AddCommand(newCmdCompletion(&cmd))
 	cmd.AddCommand(newCmdVersion())
@@ -149,19 +151,22 @@ func addHelpSubCommands(cmd *cobra.Command) error {
 }
 
 func (command *RootCmdOptions) preRun(cmd *cobra.Command, _ []string) error {
-	if command.Namespace == "" && !isOfflineCommand(cmd) {
-		var current string
+	if !command.Local && !isOfflineCommand(cmd) {
 		c, err := command.GetCmdClient()
 		if err != nil {
 			return errors.Wrap(err, "cannot get command client")
 		}
-		current, err = c.GetCurrentNamespace(command.KubeConfig)
-		if err != nil {
-			return errors.Wrap(err, "cannot get current namespace")
-		}
-		err = cmd.Flag("namespace").Value.Set(current)
-		if err != nil {
-			return err
+
+		if command.Namespace == "" {
+			var current string
+			current, err = c.GetCurrentNamespace(command.KubeConfig)
+			if err != nil {
+				return errors.Wrap(err, "cannot get current namespace")
+			}
+			err = cmd.Flag("namespace").Value.Set(current)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

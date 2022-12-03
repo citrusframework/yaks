@@ -17,24 +17,28 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
+import java.util.Map;
+
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
+import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
+
 /**
- * Test action verifies Kamelet CRD is present on given namespace.
+ * Test action verifies Kamelet binding is present in given namespace.
  *
  * @author Christoph Deppisch
  */
 public class VerifyKameletBindingAction extends AbstractKameletAction {
 
-    private final String name;
+    private final String bindingName;
 
     /**
      * Constructor using given builder.
@@ -42,29 +46,47 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
      */
     public VerifyKameletBindingAction(Builder builder) {
         super("verify-kamelet-binding", builder);
-        this.name = builder.name;
+        this.bindingName = builder.bindingName;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        String bindingName = context.replaceDynamicContentInString(name);
+        String name = context.replaceDynamicContentInString(this.bindingName);
+
+        LOG.info(String.format("Verify Kamelet binding '%s'", name));
+
+        if (YaksSettings.isLocal(clusterType(context))) {
+            verifyLocalKameletBinding(name, context);
+        } else {
+            verifyKameletBinding(namespace(context), name);
+        }
+
+        LOG.info(String.format("Successfully verified Kamelet binding '%s' - All values OK!", name));
+    }
+
+    private void verifyLocalKameletBinding(String name, TestContext context) {
+        Long pid = context.getVariable(name + ":pid", Long.class);
+        Map<String, String> properties = camel().get(pid);
+        if ((!properties.isEmpty() && properties.get("STATUS").equals("Running"))) {
+            LOG.info(String.format("Verified Kamelet binding '%s' state 'Running' - All values OK!", name));
+        } else {
+            throw new ValidationException(String.format("Failed to retrieve Kamelet binding '%s' in state 'Running'", name));
+        }
+    }
+
+    private void verifyKameletBinding(String namespace, String name) {
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
         KameletBinding binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(namespace(context))
-                .withName(bindingName)
+                .inNamespace(namespace)
+                .withName(name)
                 .get();
 
         if (binding == null) {
-            throw new ValidationException(String.format("Failed to retrieve KameletBinding '%s' in namespace '%s'", name, namespace(context)));
+            throw new ValidationException(String.format("Failed to retrieve Kamelet binding '%s' in namespace '%s'", name, namespace));
         }
 
-        LOG.info("KamletBinding validation successful - All values OK!");
         if (LOG.isDebugEnabled()) {
-            try {
-                LOG.debug(KubernetesSupport.json().writeValueAsString(binding));
-            } catch (JsonProcessingException e) {
-                LOG.warn("Unable to dump KameletBinding data", e);
-            }
+            LOG.debug(KubernetesSupport.yaml().dumpAsMap(binding));
         }
     }
 
@@ -73,14 +95,14 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
      */
     public static final class Builder extends AbstractKameletAction.Builder<VerifyKameletBindingAction, Builder> {
 
-        private String name;
+        private String bindingName;
 
         public Builder isAvailable() {
             return this;
         }
 
-        public Builder isAvailable(String integrationName) {
-            this.name = integrationName;
+        public Builder isAvailable(String name) {
+            this.bindingName = name;
             return this;
         }
 

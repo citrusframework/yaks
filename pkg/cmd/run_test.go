@@ -21,11 +21,14 @@ import (
 	"os"
 	r "runtime"
 	"testing"
+	"time"
 
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/stretchr/testify/assert"
 )
+
+var timeout, _ = time.ParseDuration("10s")
 
 func TestStepOsCheck(t *testing.T) {
 	steps := []config.StepConfig{
@@ -45,7 +48,7 @@ func TestStepOsCheck(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
 	assert.Nil(t, scriptError)
 }
@@ -81,7 +84,7 @@ func TestStepEnvCheck(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
 	assert.Nil(t, scriptError)
 }
@@ -117,7 +120,7 @@ func TestStepCheckCombinations(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
 	assert.Nil(t, scriptError)
 }
@@ -146,7 +149,7 @@ func TestStepOnFailure(t *testing.T) {
 	saveErr := func(err error) {
 		scriptError = err
 	}
-	runSteps(steps, "default", "", &v1alpha1.TestResults{}, saveErr)
+	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
 	assert.Nil(t, scriptError)
 }
