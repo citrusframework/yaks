@@ -26,7 +26,7 @@ import org.citrusframework.yaks.jbang.commands.Run;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "yab", description = "YAKS CLI", mixinStandardHelpOptions = true)
+@Command(name = "yaks", description = "YAKS CLI", mixinStandardHelpOptions = true)
 public class YaksJBangMain implements Callable<Integer> {
     private static CommandLine commandLine;
 
