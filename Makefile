@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION := 0.12.0-SNAPSHOT
-SNAPSHOT_VERSION := 0.12.0-SNAPSHOT
+VERSION := 0.13.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.13.0-SNAPSHOT
 OPERATOR_VERSION := $(subst -SNAPSHOT,,$(VERSION))
 LAST_RELEASED_IMAGE_NAME := yaks-operator
 LAST_RELEASED_VERSION := 0.10.0
