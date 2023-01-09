@@ -67,6 +67,7 @@ release() {
 
     cross_compile "$working_dir" yaks-${release_version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
     cross_compile "$working_dir" yaks-${release_version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
+    cross_compile "$working_dir" yaks-${release_version}-mac-arm64bit "$build_dir" darwin arm64 "$build_flags"
     cross_compile "$working_dir" yaks-${release_version}-windows-64bit "$build_dir" windows amd64 "$build_flags"
 
     # Update project metadata to new release version
@@ -107,6 +108,7 @@ release() {
     # Build Docker image
     mkdir -p ${working_dir}/build/_output/bin
     export GOOS=linux
+    export GOARCH=amd64
     eval go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
     docker build -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 

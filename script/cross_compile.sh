@@ -33,4 +33,5 @@ cd $working_dir
 
 cross_compile "$working_dir" yaks-${version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
 cross_compile "$working_dir" yaks-${version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
+cross_compile "$working_dir" yaks-${version}-mac-arm64bit "$build_dir" darwin arm64 "$build_flags"
 cross_compile "$working_dir" yaks-${version}-windows-64bit "$build_dir" windows amd64 "$build_flags"
