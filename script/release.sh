@@ -111,7 +111,7 @@ release() {
     export GOARCH=amd64
     export CGO_ENABLED=0
     eval go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
-    docker build -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
+    docker build --platform=linux/amd64 -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 
     # Push everything (if configured)
     git_push "$working_dir" "$release_version"
