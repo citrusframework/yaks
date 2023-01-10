@@ -20,8 +20,9 @@ LAST_RELEASED_IMAGE_NAME := yaks-operator
 LAST_RELEASED_VERSION := 0.10.0
 
 CONTROLLER_GEN_VERSION := v0.6.1
-OPERATOR_SDK_VERSION := v1.14.0
-KUSTOMIZE_VERSION := v4.1.2
+CODEGEN_VERSION := v0.25.2
+OPERATOR_SDK_VERSION := v1.16.0
+KUSTOMIZE_VERSION := v4.5.4
 DEFAULT_IMAGE := docker.io/citrusframework/yaks
 IMAGE_NAME ?= $(DEFAULT_IMAGE)
 
@@ -76,13 +77,13 @@ check-repo:
 
 generate: generate-deepcopy generate-crd generate-client
 
-generate-client:
+generate-client: codegen-tools-install
 	./script/gen_client.sh
 
-generate-crd: controller-gen
-	CONTROLLER_GEN=$(CONTROLLER_GEN) ./script/gen_crd.sh
+generate-crd: codegen-tools-install
+	./script/gen_crd.sh
 
-generate-deepcopy: controller-gen
+generate-deepcopy: codegen-tools-install
 	cd pkg/apis/yaks && $(CONTROLLER_GEN) paths="./..." object
 
 lint:
@@ -100,7 +101,13 @@ test: build
 	go test ./...
 
 build-yaks:
+	@echo "####### Building yaks CLI..."
+	@# Ensure the binary is statically linked when building on Linux due to ABI changes in newer glibc 2.32, otherwise it would not run on older versions.
+ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Linux)
+	CGO_ENABLED=0 go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
+else
 	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
+endif
 
 build-resources:
 	go generate ./pkg/...
@@ -173,17 +180,18 @@ version:
 
 .PHONY: clean build build-yaks build-resources generate-docs release-docs release-docs-dry-run release-docs-major update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
 
+codegen-tools-install: controller-gen
+	@# We must force the installation to make sure we are using the correct version
+	@# Note: as there is no --version in the tools, we cannot rely on cached local versions
+	@echo "Installing k8s.io/code-generator tools with version $(CODEGEN_VERSION)"
+	go install k8s.io/code-generator/cmd/client-gen@$(CODEGEN_VERSION)
+	go install k8s.io/code-generator/cmd/lister-gen@$(CODEGEN_VERSION)
+	go install k8s.io/code-generator/cmd/informer-gen@$(CODEGEN_VERSION)
+
 # find or download controller-gen if necessary
 controller-gen:
 ifeq (, $(shell command -v controller-gen 2> /dev/null))
-	@{ \
-	set -e ;\
-	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
-	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	go get sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION) ;\
-	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
-	}
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
 CONTROLLER_GEN=$(GOBIN)/controller-gen
 else
 CONTROLLER_GEN=$(shell command -v controller-gen 2> /dev/null)
@@ -204,27 +212,39 @@ else
 KUSTOMIZE=$(shell command -v kustomize 2> /dev/null)
 endif
 
-operator-sdk:
+detect-os:
+ifeq '$(findstring ;,$(PATH))' ';'
+OS := Windows
+OS_LOWER := windows
+else
+OS := $(shell echo $$(uname 2>/dev/null) || echo Unknown)
+OS := $(patsubst CYGWIN%,Cygwin,$(OS))
+OS := $(patsubst MSYS%,MSYS,$(OS))
+OS := $(patsubst MINGW%,MSYS,$(OS))
+OS_LOWER := $(shell echo $(OS) | tr '[:upper:]' '[:lower:]')
+endif
+ifeq ($(shell uname -m), arm64)
+OS_ARCH=arm64
+else
+OS_ARCH=amd64
+endif
+
+operator-sdk: detect-os
 ifeq (, $(shell command -v operator-sdk 2> /dev/null))
 	@{ \
 	set -e ;\
-	if [ "$(shell uname -s 2>/dev/null || echo Unknown)" == "Darwin" ] ; then \
-		curl \
-			-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_darwin_amd64 \
-			-o operator-sdk ; \
-	else \
-		curl \
-			-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_linux_amd64 \
-			-o operator-sdk ; \
-	fi ;\
+	curl \
+		-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS_LOWER)_$(OS_ARCH) \
+		-o operator-sdk ; \
 	chmod +x operator-sdk ;\
+	mkdir -p $(GOBIN) ;\
 	mv operator-sdk $(GOBIN)/ ;\
 	}
 OPERATOR_SDK=$(GOBIN)/operator-sdk
 else
 	@{ \
 	echo -n "operator-sdk already installed: "; \
-  operator-sdk version | sed -n 's/.*"v\([^"]*\)".*/\1/p'; \
+	operator-sdk version | sed -n 's/.*"v\([^"]*\)".*/\1/p'; \
 	echo " If this is less than $(OPERATOR_SDK_VERSION) then please consider moving it aside and allowing the approved version to be downloaded."; \
 	}
 OPERATOR_SDK=$(shell command -v operator-sdk 2> /dev/null)

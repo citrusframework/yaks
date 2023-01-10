@@ -109,6 +109,7 @@ release() {
     mkdir -p ${working_dir}/build/_output/bin
     export GOOS=linux
     export GOARCH=amd64
+    export CGO_ENABLED=0
     eval go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
     docker build -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 

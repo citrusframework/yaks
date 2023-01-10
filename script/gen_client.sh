@@ -18,7 +18,6 @@
 location=$(dirname $0)
 rootdir=$(realpath ${location}/../)
 
-unset GOPATH
 GO111MODULE=on
 
 # Entering the client module
@@ -26,7 +25,7 @@ cd $rootdir/pkg/client/yaks
 
 echo "Generating Go client code..."
 
-go run k8s.io/code-generator/cmd/client-gen \
+$(go env GOPATH)/bin/client-gen \
 	--input=yaks/v1alpha1 \
 	--go-header-file=$rootdir/script/headers/default.txt \
 	--clientset-name "versioned"  \
@@ -34,13 +33,13 @@ go run k8s.io/code-generator/cmd/client-gen \
 	--output-base=. \
 	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/clientset
 
-go run k8s.io/code-generator/cmd/lister-gen \
+$(go env GOPATH)/bin/lister-gen \
 	--input-dirs=github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1 \
 	--go-header-file=$rootdir/script/headers/default.txt \
 	--output-base=. \
 	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/listers
 
-go run k8s.io/code-generator/cmd/informer-gen \
+$(go env GOPATH)/bin/informer-gen \
   --versioned-clientset-package=github.com/citrusframework/yaks/pkg/client/yaks/clientset/versioned \
 	--listers-package=github.com/citrusframework/yaks/pkg/client/yaks/listers \
 	--input-dirs=github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1 \
