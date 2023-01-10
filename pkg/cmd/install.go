@@ -99,7 +99,6 @@ type installCmdOptions struct {
 	olmOptions              olm.Options
 }
 
-// nolint: gocyclo
 func (o *installCmdOptions) install(cobraCmd *cobra.Command, _ []string) error {
 	var collection *kubernetes.Collection
 	if o.OutputFormat != "" {

@@ -120,7 +120,7 @@ func HasPermissionToInstall(ctx context.Context, client client.Client, namespace
 			return false, nil
 		}
 
-		group, err := findOperatorGroup(ctx, client, namespace, options)
+		group, err := findOperatorGroup(ctx, client, namespace)
 		if err != nil {
 			return false, err
 		}
@@ -179,7 +179,7 @@ func Install(ctx context.Context, client client.Client, namespace string, global
 	}
 
 	if !global {
-		group, err := findOperatorGroup(ctx, client, namespace, options)
+		group, err := findOperatorGroup(ctx, client, namespace)
 		if err != nil {
 			return false, err
 		}
@@ -273,8 +273,7 @@ func findCSV(ctx context.Context, client client.Client, namespace string, option
 	return nil, nil
 }
 
-//nolint:unparam
-func findOperatorGroup(ctx context.Context, client client.Client, namespace string, options Options) (*operatorsv1.OperatorGroup, error) {
+func findOperatorGroup(ctx context.Context, client client.Client, namespace string) (*operatorsv1.OperatorGroup, error) {
 	opGroupList := operatorsv1.OperatorGroupList{}
 	if err := client.List(ctx, &opGroupList, runtime.InNamespace(namespace)); err != nil {
 		return nil, err

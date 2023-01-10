@@ -94,7 +94,6 @@ var defaultListOptions = metav1.ListOptions{
 	LabelSelector: config.DefaultAppLabel,
 }
 
-// nolint: gocyclo
 func (o *uninstallCmdOptions) uninstall(cmd *cobra.Command, _ []string) error {
 	c, err := o.GetCmdClient()
 	if err != nil {
