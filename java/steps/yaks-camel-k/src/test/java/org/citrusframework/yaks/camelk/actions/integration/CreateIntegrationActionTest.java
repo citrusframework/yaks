@@ -172,6 +172,7 @@ public class CreateIntegrationActionTest {
 
     @Test
     public void shouldCreateLocalJBangIntegration() {
+        camel().version();
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)
                 .integration("foo")

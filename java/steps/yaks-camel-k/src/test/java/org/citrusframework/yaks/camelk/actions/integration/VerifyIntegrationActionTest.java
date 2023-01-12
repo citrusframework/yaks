@@ -52,6 +52,7 @@ public class VerifyIntegrationActionTest {
     @BeforeClass
     public static void setup() throws IOException {
         sampleIntegration = new ClassPathResource("simple.groovy").getFile().toPath();
+        camel().version();
     }
 
     @Test

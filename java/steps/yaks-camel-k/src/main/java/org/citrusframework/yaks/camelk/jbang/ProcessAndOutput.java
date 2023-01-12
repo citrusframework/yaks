@@ -144,7 +144,7 @@ public class ProcessAndOutput {
         try {
             if (isUnix()) {
                 // wait for descendant process to be available
-                await().atMost(5000L, TimeUnit.MILLISECONDS)
+                await().atMost(15000L, TimeUnit.MILLISECONDS)
                         .until(() -> process.descendants().findAny().isPresent());
                 return process.descendants()
                         .filter(p -> p.info().commandLine().orElse("").contains(CamelJBangSettings.getCamelApp()))

@@ -32,6 +32,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActionTest;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +53,13 @@ public class CreateKameletBindingActionTest {
 
     private final TestContext context = TestContextFactory.newInstance().getObject();
 
+    @BeforeClass
+    public static void setup() throws IOException {
+        camel().version();
+    }
+
     @Test
     public void shouldCreateLocalJBangKameletBinding() throws IOException {
-        System.setProperty("yaks.jbang.camel.dump.integration.output", "true");
         CreateKameletBindingAction action = new CreateKameletBindingAction.Builder()
                 .client(kubernetesClient)
                 .binding("timer-to-log-binding")

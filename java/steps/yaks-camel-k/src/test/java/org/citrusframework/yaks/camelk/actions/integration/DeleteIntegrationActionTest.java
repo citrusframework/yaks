@@ -52,6 +52,7 @@ public class DeleteIntegrationActionTest {
     @BeforeClass
     public static void setup() throws IOException {
         sampleIntegration = new ClassPathResource("simple.groovy").getFile().toPath();
+        camel().version();
     }
 
     @Test

@@ -52,6 +52,7 @@ public class DeleteKameletBindingActionTest {
     @BeforeClass
     public static void setup() throws IOException {
         sampleBinding = new ClassPathResource("timer-to-log-binding.yaml").getFile().toPath();
+        camel().version();
     }
 
     @Test

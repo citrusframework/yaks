@@ -20,7 +20,6 @@ package org.citrusframework.yaks.camelk.actions.kamelet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
@@ -33,17 +32,11 @@ import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 public class VerifyKameletBindingActionTest {
-
-    /** Logger */
-    private static final Logger LOG = LoggerFactory.getLogger(VerifyKameletBindingActionTest.class);
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -57,24 +50,24 @@ public class VerifyKameletBindingActionTest {
     @BeforeClass
     public static void setup() throws IOException {
         sampleBinding = new ClassPathResource("timer-to-log-binding.yaml").getFile().toPath();
+        camel().version();
     }
 
     @Test
     public void shouldVerifyLocalJBangIntegration() {
-        ProcessAndOutput pao = camel().run("timer-to-log-binding.yaml", sampleBinding);
+        ProcessAndOutput pao = camel().run("timer-to-log-binding", sampleBinding);
         Long pid = pao.getCamelProcessId();
 
         try {
             VerifyKameletBindingAction action = new VerifyKameletBindingAction.Builder()
                     .client(kubernetesClient)
-                    .isAvailable("timer-to-log-binding.yaml")
+                    .isAvailable("timer-to-log-binding")
                     .clusterType(YaksClusterType.LOCAL)
+                    .maxAttempts(10)
                     .build();
 
-            context.setVariable("timer-to-log-binding.yaml:pid", pid);
-            context.setVariable("timer-to-log-binding.yaml:process:" + pid, pao);
-
-            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
+            context.setVariable("timer-to-log-binding:pid", pid);
+            context.setVariable("timer-to-log-binding:process:" + pid, pao);
 
             action.execute(context);
         } finally {

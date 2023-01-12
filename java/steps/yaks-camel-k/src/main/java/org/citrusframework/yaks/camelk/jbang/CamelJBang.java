@@ -137,6 +137,14 @@ public class CamelJBang {
     }
 
     /**
+     * Get Camel JBang version.
+     */
+    public String version() {
+        ProcessAndOutput p = execute(camel("--version"));
+        return p.getOutput();
+    }
+
+    /**
      * Get details for integration previously run via JBang Camel app. Integration is identified by its process id.
      * @param pid
      */
@@ -210,13 +218,13 @@ public class CamelJBang {
     }
 
     private static void detectJBang() {
-        ProcessAndOutput result = version();
+        ProcessAndOutput result = getVersion();
         if (result.getProcess().exitValue() == OK_EXIT_CODE) {
             LOG.info("Found JBang v" + result.getOutput());
         } else {
             LOG.warn("JBang not found. Downloading ...");
             download();
-            result = version();
+            result = getVersion();
             if (result.getProcess().exitValue() == OK_EXIT_CODE) {
                 LOG.info("Using JBang v" + result.getOutput());
             }
@@ -264,7 +272,7 @@ public class CamelJBang {
         installDir = installPath.resolve(homePath);
     }
 
-    private static ProcessAndOutput version() {
+    private static ProcessAndOutput getVersion() {
         return execute(jBang("version"));
     }
 

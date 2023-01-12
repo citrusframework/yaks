@@ -40,6 +40,9 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
 
     private final String bindingName;
 
+    private final int maxAttempts;
+    private final long delayBetweenAttempts;
+
     /**
      * Constructor using given builder.
      * @param builder
@@ -47,6 +50,8 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
     public VerifyKameletBindingAction(Builder builder) {
         super("verify-kamelet-binding", builder);
         this.bindingName = builder.bindingName;
+        this.maxAttempts = builder.maxAttempts;
+        this.delayBetweenAttempts = builder.delayBetweenAttempts;
     }
 
     @Override
@@ -66,20 +71,46 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
 
     private void verifyLocalKameletBinding(String name, TestContext context) {
         Long pid = context.getVariable(name + ":pid", Long.class);
-        Map<String, String> properties = camel().get(pid);
-        if ((!properties.isEmpty() && properties.get("STATUS").equals("Running"))) {
-            LOG.info(String.format("Verified Kamelet binding '%s' state 'Running' - All values OK!", name));
-        } else {
-            throw new ValidationException(String.format("Failed to retrieve Kamelet binding '%s' in state 'Running'", name));
+
+        for (int i = 0; i < maxAttempts; i++) {
+            Map<String, String> properties = camel().get(pid);
+            if ((!properties.isEmpty() && properties.get("STATUS").equals("Running"))) {
+                LOG.info(String.format("Verified Kamelet binding '%s' state 'Running' - All values OK!", name));
+                return;
+            }
+
+            LOG.info(String.format("Waiting for Kamelet binding '%s' to be in state 'Running'- retry in %s ms", name, delayBetweenAttempts));
+            try {
+                Thread.sleep(delayBetweenAttempts);
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for Kamelet binding", e);
+            }
         }
+
+        throw new ValidationException(String.format("Failed to retrieve Kamelet binding '%s' in state 'Running'", name));
     }
 
     private void verifyKameletBinding(String namespace, String name) {
         CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
-        KameletBinding binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .get();
+
+        KameletBinding binding = null;
+        for (int i = 0; i < maxAttempts; i++) {
+            binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .get();
+
+            if (binding == null) {
+                LOG.info(String.format("Waiting for Kamelet binding '%s' - retry in %s ms", name, delayBetweenAttempts));
+                try {
+                    Thread.sleep(delayBetweenAttempts);
+                } catch (InterruptedException e) {
+                    LOG.warn("Interrupted while waiting for Kamelet binding", e);
+                }
+            } else {
+                break;
+            }
+        }
 
         if (binding == null) {
             throw new ValidationException(String.format("Failed to retrieve Kamelet binding '%s' in namespace '%s'", name, namespace));
@@ -97,12 +128,26 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
 
         private String bindingName;
 
+        private int maxAttempts = CamelKSettings.getMaxAttempts();
+        private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
+
+
         public Builder isAvailable() {
             return this;
         }
 
         public Builder isAvailable(String name) {
             this.bindingName = name;
+            return this;
+        }
+
+        public Builder maxAttempts(int maxAttempts) {
+            this.maxAttempts = maxAttempts;
+            return this;
+        }
+
+        public Builder delayBetweenAttempts(long delayBetweenAttempts) {
+            this.delayBetweenAttempts = delayBetweenAttempts;
             return this;
         }
 
