@@ -89,7 +89,7 @@
               <outputDirectory>${basedir}/dist</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${build.sourceDirectory}/main</directory>
+                  <directory>${project.build.sourceDirectory}/main</directory>
                   <includes>
                     <include>*.java</include>
                   </includes>
