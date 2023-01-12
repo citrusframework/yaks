@@ -33,6 +33,8 @@ type Groovy struct {
 }
 type XML struct {
 }
+type YAML struct {
+}
 
 func (language *Gherkin) GetName() string {
 	return "feature"
@@ -60,5 +62,14 @@ func (language *XML) SupportsFile(fileName string) bool {
 		strings.HasSuffix(fileName, fmt.Sprintf("test.%s", language.GetName()))
 }
 
+func (language *YAML) GetName() string {
+	return "yaml"
+}
+
+func (language *YAML) SupportsFile(fileName string) bool {
+	return strings.HasSuffix(fileName, fmt.Sprintf("it.%s", language.GetName())) ||
+		strings.HasSuffix(fileName, fmt.Sprintf("test.%s", language.GetName()))
+}
+
 // KnownLanguages is the list of all supported test languages.
-var KnownLanguages = []Language{&Gherkin{}, &Groovy{}, &XML{}}
+var KnownLanguages = []Language{&Gherkin{}, &Groovy{}, &XML{}, &YAML{}}

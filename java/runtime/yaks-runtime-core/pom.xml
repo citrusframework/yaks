@@ -119,6 +119,10 @@
       <groupId>com.consol.citrus</groupId>
       <artifactId>citrus-xml</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.consol.citrus</groupId>
+      <artifactId>citrus-yaml</artifactId>
+    </dependency>
 
     <!-- ****************************** -->
     <!--                                -->
