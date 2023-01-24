@@ -39,10 +39,11 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-    - name: Set up JDK 11
-      uses: AdoptOpenJDK/install-jdk@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v3
       with:
-        version: "11"
+        java-version: '11'
+        distribution: 'temurin'
     - name: Install Go
       uses: actions/setup-go@v1
       with:
@@ -74,10 +75,11 @@ jobs:
       YAKS_IMAGE_VERSION: "latest"
       YAKS_RUN_OPTIONS: "--timeout=180s"
     steps:
-    - name: Set up JDK 11
-      uses: AdoptOpenJDK/install-jdk@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v3
       with:
-        version: "11"
+        java-version: '11'
+        distribution: 'temurin'
     - name: Install Go
       uses: actions/setup-go@v1
       with:
@@ -122,7 +124,7 @@ jobs:
         export KAMEL_INSTALL_REGISTRY=$KIND_REGISTRY
         export KAMEL_INSTALL_REGISTRY_INSECURE=true
         
-        kamel install --global --olm=false
+        kamel install --global --olm=false --operator-env-vars KAMEL_BASE_IMAGE=docker.io/eclipse-temurin:11
     - name: Install YAKS
       run: |
         yaks install --operator-image $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
