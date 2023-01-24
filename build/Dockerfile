@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM adoptopenjdk/openjdk11:slim
+FROM eclipse-temurin:11
 
 ARG MAVEN_VERSION="3.8.6"
 ARG MAVEN_HOME="/usr/share/maven"
