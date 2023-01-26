@@ -807,6 +807,7 @@ func (o *runCmdOptions) executeLocal(ctx context.Context, test *v1alpha1.Test, s
 		return setErrorStatus(test, source, err)
 	}
 
+	args = append(args, fmt.Sprintf("-Dyaks.jbang.version=%s", jbang.YaksVersion))
 	args = jbang.AddDependencies(args, runConfig, append(getModelineDeps(test.Spec.Source.Content), o.Dependencies...)...)
 	args = jbang.AddRepositories(args, runConfig, o.Repositories...)
 	args = jbang.AddCucumberGlue(args, append(runConfig.Config.Runtime.Cucumber.Glue, o.Glue...)...)

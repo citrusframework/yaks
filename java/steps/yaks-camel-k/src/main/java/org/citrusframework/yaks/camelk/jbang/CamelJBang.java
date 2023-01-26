@@ -298,6 +298,7 @@ public class CamelJBang {
      */
     private static List<String> camel(String... args) {
         List<String> jBangArgs = new ArrayList<>();
+        jBangArgs.add(String.format("-Dcamel.jbang.version=%s", CamelJBangSettings.getCamelVersion()));
         jBangArgs.add(CamelJBangSettings.getCamelApp());
         jBangArgs.addAll(List.of(args));
         return jBang(jBangArgs);

@@ -22,9 +22,11 @@ import (
 	"strings"
 
 	"github.com/citrusframework/yaks/pkg/cmd/config"
+	"github.com/citrusframework/yaks/pkg/util/defaults"
 )
 
 var YaksApp = "yaks@citrusframework/yaks"
+var YaksVersion = defaults.Version
 
 func AddDependencies(args []string, runConfig *config.RunConfig, dependencies ...string) []string {
 	deps := make([]string, 0)

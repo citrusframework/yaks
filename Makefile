@@ -60,6 +60,7 @@ $(warning Could not retrieve a valid Git Commit)
 endif
 
 GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/cmd/jbang.YaksApp=$(YAKS_JBANG)
+GOLDFLAGS += -X github.com/citrusframework/yaks/pkg/cmd/jbang.YaksVersion=$(VERSION)
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -trimpath
 
 .DEFAULT_GOAL := default

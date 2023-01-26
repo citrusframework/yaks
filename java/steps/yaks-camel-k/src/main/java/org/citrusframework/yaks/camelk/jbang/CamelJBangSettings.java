@@ -33,6 +33,10 @@ public final class CamelJBangSettings {
     private static final String CAMEL_APP_ENV = JBANG_ENV_PREFIX + "CAMEL_APP";
     private static final String CAMEL_APP_DEFAULT = "camel@apache/camel";
 
+    private static final String CAMEL_VERSION_PROPERTY = JBANG_PROPERTY_PREFIX + "camel.version";
+    private static final String CAMEL_VERSION_ENV = JBANG_ENV_PREFIX + "CAMEL_VERSION";
+    private static final String CAMEL_VERSION_DEFAULT = "3.19.0";
+
     private static final String KAMELETS_LOCAL_DIR_PROPERTY = JBANG_PROPERTY_PREFIX + "kamelets.local.dir";
     private static final String KAMELETS_LOCAL_DIR_ENV = JBANG_ENV_PREFIX + "KAMELETS_LOCAL_DIR";
 
@@ -133,6 +137,15 @@ public final class CamelJBangSettings {
     public static String getCamelApp() {
         return System.getProperty(CAMEL_APP_PROPERTY,
                 System.getenv(CAMEL_APP_ENV) != null ? System.getenv(CAMEL_APP_ENV) : CAMEL_APP_DEFAULT);
+    }
+
+    /**
+     * Camel JBang version.
+     * @return
+     */
+    public static String getCamelVersion() {
+        return System.getProperty(CAMEL_VERSION_PROPERTY,
+                System.getenv(CAMEL_VERSION_ENV) != null ? System.getenv(CAMEL_VERSION_ENV) : CAMEL_VERSION_DEFAULT);
     }
 
 }
