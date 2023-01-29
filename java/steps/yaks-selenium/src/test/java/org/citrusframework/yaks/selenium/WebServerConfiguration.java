@@ -38,7 +38,7 @@ import com.consol.citrus.selenium.endpoint.SeleniumBrowser;
 import com.consol.citrus.selenium.endpoint.SeleniumBrowserBuilder;
 import com.consol.citrus.util.FileUtils;
 import org.citrusframework.yaks.selenium.page.UserFormPage;
-import org.openqa.selenium.remote.BrowserType;
+import org.openqa.selenium.remote.Browser;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,7 +61,7 @@ public class WebServerConfiguration {
     @Bean
     public SeleniumBrowser seleniumBrowser() {
         return new SeleniumBrowserBuilder()
-                .type(BrowserType.HTMLUNIT)
+                .type(Browser.HTMLUNIT.browserName())
                 .build();
     }
 

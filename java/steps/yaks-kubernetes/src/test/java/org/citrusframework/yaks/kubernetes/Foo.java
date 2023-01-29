@@ -21,8 +21,9 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
-import io.fabric8.kubernetes.client.CustomResourceList;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 
@@ -31,7 +32,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
  */
 @Group("yaks.dev")
 @Version("v1")
-public class Foo extends CustomResource<Foo.FooSpec, Foo.FooStatus> {
+public class Foo extends CustomResource<Foo.FooSpec, Foo.FooStatus> implements Namespaced {
 
     public static class FooSpec {
         @JsonProperty
@@ -59,6 +60,6 @@ public class Foo extends CustomResource<Foo.FooSpec, Foo.FooStatus> {
         }
     }
 
-    public static class FooList extends CustomResourceList<Foo> {
+    public static class FooList extends DefaultKubernetesResourceList<Foo> {
     }
 }

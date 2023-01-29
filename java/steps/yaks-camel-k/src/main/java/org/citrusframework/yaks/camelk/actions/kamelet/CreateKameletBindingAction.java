@@ -28,10 +28,7 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.YaksSettings;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.camelk.model.Integration;
@@ -134,10 +131,10 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
             LOG.debug(KubernetesSupport.yaml().dumpAsMap(binding));
         }
 
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
-        k8sClient.customResources(ctx, KameletBinding.class, KameletBindingList.class)
+        k8sClient.resources(KameletBinding.class, KameletBindingList.class)
                 .inNamespace(namespace)
-                .createOrReplace(binding);
+                .resource(binding)
+                .createOrReplace();
     }
 
     /**

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -36,7 +37,7 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
 @Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
-public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBindingStatus> {
+public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBindingStatus> implements Namespaced {
 
     public KameletBinding() {
         super();

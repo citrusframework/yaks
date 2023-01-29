@@ -27,12 +27,10 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"phase", "digest", "image", "dependencies", "profile", "integrationKit", "kit", "lastInitTimestamp", "platform", "generatedSources", "generatedResources",
         "failure", "runtimeProvider", "configuration", "conditions", "version", "replicas", "selector", "capabilities", "observedGeneration"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
 public class IntegrationStatus implements KubernetesResource {
 
     @JsonProperty("phase")
@@ -42,6 +40,7 @@ public class IntegrationStatus implements KubernetesResource {
     @JsonProperty("image")
     private String image;
     @JsonProperty("dependencies")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> dependencies;
     @JsonProperty("profile")
     private String profile;
@@ -54,8 +53,10 @@ public class IntegrationStatus implements KubernetesResource {
     @JsonProperty("platform")
     private String platform;
     @JsonProperty("generatedSources")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Source> generatedSources;
     @JsonProperty("generatedResources")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Resource> generatedResources;
     @JsonProperty("failure")
     private String failure;
@@ -64,8 +65,10 @@ public class IntegrationStatus implements KubernetesResource {
     @JsonProperty("runtimeProvider")
     private String runtimeProvider;
     @JsonProperty("configuration")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Configuration> configuration;
     @JsonProperty("conditions")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions;
     @JsonProperty("version")
     private String version;
@@ -74,6 +77,7 @@ public class IntegrationStatus implements KubernetesResource {
     @JsonProperty("selector")
     private String selector;
     @JsonProperty("capabilities")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> capabilities;
     @JsonProperty("observedGeneration")
     private Integer observedGeneration;
@@ -248,10 +252,11 @@ public class IntegrationStatus implements KubernetesResource {
         this.observedGeneration = observedGeneration;
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "status", "lastUpdateTime", "lastTransitionTime", "reason", "message"})
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Condition {
+    public static class Condition implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("status")
@@ -325,9 +330,10 @@ public class IntegrationStatus implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "value"})
-    public static class Configuration {
+    public static class Configuration implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("value")
@@ -359,10 +365,11 @@ public class IntegrationStatus implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"language", "loader", "type", "name", "content", "contentRef", "contentKey", "compression",
             "property-names", "interceptors"})
-    public static class Source extends DataSpec {
+    public static class Source extends DataSpec implements KubernetesResource {
         @JsonProperty("language")
         private String language;
         @JsonProperty("loader")
@@ -370,8 +377,10 @@ public class IntegrationStatus implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("interceptors")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private List<String> interceptors;
         @JsonProperty("property-names")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private List<String> propertyNames;
 
         public Source() {
@@ -423,9 +432,10 @@ public class IntegrationStatus implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "mountPath", "name", "content", "contentRef", "contentKey", "compression"})
-    public static class Resource extends DataSpec {
+    public static class Resource extends DataSpec implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("mountPath")
@@ -520,9 +530,10 @@ public class IntegrationStatus implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"apiVersion", "fieldPath", "kind", "name", "namespace", "resourceVersion", "uid"})
-    public static class IntegrationKit {
+    public static class IntegrationKit implements KubernetesResource {
         @JsonProperty("apiVersion")
         private String apiVersion;
         @JsonProperty("fieldPath")

@@ -77,7 +77,7 @@ public class WatchPodLogsAction extends AbstractKubernetesAction {
             containerName = pod.getSpec().getContainers().get(0).getName();
         }
 
-        PodResource<Pod> podRes = getKubernetesClient().pods()
+        PodResource podRes = getKubernetesClient().pods()
                 .inNamespace(namespace(context))
                 .withName(pod.getMetadata().getName());
 

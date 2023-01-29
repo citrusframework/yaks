@@ -21,10 +21,8 @@ import java.util.Map;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -91,11 +89,9 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
     }
 
     private void verifyKameletBinding(String namespace, String name) {
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletBindingCRDContext(CamelKSettings.getKameletApiVersion());
-
         KameletBinding binding = null;
         for (int i = 0; i < maxAttempts; i++) {
-            binding = getKubernetesClient().customResources(ctx, KameletBinding.class, KameletBindingList.class)
+            binding = getKubernetesClient().resources(KameletBinding.class, KameletBindingList.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .get();

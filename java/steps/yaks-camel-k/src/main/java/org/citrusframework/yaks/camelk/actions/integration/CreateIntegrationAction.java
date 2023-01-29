@@ -37,10 +37,7 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import com.consol.citrus.variable.VariableUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.YaksSettings;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
@@ -143,10 +140,10 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             LOG.debug(KubernetesSupport.yaml().dumpAsMap(integration));
         }
 
-        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        k8sClient.customResources(ctx, Integration.class, IntegrationList.class)
+        k8sClient.resources(Integration.class, IntegrationList.class)
                 .inNamespace(namespace)
-                .createOrReplace(integration);
+                .resource(integration)
+                .createOrReplace();
     }
 
     /**

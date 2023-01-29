@@ -69,7 +69,7 @@ Add the following configuration to the `yaks-config.yaml` in your test.
 config:
   runtime:
     selenium:
-      image: selenium/standalone-chrome:88.0
+      image: selenium/standalone-chrome:latest
     env:
       - name: YAKS_SELENIUM_BROWSER_TYPE
         value: chrome
@@ -77,7 +77,7 @@ config:
         value: http://localhost:4444/wd/hub
 ----
 
-This sets the Selenium container image (`selenium/standalone-chrome:88.0`), the browser type and the remote web driver URL.
+This sets the Selenium container image (`selenium/standalone-chrome:latest`), the browser type and the remote web driver URL.
 YAKS automatically starts the given Selenium container image and connects the browser to the remote web driver.
 
 This way you can run the UI tests in a Kubernetes environment.

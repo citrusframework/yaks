@@ -17,10 +17,10 @@
 
 package org.citrusframework.yaks.camelk.model;
 
-import io.fabric8.kubernetes.client.CustomResourceList;
+import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
 
 /**
  * @author Christoph Deppisch
  */
-public class IntegrationList extends CustomResourceList<Integration> {
+public class IntegrationList extends DefaultKubernetesResourceList<Integration> {
 }

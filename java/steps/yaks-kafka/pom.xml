@@ -50,6 +50,16 @@
       <artifactId>citrus-kafka</artifactId>
     </dependency>
 
+    <!-- Zookeeper Netty -->
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-epoll</artifactId>
+    </dependency>
+
     <!-- Test scope -->
     <dependency>
       <groupId>io.cucumber</groupId>

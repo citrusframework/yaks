@@ -20,10 +20,7 @@ package org.citrusframework.yaks.camelk.actions.integration;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.citrusframework.yaks.YaksSettings;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
@@ -65,8 +62,7 @@ public class DeleteIntegrationAction extends AbstractCamelKAction {
      * @param name
      */
     private static void deleteIntegration(KubernetesClient k8sClient, String namespace, String name) {
-        CustomResourceDefinitionContext ctx = CamelKSupport.integrationCRDContext(CamelKSettings.getApiVersion());
-        k8sClient.customResources(ctx, Integration.class, IntegrationList.class)
+        k8sClient.resources(Integration.class, IntegrationList.class)
                 .inNamespace(namespace)
                 .withName(name)
                 .delete();

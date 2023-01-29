@@ -27,11 +27,9 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"integration", "replicas", "source", "steps", "sink"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
 public class KameletBindingSpec implements KubernetesResource {
 
     @JsonProperty("integration")
@@ -89,9 +87,10 @@ public class KameletBindingSpec implements KubernetesResource {
         return integration;
     }
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonDeserialize(using = JsonDeserializer.None.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"ref", "uri", "properties"})
-    public static class Endpoint {
+    public static class Endpoint implements KubernetesResource {
         @JsonProperty("ref")
         private ObjectReference ref;
 
@@ -99,6 +98,7 @@ public class KameletBindingSpec implements KubernetesResource {
         private String uri;
 
         @JsonProperty("properties")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private Map<String, Object> properties = new HashMap<>();
 
         public Endpoint() {
@@ -141,9 +141,10 @@ public class KameletBindingSpec implements KubernetesResource {
             this.properties = properties;
         }
 
+        @JsonDeserialize(using = JsonDeserializer.None.class)
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonPropertyOrder({"name", "kind", "namespace", "uid", "apiVersion", "resourceVersion", "fieldPath"})
-        public static class ObjectReference {
+        public static class ObjectReference implements KubernetesResource {
             @JsonProperty("name")
             private String name;
             @JsonProperty("kind")
