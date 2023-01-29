@@ -27,26 +27,27 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"phase", "conditions", "properties", "observedGeneration"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
 public class KameletStatus implements KubernetesResource {
 
     @JsonProperty("phase")
     private String phase;
     @JsonProperty("conditions")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions;
     @JsonProperty("properties")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Property> properties;
     @JsonProperty("observedGeneration")
     private Integer observedGeneration;
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "status", "lastUpdateTime", "lastTransitionTime", "reason", "message"})
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Condition {
+    public static class Condition implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("status")
@@ -120,9 +121,10 @@ public class KameletStatus implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"name", "default"})
-    public static class Property {
+    public static class Property implements KubernetesResource {
         @JsonProperty("name")
         private String name;
         @JsonProperty("default")

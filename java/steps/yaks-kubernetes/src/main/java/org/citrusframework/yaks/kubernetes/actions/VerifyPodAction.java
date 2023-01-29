@@ -127,7 +127,7 @@ public class VerifyPodAction extends AbstractKubernetesAction {
      * @return
      */
     private String getPodLogs(Pod pod, String namespace) {
-        PodResource<Pod> podRes = getKubernetesClient().pods()
+        PodResource podRes = getKubernetesClient().pods()
                 .inNamespace(namespace)
                 .withName(pod.getMetadata().getName());
 

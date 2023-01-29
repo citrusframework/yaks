@@ -21,9 +21,6 @@ import java.util.Arrays;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -67,8 +64,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
         return Arrays.stream(namespaces).distinct().anyMatch(namespace -> {
             LOG.info(String.format("Verify Kamlet '%s' exists in namespace '%s'", name, namespace));
 
-            CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
-            Kamelet kamelet = getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
+            Kamelet kamelet = getKubernetesClient().resources(Kamelet.class, KameletList.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .get();

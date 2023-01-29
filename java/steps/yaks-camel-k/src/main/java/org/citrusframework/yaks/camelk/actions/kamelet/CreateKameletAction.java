@@ -28,9 +28,6 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
@@ -135,10 +132,10 @@ public class CreateKameletAction extends AbstractKameletAction {
             }
         }
 
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
-        getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
+        getKubernetesClient().resources(Kamelet.class, KameletList.class)
                 .inNamespace(kameletNamespace(context))
-                .createOrReplace(kamelet);
+                .resource(kamelet)
+                .createOrReplace();
 
         LOG.info(String.format("Successfully created Kamelet '%s'", kamelet.getMetadata().getName()));
     }

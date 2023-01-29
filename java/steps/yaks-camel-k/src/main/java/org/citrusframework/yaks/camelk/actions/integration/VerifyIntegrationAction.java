@@ -216,7 +216,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
      * @return
      */
     private String getIntegrationPodLogs(Pod pod, String namespace) {
-        PodResource<Pod> podRes = getKubernetesClient().pods()
+        PodResource podRes = getKubernetesClient().pods()
                 .inNamespace(namespace)
                 .withName(pod.getMetadata().getName());
 

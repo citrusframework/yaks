@@ -17,10 +17,7 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import java.io.IOException;
-
 import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
@@ -47,17 +44,15 @@ public class DeleteCustomResourceAction extends AbstractKubernetesAction {
     @Override
     public void doExecute(TestContext context) {
         String resolvedName = context.replaceDynamicContentInString(resourceName);
-        try {
-            getKubernetesClient().customResource(
-                    KubernetesSupport.crdContext(
-                        context.replaceDynamicContentInString(type),
-                        context.replaceDynamicContentInString(group),
-                        context.replaceDynamicContentInString(kind),
-                        context.replaceDynamicContentInString(version)))
-                    .delete(namespace(context), resolvedName);
-        } catch (IOException e) {
-            throw new CitrusRuntimeException(String.format("Failed to delete custom resource '%s'", resolvedName), e);
-        }
+        getKubernetesClient().genericKubernetesResources(
+                KubernetesSupport.crdContext(
+                    context.replaceDynamicContentInString(type),
+                    context.replaceDynamicContentInString(group),
+                    context.replaceDynamicContentInString(kind),
+                    context.replaceDynamicContentInString(version)))
+                .inNamespace(namespace(context))
+                .withName(resolvedName)
+                .delete();
     }
 
     /**

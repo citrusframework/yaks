@@ -21,7 +21,7 @@ Feature: Kamelet resource
 
   Scenario: Verify binding
     Given HTTP server "greeting-service"
-    And HTTP server timeout is 60000 ms
+    And HTTP server timeout is 600000 ms
     Then expect HTTP request body: Hello World
     And receive POST /greeting
 

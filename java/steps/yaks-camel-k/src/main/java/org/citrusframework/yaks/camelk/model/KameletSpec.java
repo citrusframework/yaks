@@ -32,26 +32,28 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"definition", "dependencies", "types", "sources", "authorization", "flow", "template"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
 public class KameletSpec implements KubernetesResource {
 
     @JsonProperty("definition")
     private Definition definition;
     @JsonProperty("dependencies")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> dependencies;
     @JsonProperty("types")
     private Map<String, TypeSpec> types;
     @JsonProperty("sources")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Source> sources;
     @JsonProperty("authorization")
     private AuthorizationSpec authorization;
     @JsonProperty("flow")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> flow;
     @JsonProperty("template")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> template;
 
     public Definition getDefinition() {
@@ -112,9 +114,10 @@ public class KameletSpec implements KubernetesResource {
         this.template = template;
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"name", "content"})
-    public static class Source {
+    public static class Source implements KubernetesResource {
         @JsonProperty("content")
         private String content;
         @JsonProperty("name")
@@ -146,9 +149,10 @@ public class KameletSpec implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"mediaType", "schema"})
-    public static class TypeSpec {
+    public static class TypeSpec implements KubernetesResource {
         @JsonProperty("mediaType")
         private String mediaType;
         @JsonProperty("schema")
@@ -184,10 +188,11 @@ public class KameletSpec implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"title", "description", "required", "properties", "type"})
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Definition {
+    public static class Definition implements KubernetesResource {
         @JsonProperty("title")
         private String title;
         @JsonProperty("description")
@@ -195,8 +200,10 @@ public class KameletSpec implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("required")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private List<String> required = new ArrayList<>();
         @JsonProperty("properties")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private Map<String, PropertyConfig> properties = new HashMap<>();
 
         public void setTitle(String title) {
@@ -239,10 +246,11 @@ public class KameletSpec implements KubernetesResource {
             this.properties = properties;
         }
 
+        @JsonDeserialize(using = JsonDeserializer.None.class)
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonPropertyOrder({"title", "description", "type", "default", "example"})
         @JsonIgnoreProperties(ignoreUnknown = true)
-        public static class PropertyConfig {
+        public static class PropertyConfig implements KubernetesResource {
             @JsonProperty("title")
             private String title;
             @JsonProperty("description")
@@ -307,7 +315,8 @@ public class KameletSpec implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class AuthorizationSpec {
+    public static class AuthorizationSpec implements KubernetesResource {
     }
 }

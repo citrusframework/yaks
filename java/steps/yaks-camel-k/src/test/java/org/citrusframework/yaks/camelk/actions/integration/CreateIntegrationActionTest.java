@@ -33,6 +33,7 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -67,7 +68,7 @@ public class CreateIntegrationActionTest {
 
         action.execute(context);
 
-        Integration integration = kubernetesClient.resources(Integration.class).withName("helloworld").get();
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("quarkus"));
         Assert.assertEquals(2, integration.getSpec().getTraits().get("quarkus").getConfiguration().size());
         Assert.assertEquals(true, integration.getSpec().getTraits().get("quarkus").getConfiguration().get("enabled"));
@@ -91,7 +92,7 @@ public class CreateIntegrationActionTest {
 
         action.execute(context);
 
-        Integration integration = kubernetesClient.resources(Integration.class).withName("foo").get();
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("quarkus"));
         Assert.assertEquals(2, integration.getSpec().getTraits().get("quarkus").getConfiguration().size());
         Assert.assertEquals(true, integration.getSpec().getTraits().get("quarkus").getConfiguration().get("enabled"));
@@ -114,7 +115,7 @@ public class CreateIntegrationActionTest {
 
         action.execute(context);
 
-        Integration integration = kubernetesClient.resources(Integration.class).withName("helloworld").get();
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
         Assert.assertEquals(1, integration.getSpec().getTraits().size());
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
         Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
@@ -138,7 +139,7 @@ public class CreateIntegrationActionTest {
 
         action.execute(context);
 
-        Integration integration = kubernetesClient.resources(Integration.class).withName("foo").get();
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
         Assert.assertEquals(1, integration.getSpec().getTraits().size());
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
         Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
@@ -163,7 +164,7 @@ public class CreateIntegrationActionTest {
 
         action.execute(context);
 
-        Integration integration = kubernetesClient.resources(Integration.class).withName("foo").get();
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
         Assert.assertEquals(3, integration.getSpec().getConfiguration().size());
         Assert.assertEquals("secret", integration.getSpec().getConfiguration().get(0).getType());
         Assert.assertEquals("configmap", integration.getSpec().getConfiguration().get(1).getType());

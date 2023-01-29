@@ -90,33 +90,34 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.17.2</log4j2.version>
-    <snakeyaml.version>1.32</snakeyaml.version>
-    <groovy.version>3.0.10</groovy.version>
-    <citrus.version>3.3.0</citrus.version>
-    <spring.version>5.3.20</spring.version>
-    <cucumber.version>7.3.1</cucumber.version>
-    <apache.camel.version>3.16.0</apache.camel.version>
-    <jackson.version>2.13.3</jackson.version>
+    <log4j2.version>2.19.0</log4j2.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
+    <groovy.version>3.0.14</groovy.version>
+    <citrus.version>3.4.0</citrus.version>
+    <spring.version>5.3.25</spring.version>
+    <cucumber.version>7.11.0</cucumber.version>
+    <apache.camel.version>3.20.1</apache.camel.version>
+    <jackson.version>2.14.1</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <kubernetes-client.version>5.11.2</kubernetes-client.version>
-    <knative-client.version>5.11.2</knative-client.version>
-    <okhttp.version>4.9.3</okhttp.version>
-    <postgresql.version>42.5.0</postgresql.version>
-    <commons.dbcp2.version>2.7.0</commons.dbcp2.version>
+    <kubernetes-client.version>6.4.0</kubernetes-client.version>
+    <knative-client.version>6.1.1</knative-client.version>
+    <okhttp.version>4.10.0</okhttp.version>
+    <postgresql.version>42.5.1</postgresql.version>
+    <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
     <testcontainers.version>1.17.4</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
-    <assertj-core.version>3.14.0</assertj-core.version>
+    <assertj-core.version>3.24.2</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
     <aws-java-sdk.version>1.12.146</aws-java-sdk.version>
     <activemq.version>5.17.0</activemq.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
-    <mockito.version>4.5.0</mockito.version>
+    <mockito.version>4.11.0</mockito.version>
     <awaitility.version>4.2.0</awaitility.version>
     <picoli-version>4.7.0</picoli-version>
     <ascii-table-version>1.8.0</ascii-table-version>
+    <netty.version>4.1.87.Final</netty.version>
 
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
     <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
@@ -307,6 +308,38 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-tx</artifactId>
         <version>${spring.version}</version>
+      </dependency>
+
+      <!-- Selenium -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-common</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-handler</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-http</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-http2</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-epoll</artifactId>
+        <version>${netty.version}</version>
       </dependency>
 
       <!-- Apache Camel -->
@@ -545,7 +578,7 @@
         <plugin>
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.6.8</version>
+          <version>1.6.13</version>
           <configuration>
             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
             <serverId>sonatype-nexus-staging</serverId>

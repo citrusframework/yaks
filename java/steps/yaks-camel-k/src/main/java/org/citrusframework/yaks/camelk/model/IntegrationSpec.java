@@ -28,33 +28,38 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
+@JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"replicas", "flows", "sources", "resources", "kit", "dependencies", "profile", "traits",
         "configuration", "repositories", "serviceAccountName"})
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
 public class IntegrationSpec implements KubernetesResource {
 
     @JsonProperty("replicas")
     private Integer replicas;
     @JsonProperty("flows")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Map<String, Object>> flows;
     @JsonProperty("sources")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Source> sources;
     @JsonProperty("resources")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Resource> resources;
     @JsonProperty("kit")
     private String kit;
     @JsonProperty("dependencies")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> dependencies;
     @JsonProperty("profile")
     private String profile;
     @JsonProperty("traits")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, TraitConfig> traits;
     @JsonProperty("configuration")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Configuration> configuration;
     @JsonProperty("repositories")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> repositories;
     @JsonProperty("serviceAccountName")
     private String serviceAccountName;
@@ -147,9 +152,10 @@ public class IntegrationSpec implements KubernetesResource {
         this.serviceAccountName = serviceAccountName;
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "value"})
-    public static class Configuration {
+    public static class Configuration implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("value")
@@ -177,14 +183,16 @@ public class IntegrationSpec implements KubernetesResource {
         }
 
         public void setValue(String defaultValue) {
-            this.value = value;
+            this.value = defaultValue;
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"configuration"})
-    public static class TraitConfig {
+    public static class TraitConfig implements KubernetesResource {
         @JsonProperty("configuration")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private Map<String, Object> configuration = new HashMap<>();
 
         public TraitConfig() {
@@ -208,10 +216,11 @@ public class IntegrationSpec implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"language", "loader", "type", "name", "path", "rawContent", "content",
             "contentType", "contentRef", "contentKey", "compression", "property-names", "interceptors"})
-    public static class Source extends DataSpec {
+    public static class Source extends DataSpec implements KubernetesResource {
         @JsonProperty("language")
         private String language;
         @JsonProperty("loader")
@@ -219,8 +228,10 @@ public class IntegrationSpec implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("interceptors")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private List<String> interceptors;
         @JsonProperty("property-names")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private List<String> propertyNames;
 
         public Source() {
@@ -272,10 +283,11 @@ public class IntegrationSpec implements KubernetesResource {
         }
     }
 
+    @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({"type", "mountPath", "name", "path", "rawContent", "content",
             "contentType", "contentRef", "contentKey", "compression"})
-    public static class Resource extends DataSpec {
+    public static class Resource extends DataSpec implements KubernetesResource {
         @JsonProperty("type")
         private String type;
         @JsonProperty("mountPath")

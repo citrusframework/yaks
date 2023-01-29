@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.selenium;
 
-import org.openqa.selenium.remote.BrowserType;
+import org.openqa.selenium.remote.Browser;
 
 /**
  * @author Christoph Deppisch
@@ -33,7 +33,7 @@ public class SeleniumSettings {
 
     private static final String BROWSER_TYPE_PROPERTY = SELENIUM_PROPERTY_PREFIX + "browser.type";
     private static final String BROWSER_TYPE_ENV = SELENIUM_ENV_PREFIX + "BROWSER_TYPE";
-    private static final String BROWSER_TYPE_DEFAULT = BrowserType.HTMLUNIT;
+    private static final String BROWSER_TYPE_DEFAULT = Browser.HTMLUNIT.browserName();
 
     private static final String BROWSER_REMOTE_SERVER_URL_PROPERTY = SELENIUM_PROPERTY_PREFIX + "browser.remote.server.url";
     private static final String BROWSER_REMOTE_SERVER_URL_ENV = SELENIUM_ENV_PREFIX + "BROWSER_REMOTE_SERVER_URL";

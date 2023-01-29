@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
@@ -38,7 +39,7 @@ import org.springframework.util.StringUtils;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
 @Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
-public class Kamelet extends CustomResource<KameletSpec, KameletStatus> {
+public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implements Namespaced {
 
     public Kamelet() {
         super();

@@ -18,9 +18,6 @@
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import com.consol.citrus.context.TestContext;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.CamelKSupport;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 
@@ -40,8 +37,7 @@ public class DeleteKameletAction extends AbstractKameletAction {
     @Override
     public void doExecute(TestContext context) {
         String kameletName = context.replaceDynamicContentInString(this.kameletName);
-        CustomResourceDefinitionContext ctx = CamelKSupport.kameletCRDContext(CamelKSettings.getKameletApiVersion());
-        getKubernetesClient().customResources(ctx, Kamelet.class, KameletList.class)
+        getKubernetesClient().resources(Kamelet.class, KameletList.class)
                 .inNamespace(kameletNamespace(context))
                 .withName(kameletName)
                 .delete();

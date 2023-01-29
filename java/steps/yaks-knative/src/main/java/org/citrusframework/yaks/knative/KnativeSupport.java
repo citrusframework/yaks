@@ -39,14 +39,6 @@ public final class KnativeSupport {
         }
     }
 
-    public static CustomResourceDefinitionContext eventingCRDContext(String kind, String version) {
-        return knativeCRDContext("eventing", kind, version);
-    }
-
-    public static CustomResourceDefinitionContext messagingCRDContext(String kind, String version) {
-        return knativeCRDContext("messaging", kind, version);
-    }
-
     public static CustomResourceDefinitionContext knativeCRDContext(String knativeComponent, String kind, String version) {
         return new CustomResourceDefinitionContext.Builder()
                 .withName(String.format("%s.%s.knative.dev", kind, knativeComponent))

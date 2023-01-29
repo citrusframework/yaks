@@ -17,11 +17,12 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import java.io.IOException;
-import java.util.Map;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
@@ -47,19 +48,17 @@ public class CreateCustomResourceAction extends AbstractKubernetesAction impleme
 
     @Override
     public void doExecute(TestContext context) {
-        try {
-            Map<String, Object> resources = getKubernetesClient()
-                     .customResource(KubernetesSupport.crdContext(context.replaceDynamicContentInString(type),
-                             context.replaceDynamicContentInString(group),
-                             context.replaceDynamicContentInString(kind),
-                             context.replaceDynamicContentInString(version)))
-                     .createOrReplace(namespace(context), context.replaceDynamicContentInString(content));
+        GenericKubernetesResource resource = getKubernetesClient()
+                .genericKubernetesResources(KubernetesSupport.crdContext(context.replaceDynamicContentInString(type),
+                         context.replaceDynamicContentInString(group),
+                         context.replaceDynamicContentInString(kind),
+                         context.replaceDynamicContentInString(version)))
+                .inNamespace(namespace(context))
+                .load(new ByteArrayInputStream(context.replaceDynamicContentInString(content).getBytes(StandardCharsets.UTF_8)))
+                .createOrReplace();
 
-            if (resources.get("messages") != null) {
-                throw new CitrusRuntimeException(String.format("Failed to create custom resource - %s", resources.get("messages")));
-            }
-        } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create custom resource", e);
+        if (resource.get("messages") != null) {
+            throw new CitrusRuntimeException(String.format("Failed to create custom resource - %s", resource.get("messages")));
         }
     }
 

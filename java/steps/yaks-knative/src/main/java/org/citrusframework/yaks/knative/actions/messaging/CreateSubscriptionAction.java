@@ -18,9 +18,9 @@
 package org.citrusframework.yaks.knative.actions.messaging;
 
 import com.consol.citrus.context.TestContext;
+import io.fabric8.knative.internal.pkg.apis.duck.v1.KReferenceBuilder;
 import io.fabric8.knative.messaging.v1.Subscription;
 import io.fabric8.knative.messaging.v1.SubscriptionBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
@@ -52,7 +52,7 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
                     .withLabels(KnativeSettings.getDefaultLabels())
                 .endMetadata()
                 .withNewSpec()
-                    .withChannel(new ObjectReferenceBuilder()
+                    .withChannel(new KReferenceBuilder()
                             .withApiVersion(String.format("%s/%s", KnativeSupport.knativeMessagingGroup(), KnativeSupport.knativeApiVersion()))
                             .withKind("InMemoryChannel")
                             .withName(context.replaceDynamicContentInString(channelName))
