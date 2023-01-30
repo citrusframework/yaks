@@ -19,9 +19,9 @@
 
 //JAVA 11+
 //REPOS mavencentral
-//DEPS org.citrusframework.yaks:yaks-parent:${yaks.jbang.version:0.13.0-SNAPSHOT}@pom
-//DEPS org.citrusframework.yaks:yaks-jbang:${yaks.jbang.version:0.13.0-SNAPSHOT}
-//DEPS org.citrusframework.yaks:yaks-runtime-core:${yaks-jbang.version:0.13.0-SNAPSHOT}
+//DEPS org.citrusframework.yaks:yaks-parent:${yaks.jbang.version:0.14.0-SNAPSHOT}@pom
+//DEPS org.citrusframework.yaks:yaks-jbang:${yaks.jbang.version:0.14.0-SNAPSHOT}
+//DEPS org.citrusframework.yaks:yaks-runtime-core:${yaks-jbang.version:0.14.0-SNAPSHOT}
 package main;
 
 import org.citrusframework.yaks.jbang.YaksJBangMain;
