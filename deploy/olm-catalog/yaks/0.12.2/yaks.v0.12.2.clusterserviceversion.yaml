@@ -65,7 +65,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/citrusframework/yaks
     support: Citrus Framework
-  name: yaks-operator.v0.12.0
+  name: yaks-operator.v0.12.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
