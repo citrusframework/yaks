@@ -590,7 +590,8 @@ func (o *runCmdOptions) uploadArtifacts(runConfig *config.RunConfig) error {
 		if err != nil {
 			return err
 		}
-		o.Dependencies = append(o.Dependencies, additionalDep)
+
+		o.Dependencies = append(o.Dependencies, additionalDep, "com.gkatzioura.maven.cloud:s3-storage-wagon:2.3")
 	}
 	return nil
 }

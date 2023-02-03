@@ -138,7 +138,7 @@ jobs:
         yaks run examples/groovy $YAKS_RUN_OPTIONS
         yaks run examples/camel $YAKS_RUN_OPTIONS
         yaks run examples/camel-k $YAKS_RUN_OPTIONS
-        #yaks run examples/extension $YAKS_RUN_OPTIONS
+        # yaks run examples/extension $YAKS_RUN_OPTIONS --upload steps
         yaks run examples/http $YAKS_RUN_OPTIONS
         yaks run examples/jdbc $YAKS_RUN_OPTIONS
         yaks run examples/jitpack $YAKS_RUN_OPTIONS

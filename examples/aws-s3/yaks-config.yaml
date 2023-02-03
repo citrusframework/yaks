@@ -24,8 +24,8 @@ config:
         - groupId: org.apache.camel
           artifactId: camel-aws2-s3
           version: "@camel.version@"
-        - groupId: com.amazonaws
-          artifactId: aws-java-sdk-s3
-          version: "@aws-java-sdk.version@"
+        - groupId: software.amazon.awssdk
+          artifactId: s3
+          version: "@aws-java-sdk2.version@"
     resources:
       - amazonS3Client.groovy
