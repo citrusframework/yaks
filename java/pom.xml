@@ -89,44 +89,48 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
-    <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.19.0</log4j2.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
-    <groovy.version>3.0.14</groovy.version>
-    <citrus.version>3.4.0</citrus.version>
-    <spring.version>5.3.25</spring.version>
-    <cucumber.version>7.11.0</cucumber.version>
+
     <apache.camel.version>3.20.1</apache.camel.version>
+    <activemq.artemis.version>2.17.0</activemq.artemis.version>
+    <activemq.version>5.17.0</activemq.version>
+    <apicurio.version>1.1.2</apicurio.version>
+    <ascii-table-version>1.8.0</ascii-table-version>
+    <assertj-core.version>3.24.2</assertj-core.version>
+    <awaitility.version>4.2.0</awaitility.version>
+    <aws-java-sdk2.version>2.18.41</aws-java-sdk2.version>
+    <citrus.version>3.4.0</citrus.version>
+    <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
+    <cucumber.version>7.11.0</cucumber.version>
+    <groovy.version>3.0.14</groovy.version>
     <jackson.version>2.14.1</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <kubernetes-client.version>6.4.0</kubernetes-client.version>
     <knative-client.version>6.1.1</knative-client.version>
-    <okhttp.version>4.10.0</okhttp.version>
-    <postgresql.version>42.5.1</postgresql.version>
-    <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
-    <testcontainers.version>1.17.6</testcontainers.version>
-    <apicurio.version>1.1.2</apicurio.version>
-    <assertj-core.version>3.24.2</assertj-core.version>
-    <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
-    <aws-java-sdk2.version>2.18.41</aws-java-sdk2.version>
-    <activemq.version>5.17.0</activemq.version>
-    <activemq.artemis.version>2.17.0</activemq.artemis.version>
+    <kubernetes-client.version>6.4.0</kubernetes-client.version>
+    <log4j2.version>2.19.0</log4j2.version>
     <mockito.version>4.11.0</mockito.version>
-    <awaitility.version>4.2.0</awaitility.version>
-    <picoli-version>4.7.0</picoli-version>
-    <ascii-table-version>1.8.0</ascii-table-version>
     <netty.version>4.1.87.Final</netty.version>
+    <okhttp.version>4.10.0</okhttp.version>
+    <picoli-version>4.7.0</picoli-version>
+    <plexus-component-metadata.version>2.1.0</plexus-component-metadata.version>
+    <postgresql.version>42.5.1</postgresql.version>
+    <slf4j.version>1.7.36</slf4j.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
+    <spring.version>5.3.25</spring.version>
+    <testcontainers.version>1.17.6</testcontainers.version>
 
-    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
-    <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
-    <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
+    <asciidoctor-maven-plugin.version>2.1.0</asciidoctor-maven-plugin.version>
+    <asciidoctorj-pdf.version>1.5.3</asciidoctorj-pdf.version>
+    <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
     <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
-    <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
-    <mycila-license.version>3.0</mycila-license.version>
     <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
     <maven-checkstyle.version>7.6.1</maven-checkstyle.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+    <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
+    <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
+    <maven-scm-plugin.version>1.9.5</maven-scm-plugin.version>
+    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+    <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
+    <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
 
     <skip.gpg>false</skip.gpg>
   </properties>
@@ -288,6 +292,50 @@
         <version>${cucumber.version}</version>
       </dependency>
 
+      <!-- Testcontainers -->
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>mongodb</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+
+      <!-- JMS connection factory dependencies in provided scope -->
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-client</artifactId>
+        <version>${activemq.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>artemis-jms-client</artifactId>
+        <version>${activemq.artemis.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-broker</artifactId>
+        <version>${activemq.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- OpenAPI -->
+      <dependency>
+        <groupId>io.apicurio</groupId>
+        <artifactId>apicurio-data-models</artifactId>
+        <version>${apicurio.version}</version>
+      </dependency>
+
       <!-- Spring Framework -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -364,6 +412,41 @@
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-xml-jaxb-dsl</artifactId>
         <version>${apache.camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-mongodb</artifactId>
+        <version>${apache.camel.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-aws2-kinesis</artifactId>
+        <version>${apache.camel.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-aws2-s3</artifactId>
+        <version>${apache.camel.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>auth</artifactId>
+        <version>${aws-java-sdk2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>kinesis</artifactId>
+        <version>${aws-java-sdk2.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3</artifactId>
+        <version>${aws-java-sdk2.version}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -583,7 +666,7 @@
         <plugin>
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.6.13</version>
+          <version>${nexus-staging-maven-plugin.version}</version>
           <configuration>
             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
             <serverId>sonatype-nexus-staging</serverId>
@@ -619,7 +702,7 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
-          <version>2.1.0</version>
+          <version>${asciidoctor-maven-plugin.version}</version>
           <inherited>false</inherited>
           <configuration>
             <sourceDirectory>docs</sourceDirectory>
@@ -639,7 +722,21 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-scm-plugin</artifactId>
-          <version>1.9.5</version>
+          <version>${maven-scm-plugin.version}</version>
+        </plugin>
+
+        <!-- Maven extension -->
+        <plugin>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-component-metadata</artifactId>
+          <version>${plexus-component-metadata.version}</version>
+        </plugin>
+
+        <!-- Runtime -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec-maven-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -770,7 +867,7 @@
               <dependency>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctorj-pdf</artifactId>
-                <version>1.5.3</version>
+                <version>${asciidoctorj-pdf.version}</version>
               </dependency>
             </dependencies>
           </plugin>
