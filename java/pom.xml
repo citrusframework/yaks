@@ -104,11 +104,11 @@
     <okhttp.version>4.10.0</okhttp.version>
     <postgresql.version>42.5.1</postgresql.version>
     <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
-    <testcontainers.version>1.17.4</testcontainers.version>
+    <testcontainers.version>1.17.6</testcontainers.version>
     <apicurio.version>1.1.2</apicurio.version>
     <assertj-core.version>3.24.2</assertj-core.version>
     <s3-storage-wagon.version>2.3</s3-storage-wagon.version>
-    <aws-java-sdk.version>1.12.146</aws-java-sdk.version>
+    <aws-java-sdk2.version>2.18.41</aws-java-sdk2.version>
     <activemq.version>5.17.0</activemq.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
     <mockito.version>4.11.0</mockito.version>
