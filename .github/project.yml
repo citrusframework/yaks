@@ -1,4 +1,4 @@
 name: YAKS
 release:
-  current-version: 0.13.0
-  next-version: 0.14.0-SNAPSHOT
+  current-version: 0.14.0
+  next-version: 0.15.0-SNAPSHOT
