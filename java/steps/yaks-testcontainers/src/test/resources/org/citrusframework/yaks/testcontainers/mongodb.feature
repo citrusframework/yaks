@@ -11,7 +11,7 @@ Feature: MongoDB
     Given New global Camel context
     Given bind to Camel registry mongoClient.groovy
     """
-    com.mongodb.client.MongoClients.create("${YAKS_TESTCONTAINERS_MONGODB_URL}")
+    com.mongodb.client.MongoClients.create("${YAKS_TESTCONTAINERS_MONGODB_LOCAL_URL}")
     """
 
   Scenario: Insert collection
