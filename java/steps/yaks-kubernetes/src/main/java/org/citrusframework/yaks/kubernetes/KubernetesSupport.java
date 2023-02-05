@@ -19,6 +19,7 @@ package org.citrusframework.yaks.kubernetes;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import com.consol.citrus.Citrus;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -31,8 +32,9 @@ import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.Property;
@@ -65,7 +67,7 @@ public final class KubernetesSupport {
         if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KubernetesClient.class).size() == 1L) {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
-            return new DefaultKubernetesClient();
+            return new KubernetesClientBuilder().build();
         }
     }
 
@@ -153,5 +155,14 @@ public final class KubernetesSupport {
 
         return !status.equals("Running") ||
                 pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
+    }
+
+    public static Optional<String> getServiceClusterIp(Citrus citrus, String serviceName, String namespace) {
+        Service service = getKubernetesClient(citrus).services().inNamespace(namespace).withName(serviceName).get();
+        if (service != null) {
+            return Optional.ofNullable(service.getSpec().getClusterIP());
+        }
+
+        return Optional.empty();
     }
 }

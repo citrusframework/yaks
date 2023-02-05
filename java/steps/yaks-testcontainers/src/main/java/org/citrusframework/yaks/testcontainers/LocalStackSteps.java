@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.consol.citrus.Citrus;
@@ -36,6 +37,9 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.citrusframework.yaks.kubernetes.KubernetesVariableNames;
 import org.citrusframework.yaks.testcontainers.aws2.AWS2Container;
 import org.testcontainers.containers.wait.strategy.Wait;
 
@@ -98,7 +102,6 @@ public class LocalStackSteps {
                 .withLabel("app.kubernetes.io/name", "build")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
-                .withNetworkAliases("localstack")
                 .withEnv(env)
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
@@ -131,42 +134,71 @@ public class LocalStackSteps {
      */
     private void exposeConnectionSettings(AWS2Container aws2Container, TestContext context) {
         if (aws2Container.isRunning()) {
+            URI serviceEndpoint = aws2Container.getServiceEndpoint();
+
             String containerId = aws2Container.getContainerId().substring(0, 12);
 
-            context.setVariable(getEnvVarName("CONTAINER_IP"), aws2Container.getContainerIpAddress());
+            context.setVariable(getEnvVarName("HOST"), aws2Container.getHost());
+            context.setVariable(getEnvVarName("CONTAINER_IP"), aws2Container.getHost());
             context.setVariable(getEnvVarName("CONTAINER_ID"), containerId);
             context.setVariable(getEnvVarName("CONTAINER_NAME"), aws2Container.getContainerName());
-            context.setVariable(getEnvVarName("SERVICE_PORT"), String.valueOf(aws2Container.getMappedPort(4566)));
             context.setVariable(getEnvVarName("REGION"), aws2Container.getRegion());
             context.setVariable(getEnvVarName("ACCESS_KEY"), aws2Container.getAccessKey());
             context.setVariable(getEnvVarName("SECRET_KEY"), aws2Container.getSecretKey());
+            context.setVariable(getEnvVarName("SERVICE_PORT"), serviceEndpoint.getPort());
+            context.setVariable(getEnvVarName("SERVICE_LOCAL_URL"), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
 
             if (YaksSettings.isLocal()) {
                 context.setVariable(getEnvVarName("SERVICE_NAME"), "localstack");
+                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
             } else {
-                context.setVariable(getEnvVarName("SERVICE_NAME"), "kd-" + containerId);
+                context.setVariable(getEnvVarName("SERVICE_NAME"), String.format("kd-%s", containerId));
+                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
             }
 
             services.forEach(service -> {
                 String serviceName = service.getServiceName().toUpperCase(Locale.US);
-                URI serviceEndpoint = aws2Container.getServiceEndpoint();
+
                 if (YaksSettings.isLocal()) {
-                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), serviceEndpoint.toString());
+                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
                 } else {
-                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
+                    if (service == AWS2Container.AWS2Service.S3) {
+                        // Explicitly use cluster IP address in order to enable path-style access on S3 service
+                        Optional<String> clusterIp = KubernetesSupport.getServiceClusterIp(citrus, String.format("kd-%s", containerId), getNamespace(context));
+                        if (clusterIp.isPresent()) {
+                            context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", clusterIp.get(), serviceEndpoint.getPort()));
+                        } else {
+                            context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
+                        }
+                    } else {
+                        context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
+                    }
+
                 }
 
-                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", serviceName)), serviceEndpoint.toString());
+                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", serviceName)), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
                 context.setVariable(getEnvVarName(String.format("%s_PORT", serviceName)), serviceEndpoint.getPort());
             });
+
+            context.setVariable(getEnvVarName("KUBE_DOCK_SERVICE_URL"), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
+            context.setVariable(getEnvVarName("KUBE_DOCK_HOST"), String.format("kd-%s", containerId));
 
             for (Map.Entry<Object, Object> connectionProperty : aws2Container.getConnectionProperties().entrySet()) {
                 context.setVariable(connectionProperty.getKey().toString(), connectionProperty.getValue().toString());
             }
+
         }
     }
 
     private String getEnvVarName(String variable) {
         return String.format("%sLOCALSTACK_%s", TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX, variable);
+    }
+
+    private String getNamespace(TestContext context) {
+        if (context.getVariables().containsKey(KubernetesVariableNames.NAMESPACE.value())) {
+            return context.getVariable(KubernetesVariableNames.NAMESPACE.value());
+        }
+
+        return KubernetesSettings.getNamespace();
     }
 }

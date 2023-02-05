@@ -56,7 +56,7 @@ import (
 const (
 	ConfigFile    = "yaks-config.yaml"
 	SettingsFile  = "yaks.settings.yaml"
-	KubeDockImage = "joyrex2001/kubedock:0.9.1"
+	KubeDockImage = "joyrex2001/kubedock:0.9.2"
 	SeleniumImage = "selenium/standalone-chrome:latest"
 )
 

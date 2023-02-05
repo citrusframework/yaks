@@ -42,16 +42,24 @@ public class AWS2Container extends GenericContainer<AWS2Container> {
 
     private static final String HOSTNAME_EXTERNAL_ENV = "HOSTNAME_EXTERNAL";
 
+    private static final String DOCKER_IMAGE_NAME = "localstack/localstack";
+    private static final String DOCKER_IMAGE_TAG = "1.3.1";
+
     private final Set<AWS2Service> services = new HashSet<>();
     private String secretKey = "secretkey";
     private String accessKey = "accesskey";
     private String region = Region.US_EAST_1.id();
 
+    public AWS2Container() {
+        this(DOCKER_IMAGE_TAG);
+    }
+
     public AWS2Container(String version, AWS2Service... services) {
-        super(DockerImageName.parse("localstack/localstack").withTag(version));
+        super(DockerImageName.parse(DOCKER_IMAGE_NAME).withTag(version));
 
         withServices(services);
         withExposedPorts(PORT);
+        withNetworkAliases("localstack");
         waitingFor(Wait.forLogMessage(".*Ready\\.\n", 1));
     }
 
@@ -133,10 +141,6 @@ public class AWS2Container extends GenericContainer<AWS2Container> {
         return () -> AwsBasicCredentials.create(accessKey, secretKey);
     }
 
-    protected String getContainerHost() {
-        return getHost() + ":" + getMappedPort(PORT);
-    }
-
     /**
      * Provides the connection properties to this container.
      * Clients may use these to initialize.
@@ -150,18 +154,25 @@ public class AWS2Container extends GenericContainer<AWS2Container> {
         properties.put(AWSContainerSettings.ACCESS_KEY_PROPERTY, credentials.accessKeyId());
         properties.put(AWSContainerSettings.SECRET_KEY_PROPERTY, credentials.secretAccessKey());
         properties.put(AWSContainerSettings.REGION_PROPERTY, Region.US_EAST_1.toString());
-        properties.put(AWSContainerSettings.HOST_PROPERTY, getContainerHost());
+        properties.put(AWSContainerSettings.HOST_PROPERTY, getHost() + ":" + getMappedPort(PORT));
         properties.put(AWSContainerSettings.PROTOCOL_PROPERTY, "http");
 
         return properties;
     }
 
+    public String getHostIpAddress() {
+        try {
+            return InetAddress.getByName(getHost()).getHostAddress();
+        } catch (UnknownHostException e) {
+            logger().warn("Unable to resolve host ip address: {}", e.getMessage());
+            return getHost();
+        }
+    }
+
     public URI getServiceEndpoint() {
         try {
-            // resolve IP address and use that as the endpoint so that path-style access is automatically used for S3
-            String address = "http://" + InetAddress.getByName(getHost()).getHostAddress() + ":" + getMappedPort(PORT);
-            return new URI(address);
-        } catch (UnknownHostException | URISyntaxException e) {
+            return new URI("http://" + getHost() + ":" + getMappedPort(PORT));
+        } catch (URISyntaxException e) {
             throw new CitrusRuntimeException(String.format("Unable to determine the service endpoint: %s", e.getMessage()), e);
         }
     }

@@ -14,7 +14,7 @@ Feature: PostgreSQL
   Scenario: Connect and insert
     Given Database connection
       | driver    | ${YAKS_TESTCONTAINERS_POSTGRESQL_DRIVER} |
-      | url       | ${YAKS_TESTCONTAINERS_POSTGRESQL_URL} |
+      | url       | ${YAKS_TESTCONTAINERS_POSTGRESQL_LOCAL_URL} |
       | username  | ${YAKS_TESTCONTAINERS_POSTGRESQL_USERNAME} |
       | password  | ${YAKS_TESTCONTAINERS_POSTGRESQL_PASSWORD} |
     When execute SQL update: INSERT INTO todo VALUES (1, 'Write YAKS test', 0)
