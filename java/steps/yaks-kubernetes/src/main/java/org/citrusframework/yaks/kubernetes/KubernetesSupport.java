@@ -35,6 +35,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.Property;
@@ -157,10 +158,23 @@ public final class KubernetesSupport {
                 pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
     }
 
+    /**
+     * Try to get the cluster IP address of given service.
+     * Resolves service by its name in given namespace and retrieves the cluster IP setting from the service spec.
+     * Returns empty Optional in case of errors or no cluster IP setting.
+     * @param citrus
+     * @param serviceName
+     * @param namespace
+     * @return
+     */
     public static Optional<String> getServiceClusterIp(Citrus citrus, String serviceName, String namespace) {
-        Service service = getKubernetesClient(citrus).services().inNamespace(namespace).withName(serviceName).get();
-        if (service != null) {
-            return Optional.ofNullable(service.getSpec().getClusterIP());
+        try {
+            Service service = getKubernetesClient(citrus).services().inNamespace(namespace).withName(serviceName).get();
+            if (service != null) {
+                return Optional.ofNullable(service.getSpec().getClusterIP());
+            }
+        } catch (KubernetesClientException e) {
+            return Optional.empty();
         }
 
         return Optional.empty();
