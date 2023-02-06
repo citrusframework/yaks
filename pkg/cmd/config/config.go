@@ -23,13 +23,14 @@ const (
 )
 
 var DefaultVersions = Versions{
-	"citrus.version":           "3.3.0",
-	"camel.version":            "3.16.0",
-	"spring.version":           "5.3.20",
-	"cucumber.version":         "7.3.1",
-	"postgresql.version":       "42.5.0",
-	"testcontainers.version":   "1.17.4",
-	"aws-java-sdk.version":     "1.12.146",
+	"citrus.version":           "3.4.0",
+	"camel.version":            "3.20.1",
+	"apache.camel.version":     "3.20.1",
+	"spring.version":           "5.3.25",
+	"cucumber.version":         "7.11.0",
+	"postgresql.version":       "42.5.1",
+	"testcontainers.version":   "1.17.6",
+	"aws-java-sdk2.version":    "2.18.41",
 	"activemq.version":         "5.17.0",
 	"activemq.artemis.version": "2.17.0",
 }
