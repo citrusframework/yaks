@@ -84,7 +84,7 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
                 binding = KubernetesSupport.yaml().loadAs(
                         context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
             } catch (IOException e) {
-                throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", bindingName + ".kamelet.yaml"));
+                throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", bindingName + ".yaml"), e);
             }
         } else {
             final KameletBinding.Builder builder = new KameletBinding.Builder()

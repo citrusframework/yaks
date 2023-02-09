@@ -31,6 +31,8 @@ import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActionTest;
+import org.citrusframework.yaks.camelk.model.KameletBinding;
+import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -56,6 +58,26 @@ public class CreateKameletBindingActionTest {
     @BeforeClass
     public static void setup() throws IOException {
         camel().version();
+    }
+
+    @Test
+    public void shouldCreateKameletBinding() {
+        CreateKameletBindingAction action = new CreateKameletBindingAction.Builder()
+                .client(kubernetesClient)
+                .binding("kafka-source-binding")
+                .resource(new ClassPathResource("kafka-source-binding.yaml"))
+                .build();
+
+        context.setVariable("YAKS_NAMESPACE", "default");
+        context.setVariable("bootstrap.server.host", "my-cluster-kafka-bootstrap");
+        context.setVariable("bootstrap.server.port", "9092");
+        context.setVariable("topic", "my-topic");
+
+        action.execute(context);
+
+        KameletBinding binding = kubernetesClient.resources(KameletBinding.class).inNamespace(KubernetesSettings.getNamespace()).withName("kafka-source-binding").get();
+        Assert.assertNotNull(binding.getSpec().getSource().getRef());
+        Assert.assertNotNull(binding.getSpec().getSink().getUri());
     }
 
     @Test
