@@ -39,6 +39,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.citrusframework.yaks.YaksSettings;
 
 import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
 import static com.consol.citrus.actions.SendMessageAction.Builder.send;
@@ -67,6 +68,8 @@ public class KafkaSteps {
 
     private long timeout = KafkaSettings.getConsumerTimeout();
 
+    private String messageType = YaksSettings.getDefaultMessageType();
+
     @Before
     public void before(Scenario scenario) {
         if (kafkaEndpoint == null) {
@@ -83,6 +86,7 @@ public class KafkaSteps {
         headers = new HashMap<>();
         body = null;
 
+        messageType = YaksSettings.getDefaultMessageType();
         messageKey = null;
         partition = null;
     }
@@ -150,6 +154,11 @@ public class KafkaSteps {
     @Then("^(?:expect|verify) (?:Kafka|kafka) message header ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addMessageHeader(String name, Object value) {
         headers.put(name, value);
+    }
+
+    @Given("^(?:Kafka|kafka) message type ([^\\s]+)")
+    public void setMessageType(String type) {
+        this.messageType = type.toUpperCase();
     }
 
     @Given("^(?:Kafka|kafka) message headers$")
@@ -253,6 +262,8 @@ public class KafkaSteps {
     private Message createKafkaMessage() {
         KafkaMessage message = new KafkaMessage(body, headers)
                 .topic(topic);
+
+        message.setType(messageType);
 
         if (messageKey != null) {
             message.messageKey(messageKey);
