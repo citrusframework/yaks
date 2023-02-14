@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
+import com.consol.citrus.CitrusSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,10 @@ public class YaksSettings {
     private static final String TEST_ID_PROPERTY = YAKS_PROPERTY_PREFIX + "test.id";
     private static final String TEST_ID_ENV = YAKS_ENV_PREFIX + "TEST_ID";
     private static final String TEST_ID_DEFAULT = "yaks-test";
+
+    private static final String DEFAULT_MESSAGE_TYPE_PROPERTY = YAKS_PROPERTY_PREFIX + "default.message.type";
+    private static final String DEFAULT_MESSAGE_TYPE_ENV = YAKS_ENV_PREFIX + "DEFAULT_MESSAGE_TYPE";
+    private static final String DEFAULT_MESSAGE_TYPE_DEFAULT = CitrusSettings.DEFAULT_MESSAGE_TYPE;
 
     private static final String TERMINATION_LOG_PROPERTY = YAKS_PROPERTY_PREFIX + "termination.log";
     private static final String TERMINATION_LOG_ENV = YAKS_ENV_PREFIX + "TERMINATION_LOG";
@@ -127,6 +132,14 @@ public class YaksSettings {
      */
     public static String getTestId() {
         return System.getProperty(TEST_ID_PROPERTY, Optional.ofNullable(System.getenv(TEST_ID_ENV)).orElse(TEST_ID_DEFAULT));
+    }
+
+    /**
+     * Default message type.
+     * @return
+     */
+    public static String getDefaultMessageType() {
+        return System.getProperty(DEFAULT_MESSAGE_TYPE_PROPERTY, Optional.ofNullable(System.getenv(DEFAULT_MESSAGE_TYPE_ENV)).orElse(DEFAULT_MESSAGE_TYPE_DEFAULT));
     }
 
     /**
