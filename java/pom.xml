@@ -308,6 +308,11 @@
         <artifactId>mongodb</artifactId>
         <version>${testcontainers.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>redpanda</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
 
       <!-- JMS connection factory dependencies in provided scope -->
       <dependency>
