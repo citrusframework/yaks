@@ -206,7 +206,7 @@ public class CreateIntegrationActionTest {
                 return true;
             });
 
-            Assert.assertEquals(true, pao.getProcess().isAlive());
+            Assert.assertTrue(pao.getProcess().isAlive());
         } finally {
             camel().stop(pid);
         }

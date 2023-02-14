@@ -121,7 +121,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         final Integration integration = integrationBuilder.build();
         if (YaksSettings.isLocal(clusterType(context))) {
-            createLocalIntegration(integration, name, context);
+            createLocalIntegration(integration, integration.getMetadata().getName(), context);
         } else {
             createIntegration(getKubernetesClient(), namespace(context), integration);
         }
@@ -170,7 +170,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                     StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
-            ProcessAndOutput pao = camel().run(name, file);
+
+            ProcessAndOutput pao = camel().run(name, file, camelRunArgs(integration));
 
             if (!pao.getProcess().isAlive()) {
                 if (LOG.isDebugEnabled()) {
@@ -188,6 +189,26 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
     }
 
+    /**
+     * Construct optional Camel JBang run command args from given integration.
+     * @param integration
+     * @return
+     */
+    private static String[] camelRunArgs(Integration integration) {
+        List<String> args = new ArrayList<>();
+
+        if (integration.getSpec().getTraits() != null && integration.getSpec().getTraits().containsKey("openapi")) {
+            IntegrationSpec.TraitConfig traitConfig = integration.getSpec().getTraits().get("openapi");
+
+            if (traitConfig.getConfiguration() != null && traitConfig.getConfiguration().containsKey("configmaps")) {
+                args.add("--open-api");
+                args.add(traitConfig.getConfiguration().get("configmaps").toString());
+            }
+        }
+
+        return args.toArray(String[]::new);
+    }
+
     private void addOpenApiSpec(Integration.Builder integrationBuilder, TestContext context) {
         openApis.forEach((k, v) -> integrationBuilder.openApi(k, context.replaceDynamicContentInString(v)));
     }
@@ -196,8 +217,14 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
 
         if (traits != null && !traits.isEmpty()) {
-            for (String t : context.resolveDynamicValuesInList(traits)){
+            for (String t : context.resolveDynamicValuesInList(traits)) {
                 addTraitSpec(t, traitConfigMap);
+            }
+        }
+
+        if (openApis != null && !openApis.isEmpty()) {
+            for (Map.Entry<String, String> openApiSpec : openApis.entrySet()) {
+                addTraitSpec(String.format("openapi.configmaps=%s", openApiSpec.getKey()), traitConfigMap);
             }
         }
 
