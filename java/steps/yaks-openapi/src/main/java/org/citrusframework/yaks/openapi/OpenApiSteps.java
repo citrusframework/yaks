@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
+import com.consol.citrus.annotations.CitrusResource;
+import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.variable.dictionary.AbstractDataDictionary;
 import com.consol.citrus.variable.dictionary.json.JsonPathMappingDataDictionary;
@@ -41,6 +43,9 @@ import org.springframework.core.io.Resource;
  * @author Christoph Deppisch
  */
 public class OpenApiSteps {
+
+    @CitrusResource
+    private TestContext context;
 
     static OasDocument openApiDoc;
 
@@ -80,20 +85,22 @@ public class OpenApiSteps {
 
     @Given("^OpenAPI (?:specification|resource): ([^\\s]+)$")
     public void loadOpenApiResource(String resource) {
-        if (resource.startsWith("http")) {
+        String location = context.replaceDynamicContentInString(resource);
+
+        if (location.startsWith("http")) {
             try {
-                URL url = new URL(resource);
-                if (resource.startsWith("https")) {
+                URL url = new URL(location);
+                if (location.startsWith("https")) {
                     openApiDoc = OpenApiResourceLoader.fromSecuredWebResource(url);
                 } else {
                     openApiDoc = OpenApiResourceLoader.fromWebResource(url);
                 }
                 openApiUrl = String.format("%s://%s%s%s", url.getProtocol(), url.getHost(), url.getPort() > 0 ? ":" + url.getPort() : "", OasModelHelper.getBasePath(openApiDoc));
             } catch (MalformedURLException e) {
-                throw new IllegalStateException("Failed to retrieve Open API specification as web resource: " + resource, e);
+                throw new IllegalStateException("Failed to retrieve Open API specification as web resource: " + location, e);
             }
         } else {
-            openApiDoc = OpenApiResourceLoader.fromFile(resource);
+            openApiDoc = OpenApiResourceLoader.fromFile(location);
 
             String schemeToUse = Optional.ofNullable(OasModelHelper.getSchemes(openApiDoc))
                     .orElse(Collections.singletonList("http"))
