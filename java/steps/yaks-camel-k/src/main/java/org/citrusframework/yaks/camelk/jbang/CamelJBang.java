@@ -83,19 +83,21 @@ public class CamelJBang {
      * Run given integration with JBang Camel app.
      * @param name
      * @param path
+     * @param args
      * @return
      */
-    public ProcessAndOutput run(String name, Path path) {
-        return run(name, path.toAbsolutePath().toString());
+    public ProcessAndOutput run(String name, Path path, String... args) {
+        return run(name, path.toAbsolutePath().toString(), args);
     }
 
     /**
      * Run given integration with JBang Camel app.
      * @param name
      * @param file
+     * @param args
      * @return
      */
-    public ProcessAndOutput run(String name, String file) {
+    public ProcessAndOutput run(String name, String file, String... args) {
         List<String> runArgs = new ArrayList<>();
         runArgs.add("run");
         runArgs.add("--name");
@@ -105,6 +107,8 @@ public class CamelJBang {
             runArgs.add("--local-kamelet-dir");
             runArgs.add(CamelJBangSettings.getKameletsLocalDir().toString());
         }
+
+        runArgs.addAll(Arrays.asList(args));
 
         runArgs.add(file);
 
@@ -301,6 +305,11 @@ public class CamelJBang {
         jBangArgs.add(String.format("-Dcamel.jbang.version=%s", CamelJBangSettings.getCamelVersion()));
         jBangArgs.add(CamelJBangSettings.getCamelApp());
         jBangArgs.addAll(List.of(args));
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(String.format("Full Camel JBang command is: %s", String.join(" ", jBangArgs)));
+        }
+
         return jBang(jBangArgs);
     }
 
