@@ -27,7 +27,7 @@ public class PostgreSQLSettings {
     private static final String POSTGRESQL_PROPERTY_PREFIX = TestContainersSettings.TESTCONTAINERS_PROPERTY_PREFIX + "postgresql.";
     private static final String POSTGRESQL_ENV_PREFIX = TestContainersSettings.TESTCONTAINERS_ENV_PREFIX + "POSTGRESQL_";
 
-    private static final String POSTGRESQL_VERSION_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "postgresql.version";
+    private static final String POSTGRESQL_VERSION_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "version";
     private static final String POSTGRESQL_VERSION_ENV = POSTGRESQL_ENV_PREFIX + "POSTGRESQL_VERSION";
     private static final String POSTGRESQL_VERSION_DEFAULT = PostgreSQLContainer.DEFAULT_TAG;
 

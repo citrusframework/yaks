@@ -164,6 +164,10 @@ public class PostgreSQLSteps {
      * @param context
      */
     private void setConnectionSettings(PostgreSQLContainer<?> postgreSQLContainer, TestContext context) {
+        if (!postgreSQLContainer.isRunning()) {
+            return;
+        }
+
         String containerId = postgreSQLContainer.getContainerId().substring(0, 12);
 
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_HOST", postgreSQLContainer.getHost());

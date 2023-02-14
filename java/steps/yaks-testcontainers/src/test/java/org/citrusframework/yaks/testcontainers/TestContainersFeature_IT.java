@@ -29,7 +29,8 @@ import org.junit.runner.RunWith;
         extraGlue = {
                 "org.citrusframework.yaks.standard",
                 "org.citrusframework.yaks.camel",
-                "org.citrusframework.yaks.jdbc"
+                "org.citrusframework.yaks.jdbc",
+                "org.citrusframework.yaks.kafka"
         },
         plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
 )
