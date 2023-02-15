@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.camelk.actions.integration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +64,7 @@ public class CreateIntegrationActionTest {
                 .client(kubernetesClient)
                 .integration("helloworld")
                 .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
-                .traits("quarkus.enabled=true,quarkus.native=true,route.enabled=true")
+                .traits("quarkus.enabled=true,quarkus.native=true,route.enabled=true,openapi.configmaps=[spec]")
                 .build();
 
         action.execute(context);
@@ -76,6 +77,9 @@ public class CreateIntegrationActionTest {
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("route"));
         Assert.assertEquals(1, integration.getSpec().getTraits().get("route").getConfiguration().size());
         Assert.assertEquals(true, integration.getSpec().getTraits().get("route").getConfiguration().get("enabled"));
+        Assert.assertTrue(integration.getSpec().getTraits().containsKey("openapi"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("openapi").getConfiguration().size());
+        Assert.assertEquals(Collections.singletonList("spec"), integration.getSpec().getTraits().get("openapi").getConfiguration().get("configmaps"));
     }
 
     @Test

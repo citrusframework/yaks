@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
@@ -117,7 +118,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         addBuildPropertyConfigurationSpec(integrationBuilder, resolvedSource, context);
         addRuntimeConfigurationSpec(integrationBuilder, resolvedSource, context);
         addTraitSpec(integrationBuilder, resolvedSource, context);
-        addOpenApiSpec(integrationBuilder, context);
+        addOpenApiSpec(integrationBuilder, resolvedSource, context);
 
         final Integration integration = integrationBuilder.build();
         if (YaksSettings.isLocal(clusterType(context))) {
@@ -197,19 +198,33 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private static String[] camelRunArgs(Integration integration) {
         List<String> args = new ArrayList<>();
 
-        if (integration.getSpec().getTraits() != null && integration.getSpec().getTraits().containsKey("openapi")) {
-            IntegrationSpec.TraitConfig traitConfig = integration.getSpec().getTraits().get("openapi");
+        if (integration.getSpec().getResources() != null) {
+            List<IntegrationSpec.Resource> openApiResources = integration.getSpec().getResources()
+                    .stream()
+                    .filter(r -> "openapi".equals(r.getType()))
+                    .collect(Collectors.toList());
 
-            if (traitConfig.getConfiguration() != null && traitConfig.getConfiguration().containsKey("configmaps")) {
+            for (IntegrationSpec.Resource resource : openApiResources) {
                 args.add("--open-api");
-                args.add(traitConfig.getConfiguration().get("configmaps").toString());
+                args.add(resource.getName());
             }
         }
 
         return args.toArray(String[]::new);
     }
 
-    private void addOpenApiSpec(Integration.Builder integrationBuilder, TestContext context) {
+    private void addOpenApiSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
+        Pattern pattern = getModelinePattern("open-api");
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            String openApiSpecFile = depMatcher.group(1);
+            try {
+                integrationBuilder.openApi(openApiSpecFile, FileUtils.readToString(FileUtils.getFileResource(openApiSpecFile, context)));
+            } catch (IOException e) {
+                throw new CitrusRuntimeException(String.format("Failed to load OpenAPI spec from file '%s'", openApiSpecFile), e);
+            }
+        }
+
         openApis.forEach((k, v) -> integrationBuilder.openApi(k, context.replaceDynamicContentInString(v)));
     }
 
@@ -219,12 +234,6 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         if (traits != null && !traits.isEmpty()) {
             for (String t : context.resolveDynamicValuesInList(traits)) {
                 addTraitSpec(t, traitConfigMap);
-            }
-        }
-
-        if (openApis != null && !openApis.isEmpty()) {
-            for (Map.Entry<String, String> openApiSpec : openApis.entrySet()) {
-                addTraitSpec(String.format("openapi.configmaps=%s", openApiSpec.getKey()), traitConfigMap);
             }
         }
 
@@ -256,14 +265,24 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                     List<String> values = (List<String>) existingValue;
                     values.add(traitValue.toString());
                 } else {
-                    config.add(traitKey, Arrays.asList(existingValue.toString(), traitValue.toString()));
+                    config.add(traitKey, Arrays.asList(existingValue.toString(), traitValue));
                 }
             } else {
-                config.add(traitKey, traitValue);
+                config.add(traitKey, initializeTraitValue(traitValue));
             }
         } else {
-            configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitKey, traitValue));
+            configMap.put(trait[0], new IntegrationSpec.TraitConfig(traitKey, initializeTraitValue(traitValue)));
         }
+    }
+
+    private Object initializeTraitValue(Object value) {
+        if (value instanceof String && value.toString().startsWith("[") && value.toString().endsWith("]")) {
+            List<String> values = new ArrayList<>();
+            values.add(resolveTraitValue("", value.toString().substring(1, value.toString().length() - 1)).toString());
+            return values;
+        }
+
+        return value;
     }
 
     /**
