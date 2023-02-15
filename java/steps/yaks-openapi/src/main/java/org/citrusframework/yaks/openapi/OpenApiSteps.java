@@ -83,6 +83,11 @@ public class OpenApiSteps {
         validateOptionalFields = true;
     }
 
+    @Given("^(?:OpenAPI URL|url): ([^\\s]+)$")
+    public void setUrl(String url) {
+        openApiUrl = url;
+    }
+
     @Given("^OpenAPI (?:specification|resource): ([^\\s]+)$")
     public void loadOpenApiResource(String resource) {
         String location = context.replaceDynamicContentInString(resource);
