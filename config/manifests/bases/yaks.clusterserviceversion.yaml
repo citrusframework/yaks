@@ -22,7 +22,7 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/citrusframework/yaks:0.15.0-SNAPSHOT
+    containerImage: docker.io/citrusframework/yaks:0.14.2
     createdAt: 2022-10-11T09:44:34Z
     description: YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
     operators.operatorframework.io/builder: operator-sdk-v1.22.0
