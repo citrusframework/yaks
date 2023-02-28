@@ -21,6 +21,7 @@ import java.util.Arrays;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
+import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -52,6 +53,11 @@ public class VerifyKameletAction extends AbstractKameletAction {
         } else {
             throw new ValidationException(String.format("Failed to retrieve Kamelet '%s'", name));
         }
+    }
+
+    @Override
+    public boolean isDisabled(TestContext context) {
+        return clusterType(context) == YaksClusterType.LOCAL;
     }
 
     /**
