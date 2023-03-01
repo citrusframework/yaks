@@ -48,7 +48,7 @@ public class Run extends YaksCommand {
     public static final String WORK_DIR = ".yaks-jbang";
 
     private static final String[] ACCEPTED_FILE_EXT
-            = new String[] { "feature", "groovy", "yaml", "xml" };
+            = new String[] { ".feature", "test.groovy", "it.groovy", "test.yaml", "it.yaml", "Test.xml", "IT.xml", "test.xml", "it.xml" };
 
     private static final String CLIPBOARD_GENERATED_FILE = WORK_DIR + "/generated-clipboard";
 
