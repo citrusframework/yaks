@@ -602,9 +602,9 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 	env = append(env, envvar.NamespaceEnv+"="+runConfig.Config.Namespace.Name)
 
 	if len(o.Tags) > 0 {
-		env = append(env, CucumberFilterTags+"="+strings.Join(o.Tags, ","))
+		env = append(env, CucumberFilterTags+"="+strings.Join(o.Tags, " and "))
 	} else if len(runConfig.Config.Runtime.Cucumber.Tags) > 0 {
-		env = append(env, CucumberFilterTags+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Tags, ","))
+		env = append(env, CucumberFilterTags+"="+strings.Join(runConfig.Config.Runtime.Cucumber.Tags, " and "))
 	}
 
 	if len(o.Features) > 0 {
@@ -811,11 +811,11 @@ func (o *runCmdOptions) executeLocal(ctx context.Context, test *v1alpha1.Test, s
 	args = append(args, fmt.Sprintf("-Dyaks.jbang.version=%s", jbang.YaksVersion))
 	args = jbang.AddDependencies(args, runConfig, append(getModelineDeps(test.Spec.Source.Content), o.Dependencies...)...)
 	args = jbang.AddRepositories(args, runConfig, o.Repositories...)
-	args = jbang.AddCucumberGlue(args, append(runConfig.Config.Runtime.Cucumber.Glue, o.Glue...)...)
-	args = jbang.AddCucumberTags(args, append(runConfig.Config.Runtime.Cucumber.Tags, o.Tags...)...)
 
 	args = append(args, jbang.YaksApp, "run", path.Base(source))
-	shellArgs = append(shellArgs, strings.Join(args, " "))
+
+	argLine := strings.Join(args, " ")
+	shellArgs = append(shellArgs, argLine)
 	command := exec.CommandContext(ctxWithCancel, shellCommand, shellArgs...) //#nosec G204
 
 	command.Env = os.Environ()
