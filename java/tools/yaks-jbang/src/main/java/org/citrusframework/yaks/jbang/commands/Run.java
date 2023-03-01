@@ -35,8 +35,11 @@ import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.consol.citrus.CitrusInstanceManager;
 import com.consol.citrus.cucumber.CucumberTestEngine;
 import com.consol.citrus.main.TestRunConfiguration;
+import com.consol.citrus.report.TestReporter;
+import com.consol.citrus.report.TestResults;
 import com.consol.citrus.util.FileUtils;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
 import picocli.CommandLine.Command;
@@ -117,8 +120,12 @@ public class Run extends YaksCommand {
 
         TestRunConfiguration configuration = new TestRunConfiguration();
         final CucumberTestEngine engine = new CucumberTestEngine(configuration);
+
+        final ExitStatusTestReporter exitStatus = new ExitStatusTestReporter();
+        CitrusInstanceManager.addInstanceProcessor(instance -> instance.addTestReporter(exitStatus));
+
         engine.run();
-        return 0;
+        return exitStatus.exitStatus();
     }
 
     private String loadFromClipboard(String file) throws UnsupportedFlavorException, IOException {
@@ -232,4 +239,24 @@ public class Run extends YaksCommand {
         }
     }
 
+    /**
+     * Special test reporter provides proper exit status based on successful/failed tests.
+     */
+    private static class ExitStatusTestReporter implements TestReporter {
+        private static final int DEFAULT = 0;
+        private static final int ERRORS = 1;
+
+        private int exitStatus = DEFAULT;
+
+        @Override
+        public void generateReport(TestResults testResults) {
+            if (testResults.getFailed() > 0) {
+                exitStatus = ERRORS;
+            }
+        }
+
+        int exitStatus() {
+            return exitStatus;
+        }
+    }
 }
