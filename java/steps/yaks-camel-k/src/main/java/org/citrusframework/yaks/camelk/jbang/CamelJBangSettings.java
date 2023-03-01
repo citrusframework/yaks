@@ -35,7 +35,7 @@ public final class CamelJBangSettings {
 
     private static final String CAMEL_VERSION_PROPERTY = JBANG_PROPERTY_PREFIX + "camel.version";
     private static final String CAMEL_VERSION_ENV = JBANG_ENV_PREFIX + "CAMEL_VERSION";
-    private static final String CAMEL_VERSION_DEFAULT = "3.20.1";
+    private static final String CAMEL_VERSION_DEFAULT = "3.20.2";
 
     private static final String KAMELETS_LOCAL_DIR_PROPERTY = JBANG_PROPERTY_PREFIX + "kamelets.local.dir";
     private static final String KAMELETS_LOCAL_DIR_ENV = JBANG_ENV_PREFIX + "KAMELETS_LOCAL_DIR";
