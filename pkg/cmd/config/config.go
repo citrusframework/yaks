@@ -24,8 +24,8 @@ const (
 
 var DefaultVersions = Versions{
 	"citrus.version":           "3.4.0",
-	"camel.version":            "3.20.1",
-	"apache.camel.version":     "3.20.1",
+	"camel.version":            "3.20.2",
+	"apache.camel.version":     "3.20.2",
 	"spring.version":           "5.3.25",
 	"cucumber.version":         "7.11.0",
 	"postgresql.version":       "42.5.1",

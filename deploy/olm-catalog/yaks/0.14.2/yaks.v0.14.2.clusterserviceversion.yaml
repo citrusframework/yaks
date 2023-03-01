@@ -58,7 +58,7 @@ metadata:
     categories: Integration & Delivery
     certified: "false"
     containerImage: docker.io/citrusframework/yaks:0.14.2
-    createdAt: "2023-02-06T14:44:00Z"
+    createdAt: "2023-02-15T23:44:00Z"
     description: YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
     operators.operatorframework.io/builder: operator-sdk-v1.22.0
     operators.operatorframework.io/internal-objects: '["instances.yaks.citrusframework.org"]'
