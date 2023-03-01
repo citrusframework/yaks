@@ -71,19 +71,3 @@ func AddRepositories(args []string, runConfig *config.RunConfig, repositories ..
 
 	return args
 }
-
-func AddCucumberGlue(args []string, glue ...string) []string {
-	if len(glue) > 0 {
-		return append(args, fmt.Sprintf("-D=cucumber.glue=%s", strings.Join(glue, ",")))
-	}
-
-	return args
-}
-
-func AddCucumberTags(args []string, tags ...string) []string {
-	if len(tags) > 0 {
-		return append(args, fmt.Sprintf("-D=cucumber.filter.tags='%s'", strings.Join(tags, " and ")))
-	}
-
-	return args
-}
