@@ -36,8 +36,10 @@ public class KameletBuilderTest {
 
 	@Test
 	public void buildComplexKamelet() throws IOException {
-		Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
-		types.put("out", new KameletSpec.TypeSpec("text/plain"));
+		Map<String, KameletSpec.DataTypesSpec> dataTypes = new HashMap<>();
+		dataTypes.put("out", new KameletSpec.DataTypesSpec("text",
+				new KameletSpec.DataTypeSpec("camel", "binary"),
+				new KameletSpec.DataTypeSpec("camel", "text")));
 
 		KameletSpec.Definition definition = new KameletSpec.Definition();
 		definition.setTitle("Timer Source");
@@ -48,7 +50,7 @@ public class KameletBuilderTest {
 		Kamelet kamelet = new Kamelet.Builder()
 				.name("time-source")
 				.definition(definition)
-				.types(types)
+				.dataTypes(dataTypes)
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
 				.template("from:\n" +
 						"  uri: timer:tick\n" +

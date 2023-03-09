@@ -48,7 +48,7 @@ public class CreateKameletAction extends AbstractKameletAction {
     private final KameletSpec.Source source;
     private final KameletSpec.Definition definition;
     private final List<String> dependencies;
-    private final Map<String, KameletSpec.TypeSpec> types;
+    private final Map<String, KameletSpec.DataTypesSpec> dataTypes;
     private final Resource resource;
     private final boolean supportVariables;
 
@@ -63,7 +63,7 @@ public class CreateKameletAction extends AbstractKameletAction {
         this.source = builder.source;
         this.definition = builder.definition;
         this.dependencies = builder.dependencies;
-        this.types = builder.types;
+        this.dataTypes = builder.dataTypes;
         this.resource = builder.resource;
         this.supportVariables = builder.supportVariables;
     }
@@ -117,8 +117,8 @@ public class CreateKameletAction extends AbstractKameletAction {
                 builder.dependencies(context.resolveDynamicValuesInList(dependencies));
             }
 
-            if (types != null && !types.isEmpty()) {
-                builder.types(context.resolveDynamicValuesInMap(types));
+            if (dataTypes != null && !dataTypes.isEmpty()) {
+                builder.dataTypes(context.resolveDynamicValuesInMap(dataTypes));
             }
 
             kamelet = builder.build();
@@ -150,8 +150,10 @@ public class CreateKameletAction extends AbstractKameletAction {
         private KameletSpec.Source source;
         private final List<String> dependencies = new ArrayList<>();
         private KameletSpec.Definition definition = new KameletSpec.Definition();
-        private final Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+        private final Map<String, KameletSpec.DataTypesSpec> dataTypes = new HashMap<>();
+
         private Resource resource;
+
         private boolean supportVariables = true;
 
         public Builder supportVariables(boolean supportVariables) {
@@ -216,20 +218,25 @@ public class CreateKameletAction extends AbstractKameletAction {
             return this;
         }
 
-        public Builder inType(String mediaType) {
-            return addType("in", mediaType);
+        public Builder inType(String scheme, String format) {
+            return addDataType("in", scheme, format);
         }
 
-        public Builder outType(String mediaType) {
-            return addType("out", mediaType);
+        public Builder outType(String scheme, String format) {
+            return addDataType("out", scheme, format);
         }
 
-        public Builder errorType(String mediaType) {
-            return addType("error", mediaType);
+        public Builder errorType(String scheme, String format) {
+            return addDataType("error", scheme, format);
         }
 
-        public Builder addType(String slot, String mediaType) {
-            this.types.put(slot, new KameletSpec.TypeSpec(mediaType));
+        public Builder addDataType(String slot, String scheme, String format) {
+            if (dataTypes.containsKey(slot)) {
+                this.dataTypes.get(slot).getTypes().add(new KameletSpec.DataTypeSpec(scheme, format));
+            } else {
+                this.dataTypes.put(slot, new KameletSpec.DataTypesSpec(format, new KameletSpec.DataTypeSpec(scheme, format)));
+            }
+
             return this;
         }
 
@@ -239,7 +246,7 @@ public class CreateKameletAction extends AbstractKameletAction {
             name = kamelet.getMetadata().getName();
             definition = kamelet.getSpec().getDefinition();
             dependencies.addAll(kamelet.getSpec().getDependencies());
-            types.putAll(kamelet.getSpec().getTypes());
+            dataTypes.putAll(kamelet.getSpec().getDataTypes());
 
             if (kamelet.getSpec().getSources() != null && !kamelet.getSpec().getSources().isEmpty()) {
                 source = kamelet.getSpec().getSources().get(0);

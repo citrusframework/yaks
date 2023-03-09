@@ -16,7 +16,7 @@ Feature: Kamelet
       .setBody().constant('{{message}}')
       .to('kamelet:sink')
     """
-    And Kamelet type out="test/plain"
+    And Kamelet dataType out="camel:test"
     When create Kamelet timer-source
     Then Kamelet timer-source should be available
 
@@ -30,7 +30,7 @@ Feature: Kamelet
       | name     | period        |
       | type     | integer       |
       | default  | 1000          |
-    And Kamelet type out="test/plain"
+    And Kamelet dataType out="camel:test"
     When create Kamelet timer-source with template
 """
 from:

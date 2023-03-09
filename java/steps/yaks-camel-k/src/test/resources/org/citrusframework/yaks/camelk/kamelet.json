@@ -23,14 +23,24 @@
         }
       }
     },
+    "dataTypes": {
+      "out": {
+        "default": "text",
+        "types": [
+          {
+            "scheme": "camel",
+            "format": "binary"
+          },
+          {
+            "scheme": "camel",
+            "format": "text"
+          }
+        ]
+      }
+    },
     "dependencies": [
       "mvn:fake.dependency:id:version-1"
     ],
-    "types": {
-      "out": {
-        "mediaType": "text/plain"
-      }
-    },
     "template": {
       "from": {
         "uri": "timer:tick",

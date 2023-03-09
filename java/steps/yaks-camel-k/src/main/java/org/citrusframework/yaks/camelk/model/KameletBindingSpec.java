@@ -89,7 +89,7 @@ public class KameletBindingSpec implements KubernetesResource {
 
     @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"ref", "uri", "properties"})
+    @JsonPropertyOrder({"ref", "uri", "properties", "dataTypes"})
     public static class Endpoint implements KubernetesResource {
         @JsonProperty("ref")
         private ObjectReference ref;
@@ -100,6 +100,10 @@ public class KameletBindingSpec implements KubernetesResource {
         @JsonProperty("properties")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         private Map<String, Object> properties = new HashMap<>();
+
+        @JsonProperty("dataTypes")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private Map<String, DataTypeRef> dataTypes = new HashMap<>();
 
         public Endpoint() {
         }
@@ -139,6 +143,50 @@ public class KameletBindingSpec implements KubernetesResource {
 
         public void setProperties(Map<String, Object> properties) {
             this.properties = properties;
+        }
+
+        public Map<String, DataTypeRef> getDataTypes() {
+            return dataTypes;
+        }
+
+        public void setDataTypes(Map<String, DataTypeRef> dataTypes) {
+            this.dataTypes = dataTypes;
+        }
+
+        @JsonDeserialize(using = JsonDeserializer.None.class)
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        @JsonPropertyOrder({"scheme", "format"})
+        public static class DataTypeRef implements KubernetesResource {
+            @JsonProperty("scheme")
+            private String scheme;
+
+            @JsonProperty("format")
+            private String format;
+
+            public DataTypeRef() {
+                super();
+            }
+
+            public DataTypeRef(String scheme, String format) {
+                this.scheme = scheme;
+                this.format = format;
+            }
+
+            public String getScheme() {
+                return scheme;
+            }
+
+            public void setScheme(String scheme) {
+                this.scheme = scheme;
+            }
+
+            public String getFormat() {
+                return format;
+            }
+
+            public void setFormat(String format) {
+                this.format = format;
+            }
         }
 
         @JsonDeserialize(using = JsonDeserializer.None.class)
