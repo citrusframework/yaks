@@ -40,6 +40,7 @@ public class KameletBindingBuilderTest {
 
 		KameletBindingSpec.Endpoint source = new KameletBindingSpec.Endpoint(sourceRef);
 		source.getProperties().put("message", "Hello World");
+		source.getDataTypes().put("out", new KameletBindingSpec.Endpoint.DataTypeRef("camel", "string"));
 
 		KameletBindingSpec.Endpoint.ObjectReference sinkRef = new KameletBindingSpec.Endpoint.ObjectReference();
 		sinkRef.setName("hello-topic");

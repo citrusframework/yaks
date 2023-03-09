@@ -84,7 +84,8 @@ public class CreateServiceAction extends AbstractKubernetesAction {
                 .build();
 
         Service created = getKubernetesClient().services().inNamespace(namespace(context))
-                .createOrReplace(service);
+                .resource(service)
+                .createOrReplace();
 
         if (created.getSpec().getClusterIP() != null) {
             context.setVariable("YAKS_KUBERNETES_SERVICE_CLUSTER_IP", created.getSpec().getClusterIP());

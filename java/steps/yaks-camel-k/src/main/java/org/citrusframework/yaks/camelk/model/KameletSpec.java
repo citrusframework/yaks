@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.camelk.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,22 +29,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 
 @JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"definition", "dependencies", "types", "sources", "authorization", "flow", "template"})
+@JsonPropertyOrder({"definition", "dataTypes", "dependencies", "sources", "authorization", "flow", "template"})
 public class KameletSpec implements KubernetesResource {
 
     @JsonProperty("definition")
     private Definition definition;
+    @JsonProperty("dataTypes")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, DataTypesSpec> dataTypes;
     @JsonProperty("dependencies")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<String> dependencies;
-    @JsonProperty("types")
-    private Map<String, TypeSpec> types;
     @JsonProperty("sources")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Source> sources;
@@ -88,12 +89,12 @@ public class KameletSpec implements KubernetesResource {
         this.dependencies = dependencies;
     }
 
-    public Map<String, TypeSpec> getTypes() {
-        return types;
+    public Map<String, DataTypesSpec> getDataTypes() {
+        return dataTypes;
     }
 
-    public void setTypes(Map<String, TypeSpec> types) {
-        this.types = types;
+    public void setDataTypes(Map<String, DataTypesSpec> dataTypes) {
+        this.dataTypes = dataTypes;
     }
 
     @Deprecated
@@ -151,24 +152,111 @@ public class KameletSpec implements KubernetesResource {
 
     @JsonDeserialize(using = JsonDeserializer.None.class)
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JsonPropertyOrder({"mediaType", "schema"})
-    public static class TypeSpec implements KubernetesResource {
-        @JsonProperty("mediaType")
-        private String mediaType;
-        @JsonProperty("schema")
-        private ObjectSchema schema;
+    @JsonPropertyOrder({"default", "types", "headers"})
+    public static class DataTypesSpec implements KubernetesResource {
+        @JsonProperty("default")
+        private String defaultType;
 
-        public TypeSpec() {
+        @JsonProperty("types")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private List<DataTypeSpec> types;
+
+        @JsonProperty("headers")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private Map<String, HeaderSpec> headers = new HashMap<>();
+
+        public DataTypesSpec() {
             super();
         }
 
-        public TypeSpec(String mediaType) {
-            this(mediaType, null);
+        public DataTypesSpec(String defaultType, DataTypeSpec... types) {
+            this.defaultType = defaultType;
+            this.types = Arrays.asList(types);
         }
 
-        public TypeSpec(String mediaType, ObjectSchema schema) {
-            this.mediaType = mediaType;
-            this.schema = schema;
+        public List<DataTypeSpec> getTypes() {
+            return types;
+        }
+
+        public void setTypes(List<DataTypeSpec> types) {
+            this.types = types;
+        }
+
+        public String getDefaultType() {
+            return defaultType;
+        }
+
+        public void setDefaultType(String defaultType) {
+            this.defaultType = defaultType;
+        }
+
+        public Map<String, HeaderSpec> getHeaders() {
+            return headers;
+        }
+
+        public void setHeaders(Map<String, HeaderSpec> headers) {
+            this.headers = headers;
+        }
+    }
+
+    @JsonDeserialize(using = JsonDeserializer.None.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"scheme", "format", "description", "mediaType", "headers", "dependencies", "schema"})
+    public static class DataTypeSpec implements KubernetesResource {
+        @JsonProperty("scheme")
+        private String scheme;
+
+        @JsonProperty("format")
+        private String format;
+
+        @JsonProperty("description")
+        private String description;
+
+        @JsonProperty("mediaType")
+        private String mediaType;
+
+        @JsonProperty("headers")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private Map<String, HeaderSpec> headers;
+
+        @JsonProperty("dependencies")
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private List<String> dependencies;
+
+        @JsonProperty("schema")
+        private ObjectSchema schema;
+
+        public DataTypeSpec() {
+            super();
+        }
+
+        public DataTypeSpec(String scheme, String format) {
+            this.scheme = scheme;
+            this.format = format;
+        }
+
+        public String getScheme() {
+            return scheme;
+        }
+
+        public void setScheme(String scheme) {
+            this.scheme = scheme;
+        }
+
+        public String getFormat() {
+            return format;
+        }
+
+        public void setFormat(String format) {
+            this.format = format;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
         }
 
         public String getMediaType() {
@@ -179,12 +267,99 @@ public class KameletSpec implements KubernetesResource {
             this.mediaType = mediaType;
         }
 
-        public JsonSchema getSchema() {
+        public ObjectSchema getSchema() {
             return schema;
         }
 
         public void setSchema(ObjectSchema schema) {
             this.schema = schema;
+        }
+
+        public Map<String, HeaderSpec> getHeaders() {
+            return headers;
+        }
+
+        public void setHeaders(Map<String, HeaderSpec> headers) {
+            this.headers = headers;
+        }
+
+        public List<String> getDependencies() {
+            return dependencies;
+        }
+
+        public void setDependencies(List<String> dependencies) {
+            this.dependencies = dependencies;
+        }
+    }
+
+    @JsonDeserialize(using = JsonDeserializer.None.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"type", "title", "description", "required", "default"})
+    public static class HeaderSpec implements KubernetesResource {
+        @JsonProperty("type")
+        private String type;
+
+        @JsonProperty("title")
+        private String title;
+
+        @JsonProperty("description")
+        private String description;
+
+        @JsonProperty("required")
+        private boolean required;
+
+        @JsonProperty("default")
+        private String defaultValue;
+
+        public HeaderSpec() {
+            super();
+        }
+
+        public HeaderSpec(String type, String title, boolean required, String defaultValue) {
+            this.type = type;
+            this.title = title;
+            this.required = required;
+            this.defaultValue = defaultValue;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public boolean isRequired() {
+            return required;
+        }
+
+        public void setRequired(boolean required) {
+            this.required = required;
+        }
+
+        public String getDefaultValue() {
+            return defaultValue;
+        }
+
+        public void setDefaultValue(String defaultValue) {
+            this.defaultValue = defaultValue;
         }
     }
 

@@ -59,7 +59,7 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
         private String name;
         private String template;
         private KameletSpec.Definition definition = new KameletSpec.Definition();
-        private final Map<String, KameletSpec.TypeSpec> types = new HashMap<>();
+        private final Map<String, KameletSpec.DataTypesSpec> dataTypes = new HashMap<>();
         private List<String> dependencies = new ArrayList<>();
         private KameletSpec.Source source;
 
@@ -100,13 +100,18 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
             return this;
         }
 
-        public Builder types(Map<String, KameletSpec.TypeSpec> types) {
-            this.types.putAll(types);
+        public Builder dataTypes(Map<String, KameletSpec.DataTypesSpec> types) {
+            this.dataTypes.putAll(types);
             return this;
         }
 
-        public Builder addType(String slot, String mediaType) {
-            this.types.put(slot, new KameletSpec.TypeSpec(mediaType));
+        public Builder addDataType(String slot, String scheme, String format) {
+            if (dataTypes.containsKey(slot)) {
+                this.dataTypes.get(slot).getTypes().add(new KameletSpec.DataTypeSpec(scheme, format));
+            } else {
+                this.dataTypes.put(slot, new KameletSpec.DataTypesSpec(format, new KameletSpec.DataTypeSpec(scheme, format)));
+            }
+
             return this;
         }
 
@@ -124,7 +129,7 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
             }
 
             kamelet.getSpec().setDependencies(dependencies);
-            kamelet.getSpec().setTypes(types);
+            kamelet.getSpec().setDataTypes(dataTypes);
             return kamelet;
         }
     }

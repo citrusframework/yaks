@@ -13,6 +13,12 @@
       },
       "properties": {
         "message": "Hello World"
+      },
+      "dataTypes": {
+        "out": {
+          "scheme": "camel",
+          "format": "string"
+        }
       }
     },
     "sink": {

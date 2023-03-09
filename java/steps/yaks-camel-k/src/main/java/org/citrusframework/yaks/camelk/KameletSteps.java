@@ -111,9 +111,14 @@ public class KameletSteps {
         runner.run(createVariable(VariableNames.KAMELET_NAMESPACE.value(), namespace));
     }
 
-    @Given("^Kamelet type (in|out|error)(?:=| is )\"(.+)\"$")
-	public void addType(String slot, String mediaType) {
-        kamelet.addType(slot, mediaType);
+    @Given("^Kamelet dataType (in|out|error)(?:=| is )\"(.+)\"$")
+	public void addType(String slot, String format) {
+        if (format.contains(":")) {
+            String[] schemeAndFormat = format.split(":");
+            kamelet.addDataType(slot, schemeAndFormat[0], schemeAndFormat[1]);
+        } else {
+            kamelet.addDataType(slot, "camel", format);
+        }
 	}
 
     @Given("^Kamelet title \"(.+)\"$")

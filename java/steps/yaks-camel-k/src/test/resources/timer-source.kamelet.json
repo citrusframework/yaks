@@ -35,9 +35,15 @@
         }
       }
     },
-    "types": {
+    "dataTypes": {
       "out": {
-        "mediaType": "text/plain"
+        "default": "text",
+        "types": [
+          {
+            "format": "text",
+            "mediaType": "text/plain"
+          }
+        ]
       }
     },
     "template": {

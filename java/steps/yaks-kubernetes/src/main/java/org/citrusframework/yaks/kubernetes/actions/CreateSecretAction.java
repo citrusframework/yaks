@@ -77,7 +77,8 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
 
         getKubernetesClient().secrets()
                 .inNamespace(namespace(context))
-                .createOrReplace(secret);
+                .resource(secret)
+                .createOrReplace();
     }
 
     /**
