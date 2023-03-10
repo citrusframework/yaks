@@ -38,7 +38,7 @@ public class YaksJBangMain implements Callable<Integer> {
                 .addSubcommand("ls", new CommandLine(new ListTests(main)))
                 .addSubcommand("completion", new CommandLine(new Complete(main)));
 
-        commandLine.getCommandSpec().versionProvider(() -> new String[] { "0.15.0-SNAPSHOT" });
+        commandLine.getCommandSpec().versionProvider(() -> new String[] { "0.14.3" });
 
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);
