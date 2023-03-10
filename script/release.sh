@@ -80,6 +80,9 @@ release() {
     if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --snapshot-release) ]; then
         # Commit project metadata for new version
         git_commit "$working_dir" project.yml "Update project metadata for $release_version"
+
+        # Commit docs overview.adoc
+        git_commit "$working_dir" overview.adoc "Update docs overview for $release_version"
     fi
 
     # Build and stage artifacts
@@ -132,6 +135,9 @@ release() {
     fi
 
     if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --no-git-push) ]; then
+        # Update docs overview with new snapshot version
+        update_docs_overview "$working_dir" "$release_version" "$snapshot_version"
+
         local remote=$(get_git_remote)
 
         # Push changes
@@ -214,6 +220,26 @@ update_project_metadata() {
 
     sed -i "s/current-version: .*/current-version: $version/" $file
     sed -i "s/next-version: .*/next-version: $next_version/g" $file
+
+    file="$working_dir/Makefile"
+
+    sed -i "s/LAST_RELEASED_VERSION := .*/LAST_RELEASED_VERSION := $version/" $file
+
+    file="$working_dir/java/tools/yaks-jbang/dist/YaksJBang.java"
+
+    sed -i "s/yaks.jbang.version:.*}/yaks.jbang.version:$version}/" $file
+}
+
+update_docs_overview() {
+    local working_dir="$1"
+    local version="$2"
+    local snapshot_version="$3"
+
+    local file="$working_dir/java/docs/overview.adoc"
+
+    # Insert snapshot docs in line 18
+    local line=$(sed -n "/$version/s/$version/$snapshot_version/gp" $file)
+    sed -i "18 i $line" $file
 }
 
 source "$location/util/common_funcs"
