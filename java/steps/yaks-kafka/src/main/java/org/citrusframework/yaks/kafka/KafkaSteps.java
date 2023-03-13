@@ -106,6 +106,13 @@ public class KafkaSteps {
         kafkaEndpoint.getEndpointConfiguration().setConsumerGroup(context.replaceDynamicContentInString(consumerGroup));
     }
 
+    @Given("^new (?:Kafka|kafka) connection$")
+    public void createConnection(DataTable properties) {
+        setConnection(properties);
+        kafkaEndpoint = new KafkaEndpoint(kafkaEndpoint.getEndpointConfiguration());
+        citrus.getCitrusContext().getReferenceResolver().bind(endpointName, kafkaEndpoint);
+    }
+
     @Given("^(?:Kafka|kafka) producer configuration$")
     public void setProducerConfig(DataTable properties) {
         Map<String, Object> producerProperties = properties.asMap(String.class, Object.class);
