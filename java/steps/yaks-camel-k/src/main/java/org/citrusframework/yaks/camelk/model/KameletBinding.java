@@ -17,19 +17,11 @@
 
 package org.citrusframework.yaks.camelk.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.fabric8.kubernetes.api.model.Namespaced;
-import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * @author Christoph Deppisch
@@ -37,24 +29,14 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
 @Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
-public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBindingStatus> implements Namespaced {
-
-    public KameletBinding() {
-        super();
-        this.spec = new KameletBindingSpec();
-        this.status = null;
-    }
+public class KameletBinding extends Binding {
 
     /**
      * Fluent builder
      */
-    public static class Builder {
-        private String name;
-        private int replicas;
-        private Integration integration;
-        private KameletBindingSpec.Endpoint source;
-        private KameletBindingSpec.Endpoint sink;
-        private final List<KameletBindingSpec.Endpoint> steps = new ArrayList<>();
+    public static class Builder extends Binding.Builder {
+
+        Binding.Builder delegate = new Binding.Builder();
 
         public Builder name(String name) {
             this.name = name;
@@ -62,97 +44,91 @@ public class KameletBinding extends CustomResource<KameletBindingSpec, KameletBi
         }
 
         public Builder integration(Integration integration) {
-            this.integration = integration;
+            delegate.integration(integration);
             return this;
         }
 
-        public Builder source(KameletBindingSpec.Endpoint source) {
-            this.source = source;
+        public Builder source(BindingSpec.Endpoint source) {
+            delegate.source(source);
             return this;
         }
 
         public Builder source(String uri) {
-            return source(new KameletBindingSpec.Endpoint(uri));
+            delegate.source(uri);
+            return this;
         }
 
-        public Builder source(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
-            Map<String, Object> props = null;
-            if (properties != null && !properties.isEmpty()) {
-                props = KubernetesSupport.yaml().load(properties);
-            }
-
-            return source(new KameletBindingSpec.Endpoint(ref, props));
+        public Builder source(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+            delegate.source(ref, properties);
+            return this;
         }
 
-        public Builder sink(KameletBindingSpec.Endpoint sink) {
-            this.sink = sink;
+        public Builder sink(BindingSpec.Endpoint sink) {
+            delegate.sink(sink);
             return this;
         }
 
         public Builder sink(String uri) {
-            return sink(new KameletBindingSpec.Endpoint(uri));
-        }
-
-        public Builder sink(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
-            Map<String, Object> props = null;
-            if (properties != null && !properties.isEmpty()) {
-                props = KubernetesSupport.yaml().load(properties);
-            }
-
-            return sink(new KameletBindingSpec.Endpoint(ref, props));
-        }
-
-        public Builder steps(KameletBindingSpec.Endpoint... step) {
-            this.steps.addAll(Arrays.asList(step));
+            delegate.sink(uri);
             return this;
         }
 
-        public Builder addStep(KameletBindingSpec.Endpoint step) {
-            this.steps.add(step);
+        public Builder sink(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+            delegate.sink(ref, properties);
+            return this;
+        }
+
+        public Builder steps(BindingSpec.Endpoint... step) {
+            delegate.steps(step);
+            return this;
+        }
+
+        public Builder addStep(BindingSpec.Endpoint step) {
+            delegate.addStep(step);
             return this;
         }
 
         public Builder addStep(String uri) {
-            return addStep(new KameletBindingSpec.Endpoint(uri));
+            delegate.addStep(new BindingSpec.Endpoint(uri));
+            return this;
         }
 
-        public Builder addStep(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
-            Map<String, Object> props = null;
-            if (properties != null && !properties.isEmpty()) {
-                props = KubernetesSupport.yaml().load(properties);
-            }
-
-            return addStep(new KameletBindingSpec.Endpoint(ref, props));
+        public Builder addStep(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+            delegate.addStep(ref, properties);
+            return this;
         }
 
         public Builder replicas(int replicas) {
-            this.replicas = replicas;
+            delegate.replicas(replicas);
+            return this;
+        }
+
+        public Builder from(Binding binding) {
+            delegate.name(binding.getMetadata().getName());
+            delegate.source(binding.getSpec().getSource());
+            delegate.sink(binding.getSpec().getSink());
+
+            if (binding.getSpec().getSteps() != null) {
+                delegate.steps(binding.getSpec().getSteps());
+            }
+
+            delegate.integration(binding.getSpec().getIntegration());
+
+            if (binding.getSpec().getReplicas() != null) {
+                delegate.replicas(binding.getSpec().getReplicas());
+            }
+
             return this;
         }
 
         public KameletBinding build() {
+            Binding b = this.delegate.build();
+
             KameletBinding binding = new KameletBinding();
-            binding.getMetadata().setName(name);
+            binding.setMetadata(b.getMetadata());
 
-            if (replicas > 0) {
-                binding.getSpec().setReplicas(replicas);
-            }
-
-            if (integration != null) {
-                binding.getSpec().setIntegration(integration);
-            }
-
-            if (source != null) {
-                binding.getSpec().setSource(source);
-            }
-
-            if (sink != null) {
-                binding.getSpec().setSink(sink);
-            }
-
-            if (!steps.isEmpty()) {
-                binding.getSpec().setSteps(steps.toArray(new KameletBindingSpec.Endpoint[]{}));
-            }
+            binding.setSpec(b.getSpec());
+            binding.setStatus(b.getStatus());
 
             return binding;
         }

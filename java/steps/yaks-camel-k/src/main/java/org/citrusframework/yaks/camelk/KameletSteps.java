@@ -30,9 +30,9 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.camelk.model.Binding;
+import org.citrusframework.yaks.camelk.model.BindingSpec;
 import org.citrusframework.yaks.camelk.model.Kamelet;
-import org.citrusframework.yaks.camelk.model.KameletBinding;
-import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
@@ -60,10 +60,10 @@ public class KameletSteps {
     private Kamelet.Builder kamelet;
     private KameletSpec.Definition definition;
 
-    // KameleteBinding builder
-    private KameletBinding.Builder binding;
-    private KameletBindingSpec.Endpoint source;
-    private KameletBindingSpec.Endpoint sink;
+    // Binding builder
+    private Binding.Builder binding;
+    private BindingSpec.Endpoint source;
+    private BindingSpec.Endpoint sink;
 
     private Map<String, Object> sourceProperties;
     private Map<String, Object> sinkProperties;
@@ -80,7 +80,7 @@ public class KameletSteps {
         }
 
         initializeKameletBuilder();
-        initializeKameletBindingBuilder();
+        initializeBindingBuilder();
     }
 
     @Given("^Disable auto removal of Kamelet resources$")
@@ -162,33 +162,33 @@ public class KameletSteps {
 	}
 
 	@Given("^KameletBinding source properties$")
-    public void setKameletBindingSourceProperties(Map<String, Object> properties) {
+    public void setBindingSourceProperties(Map<String, Object> properties) {
         this.sourceProperties.putAll(properties);
     }
 
     @Given("^KameletBinding sink properties$")
-    public void setKameletBindingSinkProperties(Map<String, Object> properties) {
+    public void setBindingSinkProperties(Map<String, Object> properties) {
         this.sinkProperties.putAll(properties);
     }
 
     @Given("^bind Kamelet ([a-z0-9-]+) to uri ([^\\s]+)$")
     public void bindKameletToUri(String kameletName, String uri) {
-        KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
-        source = new KameletBindingSpec.Endpoint(sourceRef);
+        BindingSpec.Endpoint.ObjectReference sourceRef =
+                new BindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
+        source = new BindingSpec.Endpoint(sourceRef);
 
-        sink = new KameletBindingSpec.Endpoint(uri);
+        sink = new BindingSpec.Endpoint(uri);
     }
 
     @Given("^bind Kamelet ([a-z0-9-]+) to Kafka topic ([^\\s]+)$")
     public void bindKameletToKafka(String kameletName, String topic) {
-        KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
-        source = new KameletBindingSpec.Endpoint(sourceRef);
+        BindingSpec.Endpoint.ObjectReference sourceRef =
+                new BindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
+        source = new BindingSpec.Endpoint(sourceRef);
 
-        KameletBindingSpec.Endpoint.ObjectReference sinkRef =
-                new KameletBindingSpec.Endpoint.ObjectReference("KafkaTopic", KafkaSettings.getNamespace(), topic);
-        sink = new KameletBindingSpec.Endpoint(sinkRef);
+        BindingSpec.Endpoint.ObjectReference sinkRef =
+                new BindingSpec.Endpoint.ObjectReference("KafkaTopic", KafkaSettings.getNamespace(), topic);
+        sink = new BindingSpec.Endpoint(sinkRef);
     }
 
     @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+)$")
@@ -198,13 +198,13 @@ public class KameletSteps {
 
     @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+) of kind ([^\\s]+)$")
     public void bindKameletToKnativeChannel(String kameletName, String channel, String channelKind) {
-        KameletBindingSpec.Endpoint.ObjectReference sourceRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
-        source = new KameletBindingSpec.Endpoint(sourceRef);
+        BindingSpec.Endpoint.ObjectReference sourceRef =
+                new BindingSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + CamelKSettings.getKameletApiVersion(), "Kamelet", namespace, kameletName);
+        source = new BindingSpec.Endpoint(sourceRef);
 
-        KameletBindingSpec.Endpoint.ObjectReference sinkRef =
-                new KameletBindingSpec.Endpoint.ObjectReference(channelKind, KnativeSettings.getNamespace(), channel);
-        sink = new KameletBindingSpec.Endpoint(sinkRef);
+        BindingSpec.Endpoint.ObjectReference sinkRef =
+                new BindingSpec.Endpoint.ObjectReference(channelKind, KnativeSettings.getNamespace(), channel);
+        sink = new BindingSpec.Endpoint(sinkRef);
     }
 
     @Given("^load Kamelet ([a-z0-9-]+).kamelet.yaml$")
@@ -223,16 +223,16 @@ public class KameletSteps {
     }
 
     @Given("^load KameletBinding ([a-z0-9-]+).yaml$")
-    public void loadKameletBindingFromFile(String fileName) {
+    public void loadBindingFromFile(String fileName) {
         Resource resource = new ClassPathResource(fileName + ".yaml");
         runner.run(camelk()
                 .client(k8sClient)
-                .createKameletBinding(fileName)
+                .createBinding(fileName)
                 .resource(resource));
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteKameletBinding(fileName)));
+                    .actions(camelk().client(k8sClient).deleteBinding(fileName)));
         }
     }
 
@@ -273,7 +273,7 @@ public class KameletSteps {
 	}
 
     @Given("^(?:create|new) KameletBinding ([a-z0-9-]+)$")
-    public void createNewKameletBinding(String name) {
+    public void createNewBinding(String name) {
         binding.name(name);
 
         source.getProperties().putAll(sourceProperties);
@@ -284,14 +284,14 @@ public class KameletSteps {
 
         runner.run(camelk()
                 .client(k8sClient)
-                .createKameletBinding(name)
+                .createBinding(name)
                 .fromBuilder(binding));
 
-        initializeKameletBindingBuilder();
+        initializeBindingBuilder();
 
         if (autoRemoveResources) {
             runner.then(doFinally()
-                    .actions(camelk().client(k8sClient).deleteKameletBinding(name)));
+                    .actions(camelk().client(k8sClient).deleteBinding(name)));
         }
     }
 
@@ -303,10 +303,10 @@ public class KameletSteps {
 	}
 
     @Given("^delete KameletBinding ([a-z0-9-]+)$")
-	public void deleteKameletBinding(String name) {
+	public void deleteBinding(String name) {
         runner.run(camelk()
                     .client(k8sClient)
-                    .deleteKameletBinding(name));
+                    .deleteBinding(name));
 	}
 
     @Given("^Kamelet ([a-z0-9-]+) is available$")
@@ -330,10 +330,10 @@ public class KameletSteps {
 
     @Given("^KameletBinding ([a-z0-9-]+) is available$")
     @Then("^KameletBinding ([a-z0-9-]+) should be available$")
-    public void kameletBindingShouldBeAvailable(String name) {
+    public void bindingShouldBeAvailable(String name) {
         runner.run(camelk()
                 .client(k8sClient)
-                .verifyKameletBinding(name)
+                .verifyBinding(name)
                 .isAvailable());
     }
 
@@ -342,8 +342,8 @@ public class KameletSteps {
         definition = new KameletSpec.Definition();
     }
 
-    private void initializeKameletBindingBuilder() {
-        binding = new KameletBinding.Builder();
+    private void initializeBindingBuilder() {
+        binding = new Binding.Builder();
         source = null;
         sink = null;
         sourceProperties = new HashMap<>();

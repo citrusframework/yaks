@@ -30,10 +30,10 @@ specification you are able to create the Kamelet in the current namespace.
 
 First of all you can specify the media type of the available slots (in, out and error) in the Kamelet.
 
-.@Given("^Kamelet type (in|out|error)(?:=| is )\"{mediaType}\"$")
+.@Given("^Kamelet dataType (in|out|error)(?:=| is )\"{mediaType}\"$")
 [source,gherkin]
 ----
-Given Kamelet type in="{mediaType}"
+Given Kamelet dataType in="{mediaType}"
 ----
 
 The Kamelet can use a title that you set with the following step.

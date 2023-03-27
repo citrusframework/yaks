@@ -17,9 +17,11 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.context.TestContextFactory;
@@ -29,14 +31,14 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
-import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 
+import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class VerifyKameletBindingActionTest {
+public class DeleteBindingActionTest {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -54,22 +56,44 @@ public class VerifyKameletBindingActionTest {
     }
 
     @Test
-    public void shouldVerifyLocalJBangIntegration() {
-        ProcessAndOutput pao = camel().run("timer-to-log-binding", sampleBinding);
-        Long pid = pao.getCamelProcessId();
+    public void shouldDeleteLocalJBangBinding() {
+        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
 
         try {
-            VerifyKameletBindingAction action = new VerifyKameletBindingAction.Builder()
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
+
+            DeleteBindingAction action = new DeleteBindingAction.Builder()
                     .client(kubernetesClient)
-                    .isAvailable("timer-to-log-binding")
+                    .binding("timer-to-log-binding.yaml")
                     .clusterType(YaksClusterType.LOCAL)
-                    .maxAttempts(10)
                     .build();
 
-            context.setVariable("timer-to-log-binding:pid", pid);
-            context.setVariable("timer-to-log-binding:process:" + pid, pao);
+            context.setVariable("timer-to-log-binding.yaml:pid", pid);
 
             action.execute(context);
+
+            await().atMost(15000L, TimeUnit.MILLISECONDS).until(() -> camel().get(pid).isEmpty());
+        } finally {
+            camel().stop(pid);
+        }
+    }
+
+    @Test
+    public void shouldDeleteLocalJBangBindingByName() {
+        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
+
+        try {
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
+
+            DeleteBindingAction action = new DeleteBindingAction.Builder()
+                    .client(kubernetesClient)
+                    .binding("timer-to-log-binding.yaml")
+                    .clusterType(YaksClusterType.LOCAL)
+                    .build();
+
+            action.execute(context);
+
+            await().atMost(15000L, TimeUnit.MILLISECONDS).until(() -> camel().get(pid).isEmpty());
         } finally {
             camel().stop(pid);
         }

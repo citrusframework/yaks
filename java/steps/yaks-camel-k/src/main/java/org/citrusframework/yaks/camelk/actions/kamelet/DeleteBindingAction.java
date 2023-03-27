@@ -21,6 +21,9 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.camelk.CamelKSettings;
+import org.citrusframework.yaks.camelk.model.Binding;
+import org.citrusframework.yaks.camelk.model.BindingList;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
 
@@ -29,12 +32,12 @@ import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 /**
  * @author Christoph Deppisch
  */
-public class DeleteKameletBindingAction extends AbstractKameletAction {
+public class DeleteBindingAction extends AbstractKameletAction {
 
     private final String bindingName;
 
-    public DeleteKameletBindingAction(Builder builder) {
-        super("delete-kamelet-binding", builder);
+    public DeleteBindingAction(Builder builder) {
+        super("delete-binding", builder);
 
         this.bindingName = builder.bindingName;
     }
@@ -43,22 +46,29 @@ public class DeleteKameletBindingAction extends AbstractKameletAction {
     public void doExecute(TestContext context) {
         String binding = context.replaceDynamicContentInString(bindingName);
 
-        LOG.info(String.format("Deleting Kamelet binding '%s'", binding));
+        LOG.info(String.format("Deleting binding '%s'", binding));
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            deleteLocalKameletBinding(binding, context);
+            deleteLocalBinding(binding, context);
         } else {
-            deleteKameletBinding(getKubernetesClient(), namespace(context), binding);
+            deleteBinding(getKubernetesClient(), namespace(context), binding);
         }
 
-        LOG.info(String.format("Successfully deleted Kamelet binding '%s'", binding));
+        LOG.info(String.format("Successfully deleted binding '%s'", binding));
     }
 
-    private static void deleteKameletBinding(KubernetesClient k8sClient, String namespace, String name) {
-        k8sClient.resources(KameletBinding.class, KameletBindingList.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .delete();
+    private void deleteBinding(KubernetesClient k8sClient, String namespace, String name) {
+        if (apiVersion.equals(CamelKSettings.V1ALPHA1)) {
+            k8sClient.resources(KameletBinding.class, KameletBindingList.class)
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .delete();
+        } else {
+            k8sClient.resources(Binding.class, BindingList.class)
+                    .inNamespace(namespace)
+                    .withName(name)
+                    .delete();
+        }
     }
 
     /**
@@ -66,7 +76,7 @@ public class DeleteKameletBindingAction extends AbstractKameletAction {
      * @param name
      * @param context
      */
-    private static void deleteLocalKameletBinding(String name, TestContext context) {
+    private static void deleteLocalBinding(String name, TestContext context) {
         Long pid;
         if (context.getVariables().containsKey(name + ":pid")) {
             pid = context.getVariable(name + ":pid", Long.class);
@@ -74,7 +84,7 @@ public class DeleteKameletBindingAction extends AbstractKameletAction {
             pid = camel().getAll().stream()
                     .filter(props -> name.equals(props.get("NAME")) && !props.getOrDefault("PID", "").isBlank())
                     .map(props -> Long.valueOf(props.get("PID"))).findFirst()
-                    .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to retrieve Kamelet binding process id %s:pid", name)));
+                    .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to retrieve binding process id %s:pid", name)));
         }
 
         camel().stop(pid);
@@ -83,7 +93,7 @@ public class DeleteKameletBindingAction extends AbstractKameletAction {
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractKameletAction.Builder<DeleteKameletBindingAction, Builder> {
+    public static class Builder extends AbstractKameletAction.Builder<DeleteBindingAction, Builder> {
 
         private String bindingName;
 
@@ -93,8 +103,8 @@ public class DeleteKameletBindingAction extends AbstractKameletAction {
         }
 
         @Override
-        public DeleteKameletBindingAction build() {
-            return new DeleteKameletBindingAction(this);
+        public DeleteBindingAction build() {
+            return new DeleteBindingAction(this);
         }
     }
 }

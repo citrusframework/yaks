@@ -17,7 +17,7 @@ Feature: Kamelet
       | name     | period        |
       | type     | integer       |
       | default  | 1000          |
-    And Kamelet type out="text/plain"
+    And Kamelet dataType out="text/plain"
     When create Kamelet timer-source with template
 """
 from:

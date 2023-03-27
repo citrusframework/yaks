@@ -30,7 +30,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 @JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"integration", "replicas", "source", "steps", "sink"})
-public class KameletBindingSpec implements KubernetesResource {
+public class BindingSpec implements KubernetesResource {
 
     @JsonProperty("integration")
     private Integration integration;

@@ -36,6 +36,9 @@ public final class CamelKSettings {
     private static final String CAMELK_PROPERTY_PREFIX = "yaks.camelk.";
     private static final String CAMELK_ENV_PREFIX = "YAKS_CAMELK_";
 
+    public static final String V1 = "v1";
+    public static final String V1ALPHA1 = "v1alpha1";
+
     private static final String MAX_ATTEMPTS_PROPERTY = CAMELK_PROPERTY_PREFIX + "max.attempts";
     private static final String MAX_ATTEMPTS_ENV = CAMELK_ENV_PREFIX + "MAX_ATTEMPTS";
     private static final String MAX_ATTEMPTS_DEFAULT = String.valueOf(KubernetesSettings.getMaxAttempts());
@@ -53,11 +56,14 @@ public final class CamelKSettings {
 
     private static final String API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "api.version";
     private static final String API_VERSION_ENV = CAMELK_ENV_PREFIX + "API_VERSION";
-    public static final String API_VERSION_DEFAULT = "v1";
+    public static final String API_VERSION_DEFAULT = V1;
 
     private static final String KAMELET_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "kamelet.api.version";
     private static final String KAMELET_API_VERSION_ENV = CAMELK_ENV_PREFIX + "_KAMELET_API_VERSION";
-    public static final String KAMELET_API_VERSION_DEFAULT = "v1alpha1";
+    public static final String KAMELET_API_VERSION_DEFAULT = V1ALPHA1;
+
+    private static final String KAMELET_BINDING_API_VERSION_PROPERTY = CAMELK_PROPERTY_PREFIX + "kamelet.binding.api.version";
+    private static final String KAMELET_BINDING_API_VERSION_ENV = CAMELK_ENV_PREFIX + "_KAMELET_BINDING_API_VERSION";
 
     private static final String AUTO_REMOVE_RESOURCES_PROPERTY = CAMELK_PROPERTY_PREFIX + "auto.remove.resources";
     private static final String AUTO_REMOVE_RESOURCES_ENV = CAMELK_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
@@ -93,6 +99,15 @@ public final class CamelKSettings {
     public static String getKameletApiVersion() {
         return System.getProperty(KAMELET_API_VERSION_PROPERTY,
                 System.getenv(KAMELET_API_VERSION_ENV) != null ? System.getenv(KAMELET_API_VERSION_ENV) : KAMELET_API_VERSION_DEFAULT);
+    }
+
+    /**
+     * Api version for current Kamelet binding specification.
+     * @return
+     */
+    public static String getKameletBindingApiVersion() {
+        return System.getProperty(KAMELET_BINDING_API_VERSION_PROPERTY,
+                System.getenv(KAMELET_BINDING_API_VERSION_ENV) != null ? System.getenv(KAMELET_BINDING_API_VERSION_ENV) : getKameletApiVersion());
     }
 
     /**
