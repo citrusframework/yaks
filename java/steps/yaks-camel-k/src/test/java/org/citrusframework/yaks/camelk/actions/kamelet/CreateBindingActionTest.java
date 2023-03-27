@@ -17,7 +17,6 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,9 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActionTest;
+import org.citrusframework.yaks.camelk.model.Binding;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.junit.Assert;
@@ -43,7 +44,7 @@ import org.springframework.core.io.ClassPathResource;
 import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class CreateKameletBindingActionTest {
+public class CreateBindingActionTest {
 
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(CreateIntegrationActionTest.class);
@@ -56,15 +57,16 @@ public class CreateKameletBindingActionTest {
     private final TestContext context = TestContextFactory.newInstance().getObject();
 
     @BeforeClass
-    public static void setup() throws IOException {
+    public static void setup() {
         camel().version();
     }
 
     @Test
     public void shouldCreateKameletBinding() {
-        CreateKameletBindingAction action = new CreateKameletBindingAction.Builder()
+        CreateBindingAction action = new CreateBindingAction.Builder()
                 .client(kubernetesClient)
                 .binding("kafka-source-binding")
+                .apiVersion(CamelKSettings.V1ALPHA1)
                 .resource(new ClassPathResource("kafka-source-binding.yaml"))
                 .build();
 
@@ -81,9 +83,67 @@ public class CreateKameletBindingActionTest {
     }
 
     @Test
-    public void shouldCreateLocalJBangKameletBinding() throws IOException {
-        CreateKameletBindingAction action = new CreateKameletBindingAction.Builder()
+    public void shouldCreateLocalJBangKameletBinding() {
+        CreateBindingAction action = new CreateBindingAction.Builder()
                 .client(kubernetesClient)
+                .apiVersion(CamelKSettings.V1ALPHA1)
+                .binding("timer-to-log-binding")
+                .clusterType(YaksClusterType.LOCAL)
+                .resource(new ClassPathResource("timer-to-log-binding.yaml"))
+                .build();
+
+        action.execute(context);
+
+        Assert.assertNotNull(context.getVariable("timer-to-log-binding:pid"));
+
+        Long pid = context.getVariable("timer-to-log-binding:pid", Long.class);
+
+        try {
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> {
+                Map<String, String> integration = camel().get(pid);
+
+                if (integration.isEmpty() || integration.get("STATUS").equals("Starting")) {
+                    LOG.info("Waiting for Camel integration to start ...");
+                    return false;
+                }
+
+                Assert.assertEquals("timer-to-log-binding", integration.get("NAME"));
+                Assert.assertEquals("Running", integration.get("STATUS"));
+
+                return true;
+            });
+        } finally {
+            camel().stop(pid);
+        }
+    }
+
+    @Test
+    public void shouldCreateBinding() {
+        CreateBindingAction action = new CreateBindingAction.Builder()
+                .client(kubernetesClient)
+                .apiVersion(CamelKSettings.V1)
+                .binding("kafka-source-binding")
+                .resource(new ClassPathResource("kafka-source-binding.yaml"))
+                .build();
+
+        context.setVariable("YAKS_NAMESPACE", "default");
+        context.setVariable("bootstrap.server.host", "my-cluster-kafka-bootstrap");
+        context.setVariable("bootstrap.server.port", "9092");
+        context.setVariable("topic", "my-topic");
+
+        action.execute(context);
+
+        Binding binding = kubernetesClient.resources(Binding.class).inNamespace(KubernetesSettings.getNamespace()).withName("kafka-source-binding").get();
+        Assert.assertNotNull(binding);
+        Assert.assertNotNull(binding.getSpec().getSource().getRef());
+        Assert.assertNotNull(binding.getSpec().getSink().getUri());
+    }
+
+    @Test
+    public void shouldCreateLocalJBangBinding() {
+        CreateBindingAction action = new CreateBindingAction.Builder()
+                .client(kubernetesClient)
+                .apiVersion(CamelKSettings.V1)
                 .binding("timer-to-log-binding")
                 .clusterType(YaksClusterType.LOCAL)
                 .resource(new ClassPathResource("timer-to-log-binding.yaml"))

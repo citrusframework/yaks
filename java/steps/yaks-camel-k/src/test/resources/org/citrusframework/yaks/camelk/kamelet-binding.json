@@ -1,6 +1,6 @@
 {
   "apiVersion": "camel.apache.org/v1alpha1",
-  "kind": "KameletBinding",
+  "kind": "Binding",
   "metadata": {
     "name": "time-source-kafka"
   },

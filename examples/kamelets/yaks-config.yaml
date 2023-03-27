@@ -26,6 +26,7 @@ config:
     resources:
     - timer-source.kamelet.yaml
     - timer-to-log.groovy
+    - timer-to-log-binding.yaml
 post:
   - name: print dump
     if: env:CI=true && failure()

@@ -23,11 +23,11 @@ import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActi
 import org.citrusframework.yaks.camelk.actions.integration.DeleteIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.integration.VerifyIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.CreateKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.CreateKameletBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.CreateBindingAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.DeleteKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.DeleteKameletBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.DeleteBindingAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.VerifyKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.VerifyKameletBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.VerifyBindingAction;
 import org.springframework.util.Assert;
 
 /**
@@ -105,11 +105,11 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
-     * Create KameletBinding CRD in current namespace.
-     * @param bindingName the name of the KameletBinding.
+     * Create binding CRD in current namespace.
+     * @param bindingName the name of the binding.
      */
-    public CreateKameletBindingAction.Builder createKameletBinding(String bindingName) {
-        CreateKameletBindingAction.Builder builder = new CreateKameletBindingAction.Builder()
+    public CreateBindingAction.Builder createBinding(String bindingName) {
+        CreateBindingAction.Builder builder = new CreateBindingAction.Builder()
                 .client(kubernetesClient)
                 .binding(bindingName);
         this.delegate = builder;
@@ -117,11 +117,11 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
-     * Delete KameletBinding CRD from current namespace.
-     * @param bindingName the name of the KameletBinding.
+     * Delete binding CRD from current namespace.
+     * @param bindingName the name of the binding.
      */
-    public DeleteKameletBindingAction.Builder deleteKameletBinding(String bindingName) {
-        DeleteKameletBindingAction.Builder builder = new DeleteKameletBindingAction.Builder()
+    public DeleteBindingAction.Builder deleteBinding(String bindingName) {
+        DeleteBindingAction.Builder builder = new DeleteBindingAction.Builder()
                 .client(kubernetesClient)
                 .binding(bindingName);
         this.delegate = builder;
@@ -153,11 +153,11 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
-     * Verify that given KameletBinding CRD is available in current namespace.
-     * @param bindingName the name of the KameletBinding.
+     * Verify that given binding CRD is available in current namespace.
+     * @param bindingName the name of the binding.
      */
-    public VerifyKameletBindingAction.Builder verifyKameletBinding(String bindingName) {
-        VerifyKameletBindingAction.Builder builder = new VerifyKameletBindingAction.Builder()
+    public VerifyBindingAction.Builder verifyBinding(String bindingName) {
+        VerifyBindingAction.Builder builder = new VerifyBindingAction.Builder()
                 .client(kubernetesClient)
                 .isAvailable(bindingName);
         this.delegate = builder;

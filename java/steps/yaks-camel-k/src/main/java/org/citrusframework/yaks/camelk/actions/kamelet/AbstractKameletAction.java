@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import com.consol.citrus.context.TestContext;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.VariableNames;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 
@@ -26,8 +27,11 @@ import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
  */
 public abstract class AbstractKameletAction extends AbstractCamelKAction {
 
+    protected final String apiVersion;
+
     public AbstractKameletAction(String name, Builder<?, ?> builder) {
         super(name, builder);
+        this.apiVersion = builder.apiVersion;
     }
 
     public String kameletNamespace(TestContext context) {
@@ -36,5 +40,23 @@ public abstract class AbstractKameletAction extends AbstractCamelKAction {
         }
 
         return super.namespace(context);
+    }
+
+    /**
+     * Action builder.
+     */
+    public static abstract class Builder<T extends AbstractKameletAction, B extends Builder<T, B>> extends AbstractCamelKAction.Builder<T, B> {
+
+        protected String apiVersion = CamelKSettings.getKameletApiVersion();
+
+        /**
+         * Explicitly set Kamelet api version.
+         * @param version
+         * @return
+         */
+        public B apiVersion(String version) {
+            this.apiVersion = version;
+            return self;
+        }
     }
 }

@@ -29,12 +29,15 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
+import org.citrusframework.yaks.camelk.model.Binding;
+import org.citrusframework.yaks.camelk.model.BindingList;
+import org.citrusframework.yaks.camelk.model.BindingSpec;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.KameletBinding;
 import org.citrusframework.yaks.camelk.model.KameletBindingList;
-import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,28 +46,28 @@ import org.springframework.core.io.Resource;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
- * Test action creates new Camel K integration with given name and source code. Uses given Kubernetes client to
- * create a custom resource of type integration.
+ * Test action creates new Camel K binding with given name and source code. Uses given Kubernetes client to
+ * create a custom resource of type binding.
  *
  * @author Christoph Deppisch
  */
-public class CreateKameletBindingAction extends AbstractKameletAction {
+public class CreateBindingAction extends AbstractKameletAction {
 
     /** Logger */
-    private static final Logger LOG = LoggerFactory.getLogger(CreateKameletBindingAction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CreateBindingAction.class);
 
     private final String bindingName;
     private final Integration integration;
-    private final KameletBindingSpec.Endpoint source;
-    private final KameletBindingSpec.Endpoint sink;
+    private final BindingSpec.Endpoint source;
+    private final BindingSpec.Endpoint sink;
     private final Resource resource;
 
     /**
      * Constructor using given builder.
      * @param builder
      */
-    public CreateKameletBindingAction(Builder builder) {
-        super("create-kamelet-binding", builder);
+    public CreateBindingAction(Builder builder) {
+        super("create-binding", builder);
         this.bindingName = builder.bindingName;
         this.integration = builder.integration;
         this.source = builder.source;
@@ -74,20 +77,25 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
 
     @Override
     public void doExecute(TestContext context) {
-        final KameletBinding binding;
+        final Binding binding;
 
         String bindingName = context.replaceDynamicContentInString(this.bindingName);
-        LOG.info(String.format("Creating Kamelet binding '%s'", bindingName));
+        LOG.info(String.format("Creating Camel K binding '%s'", bindingName));
 
         if (resource != null) {
             try {
-                binding = KubernetesSupport.yaml().loadAs(
-                        context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
+                if (apiVersion.equals(CamelKSettings.V1ALPHA1)) {
+                    binding = KubernetesSupport.yaml().loadAs(
+                            context.replaceDynamicContentInString(FileUtils.readToString(resource)), KameletBinding.class);
+                } else {
+                    binding = KubernetesSupport.yaml().loadAs(
+                            context.replaceDynamicContentInString(FileUtils.readToString(resource)), Binding.class);
+                }
             } catch (IOException e) {
-                throw new CitrusRuntimeException(String.format("Failed to load KameletBinding from resource %s", bindingName + ".yaml"), e);
+                throw new CitrusRuntimeException(String.format("Failed to load binding from resource %s", bindingName + ".yaml"), e);
             }
         } else {
-            final KameletBinding.Builder builder = new KameletBinding.Builder()
+            final Binding.Builder builder = new Binding.Builder()
                     .name(bindingName);
 
             if (integration != null) {
@@ -112,38 +120,52 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
         }
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            createLocalKameletBinding(binding, bindingName, context);
+            createLocalBinding(binding, bindingName, context);
         } else {
-            createKameletBinding(getKubernetesClient(), namespace(context), binding);
+            createBinding(getKubernetesClient(), namespace(context), binding);
         }
 
-        LOG.info(String.format("Successfully created Kamelet binding '%s'", binding.getMetadata().getName()));
+        LOG.info(String.format("Successfully created binding '%s'", binding.getMetadata().getName()));
     }
 
     /**
-     * Creates the Kamelet binding as a custom resource in given namespace.
+     * Creates the binding as a custom resource in given namespace.
      * @param k8sClient
      * @param namespace
      * @param binding
      */
-    private static void createKameletBinding(KubernetesClient k8sClient, String namespace, KameletBinding binding) {
+    private void createBinding(KubernetesClient k8sClient, String namespace, Binding binding) {
         if (LOG.isDebugEnabled()) {
             LOG.debug(KubernetesSupport.yaml().dumpAsMap(binding));
         }
 
-        k8sClient.resources(KameletBinding.class, KameletBindingList.class)
-                .inNamespace(namespace)
-                .resource(binding)
-                .createOrReplace();
+        if (apiVersion.equals(CamelKSettings.V1ALPHA1)) {
+            KameletBinding kb;
+            if (binding instanceof KameletBinding) {
+                kb = (KameletBinding) binding;
+            } else {
+                kb = new KameletBinding.Builder().from(binding).build();
+            }
+
+            k8sClient.resources(KameletBinding.class, KameletBindingList.class)
+                    .inNamespace(namespace)
+                    .resource(kb)
+                    .createOrReplace();
+        } else {
+            k8sClient.resources(Binding.class, BindingList.class)
+                    .inNamespace(namespace)
+                    .resource(binding)
+                    .createOrReplace();
+        }
     }
 
     /**
-     * Creates the Kamelet binding with local JBang runtime.
+     * Creates the binding with local JBang runtime.
      * @param binding
      * @param name
      * @param context
      */
-    private void createLocalKameletBinding(KameletBinding binding, String name, TestContext context) {
+    private void createLocalBinding(Binding binding, String name, TestContext context) {
         try {
             String bindingYaml = KubernetesSupport.yaml().dumpAsMap(binding);
 
@@ -165,26 +187,26 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
                     LOG.debug(pao.getOutput());
                 }
 
-                throw new CitrusRuntimeException(String.format("Failed to create Kamelet binding - exit code %s", pao.getProcess().exitValue()));
+                throw new CitrusRuntimeException(String.format("Failed to create binding - exit code %s", pao.getProcess().exitValue()));
             }
 
             Long pid = pao.getCamelProcessId();
             context.setVariable(name + ":pid", pid);
             context.setVariable(name + ":process:" + pid, pao);
         } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create Kamelet binding file", e);
+            throw new CitrusRuntimeException("Failed to create binding file", e);
         }
     }
 
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractKameletAction.Builder<CreateKameletBindingAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<CreateBindingAction, Builder> {
 
         private String bindingName;
         private Integration integration;
-        private KameletBindingSpec.Endpoint source;
-        private KameletBindingSpec.Endpoint sink;
+        private BindingSpec.Endpoint source;
+        private BindingSpec.Endpoint sink;
         private Resource resource;
 
         public Builder binding(String bindingName) {
@@ -197,44 +219,44 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
             return this;
         }
 
-        public Builder source(KameletBindingSpec.Endpoint source) {
+        public Builder source(BindingSpec.Endpoint source) {
             this.source = source;
             return this;
         }
 
         public Builder source(String uri) {
-            return source(new KameletBindingSpec.Endpoint(uri));
+            return source(new BindingSpec.Endpoint(uri));
         }
 
-        public Builder source(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder source(BindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
             }
 
-            return source(new KameletBindingSpec.Endpoint(ref, props));
+            return source(new BindingSpec.Endpoint(ref, props));
         }
 
-        public Builder sink(KameletBindingSpec.Endpoint sink) {
+        public Builder sink(BindingSpec.Endpoint sink) {
             this.sink = sink;
             return this;
         }
 
         public Builder sink(String uri) {
-            return sink(new KameletBindingSpec.Endpoint(uri));
+            return sink(new BindingSpec.Endpoint(uri));
         }
 
-        public Builder sink(KameletBindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder sink(BindingSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
             }
 
-            return sink(new KameletBindingSpec.Endpoint(ref, props));
+            return sink(new BindingSpec.Endpoint(ref, props));
         }
 
-        public Builder fromBuilder(KameletBinding.Builder builder) {
-            KameletBinding binding = builder.build();
+        public Builder fromBuilder(Binding.Builder builder) {
+            Binding binding = builder.build();
 
             bindingName = binding.getMetadata().getName();
             integration = binding.getSpec().getIntegration();
@@ -250,8 +272,8 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
         }
 
         @Override
-        public CreateKameletBindingAction build() {
-            return new CreateKameletBindingAction(this);
+        public CreateBindingAction build() {
+            return new CreateBindingAction(this);
         }
     }
 }

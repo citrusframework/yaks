@@ -20,8 +20,8 @@ package org.citrusframework.yaks.camelk;
 import java.io.IOException;
 
 import com.consol.citrus.util.FileUtils;
-import org.citrusframework.yaks.camelk.model.KameletBinding;
-import org.citrusframework.yaks.camelk.model.KameletBindingSpec;
+import org.citrusframework.yaks.camelk.model.Binding;
+import org.citrusframework.yaks.camelk.model.BindingSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
@@ -29,27 +29,27 @@ import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
-public class KameletBindingBuilderTest {
+public class BindingBuilderTest {
 
 	@Test
-	public void buildComplexKameletBinding() throws IOException {
-		KameletBindingSpec.Endpoint.ObjectReference sourceRef = new KameletBindingSpec.Endpoint.ObjectReference();
+	public void buildComplexBinding() throws IOException {
+		BindingSpec.Endpoint.ObjectReference sourceRef = new BindingSpec.Endpoint.ObjectReference();
 		sourceRef.setName("timer-source");
 		sourceRef.setKind("Kamelet");
 		sourceRef.setNamespace(CamelKSettings.getNamespace());
 
-		KameletBindingSpec.Endpoint source = new KameletBindingSpec.Endpoint(sourceRef);
+		BindingSpec.Endpoint source = new BindingSpec.Endpoint(sourceRef);
 		source.getProperties().put("message", "Hello World");
-		source.getDataTypes().put("out", new KameletBindingSpec.Endpoint.DataTypeRef("camel", "string"));
+		source.getDataTypes().put("out", new BindingSpec.Endpoint.DataTypeRef("camel", "string"));
 
-		KameletBindingSpec.Endpoint.ObjectReference sinkRef = new KameletBindingSpec.Endpoint.ObjectReference();
+		BindingSpec.Endpoint.ObjectReference sinkRef = new BindingSpec.Endpoint.ObjectReference();
 		sinkRef.setName("hello-topic");
 		sinkRef.setKind("KafkaTopic");
 		sinkRef.setNamespace(KafkaSettings.getNamespace());
 
-		KameletBindingSpec.Endpoint sink = new KameletBindingSpec.Endpoint(sinkRef);
+		BindingSpec.Endpoint sink = new BindingSpec.Endpoint(sinkRef);
 
-		KameletBinding binding = new KameletBinding.Builder()
+		Binding binding = new Binding.Builder()
 				.name("time-source-kafka")
 				.source(source)
 				.sink(sink)
@@ -57,7 +57,7 @@ public class KameletBindingBuilderTest {
 
 		final String json = KubernetesSupport.json().writeValueAsString(binding);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("kamelet-binding.json", KameletBindingBuilderTest.class))),
+				FileUtils.readToString(new ClassPathResource("kamelet-binding.json", BindingBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
 	}
 }
