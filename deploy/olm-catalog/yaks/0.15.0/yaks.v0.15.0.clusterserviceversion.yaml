@@ -57,15 +57,15 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/citrusframework/yaks:0.16.0-SNAPSHOT
-    createdAt: "2022-10-11T09:44:34Z"
+    containerImage: docker.io/citrusframework/yaks:0.15.0
+    createdAt: "2023-03-10T08:44:00Z"
     description: YAKS is a platform to enable Cloud Native BDD testing on Kubernetes.
     operators.operatorframework.io/builder: operator-sdk-v1.22.0
     operators.operatorframework.io/internal-objects: '["instances.yaks.citrusframework.org"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/citrusframework/yaks
     support: Citrus Framework
-  name: yaks-operator.v0.16.0-SNAPSHOT
+  name: yaks-operator.v0.15.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -175,7 +175,7 @@ spec:
                         valueFrom:
                           fieldRef:
                             fieldPath: metadata.namespace
-                    image: docker.io/citrusframework/yaks:0.16.0-SNAPSHOT
+                    image: docker.io/citrusframework/yaks:0.15.0
                     imagePullPolicy: IfNotPresent
                     name: yaks-operator
                     resources: {}
@@ -430,8 +430,8 @@ spec:
   minKubeVersion: 1.16.0
   provider:
     name: Citrus Framework
-  replaces: yaks-operator.v0.15.0
+  replaces: yaks-operator.v0.14.3
   selector:
     matchLabels:
       name: yaks-operator
-  version: 0.16.0-SNAPSHOT
+  version: 0.15.0
