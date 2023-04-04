@@ -20,8 +20,8 @@ LAST_RELEASED_IMAGE_NAME := yaks-operator
 LAST_RELEASED_VERSION := 0.15.0
 
 CONTROLLER_GEN_VERSION := v0.6.1
-CODEGEN_VERSION := v0.25.2
-OPERATOR_SDK_VERSION := v1.16.0
+CODEGEN_VERSION := v0.25.6
+OPERATOR_SDK_VERSION := v1.28.0
 KUSTOMIZE_VERSION := v4.5.4
 DEFAULT_IMAGE := docker.io/citrusframework/yaks
 IMAGE_NAME ?= $(DEFAULT_IMAGE)
@@ -231,25 +231,15 @@ OS_ARCH=amd64
 endif
 
 operator-sdk: detect-os
-ifeq (, $(shell command -v operator-sdk 2> /dev/null))
-	@{ \
+	@echo "####### Installing operator-sdk version $(OPERATOR_SDK_VERSION)..."
 	set -e ;\
 	curl \
-		-L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS_LOWER)_$(OS_ARCH) \
+		-s -L https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS_LOWER)_amd64 \
 		-o operator-sdk ; \
 	chmod +x operator-sdk ;\
 	mkdir -p $(GOBIN) ;\
-	mv operator-sdk $(GOBIN)/ ;\
-	}
+	mv operator-sdk $(GOBIN)/ ;
 OPERATOR_SDK=$(GOBIN)/operator-sdk
-else
-	@{ \
-	echo -n "operator-sdk already installed: "; \
-	operator-sdk version | sed -n 's/.*"v\([^"]*\)".*/\1/p'; \
-	echo " If this is less than $(OPERATOR_SDK_VERSION) then please consider moving it aside and allowing the approved version to be downloaded."; \
-	}
-OPERATOR_SDK=$(shell command -v operator-sdk 2> /dev/null)
-endif
 
 .PHONY: generate-crd v1alpha1 pre-bundle bundle bundle-build
 
