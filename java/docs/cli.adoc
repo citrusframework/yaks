@@ -6,8 +6,7 @@ installing the operator and for running tests on a Kubernetes cluster.
 
 Releases of the CLI are available on:
 
-- Github Releases: https://github.com/citrusfrmaework/yaks/releases
-- Homebrew (Mac and Linux): https://formulae.brew.sh/formula/yaks
+- GitHub Releases: https://github.com/citrusframework/yaks/releases
 
 [[cli-commands]]
 == Available Commands
