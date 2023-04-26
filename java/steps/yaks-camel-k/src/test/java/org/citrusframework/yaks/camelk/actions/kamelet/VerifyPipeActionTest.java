@@ -36,7 +36,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class VerifyBindingActionTest {
+public class VerifyPipeActionTest {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -59,7 +59,7 @@ public class VerifyBindingActionTest {
         Long pid = pao.getCamelProcessId();
 
         try {
-            VerifyBindingAction action = new VerifyBindingAction.Builder()
+            VerifyPipeAction action = new VerifyPipeAction.Builder()
                     .client(kubernetesClient)
                     .isAvailable("timer-to-log-binding")
                     .clusterType(YaksClusterType.LOCAL)

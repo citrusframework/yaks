@@ -15,22 +15,17 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-config:
-  runtime:
-    env:
-      - name: YAKS_CAMELK_KAMELET_API_VERSION
-        value: v1alpha1
-    settings:
-      loggers:
-      - name: INTEGRATION_STATUS
-        level: INFO
-      - name: INTEGRATION_LOGS
-        level: INFO
-    resources:
-    - timer-source.kamelet.yaml
-    - timer-to-log.groovy
-    - timer-to-log-binding.yaml
-post:
-  - name: print dump
-    if: env:CI=true && failure()
-    run: kamel dump
+apiVersion: camel.apache.org/v1
+kind: Pipe
+metadata:
+  name: timer-to-log-pipe
+spec:
+  source:
+    ref:
+      kind: Kamelet
+      apiVersion: camel.apache.org/v1alpha1
+      name: timer-source
+    properties:
+      message: "Hello world!"
+  sink:
+    uri: log:info

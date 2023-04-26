@@ -28,9 +28,12 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1List;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
@@ -132,10 +135,24 @@ public class CreateKameletAction extends AbstractKameletAction {
             }
         }
 
-        getKubernetesClient().resources(Kamelet.class, KameletList.class)
-                .inNamespace(kameletNamespace(context))
-                .resource(kamelet)
-                .createOrReplace();
+        if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
+            KameletV1Alpha1 kameletV1Alpha1;
+            if (kamelet instanceof KameletV1Alpha1) {
+                kameletV1Alpha1 = (KameletV1Alpha1) kamelet;
+            } else {
+                kameletV1Alpha1 = new KameletV1Alpha1.Builder().from(kamelet).build();
+            }
+
+            getKubernetesClient().resources(KameletV1Alpha1.class, KameletV1Alpha1List.class)
+                    .inNamespace(kameletNamespace(context))
+                    .resource(kameletV1Alpha1)
+                    .createOrReplace();
+        } else {
+            getKubernetesClient().resources(Kamelet.class, KameletList.class)
+                    .inNamespace(kameletNamespace(context))
+                    .resource(kamelet)
+                    .createOrReplace();
+        }
 
         LOG.info(String.format("Successfully created Kamelet '%s'", kamelet.getMetadata().getName()));
     }

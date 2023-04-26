@@ -22,49 +22,49 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.model.Binding;
-import org.citrusframework.yaks.camelk.model.BindingList;
-import org.citrusframework.yaks.camelk.model.KameletBinding;
-import org.citrusframework.yaks.camelk.model.KameletBindingList;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBindingList;
+import org.citrusframework.yaks.camelk.model.Pipe;
+import org.citrusframework.yaks.camelk.model.PipeList;
 
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
  * @author Christoph Deppisch
  */
-public class DeleteBindingAction extends AbstractKameletAction {
+public class DeletePipeAction extends AbstractKameletAction {
 
-    private final String bindingName;
+    private final String pipeName;
 
-    public DeleteBindingAction(Builder builder) {
-        super("delete-binding", builder);
+    public DeletePipeAction(Builder builder) {
+        super("delete-pipe", builder);
 
-        this.bindingName = builder.bindingName;
+        this.pipeName = builder.pipeName;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        String binding = context.replaceDynamicContentInString(bindingName);
+        String pipe = context.replaceDynamicContentInString(pipeName);
 
-        LOG.info(String.format("Deleting binding '%s'", binding));
+        LOG.info(String.format("Deleting pipe '%s'", pipe));
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            deleteLocalBinding(binding, context);
+            deleteLocalBinding(pipe, context);
         } else {
-            deleteBinding(getKubernetesClient(), namespace(context), binding);
+            deleteBinding(getKubernetesClient(), namespace(context), pipe, context);
         }
 
-        LOG.info(String.format("Successfully deleted binding '%s'", binding));
+        LOG.info(String.format("Successfully deleted pipe '%s'", pipe));
     }
 
-    private void deleteBinding(KubernetesClient k8sClient, String namespace, String name) {
-        if (apiVersion.equals(CamelKSettings.V1ALPHA1)) {
+    private void deleteBinding(KubernetesClient k8sClient, String namespace, String name, TestContext context) {
+        if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
             k8sClient.resources(KameletBinding.class, KameletBindingList.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .delete();
         } else {
-            k8sClient.resources(Binding.class, BindingList.class)
+            k8sClient.resources(Pipe.class, PipeList.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .delete();
@@ -84,7 +84,7 @@ public class DeleteBindingAction extends AbstractKameletAction {
             pid = camel().getAll().stream()
                     .filter(props -> name.equals(props.get("NAME")) && !props.getOrDefault("PID", "").isBlank())
                     .map(props -> Long.valueOf(props.get("PID"))).findFirst()
-                    .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to retrieve binding process id %s:pid", name)));
+                    .orElseThrow(() -> new CitrusRuntimeException(String.format("Unable to retrieve pipe process id %s:pid", name)));
         }
 
         camel().stop(pid);
@@ -93,18 +93,24 @@ public class DeleteBindingAction extends AbstractKameletAction {
     /**
      * Action builder.
      */
-    public static class Builder extends AbstractKameletAction.Builder<DeleteBindingAction, Builder> {
+    public static class Builder extends AbstractKameletAction.Builder<DeletePipeAction, Builder> {
 
-        private String bindingName;
+        private String pipeName;
 
         public Builder binding(String name) {
-            this.bindingName = name;
+            apiVersion(CamelKSettings.V1ALPHA1);
+            this.pipeName = name;
+            return this;
+        }
+
+        public Builder pipe(String name) {
+            this.pipeName = name;
             return this;
         }
 
         @Override
-        public DeleteBindingAction build() {
-            return new DeleteBindingAction(this);
+        public DeletePipeAction build() {
+            return new DeletePipeAction(this);
         }
     }
 }

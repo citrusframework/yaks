@@ -31,8 +31,8 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActionTest;
-import org.citrusframework.yaks.camelk.model.Binding;
-import org.citrusframework.yaks.camelk.model.KameletBinding;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
+import org.citrusframework.yaks.camelk.model.Pipe;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -44,7 +44,7 @@ import org.springframework.core.io.ClassPathResource;
 import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class CreateBindingActionTest {
+public class CreatePipeActionTest {
 
     /** Logger */
     private static final Logger LOG = LoggerFactory.getLogger(CreateIntegrationActionTest.class);
@@ -62,11 +62,11 @@ public class CreateBindingActionTest {
     }
 
     @Test
-    public void shouldCreateKameletBinding() {
-        CreateBindingAction action = new CreateBindingAction.Builder()
+    public void shouldCreateBinding() {
+        CreatePipeAction action = new CreatePipeAction.Builder()
                 .client(kubernetesClient)
-                .binding("kafka-source-binding")
                 .apiVersion(CamelKSettings.V1ALPHA1)
+                .binding("kafka-source-binding")
                 .resource(new ClassPathResource("kafka-source-binding.yaml"))
                 .build();
 
@@ -83,8 +83,8 @@ public class CreateBindingActionTest {
     }
 
     @Test
-    public void shouldCreateLocalJBangKameletBinding() {
-        CreateBindingAction action = new CreateBindingAction.Builder()
+    public void shouldCreateLocalJBangBinding() {
+        CreatePipeAction action = new CreatePipeAction.Builder()
                 .client(kubernetesClient)
                 .apiVersion(CamelKSettings.V1ALPHA1)
                 .binding("timer-to-log-binding")
@@ -118,12 +118,12 @@ public class CreateBindingActionTest {
     }
 
     @Test
-    public void shouldCreateBinding() {
-        CreateBindingAction action = new CreateBindingAction.Builder()
+    public void shouldCreatePipe() {
+        CreatePipeAction action = new CreatePipeAction.Builder()
                 .client(kubernetesClient)
                 .apiVersion(CamelKSettings.V1)
-                .binding("kafka-source-binding")
-                .resource(new ClassPathResource("kafka-source-binding.yaml"))
+                .pipe("kafka-source-pipe")
+                .resource(new ClassPathResource("kafka-source-pipe.yaml"))
                 .build();
 
         context.setVariable("YAKS_NAMESPACE", "default");
@@ -133,44 +133,9 @@ public class CreateBindingActionTest {
 
         action.execute(context);
 
-        Binding binding = kubernetesClient.resources(Binding.class).inNamespace(KubernetesSettings.getNamespace()).withName("kafka-source-binding").get();
-        Assert.assertNotNull(binding);
-        Assert.assertNotNull(binding.getSpec().getSource().getRef());
-        Assert.assertNotNull(binding.getSpec().getSink().getUri());
-    }
-
-    @Test
-    public void shouldCreateLocalJBangBinding() {
-        CreateBindingAction action = new CreateBindingAction.Builder()
-                .client(kubernetesClient)
-                .apiVersion(CamelKSettings.V1)
-                .binding("timer-to-log-binding")
-                .clusterType(YaksClusterType.LOCAL)
-                .resource(new ClassPathResource("timer-to-log-binding.yaml"))
-                .build();
-
-        action.execute(context);
-
-        Assert.assertNotNull(context.getVariable("timer-to-log-binding:pid"));
-
-        Long pid = context.getVariable("timer-to-log-binding:pid", Long.class);
-
-        try {
-            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> {
-                Map<String, String> integration = camel().get(pid);
-
-                if (integration.isEmpty() || integration.get("STATUS").equals("Starting")) {
-                    LOG.info("Waiting for Camel integration to start ...");
-                    return false;
-                }
-
-                Assert.assertEquals("timer-to-log-binding", integration.get("NAME"));
-                Assert.assertEquals("Running", integration.get("STATUS"));
-
-                return true;
-            });
-        } finally {
-            camel().stop(pid);
-        }
+        Pipe pipe = kubernetesClient.resources(Pipe.class).inNamespace(KubernetesSettings.getNamespace()).withName("kafka-source-pipe").get();
+        Assert.assertNotNull(pipe);
+        Assert.assertNotNull(pipe.getSpec().getSource().getRef());
+        Assert.assertNotNull(pipe.getSpec().getSink().getUri());
     }
 }

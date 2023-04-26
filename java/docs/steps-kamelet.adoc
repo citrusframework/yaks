@@ -149,16 +149,19 @@ Given Kamelet {name} is available$
 
 Verifies that the Kamelet custom resource is available in the current namespace.
 
-[[steps-kamelet-binding]]
-== KameletBinding steps
+[[steps-pipe]]
+== Pipe steps
 
-You can bind a Kamelet as a source to a sink. This concept is described with KameletBindings. YAKS as a framework
-is able to create and verify KameletBindings in combination with Kamelets.
+You can bind a Kamelet as a source to a sink. This concept is described with Pipes. YAKS as a framework
+is able to create and verify Pipes in combination with Kamelets.
 
-[[kamelet-binding-create]]
-=== Create KameletBindings
+NOTE: Pipes are available since API version `v1` in Camel K. YAKS also supports KameletBinding resources that represent
+the `v1alpha1` equivalent to Pipes. So in case you need to work with KameletBindings you need to explicitly set the Kamelet API version to `v1alpha1` (e.g. via environment variable settings `YAKS_CAMELK_KAMELET_API_VERSION`).
 
-YAKS provides multiple steps that bind a Kamelet source to a sink. The binding is going to forward all messages
+[[pipe-create]]
+=== Create Pipes
+
+YAKS provides multiple steps that bind a Kamelet source to a sink. The pipe is going to forward all messages
 processed by the source to the sink.
 
 ==== Bind to Http URI
@@ -169,7 +172,7 @@ processed by the source to the sink.
 Given bind Kamelet {name} to uri {uri}
 ----
 
-This defines the KameletBinding with the given Kamelet name as source to the given
+This defines the Pipe with the given Kamelet name as source to the given
 Http URI as a sink.
 
 ==== Bind to Kafka topic
@@ -194,7 +197,7 @@ Given bind Kamelet {kamelet} to Knative channel {channel}
 ----
 
 Channels can be backed with different implementations. You can explicitly set the channel type to use
-in the binding.
+in the pipe.
 
 .@Given("^bind Kamelet {kamelet} to Knative channel {channel} of kind {kind}$")
 [source,gherkin]
@@ -204,88 +207,88 @@ Given bind Kamelet {kamelet} to Knative channel {channel} of kind {kind}
 
 ==== Specify source/sink properties
 
-The KameletBinding may need to specify properties for source and sink. These properties
+The Pipe may need to specify properties for source and sink. These properties
 are defined in the Kamelet source specifications for instance.
 
 You can set properties with values in the following step:
 
-.@Given("^KameletBinding source properties$")
+.@Given("^Pipe source properties$")
 [source,gherkin]
 ----
-Given KameletBinding source properties
+Given Pipe source properties
   | {property}  | {value} |
 ----
 
 The Kamelet source that we have used in the examples above has defined a property
-`message`. So you can set the property on the binding as follows.
+`message`. So you can set the property on the pipe as follows.
 
 [source,gherkin]
 ----
-Given KameletBinding source properties
+Given Pipe source properties
   | message  | "Hello world" |
 ----
 
 The same approach applies to sink properties.
 
-.@Given("^KameletBinding sink properties$")
+.@Given("^Pipe sink properties$")
 [source,gherkin]
 ----
-Given KameletBinding sink properties
+Given Pipe sink properties
   | {property}  | {value} |
 ----
 
-==== Create the binding
+==== Create the pipe
 
-The previous steps have defined source and sink of the KameletBinding specification. Now you are ready
-to create the KameletBinding in the current namespace.
+The previous steps have defined source and sink of the Pipe specification. Now you are ready
+to create the Pipe in the current namespace.
 
-.@Given("^(?:create|new) KameletBinding {name}$")
+.@Given("^(?:create|new) Pipe {name}$")
 [source,gherkin]
 ----
-Given create KameletBinding {name}
+Given create Pipe {name}
 ----
 
-The KameletBinding receives a unique `name` and uses the previously specified source and sink. Creating a KameletBinding means
-that a new custom resource of type KameletBinding is created in the current namespace.
+The Pipe receives a unique `name` and uses the previously specified source and sink. Creating a Pipe means
+that a new custom resource of type Pipe is created in the current namespace.
 
-[[kamelet-binding-load]]
-=== Load KameletBindings
+[[pipe-load]]
+=== Load Pipes
 
-You can create new KameletBindings by giving the complete specification in an external YAML file. The step loads the file content
-and creates the KameletBinding in the current namespace.
+You can create new Pipes by giving the complete specification in an external YAML file. The step loads the file content
+and creates the Pipe in the current namespace.
 
-.@Given("^load KameletBinding {name}.yaml$")
+.@Given("^load Pipe {name}.yaml$")
 [source,gherkin]
 ----
-Given load KameletBinding {name}.yaml
+Given load Pipe {name}.yaml
 ----
 
-Loads the file `{name}.yaml` as a KameletBinding. At the moment YAKS only supports `.yaml` source files.
+Loads the file `{name}.yaml` as a Pipe. At the moment YAKS only supports `.yaml` source files.
 
-[[kamelet-binding-delete]]
-=== Delete KameletBindings
+[[pipe-delete]]
+=== Delete Pipes
 
-.@Given("^delete KameletBinding {name}$")
+.@Given("^delete Pipe {name}$")
 [source,gherkin]
 ----
-Given delete KameletBinding {name}
+Given delete Pipe {name}
 ----
 
-Deletes the KameletBinding with given `{name}` from the current namespace.
+Deletes the Pipe with given `{name}` from the current namespace.
 
-[[kamelet-bindings-state]]
-=== Verify KameletBinding is available
+[[pipes-state]]
+=== Verify Pipe is available
 
-.@Given("^KameletBinding {name} is available$$")
+.@Given("^Pipe {name} is available$$")
 [source,gherkin]
 ----
-Given KameletBinding {name} is available$
+Given Pipe {name} is available$
 ----
 
-Verifies that the KameletBinding custom resource is available in the current namespace.
+Verifies that the Pipe custom resource is available in the current namespace.
 
 [[kamelets-resources]]
-=== Manage Kamelet and KameletBinding resources
+=== Manage Kamelet and Pipe resources
 
 The described steps are able to create Kamelet resources on the current Kubernetes namespace.
 By default these resources get removed automatically after the test scenario.
