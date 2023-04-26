@@ -15,32 +15,12 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk;
+package org.citrusframework.yaks.camelk.model;
+
+import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
 
 /**
  * @author Christoph Deppisch
  */
-public enum VariableNames {
-
-    CLUSTER_TYPE("YAKS_CLUSTER_TYPE"),
-    CAMELK_NAMESPACE("CAMELK_NAMESPACE"),
-
-    KAMELET_API_VERSION("KAMELET_API_VERSION"),
-    KAMELET_NAMESPACE("KAMELET_NAMESPACE"),
-    OPERATOR_NAMESPACE("CAMELK_OPERATOR_NAMESPACE");
-
-    private final String variableName;
-
-    VariableNames(String variableName) {
-        this.variableName = variableName;
-    }
-
-    public String value() {
-        return variableName;
-    }
-
-    @Override
-    public String toString() {
-        return variableName;
-    }
+public class PipeList extends DefaultKubernetesResourceList<Pipe> {
 }

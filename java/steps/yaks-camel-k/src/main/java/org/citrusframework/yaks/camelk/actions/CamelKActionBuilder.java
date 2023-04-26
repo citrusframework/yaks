@@ -23,11 +23,11 @@ import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActi
 import org.citrusframework.yaks.camelk.actions.integration.DeleteIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.integration.VerifyIntegrationAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.CreateKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.CreateBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.CreatePipeAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.DeleteKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.DeleteBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.DeletePipeAction;
 import org.citrusframework.yaks.camelk.actions.kamelet.VerifyKameletAction;
-import org.citrusframework.yaks.camelk.actions.kamelet.VerifyBindingAction;
+import org.citrusframework.yaks.camelk.actions.kamelet.VerifyPipeAction;
 import org.springframework.util.Assert;
 
 /**
@@ -105,25 +105,25 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
-     * Create binding CRD in current namespace.
-     * @param bindingName the name of the binding.
+     * Create pipe CRD in current namespace.
+     * @param pipeName the name of the pipe.
      */
-    public CreateBindingAction.Builder createBinding(String bindingName) {
-        CreateBindingAction.Builder builder = new CreateBindingAction.Builder()
+    public CreatePipeAction.Builder createPipe(String pipeName) {
+        CreatePipeAction.Builder builder = new CreatePipeAction.Builder()
                 .client(kubernetesClient)
-                .binding(bindingName);
+                .pipe(pipeName);
         this.delegate = builder;
         return builder;
     }
 
     /**
-     * Delete binding CRD from current namespace.
-     * @param bindingName the name of the binding.
+     * Delete pipe CRD from current namespace.
+     * @param pipeName the name of the pipe.
      */
-    public DeleteBindingAction.Builder deleteBinding(String bindingName) {
-        DeleteBindingAction.Builder builder = new DeleteBindingAction.Builder()
+    public DeletePipeAction.Builder deletePipe(String pipeName) {
+        DeletePipeAction.Builder builder = new DeletePipeAction.Builder()
                 .client(kubernetesClient)
-                .binding(bindingName);
+                .pipe(pipeName);
         this.delegate = builder;
         return builder;
     }
@@ -153,13 +153,13 @@ public class CamelKActionBuilder implements TestActionBuilder.DelegatingTestActi
     }
 
     /**
-     * Verify that given binding CRD is available in current namespace.
-     * @param bindingName the name of the binding.
+     * Verify that given pipe CRD is available in current namespace.
+     * @param pipeName the name of the pipe.
      */
-    public VerifyBindingAction.Builder verifyBinding(String bindingName) {
-        VerifyBindingAction.Builder builder = new VerifyBindingAction.Builder()
+    public VerifyPipeAction.Builder verifyPipe(String pipeName) {
+        VerifyPipeAction.Builder builder = new VerifyPipeAction.Builder()
                 .client(kubernetesClient)
-                .isAvailable(bindingName);
+                .isAvailable(pipeName);
         this.delegate = builder;
         return builder;
     }

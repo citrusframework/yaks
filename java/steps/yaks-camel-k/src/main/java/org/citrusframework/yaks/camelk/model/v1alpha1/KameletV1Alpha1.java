@@ -15,33 +15,31 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.model;
+package org.citrusframework.yaks.camelk.model.v1alpha1;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.kubernetes.api.model.Namespaced;
-import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
 import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
-import org.springframework.util.StringUtils;
+import org.citrusframework.yaks.camelk.model.Kamelet;
+import org.citrusframework.yaks.camelk.model.KameletSpec;
 
 /**
  * @author Christoph Deppisch
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
-@Version(CamelKSettings.V1)
-public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implements Namespaced {
+@Kind("Kamelet")
+@Version(CamelKSettings.V1ALPHA1)
+public class KameletV1Alpha1 extends Kamelet implements Namespaced {
 
-    public Kamelet() {
+    public KameletV1Alpha1() {
         super();
         this.spec = new KameletSpec();
         this.status = null;
@@ -50,81 +48,91 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
     /**
      * Fluent builder
      */
-    public static class Builder {
-        protected String name;
-        private String template;
-        private KameletSpec.Definition definition = new KameletSpec.Definition();
-        private final Map<String, KameletSpec.DataTypesSpec> dataTypes = new HashMap<>();
-        private List<String> dependencies = new ArrayList<>();
-        private KameletSpec.Source source;
+    public static class Builder extends Kamelet.Builder {
+
+        Kamelet.Builder delegate = new Kamelet.Builder();
 
         public Builder name(String name) {
             this.name = name;
-            definition.setTitle(StringUtils.capitalize(name));
+            delegate.name(name);
             return this;
         }
 
         public Builder definition(KameletSpec.Definition definition) {
-            this.definition = definition;
+            delegate.definition(definition);
             return this;
         }
 
         public Builder source(String name, String language, String content) {
-            this.source = new KameletSpec.Source(name + "." + language, content);
+            delegate.source(name, language, content);
             return this;
         }
 
         public Builder source(String name, String content) {
-            this.source = new KameletSpec.Source(name, content);
+            delegate.source(name, content);
             return this;
         }
 
         public Builder template(String template) {
-            this.template = template;
+            delegate.template(template);
             return this;
         }
 
         @Deprecated
         public Builder flow(String flow) {
-            this.template = flow;
+            delegate.flow(flow);
             return this;
         }
 
         public Builder dependencies(List<String> dependencies) {
-            this.dependencies = Collections.unmodifiableList(dependencies);
+            delegate.dependencies(dependencies);
             return this;
         }
 
         public Builder dataTypes(Map<String, KameletSpec.DataTypesSpec> types) {
-            this.dataTypes.putAll(types);
+            delegate.dataTypes(types);
             return this;
         }
 
         public Builder addDataType(String slot, String scheme, String format) {
-            if (dataTypes.containsKey(slot)) {
-                this.dataTypes.get(slot).getTypes().add(new KameletSpec.DataTypeSpec(scheme, format));
-            } else {
-                this.dataTypes.put(slot, new KameletSpec.DataTypesSpec(format, new KameletSpec.DataTypeSpec(scheme, format)));
+            delegate.addDataType(slot, scheme, format);
+            return this;
+        }
+
+        public Builder from(Kamelet kamelet) {
+            delegate.name(kamelet.getMetadata().getName());
+
+            if (kamelet.getSpec() != null) {
+                if (kamelet.getSpec().getDefinition() != null) {
+                    delegate.definition(kamelet.getSpec().getDefinition());
+                }
+
+                if (kamelet.getSpec().getSources() != null && !kamelet.getSpec().getSources().isEmpty()) {
+                    KameletSpec.Source source = kamelet.getSpec().getSources().get(0);
+                    delegate.source(source.getName(), source.getContent());
+                }
+
+                if (kamelet.getSpec().getDependencies() != null) {
+                    delegate.dependencies(kamelet.getSpec().getDependencies());
+                }
+
+                if (kamelet.getSpec().getDataTypes() != null) {
+                    delegate.dataTypes(kamelet.getSpec().getDataTypes());
+                }
             }
 
             return this;
         }
 
-        public Kamelet build() {
-            Kamelet kamelet = new Kamelet();
-            kamelet.getMetadata().setName(name);
-            kamelet.getSpec().setDefinition(definition);
+        public KameletV1Alpha1 build() {
+            Kamelet k = delegate.build();
 
-            if (template != null && !template.isEmpty()) {
-                kamelet.getSpec().setTemplate(KubernetesSupport.yaml().load(template));
-            }
+            KameletV1Alpha1 kamelet = new KameletV1Alpha1();
+            kamelet.setMetadata(k.getMetadata());
 
-            if (source != null) {
-                kamelet.getSpec().setSources(Collections.singletonList(source));
-            }
+            kamelet.setSpec(k.getSpec());
+            kamelet.setStatus(k.getStatus());
 
-            kamelet.getSpec().setDependencies(dependencies);
-            kamelet.getSpec().setDataTypes(dataTypes);
             return kamelet;
         }
     }

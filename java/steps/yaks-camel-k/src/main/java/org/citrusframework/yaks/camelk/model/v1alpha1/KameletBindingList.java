@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.model;
+package org.citrusframework.yaks.camelk.model.v1alpha1;
 
 import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
 
 /**
  * @author Christoph Deppisch
  */
-public class BindingList extends DefaultKubernetesResourceList<Binding> {
+public class KameletBindingList extends DefaultKubernetesResourceList<KameletBinding> {
 }

@@ -27,7 +27,7 @@ import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
  */
 public abstract class AbstractKameletAction extends AbstractCamelKAction {
 
-    protected final String apiVersion;
+    private final String apiVersion;
 
     public AbstractKameletAction(String name, Builder<?, ?> builder) {
         super(name, builder);
@@ -40,6 +40,14 @@ public abstract class AbstractKameletAction extends AbstractCamelKAction {
         }
 
         return super.namespace(context);
+    }
+
+    public String getApiVersion(TestContext context) {
+        if (context.getVariables().containsKey(VariableNames.KAMELET_API_VERSION.value())) {
+            return context.getVariable(VariableNames.KAMELET_API_VERSION.value());
+        }
+
+        return apiVersion;
     }
 
     /**

@@ -22,8 +22,11 @@ import java.util.Arrays;
 import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
 import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1List;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
@@ -48,7 +51,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
     public void doExecute(TestContext context) {
         String name = context.replaceDynamicContentInString(this.kameletName);
 
-        if (findKamelet(name, kameletNamespace(context), operatorNamespace(context), namespace(context)))  {
+        if (findKamelet(name, context, kameletNamespace(context), operatorNamespace(context), namespace(context)))  {
             LOG.info("Kamlet validation successful - All values OK!");
         } else {
             throw new ValidationException(String.format("Failed to retrieve Kamelet '%s'", name));
@@ -63,17 +66,26 @@ public class VerifyKameletAction extends AbstractKameletAction {
     /**
      * Find Kamelet with specified name in one of the given namespaces.
      * @param name
+     * @param context
      * @param namespaces
      * @return
      */
-    private boolean findKamelet(String name, String ... namespaces) {
+    private boolean findKamelet(String name, TestContext context, String ... namespaces) {
         return Arrays.stream(namespaces).distinct().anyMatch(namespace -> {
             LOG.info(String.format("Verify Kamlet '%s' exists in namespace '%s'", name, namespace));
 
-            Kamelet kamelet = getKubernetesClient().resources(Kamelet.class, KameletList.class)
+            Kamelet kamelet;
+            if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
+                kamelet = getKubernetesClient().resources(KameletV1Alpha1.class, KameletV1Alpha1List.class)
+                        .inNamespace(namespace)
+                        .withName(name)
+                        .get();
+            } else {
+                kamelet = getKubernetesClient().resources(Kamelet.class, KameletList.class)
                     .inNamespace(namespace)
                     .withName(name)
                     .get();
+            }
 
             if (LOG.isDebugEnabled()) {
                 if (kamelet == null) {

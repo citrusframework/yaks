@@ -36,12 +36,12 @@ import org.citrusframework.yaks.kubernetes.KubernetesSupport;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
-@Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
-public class Binding extends CustomResource<BindingSpec, BindingStatus> implements Namespaced {
+@Version(CamelKSettings.V1)
+public class Pipe extends CustomResource<PipeSpec, PipeStatus> implements Namespaced {
 
-    public Binding() {
+    public Pipe() {
         super();
-        this.spec = new BindingSpec();
+        this.spec = new PipeSpec();
         this.status = null;
     }
 
@@ -52,9 +52,9 @@ public class Binding extends CustomResource<BindingSpec, BindingStatus> implemen
         protected String name;
         private int replicas;
         private Integration integration;
-        private BindingSpec.Endpoint source;
-        private BindingSpec.Endpoint sink;
-        private final List<BindingSpec.Endpoint> steps = new ArrayList<>();
+        private PipeSpec.Endpoint source;
+        private PipeSpec.Endpoint sink;
+        private final List<PipeSpec.Endpoint> steps = new ArrayList<>();
 
         public Builder name(String name) {
             this.name = name;
@@ -66,63 +66,63 @@ public class Binding extends CustomResource<BindingSpec, BindingStatus> implemen
             return this;
         }
 
-        public Builder source(BindingSpec.Endpoint source) {
+        public Builder source(PipeSpec.Endpoint source) {
             this.source = source;
             return this;
         }
 
         public Builder source(String uri) {
-            return source(new BindingSpec.Endpoint(uri));
+            return source(new PipeSpec.Endpoint(uri));
         }
 
-        public Builder source(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder source(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
             }
 
-            return source(new BindingSpec.Endpoint(ref, props));
+            return source(new PipeSpec.Endpoint(ref, props));
         }
 
-        public Builder sink(BindingSpec.Endpoint sink) {
+        public Builder sink(PipeSpec.Endpoint sink) {
             this.sink = sink;
             return this;
         }
 
         public Builder sink(String uri) {
-            return sink(new BindingSpec.Endpoint(uri));
+            return sink(new PipeSpec.Endpoint(uri));
         }
 
-        public Builder sink(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder sink(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
             }
 
-            return sink(new BindingSpec.Endpoint(ref, props));
+            return sink(new PipeSpec.Endpoint(ref, props));
         }
 
-        public Builder steps(BindingSpec.Endpoint... step) {
+        public Builder steps(PipeSpec.Endpoint... step) {
             this.steps.addAll(Arrays.asList(step));
             return this;
         }
 
-        public Builder addStep(BindingSpec.Endpoint step) {
+        public Builder addStep(PipeSpec.Endpoint step) {
             this.steps.add(step);
             return this;
         }
 
         public Builder addStep(String uri) {
-            return addStep(new BindingSpec.Endpoint(uri));
+            return addStep(new PipeSpec.Endpoint(uri));
         }
 
-        public Builder addStep(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder addStep(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
             }
 
-            return addStep(new BindingSpec.Endpoint(ref, props));
+            return addStep(new PipeSpec.Endpoint(ref, props));
         }
 
         public Builder replicas(int replicas) {
@@ -130,31 +130,31 @@ public class Binding extends CustomResource<BindingSpec, BindingStatus> implemen
             return this;
         }
 
-        public Binding build() {
-            Binding binding = new Binding();
-            binding.getMetadata().setName(name);
+        public Pipe build() {
+            Pipe pipe = new Pipe();
+            pipe.getMetadata().setName(name);
 
             if (replicas > 0) {
-                binding.getSpec().setReplicas(replicas);
+                pipe.getSpec().setReplicas(replicas);
             }
 
             if (integration != null) {
-                binding.getSpec().setIntegration(integration);
+                pipe.getSpec().setIntegration(integration);
             }
 
             if (source != null) {
-                binding.getSpec().setSource(source);
+                pipe.getSpec().setSource(source);
             }
 
             if (sink != null) {
-                binding.getSpec().setSink(sink);
+                pipe.getSpec().setSink(sink);
             }
 
             if (!steps.isEmpty()) {
-                binding.getSpec().setSteps(steps.toArray(new BindingSpec.Endpoint[]{}));
+                pipe.getSpec().setSteps(steps.toArray(new PipeSpec.Endpoint[]{}));
             }
 
-            return binding;
+            return pipe;
         }
     }
 }

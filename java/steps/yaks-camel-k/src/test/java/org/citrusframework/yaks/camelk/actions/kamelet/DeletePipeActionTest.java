@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -38,7 +39,7 @@ import org.springframework.core.io.ClassPathResource;
 import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class DeleteBindingActionTest {
+public class DeletePipeActionTest {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -62,8 +63,9 @@ public class DeleteBindingActionTest {
         try {
             await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
 
-            DeleteBindingAction action = new DeleteBindingAction.Builder()
+            DeletePipeAction action = new DeletePipeAction.Builder()
                     .client(kubernetesClient)
+                    .apiVersion(CamelKSettings.V1ALPHA1)
                     .binding("timer-to-log-binding.yaml")
                     .clusterType(YaksClusterType.LOCAL)
                     .build();
@@ -85,8 +87,9 @@ public class DeleteBindingActionTest {
         try {
             await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
 
-            DeleteBindingAction action = new DeleteBindingAction.Builder()
+            DeletePipeAction action = new DeletePipeAction.Builder()
                     .client(kubernetesClient)
+                    .apiVersion(CamelKSettings.V1ALPHA1)
                     .binding("timer-to-log-binding.yaml")
                     .clusterType(YaksClusterType.LOCAL)
                     .build();

@@ -30,6 +30,7 @@ rules:
     - integrations
     - kamelets
     - kameletbindings
+    - pipes
   verbs:
     - create
     - delete

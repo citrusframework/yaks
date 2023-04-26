@@ -15,31 +15,35 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.camelk.model;
+package org.citrusframework.yaks.camelk.model.v1alpha1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
+import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.Pipe;
+import org.citrusframework.yaks.camelk.model.PipeSpec;
 
 /**
  * @author Christoph Deppisch
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Group(CamelKSupport.CAMELK_CRD_GROUP)
-@Version(CamelKSettings.KAMELET_API_VERSION_DEFAULT)
-public class KameletBinding extends Binding {
+@Version(CamelKSettings.V1ALPHA1)
+public class KameletBinding extends Pipe {
 
     /**
      * Fluent builder
      */
-    public static class Builder extends Binding.Builder {
+    public static class Builder extends Pipe.Builder {
 
-        Binding.Builder delegate = new Binding.Builder();
+        Pipe.Builder delegate = new Pipe.Builder();
 
         public Builder name(String name) {
             this.name = name;
+            delegate.name(name);
             return this;
         }
 
@@ -48,7 +52,7 @@ public class KameletBinding extends Binding {
             return this;
         }
 
-        public Builder source(BindingSpec.Endpoint source) {
+        public Builder source(PipeSpec.Endpoint source) {
             delegate.source(source);
             return this;
         }
@@ -58,12 +62,12 @@ public class KameletBinding extends Binding {
             return this;
         }
 
-        public Builder source(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder source(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             delegate.source(ref, properties);
             return this;
         }
 
-        public Builder sink(BindingSpec.Endpoint sink) {
+        public Builder sink(PipeSpec.Endpoint sink) {
             delegate.sink(sink);
             return this;
         }
@@ -73,27 +77,27 @@ public class KameletBinding extends Binding {
             return this;
         }
 
-        public Builder sink(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder sink(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             delegate.sink(ref, properties);
             return this;
         }
 
-        public Builder steps(BindingSpec.Endpoint... step) {
+        public Builder steps(PipeSpec.Endpoint... step) {
             delegate.steps(step);
             return this;
         }
 
-        public Builder addStep(BindingSpec.Endpoint step) {
+        public Builder addStep(PipeSpec.Endpoint step) {
             delegate.addStep(step);
             return this;
         }
 
         public Builder addStep(String uri) {
-            delegate.addStep(new BindingSpec.Endpoint(uri));
+            delegate.addStep(new PipeSpec.Endpoint(uri));
             return this;
         }
 
-        public Builder addStep(BindingSpec.Endpoint.ObjectReference ref, String properties) {
+        public Builder addStep(PipeSpec.Endpoint.ObjectReference ref, String properties) {
             delegate.addStep(ref, properties);
             return this;
         }
@@ -103,26 +107,26 @@ public class KameletBinding extends Binding {
             return this;
         }
 
-        public Builder from(Binding binding) {
-            delegate.name(binding.getMetadata().getName());
-            delegate.source(binding.getSpec().getSource());
-            delegate.sink(binding.getSpec().getSink());
+        public Builder from(Pipe pipe) {
+            delegate.name(pipe.getMetadata().getName());
+            delegate.source(pipe.getSpec().getSource());
+            delegate.sink(pipe.getSpec().getSink());
 
-            if (binding.getSpec().getSteps() != null) {
-                delegate.steps(binding.getSpec().getSteps());
+            if (pipe.getSpec().getSteps() != null) {
+                delegate.steps(pipe.getSpec().getSteps());
             }
 
-            delegate.integration(binding.getSpec().getIntegration());
+            delegate.integration(pipe.getSpec().getIntegration());
 
-            if (binding.getSpec().getReplicas() != null) {
-                delegate.replicas(binding.getSpec().getReplicas());
+            if (pipe.getSpec().getReplicas() != null) {
+                delegate.replicas(pipe.getSpec().getReplicas());
             }
 
             return this;
         }
 
         public KameletBinding build() {
-            Binding b = this.delegate.build();
+            Pipe b = this.delegate.build();
 
             KameletBinding binding = new KameletBinding();
             binding.setMetadata(b.getMetadata());

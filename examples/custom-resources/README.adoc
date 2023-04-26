@@ -168,9 +168,9 @@ rules:
 
 The role `yaks-operator-foo` is granted to create/delete/get/list/update custom resources of type `foos.yaks.dev`.
 
-You also need a role binding to the `yaks-operator` service account:
+You also need a role pipe to the `yaks-operator` service account:
 
-.role-binding-foo.yaml
+.role-pipe-foo.yaml
 [source,yaml]
 ----
 kind: RoleBinding
@@ -194,12 +194,12 @@ Please make sure to add the role to each operator instance in all namespaces, wh
 Also, you may need to use cluster roles when using a global YAKS operator.
 All of this is already covered when using the `yaks role` command.
 
-You can use the YAKS command line tool to properly add the role and role binding on the YAKS operator:
+You can use the YAKS command line tool to properly add the role and role pipe on the YAKS operator:
 
 [source,bash]
 ----
 yaks role –-add role-foo.yaml
-yaks role –-add role-binding-foo.yaml
+yaks role –-add role-pipe-foo.yaml
 ----
 
 The commands above create the role and role bindings on the `yaks-operator` service account.
@@ -258,7 +258,7 @@ config:
   operator:
     roles:
       - role-foo.yaml
-      - role-binding-foo.yaml
+      - role-pipe-foo.yaml
   namespace:
     temporary: true
 ----

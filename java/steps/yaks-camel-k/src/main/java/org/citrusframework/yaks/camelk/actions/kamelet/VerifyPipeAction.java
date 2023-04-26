@@ -23,10 +23,10 @@ import com.consol.citrus.context.TestContext;
 import com.consol.citrus.exceptions.ValidationException;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.model.Binding;
-import org.citrusframework.yaks.camelk.model.BindingList;
-import org.citrusframework.yaks.camelk.model.KameletBinding;
-import org.citrusframework.yaks.camelk.model.KameletBindingList;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBindingList;
+import org.citrusframework.yaks.camelk.model.Pipe;
+import org.citrusframework.yaks.camelk.model.PipeList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
@@ -36,9 +36,9 @@ import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
  *
  * @author Christoph Deppisch
  */
-public class VerifyBindingAction extends AbstractKameletAction {
+public class VerifyPipeAction extends AbstractKameletAction {
 
-    private final String bindingName;
+    private final String pipeName;
 
     private final int maxAttempts;
     private final long delayBetweenAttempts;
@@ -47,91 +47,91 @@ public class VerifyBindingAction extends AbstractKameletAction {
      * Constructor using given builder.
      * @param builder
      */
-    public VerifyBindingAction(Builder builder) {
-        super("verify-binding", builder);
-        this.bindingName = builder.bindingName;
+    public VerifyPipeAction(Builder builder) {
+        super("verify-pipe", builder);
+        this.pipeName = builder.pipeName;
         this.maxAttempts = builder.maxAttempts;
         this.delayBetweenAttempts = builder.delayBetweenAttempts;
     }
 
     @Override
     public void doExecute(TestContext context) {
-        String name = context.replaceDynamicContentInString(this.bindingName);
+        String name = context.replaceDynamicContentInString(this.pipeName);
 
-        LOG.info(String.format("Verify binding '%s'", name));
+        LOG.info(String.format("Verify pipe '%s'", name));
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            verifyLocalBinding(name, context);
+            verifyLocalPipe(name, context);
         } else {
-            verifyBinding(namespace(context), name);
+            verifyPipe(namespace(context), name, context);
         }
 
-        LOG.info(String.format("Successfully verified binding '%s' - All values OK!", name));
+        LOG.info(String.format("Successfully verified pipe '%s' - All values OK!", name));
     }
 
-    private void verifyLocalBinding(String name, TestContext context) {
+    private void verifyLocalPipe(String name, TestContext context) {
         Long pid = context.getVariable(name + ":pid", Long.class);
 
         for (int i = 0; i < maxAttempts; i++) {
             Map<String, String> properties = camel().get(pid);
             if ((!properties.isEmpty() && properties.get("STATUS").equals("Running"))) {
-                LOG.info(String.format("Verified binding '%s' state 'Running' - All values OK!", name));
+                LOG.info(String.format("Verified pipe '%s' state 'Running' - All values OK!", name));
                 return;
             }
 
-            LOG.info(String.format("Waiting for binding '%s' to be in state 'Running'- retry in %s ms", name, delayBetweenAttempts));
+            LOG.info(String.format("Waiting for pipe '%s' to be in state 'Running'- retry in %s ms", name, delayBetweenAttempts));
             try {
                 Thread.sleep(delayBetweenAttempts);
             } catch (InterruptedException e) {
-                LOG.warn("Interrupted while waiting for binding", e);
+                LOG.warn("Interrupted while waiting for pipe", e);
             }
         }
 
-        throw new ValidationException(String.format("Failed to retrieve binding '%s' in state 'Running'", name));
+        throw new ValidationException(String.format("Failed to retrieve pipe '%s' in state 'Running'", name));
     }
 
-    private void verifyBinding(String namespace, String name) {
-        Binding binding = null;
+    private void verifyPipe(String namespace, String name, TestContext context) {
+        Pipe pipe = null;
         for (int i = 0; i < maxAttempts; i++) {
-            if (apiVersion.equals(CamelKSettings.V1ALPHA1)) {
-                binding = getKubernetesClient().resources(KameletBinding.class, KameletBindingList.class)
+            if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
+                pipe = getKubernetesClient().resources(KameletBinding.class, KameletBindingList.class)
                         .inNamespace(namespace)
                         .withName(name)
                         .get();
             } else {
-                binding = getKubernetesClient().resources(Binding.class, BindingList.class)
+                pipe = getKubernetesClient().resources(Pipe.class, PipeList.class)
                         .inNamespace(namespace)
                         .withName(name)
                         .get();
             }
 
-            if (binding == null) {
-                LOG.info(String.format("Waiting for binding '%s' - retry in %s ms", name, delayBetweenAttempts));
+            if (pipe == null) {
+                LOG.info(String.format("Waiting for pipe '%s' - retry in %s ms", name, delayBetweenAttempts));
                 try {
                     Thread.sleep(delayBetweenAttempts);
                 } catch (InterruptedException e) {
-                    LOG.warn("Interrupted while waiting for binding", e);
+                    LOG.warn("Interrupted while waiting for pipe", e);
                 }
             } else {
                 break;
             }
         }
 
-        if (binding == null) {
-            throw new ValidationException(String.format("Failed to retrieve binding '%s' in namespace '%s'", name, namespace));
+        if (pipe == null) {
+            throw new ValidationException(String.format("Failed to retrieve pipe '%s' in namespace '%s'", name, namespace));
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml().dumpAsMap(binding));
+            LOG.debug(KubernetesSupport.yaml().dumpAsMap(pipe));
         }
     }
 
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractKameletAction.Builder<VerifyBindingAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<VerifyPipeAction, Builder> {
 
-        private String bindingName;
+        private String pipeName;
 
         private int maxAttempts = CamelKSettings.getMaxAttempts();
         private long delayBetweenAttempts = CamelKSettings.getDelayBetweenAttempts();
@@ -142,7 +142,7 @@ public class VerifyBindingAction extends AbstractKameletAction {
         }
 
         public Builder isAvailable(String name) {
-            this.bindingName = name;
+            this.pipeName = name;
             return this;
         }
 
@@ -157,8 +157,8 @@ public class VerifyBindingAction extends AbstractKameletAction {
         }
 
         @Override
-        public VerifyBindingAction build() {
-            return new VerifyBindingAction(this);
+        public VerifyPipeAction build() {
+            return new VerifyPipeAction(this);
         }
     }
 }

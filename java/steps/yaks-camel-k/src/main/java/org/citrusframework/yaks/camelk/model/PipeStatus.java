@@ -30,7 +30,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResource;
 @JsonDeserialize(using = JsonDeserializer.None.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"phase", "conditions", "observedGeneration"})
-public class BindingStatus implements KubernetesResource {
+public class PipeStatus implements KubernetesResource {
 
     @JsonProperty("phase")
     private String phase;
