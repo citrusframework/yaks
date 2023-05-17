@@ -168,7 +168,20 @@ public class CreatePipeAction extends AbstractKameletAction {
      */
     private void createLocalPipe(Pipe pipe, String name, TestContext context) {
         try {
-            String pipeYaml = KubernetesSupport.yaml().dumpAsMap(pipe);
+            String pipeYaml;
+
+            if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
+                KameletBinding kb;
+                if (pipe instanceof KameletBinding) {
+                    kb = (KameletBinding) pipe;
+                } else {
+                    kb = new KameletBinding.Builder().from(pipe).build();
+                }
+
+                pipeYaml = KubernetesSupport.yaml().dumpAsMap(kb);
+            } else {
+                pipeYaml = KubernetesSupport.yaml().dumpAsMap(pipe);
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(pipeYaml);

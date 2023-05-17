@@ -19,6 +19,8 @@ package org.citrusframework.yaks.kubernetes;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import com.consol.citrus.Citrus;
@@ -80,7 +82,8 @@ public final class KubernetesSupport {
             @Override
             protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
                 // if value of property is null, ignore it.
-                if (propertyValue == null) {
+                if (propertyValue == null || (propertyValue instanceof Collection && ((Collection<?>) propertyValue).isEmpty()) ||
+                    (propertyValue instanceof Map && ((Map<?, ?>) propertyValue).isEmpty())) {
                     return null;
                 } else {
                     return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);

@@ -109,7 +109,7 @@ public class KameletSteps {
         this.kameletApiVersion = apiVersion;
 
         // update the test variable that points to the api version
-        runner.run(createVariable(VariableNames.KAMELET_API_VERSION.value(), namespace));
+        runner.run(createVariable(VariableNames.KAMELET_API_VERSION.value(), apiVersion));
     }
 
     @Given("^Kamelet namespace ([^\\s]+)$")
