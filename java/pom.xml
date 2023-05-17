@@ -90,14 +90,14 @@
     <maven.compiler.target>11</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
 
-    <apache.camel.version>3.20.2</apache.camel.version>
+    <apache.camel.version>3.20.4</apache.camel.version>
     <activemq.artemis.version>2.17.0</activemq.artemis.version>
     <activemq.version>5.17.0</activemq.version>
     <apicurio.version>1.1.2</apicurio.version>
     <ascii-table-version>1.8.0</ascii-table-version>
     <assertj-core.version>3.24.2</assertj-core.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <aws-java-sdk2.version>2.18.41</aws-java-sdk2.version>
+    <aws-java-sdk2.version>2.20.17</aws-java-sdk2.version>
     <citrus.version>3.4.0</citrus.version>
     <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
     <cucumber.version>7.11.0</cucumber.version>
