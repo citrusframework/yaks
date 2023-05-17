@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.yaks.testcontainers.LocalStackSettings;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
@@ -43,7 +44,7 @@ public class AWS2Container extends GenericContainer<AWS2Container> {
     private static final String HOSTNAME_EXTERNAL_ENV = "HOSTNAME_EXTERNAL";
 
     private static final String DOCKER_IMAGE_NAME = "localstack/localstack";
-    private static final String DOCKER_IMAGE_TAG = "1.3.1";
+    private static final String DOCKER_IMAGE_TAG = LocalStackSettings.VERSION_DEFAULT;
 
     private final Set<AWS2Service> services = new HashSet<>();
     private String secretKey = "secretkey";
