@@ -124,7 +124,7 @@ jobs:
         export KAMEL_INSTALL_REGISTRY=$KIND_REGISTRY
         export KAMEL_INSTALL_REGISTRY_INSECURE=true
         
-        kamel install --global --olm=false --operator-env-vars KAMEL_BASE_IMAGE=docker.io/eclipse-temurin:11
+        kamel install --global --olm=false
     - name: Install YAKS
       run: |
         yaks install --operator-image $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
