@@ -135,7 +135,7 @@ public class RedpandaSteps {
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_PORT", String.valueOf(redpandaContainer.getMappedPort(REDPANDA_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_LOCAL_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
 
-        if (YaksSettings.isLocal()) {
+        if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", "redpanda");
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
         } else {

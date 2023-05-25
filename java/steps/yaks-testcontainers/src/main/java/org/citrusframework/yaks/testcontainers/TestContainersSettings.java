@@ -19,6 +19,8 @@ package org.citrusframework.yaks.testcontainers;
 
 import java.util.Optional;
 
+import org.citrusframework.yaks.YaksSettings;
+
 /**
  * @author Christoph Deppisch
  */
@@ -30,6 +32,9 @@ public class TestContainersSettings {
     private static final String AUTO_REMOVE_RESOURCES_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "auto.remove.resources";
     private static final String AUTO_REMOVE_RESOURCES_ENV = TESTCONTAINERS_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
+
+    private static final String KUBEDOCK_ENABLED_PROPERTY = TESTCONTAINERS_PROPERTY_PREFIX + "kubedock.enabled";
+    private static final String KUBEDOCK_ENABLED_ENV = TESTCONTAINERS_ENV_PREFIX + "KUBEDOCK_ENABLED";
 
     private static final String TEST_ID_PROPERTY = "yaks.test.id";
     private static final String TEST_ID_ENV = "YAKS_TEST_ID";
@@ -51,6 +56,15 @@ public class TestContainersSettings {
     public static boolean isAutoRemoveResources() {
         return Boolean.parseBoolean(System.getProperty(AUTO_REMOVE_RESOURCES_PROPERTY,
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
+    }
+
+    /**
+     * True when using KubeDock services.
+     * @return
+     */
+    public static boolean isKubedockEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KUBEDOCK_ENABLED_PROPERTY,
+                Optional.ofNullable(System.getenv(KUBEDOCK_ENABLED_ENV)).orElseGet(() -> String.valueOf(!YaksSettings.isLocal()))));
     }
 
     /**

@@ -183,7 +183,7 @@ public class PostgreSQLSteps {
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_LOCAL_URL", postgreSQLContainer.getJdbcUrl());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_LOCAL_URL", postgreSQLContainer.getJdbcUrl());
 
-        if (YaksSettings.isLocal()) {
+        if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", "postgresql");
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", postgreSQLContainer.getJdbcUrl());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", postgreSQLContainer.getJdbcUrl());

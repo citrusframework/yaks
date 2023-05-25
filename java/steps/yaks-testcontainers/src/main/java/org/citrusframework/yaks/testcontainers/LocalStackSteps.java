@@ -146,9 +146,9 @@ public class LocalStackSteps {
             context.setVariable(getEnvVarName("ACCESS_KEY"), aws2Container.getAccessKey());
             context.setVariable(getEnvVarName("SECRET_KEY"), aws2Container.getSecretKey());
             context.setVariable(getEnvVarName("SERVICE_PORT"), serviceEndpoint.getPort());
-            context.setVariable(getEnvVarName("SERVICE_LOCAL_URL"), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
+            context.setVariable(getEnvVarName("SERVICE_LOCAL_URL"), String.format("http://localhost:%s", serviceEndpoint.getPort()));
 
-            if (YaksSettings.isLocal()) {
+            if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
                 context.setVariable(getEnvVarName("SERVICE_NAME"), "localstack");
                 context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
             } else {
@@ -159,24 +159,21 @@ public class LocalStackSteps {
             services.forEach(service -> {
                 String serviceName = service.getServiceName().toUpperCase(Locale.US);
 
-                if (YaksSettings.isLocal()) {
+                if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
                     context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
-                } else {
-                    if (service == AWS2Container.AWS2Service.S3) {
-                        // Explicitly use cluster IP address in order to enable path-style access on S3 service
-                        Optional<String> clusterIp = KubernetesSupport.getServiceClusterIp(citrus, String.format("kd-%s", containerId), getNamespace(context));
-                        if (clusterIp.isPresent()) {
-                            context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", clusterIp.get(), serviceEndpoint.getPort()));
-                        } else {
-                            context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
-                        }
+                } else if (service == AWS2Container.AWS2Service.S3) {
+                    // Explicitly use cluster IP address in order to enable path-style access on S3 service
+                    Optional<String> clusterIp = KubernetesSupport.getServiceClusterIp(citrus, String.format("kd-%s", containerId), getNamespace(context));
+                    if (clusterIp.isPresent()) {
+                        context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", clusterIp.get(), serviceEndpoint.getPort()));
                     } else {
                         context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
                     }
-
+                } else {
+                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://kd-%s:%s", containerId, serviceEndpoint.getPort()));
                 }
 
-                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", serviceName)), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
+                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", serviceName)), String.format("http://localhost:%s", serviceEndpoint.getPort()));
                 context.setVariable(getEnvVarName(String.format("%s_PORT", serviceName)), serviceEndpoint.getPort());
             });
 

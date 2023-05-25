@@ -128,7 +128,7 @@ public class MongoDBSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_LOCAL_URL", mongoDBContainer.getReplicaSetUrl());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_LOCAL_URL", mongoDBContainer.getReplicaSetUrl());
 
-            if (YaksSettings.isLocal()) {
+            if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", "mongodb");
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", mongoDBContainer.getReplicaSetUrl());
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", mongoDBContainer.getReplicaSetUrl());
