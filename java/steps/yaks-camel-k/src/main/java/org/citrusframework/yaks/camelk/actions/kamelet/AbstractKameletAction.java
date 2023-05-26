@@ -18,7 +18,7 @@
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import com.consol.citrus.context.TestContext;
-import org.citrusframework.yaks.camelk.CamelKSettings;
+import org.citrusframework.yaks.camelk.KameletSettings;
 import org.citrusframework.yaks.camelk.VariableNames;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 
@@ -55,7 +55,7 @@ public abstract class AbstractKameletAction extends AbstractCamelKAction {
      */
     public static abstract class Builder<T extends AbstractKameletAction, B extends Builder<T, B>> extends AbstractCamelKAction.Builder<T, B> {
 
-        protected String apiVersion = CamelKSettings.getKameletApiVersion();
+        protected String apiVersion = KameletSettings.getKameletApiVersion();
 
         /**
          * Explicitly set Kamelet api version.

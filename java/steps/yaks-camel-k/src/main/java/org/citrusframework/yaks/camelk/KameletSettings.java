@@ -28,6 +28,11 @@ public final class KameletSettings {
     private static final String NAMESPACE_PROPERTY = KAMELET_PROPERTY_PREFIX + "namespace";
     private static final String NAMESPACE_ENV = KAMELET_ENV_PREFIX + "NAMESPACE";
 
+    private static final String KAMELET_API_VERSION_PROPERTY = KAMELET_PROPERTY_PREFIX + "api.version";
+    private static final String KAMELET_API_VERSION_ENV = KAMELET_ENV_PREFIX + "API_VERSION";
+    public static final String KAMELET_API_VERSION_DEFAULT = CamelKSettings.V1;
+
+
     private KameletSettings() {
         // prevent instantiation of utility class
     }
@@ -39,6 +44,15 @@ public final class KameletSettings {
     public static String getNamespace() {
         return System.getProperty(NAMESPACE_PROPERTY,
                 System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : CamelKSettings.getNamespace());
+    }
+
+    /**
+     * Api version for current Kamelet specification.
+     * @return
+     */
+    public static String getKameletApiVersion() {
+        return System.getProperty(KAMELET_API_VERSION_PROPERTY,
+                System.getenv(KAMELET_API_VERSION_ENV) != null ? System.getenv(KAMELET_API_VERSION_ENV) : KAMELET_API_VERSION_DEFAULT);
     }
 
 }

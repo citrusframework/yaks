@@ -56,7 +56,7 @@ public class KameletSteps {
 
     private KubernetesClient k8sClient;
 
-    private String kameletApiVersion = CamelKSettings.getKameletApiVersion();
+    private String kameletApiVersion = KameletSettings.getKameletApiVersion();
 
     // Kamelet builder
     private Kamelet.Builder kamelet;

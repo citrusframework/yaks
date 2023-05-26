@@ -16,7 +16,7 @@ version with a environment variable set on the YAKS configuration.
 .Overwrite Kamelet API version
 [source,bash]
 ----
-YAKS_CAMELK_KAMELET_API_VERSION=v1
+YAKS_KAMELET_API_VERSION=v1
 ----
 
 This sets the Kamelet API version for all operations.
@@ -156,7 +156,7 @@ You can bind a Kamelet as a source to a sink. This concept is described with Pip
 is able to create and verify Pipes in combination with Kamelets.
 
 NOTE: Pipes are available since API version `v1` in Camel K. YAKS also supports KameletBinding resources that represent
-the `v1alpha1` equivalent to Pipes. So in case you need to work with KameletBindings you need to explicitly set the Kamelet API version to `v1alpha1` (e.g. via environment variable settings `YAKS_CAMELK_KAMELET_API_VERSION`).
+the `v1alpha1` equivalent to Pipes. So in case you need to work with KameletBindings you need to explicitly set the Kamelet API version to `v1alpha1` (e.g. via environment variable settings `YAKS_KAMELET_API_VERSION`).
 
 [[pipe-create]]
 === Create Pipes
