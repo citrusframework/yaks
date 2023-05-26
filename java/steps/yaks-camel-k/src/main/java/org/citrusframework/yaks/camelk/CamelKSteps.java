@@ -233,6 +233,11 @@ public class CamelKSteps {
 
     @Then("^Camel K integration ([a-z0-9-]+) should print (.*)$")
     public void integrationShouldPrint(String name, String message) {
+        integrationShouldPrintMultiline(name, message);
+    }
+
+    @Then("^Camel K integration ([a-z0-9-]+) should print$")
+    public void integrationShouldPrintMultiline(String name, String message) {
         runner.run(camelk()
                 .client(k8sClient)
                 .verifyIntegration(name)
@@ -244,6 +249,11 @@ public class CamelKSteps {
 
     @Then("^Camel K integration ([a-z0-9-]+) should not print (.*)$")
     public void integrationShouldNotPrint(String name, String message) {
+        integrationShouldNotPrintMultiline(name, message);
+    }
+
+    @Then("^Camel K integration ([a-z0-9-]+) should not print$")
+    public void integrationShouldNotPrintMultiline(String name, String message) {
         runner.run(assertException()
                 .exception(ActionTimeoutException.class)
                 .when(camelk()
