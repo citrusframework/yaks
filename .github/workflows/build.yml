@@ -111,9 +111,9 @@ jobs:
         kubectl cluster-info
         kubectl describe nodes
     - name: Camel K Tools
-      uses: container-tools/camel-k-action@v1
+      uses: container-tools/camel-k-action@v1.0.2
       with:
-        version: 1.12.1
+        version: v1.12.1
     - name: Build
       run: |
         make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
