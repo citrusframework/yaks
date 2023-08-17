@@ -102,6 +102,9 @@ public class KameletV1Alpha1 extends Kamelet implements Namespaced {
         public Builder from(Kamelet kamelet) {
             delegate.name(kamelet.getMetadata().getName());
 
+            delegate.annotations(kamelet.getMetadata().getAnnotations());
+            delegate.labels(kamelet.getMetadata().getLabels());
+
             if (kamelet.getSpec() != null) {
                 if (kamelet.getSpec().getDefinition() != null) {
                     delegate.definition(kamelet.getSpec().getDefinition());

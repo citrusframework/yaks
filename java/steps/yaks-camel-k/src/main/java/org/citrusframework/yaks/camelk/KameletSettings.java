@@ -22,6 +22,8 @@ package org.citrusframework.yaks.camelk;
  */
 public final class KameletSettings {
 
+    public static final String KAMELET_TYPE_LABEL = "camel.apache.org/kamelet.type";
+
     private static final String KAMELET_PROPERTY_PREFIX = "yaks.kamelet.";
     private static final String KAMELET_ENV_PREFIX = "YAKS_KAMELET_";
 

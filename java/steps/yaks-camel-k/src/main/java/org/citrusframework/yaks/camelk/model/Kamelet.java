@@ -20,6 +20,7 @@ package org.citrusframework.yaks.camelk.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +58,9 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
         private final Map<String, KameletSpec.DataTypesSpec> dataTypes = new HashMap<>();
         private List<String> dependencies = new ArrayList<>();
         private KameletSpec.Source source;
+
+        private final Map<String, String> labels = new LinkedHashMap<>();
+        private final Map<String, String> annotations = new LinkedHashMap<>();
 
         public Builder name(String name) {
             this.name = name;
@@ -110,10 +114,33 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
             return this;
         }
 
+        public Builder labels(Map<String, String> labels) {
+            this.labels.putAll(labels);
+            return this;
+        }
+
+        public Builder addLabel(String name, String value) {
+            this.labels.put(name, value);
+            return this;
+        }
+
+        public Builder annotations(Map<String, String> annotations) {
+            this.annotations.putAll(annotations);
+            return this;
+        }
+
+        public Builder addAnnotation(String name, String value) {
+            this.annotations.put(name, value);
+            return this;
+        }
+
         public Kamelet build() {
             Kamelet kamelet = new Kamelet();
             kamelet.getMetadata().setName(name);
             kamelet.getSpec().setDefinition(definition);
+
+            kamelet.getMetadata().getAnnotations().putAll(annotations);
+            kamelet.getMetadata().getLabels().putAll(labels);
 
             if (template != null && !template.isEmpty()) {
                 kamelet.getSpec().setTemplate(KubernetesSupport.yaml().load(template));

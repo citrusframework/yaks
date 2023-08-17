@@ -29,6 +29,7 @@ import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.citrusframework.yaks.camelk.CamelKSettings;
+import org.citrusframework.yaks.camelk.KameletSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
@@ -125,6 +126,19 @@ public class CreateKameletAction extends AbstractKameletAction {
             }
 
             kamelet = builder.build();
+        }
+
+        if (!kamelet.getMetadata().getLabels().containsKey(KameletSettings.KAMELET_TYPE_LABEL)) {
+            if (kamelet.getMetadata().getName().endsWith("-source")) {
+                kamelet.getMetadata().getLabels().put(KameletSettings.KAMELET_TYPE_LABEL, "source");
+            } else if (kamelet.getMetadata().getName().endsWith("-sink")) {
+                kamelet.getMetadata().getLabels().put(KameletSettings.KAMELET_TYPE_LABEL, "sink");
+            } else if (kamelet.getMetadata().getName().endsWith("-action")) {
+                kamelet.getMetadata().getLabels().put(KameletSettings.KAMELET_TYPE_LABEL, "action");
+            } else {
+                throw new CitrusRuntimeException(String.format("Unsupported Kamelet type - failed to determine type from Kamelet name %s, " +
+                        "expected one of '-source', '-sink' or '-action' suffix", kamelet.getMetadata().getName()));
+            }
         }
 
         if (LOG.isDebugEnabled()) {
