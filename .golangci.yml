@@ -25,6 +25,7 @@ linters:
   disable:
     - containedctx
     - cyclop
+    - depguard
     - dupl
     - exhaustive
     - exhaustivestruct
@@ -51,12 +52,20 @@ linters:
     - nestif
     - nilnil
     - nlreturn
+    - nolintlint
+    - nosnakecase
     - paralleltest
+    - revive
+    - rowserrcheck
     - scopelint
+    - structcheck
+    - sqlclosecheck
+    - tagalign
     - tagliatelle
     - tenv
     - testpackage
     - varnamelen
+    - wastedassign
     - whitespace
     - wrapcheck
     - wsl

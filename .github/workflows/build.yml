@@ -37,7 +37,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - name: Set up JDK
       uses: actions/setup-java@v3
@@ -69,7 +69,7 @@ jobs:
         make check-licenses test package-artifacts
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       YAKS_IMAGE_NAME: "kind-registry:5000/yaks"
       YAKS_IMAGE_VERSION: "latest"
