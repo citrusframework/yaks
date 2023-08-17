@@ -38,12 +38,12 @@
     "dataTypes": {
       "out": {
         "default": "text",
-        "types": [
-          {
+        "types": {
+          "text": {
             "format": "text",
             "mediaType": "text/plain"
           }
-        ]
+        }
       }
     },
     "template": {
