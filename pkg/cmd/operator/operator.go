@@ -21,7 +21,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"math/rand"
 	"os"
 	"runtime"
 	"strconv"
@@ -78,8 +77,6 @@ func printVersion() {
 
 // Run starts the YAKS operator.
 func Run(leaderElection bool, leaderElectionID string) {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	flag.Parse()
 
 	// The logger instantiated here can be changed to any logger
@@ -151,16 +148,6 @@ func Run(leaderElection bool, leaderElectionID string) {
 		if operatorNamespace == "" {
 			leaderElection = false
 			log.Info("unable to determine namespace for leader election")
-		}
-	}
-
-	if ok, err := kubernetes.CheckPermission(context.TODO(), c, corev1.GroupName, "events", watchNamespace, "", "create"); err != nil || !ok {
-		// Do not sink Events to the server as they'll be rejected
-		broadcaster = event.NewSinkLessBroadcaster(broadcaster)
-		if err != nil {
-			log.Error(err, "cannot check permissions for configuring event broadcaster")
-		} else if !ok {
-			log.Info("Event broadcasting to Kubernetes is disabled because of missing permissions to create events")
 		}
 	}
 

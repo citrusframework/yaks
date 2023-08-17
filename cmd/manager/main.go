@@ -19,18 +19,13 @@ package main
 
 import (
 	"context"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/citrusframework/yaks/pkg/cmd"
-
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Cancel ctx as soon as main returns
