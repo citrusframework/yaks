@@ -106,8 +106,8 @@ You can also add settings files to the `yaks-config.xml`
 config:
   runtime:
     resources:
-    - examples/kamelets/timer-to-log.groovy 
-    - examples/kamelets/timer-source.kamelet.yaml 
+    - examples/resources/some.groovy 
+    - examples/resources/another.yaml 
 ```
 
 With this configuration in place you can just run the test and the settings file will be added automatically.

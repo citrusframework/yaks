@@ -27,9 +27,9 @@ config:
       - name: INTEGRATION_LOGS
         level: INFO
     resources:
-    - timer-source.kamelet.yaml
+    - hello-source.kamelet.yaml
     - timer-to-log.groovy
-    - timer-to-log-binding.yaml
+    - hello-to-log-binding.yaml
 post:
   - name: print dump
     if: env:CI=true && failure()

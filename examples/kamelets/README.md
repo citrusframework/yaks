@@ -22,10 +22,9 @@ File resources are added to the test using the `yaks-config.yaml` file present i
 config:
   runtime:
     resources:
-    - timer-to-log.groovy 
-    - timer-source.kamelet.yaml 
+      - timer-to-log.groovy 
+      - hello-source.kamelet.yaml 
 ```
-
 
 [kamelet-resource.feature](kamelet-resource.feature)
 ```shell script
@@ -40,5 +39,5 @@ You could also specify files to load in the command line
 ```shell script
 $ yaks run examples/kamelets/kamelet-resource.feature \
             --resource timer-to-log.groovy \
-            --resource timer-source.kamelet.yaml
+            --resource hello-source.kamelet.yaml
 ``` 

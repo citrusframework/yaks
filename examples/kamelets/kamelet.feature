@@ -17,29 +17,28 @@ Feature: Kamelet
       | name     | period        |
       | type     | integer       |
       | default  | 1000          |
-    And Kamelet dataType out="text/plain"
-    When create Kamelet timer-source with template
+    When create Kamelet tick-source with template
 """
 from:
   uri: timer:tick
   parameters:
-    period: "#property:period"
+    period: "{{period}}"
   steps:
   - set-body:
       constant: "{{message}}"
   - to: "kamelet:sink"
 """
-    Then Kamelet timer-source should be available
+    Then Kamelet tick-source should be available
 
   Scenario: Use Kamelet
-    Given create Camel K integration timer-to-log.groovy
+    Given create Camel K integration tick-to-log.groovy
     """
-    from('kamelet:timer-source?message=Hello+Kamelets&period=2000')
+    from('kamelet:tick-source?message=Hello+Kamelets&period=2000')
         .log('${//body//}')
     """
-    Then Camel K integration timer-to-log should be running
-    Then Camel K integration timer-to-log should print Hello Kamelets
+    Then Camel K integration tick-to-log should be running
+    Then Camel K integration tick-to-log should print Hello Kamelets
 
   Scenario: Remove Camel K resources
-    Given delete Kamelet timer-source
-    Given delete Camel K integration timer-to-log
+    Given delete Kamelet tick-source
+    Given delete Camel K integration tick-to-log

@@ -9,16 +9,16 @@ Feature: Kamelet resource
 
   Scenario: Bind Kamelet to service
     # Create Kamelet from file
-    Given load Kamelet timer-source.kamelet.yaml
-    Then Kamelet timer-source should be available
+    Given load Kamelet hello-source.kamelet.yaml
+    Then Kamelet hello-source should be available
 
     # Create the binding
     Given create Kubernetes service greeting-service with target port 8080
     And KameletBinding source properties
       | message  | Hello World |
-    And bind Kamelet timer-source to uri http://greeting-service.${YAKS_NAMESPACE}/greeting
-    When create KameletBinding timer-source-uri
-    Then KameletBinding timer-source-uri should be available
+    And bind Kamelet hello-source to uri http://greeting-service.${YAKS_NAMESPACE}/greeting
+    When create KameletBinding hello-source-uri
+    Then KameletBinding hello-source-uri should be available
 
     # Verify binding
     Given HTTP server "greeting-service"
@@ -27,11 +27,11 @@ Feature: Kamelet resource
     And receive POST /greeting
 
   Scenario: Create binding from YAML
-    Given load KameletBinding timer-to-log-binding.yaml
-    Then KameletBinding timer-to-log-binding should be available
-    And Camel K integration timer-to-log-binding should print Hello world!
+    Given load KameletBinding hello-to-log-binding.yaml
+    Then KameletBinding hello-to-log-binding should be available
+    And Camel K integration hello-to-log-binding should print Hello world!
 
   Scenario: Remove Camel K resources
-    Given delete Kamelet timer-source
-    Given delete KameletBinding timer-source-uri
-    Given delete KameletBinding timer-to-log-binding
+    Given delete Kamelet hello-source
+    Given delete KameletBinding hello-source-uri
+    Given delete KameletBinding hello-to-log-binding
