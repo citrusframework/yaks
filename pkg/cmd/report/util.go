@@ -34,7 +34,7 @@ func writeReport(report string, fileName string, outputDir string) error {
 		return err
 	}
 
-	if _, err := reportFile.Write([]byte(report)); err != nil {
+	if _, err := reportFile.WriteString(report); err != nil {
 		return err
 	}
 
