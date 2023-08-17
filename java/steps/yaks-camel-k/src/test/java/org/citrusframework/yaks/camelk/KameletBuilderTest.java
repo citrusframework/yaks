@@ -49,6 +49,7 @@ public class KameletBuilderTest {
 
 		Kamelet kamelet = new Kamelet.Builder()
 				.name("time-source")
+				.addLabel(KameletSettings.KAMELET_TYPE_LABEL, "source")
 				.definition(definition)
 				.dataTypes(dataTypes)
 				.dependencies(Collections.singletonList("mvn:fake.dependency:id:version-1"))
