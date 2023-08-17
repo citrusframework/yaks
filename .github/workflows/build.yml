@@ -45,20 +45,20 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     - name: Install Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v4
       with:
-        go-version: 1.18.x
+        go-version: 1.21.x
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Cache Go modules
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Cache Maven modules
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -81,20 +81,20 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
     - name: Install Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v4
       with:
-        go-version: 1.18.x
+        go-version: 1.21.x
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Cache Go modules
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Cache Maven modules
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
@@ -111,7 +111,7 @@ jobs:
         kubectl cluster-info
         kubectl describe nodes
     - name: Camel K Tools
-      uses: container-tools/camel-k-action@v1.0.2
+      uses: container-tools/camel-k-action@v1.0.3
       with:
         version: v1.12.1
     - name: Build
