@@ -18,7 +18,6 @@
 package org.citrusframework.yaks.camelk.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +158,7 @@ public class KameletSpec implements KubernetesResource {
 
         @JsonProperty("types")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        private List<DataTypeSpec> types;
+        private Map<String, DataTypeSpec> types = new HashMap<>();
 
         @JsonProperty("headers")
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -171,14 +170,16 @@ public class KameletSpec implements KubernetesResource {
 
         public DataTypesSpec(String defaultType, DataTypeSpec... types) {
             this.defaultType = defaultType;
-            this.types = Arrays.asList(types);
+            for (DataTypeSpec spec : types) {
+                this.types.put(spec.format, spec);
+            }
         }
 
-        public List<DataTypeSpec> getTypes() {
+        public Map<String, DataTypeSpec> getTypes() {
             return types;
         }
 
-        public void setTypes(List<DataTypeSpec> types) {
+        public void setTypes(Map<String, DataTypeSpec> types) {
             this.types = types;
         }
 

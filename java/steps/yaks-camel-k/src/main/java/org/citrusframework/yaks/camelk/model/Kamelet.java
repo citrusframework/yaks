@@ -102,7 +102,7 @@ public class Kamelet extends CustomResource<KameletSpec, KameletStatus> implemen
 
         public Builder addDataType(String slot, String scheme, String format) {
             if (dataTypes.containsKey(slot)) {
-                this.dataTypes.get(slot).getTypes().add(new KameletSpec.DataTypeSpec(scheme, format));
+                this.dataTypes.get(slot).getTypes().put(format, new KameletSpec.DataTypeSpec(scheme, format));
             } else {
                 this.dataTypes.put(slot, new KameletSpec.DataTypesSpec(format, new KameletSpec.DataTypeSpec(scheme, format)));
             }
