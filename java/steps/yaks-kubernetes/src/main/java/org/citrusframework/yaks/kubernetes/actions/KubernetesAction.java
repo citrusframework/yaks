@@ -20,8 +20,7 @@ package org.citrusframework.yaks.kubernetes.actions;
 import com.consol.citrus.TestAction;
 import com.consol.citrus.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.citrusframework.yaks.kubernetes.KubernetesSettings;
-import org.citrusframework.yaks.kubernetes.KubernetesVariableNames;
+import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
  * Base action provides access to Kubernetes properties such as broker name. These properties are read from
@@ -46,11 +45,7 @@ public interface KubernetesAction extends TestAction {
      * @return
      */
     default String namespace(TestContext context) {
-        if (context.getVariables().containsKey(KubernetesVariableNames.NAMESPACE.value())) {
-            return context.getVariable(KubernetesVariableNames.NAMESPACE.value());
-        }
-
-        return KubernetesSettings.getNamespace();
+        return KubernetesSupport.getNamespace(context);
     }
 }
 

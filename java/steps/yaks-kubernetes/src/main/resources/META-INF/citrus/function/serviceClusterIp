@@ -1,0 +1,1 @@
+type=org.citrusframework.yaks.kubernetes.functions.ServiceClusterIpFunction
