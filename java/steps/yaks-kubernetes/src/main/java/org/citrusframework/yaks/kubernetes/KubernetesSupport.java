@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.consol.citrus.Citrus;
+import com.consol.citrus.context.TestContext;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -69,12 +70,46 @@ public final class KubernetesSupport {
         // prevent instantiation of utility class
     }
 
+    /**
+     * Retrieve current Kubernetes client if set in Citrus context as bean reference.
+     * Otherwise, create new default instance.
+     * @param citrus holding the potential bean reference to the client instance.
+     * @return
+     */
     public static KubernetesClient getKubernetesClient(Citrus citrus) {
         if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KubernetesClient.class).size() == 1L) {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
             return new KubernetesClientBuilder().build();
         }
+    }
+
+    /**
+     * Retrieve current Kubernetes client if set in test context as bean reference.
+     * Otherwise, create new default instance.
+     * @param context holding the potential client bean reference.
+     * @return
+     */
+    public static KubernetesClient getKubernetesClient(TestContext context) {
+        if (context.getReferenceResolver().resolveAll(KubernetesClient.class).size() == 1L) {
+            return context.getReferenceResolver().resolve(KubernetesClient.class);
+        } else {
+            return new KubernetesClientBuilder().build();
+        }
+    }
+
+    /**
+     * Retrieve current namespace set as test variable.
+     * In case no suitable test variable is available use namespace loaded from Kubernetes settings via environment settings.
+     * @param context potentially holding the namespace variable.
+     * @return
+     */
+    public static String getNamespace(TestContext context) {
+        if (context.getVariables().containsKey(KubernetesVariableNames.NAMESPACE.value())) {
+            return context.getVariable(KubernetesVariableNames.NAMESPACE.value());
+        }
+
+        return KubernetesSettings.getNamespace();
     }
 
     public static Yaml yaml() {
@@ -185,4 +220,5 @@ public final class KubernetesSupport {
 
         return Optional.empty();
     }
+
 }
