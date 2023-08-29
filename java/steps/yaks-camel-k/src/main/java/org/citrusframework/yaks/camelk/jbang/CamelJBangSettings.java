@@ -37,6 +37,10 @@ public final class CamelJBangSettings {
     private static final String CAMEL_VERSION_ENV = JBANG_ENV_PREFIX + "CAMEL_VERSION";
     private static final String CAMEL_VERSION_DEFAULT = "3.20.4";
 
+    private static final String KAMELETS_VERSION_PROPERTY = JBANG_PROPERTY_PREFIX + "kamelets.version";
+    private static final String KAMELETS_VERSION_ENV = JBANG_ENV_PREFIX + "KAMELETS_VERSION";
+    private static final String KAMELETS_VERSION_DEFAULT = "";
+
     private static final String KAMELETS_LOCAL_DIR_PROPERTY = JBANG_PROPERTY_PREFIX + "kamelets.local.dir";
     private static final String KAMELETS_LOCAL_DIR_ENV = JBANG_ENV_PREFIX + "KAMELETS_LOCAL_DIR";
 
@@ -146,6 +150,15 @@ public final class CamelJBangSettings {
     public static String getCamelVersion() {
         return System.getProperty(CAMEL_VERSION_PROPERTY,
                 System.getenv(CAMEL_VERSION_ENV) != null ? System.getenv(CAMEL_VERSION_ENV) : CAMEL_VERSION_DEFAULT);
+    }
+
+    /**
+     * Kamelets version used by the JBang runtime.
+     * @return
+     */
+    public static String getKameletsVersion() {
+        return System.getProperty(KAMELETS_VERSION_PROPERTY,
+                System.getenv(KAMELETS_VERSION_ENV) != null ? System.getenv(KAMELETS_VERSION_ENV) : KAMELETS_VERSION_DEFAULT);
     }
 
 }

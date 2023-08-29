@@ -303,6 +303,11 @@ public class CamelJBang {
     private static List<String> camel(String... args) {
         List<String> jBangArgs = new ArrayList<>();
         jBangArgs.add(String.format("-Dcamel.jbang.version=%s", CamelJBangSettings.getCamelVersion()));
+
+        if (!CamelJBangSettings.getKameletsVersion().isBlank()) {
+            jBangArgs.add(String.format("-Dcamel-kamelets.version=%s", CamelJBangSettings.getKameletsVersion()));
+        }
+
         jBangArgs.add(CamelJBangSettings.getCamelApp());
         jBangArgs.addAll(List.of(args));
 
