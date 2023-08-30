@@ -38,22 +38,22 @@ public class FileBasedRepositoryLoaderTest {
     @Test
     public void shouldLoadFromPropertyFile() throws LifecycleExecutionException {
         System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.properties");
-        List<Repository> repositoryList = loader.load(logger);
+        List<Repository> repositoryList = loader.load(logger, false);
         TestHelper.verifyRepositories(repositoryList);
 
         System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.settings.yaml");
-        repositoryList = loader.load(logger);
+        repositoryList = loader.load(logger, false);
         TestHelper.verifyRepositories(repositoryList);
 
         System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.settings.json");
-        repositoryList = loader.load(logger);
+        repositoryList = loader.load(logger, false);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
     public void shouldHandleNonExistingFile() throws LifecycleExecutionException {
         System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "doesNotExist");
-        List<Repository> repositoryList = loader.load(logger);
+        List<Repository> repositoryList = loader.load(logger, false);
         Assertions.assertThat(repositoryList).isEmpty();
     }
 

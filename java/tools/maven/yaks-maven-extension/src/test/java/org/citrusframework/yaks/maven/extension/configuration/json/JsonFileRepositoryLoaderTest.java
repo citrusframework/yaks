@@ -39,14 +39,14 @@ public class JsonFileRepositoryLoaderTest {
 
     @Test
     public void shouldLoadFromJson() throws LifecycleExecutionException, URISyntaxException {
-        List<Repository> repositoryList = loader.load(TestHelper.getClasspathResource("yaks.settings.json"), logger);
+        List<Repository> repositoryList = loader.load(TestHelper.getClasspathResource("yaks.settings.json"), logger, false);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
     public void shouldHandleNonExistingJson() {
         Assertions.assertThatExceptionOfType(LifecycleExecutionException.class)
-                .isThrownBy(() -> loader.load(Paths.get("doesNotExist"), logger));
+                .isThrownBy(() -> loader.load(Paths.get("doesNotExist"), logger, false));
     }
 
 }

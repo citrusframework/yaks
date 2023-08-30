@@ -45,7 +45,7 @@ import org.codehaus.plexus.logging.Logger;
 public class PropertyFileRepositoryLoader extends AbstractConfigFileRepositoryLoader {
 
     @Override
-    protected List<Repository> load(Path filePath, Logger logger) throws LifecycleExecutionException {
+    protected List<Repository> load(Path filePath, Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         List<Repository> repositoryList = new ArrayList<>();
 
         try {
@@ -54,7 +54,9 @@ public class PropertyFileRepositoryLoader extends AbstractConfigFileRepositoryLo
 
             for (Enumeration<?> e = props.propertyNames(); e.hasMoreElements(); ) {
                 String name = (String) e.nextElement();
-                if (name.startsWith("yaks.repository.")) {
+                if (asPluginRepository && name.startsWith("yaks.pluginRepository.")) {
+                    repositoryList.add(build(name.substring("yaks.pluginRepository.".length()), props.getProperty(name), logger));
+                } else if (!asPluginRepository && name.startsWith("yaks.repository.")) {
                     repositoryList.add(build(name.substring("yaks.repository.".length()), props.getProperty(name), logger));
                 }
             }

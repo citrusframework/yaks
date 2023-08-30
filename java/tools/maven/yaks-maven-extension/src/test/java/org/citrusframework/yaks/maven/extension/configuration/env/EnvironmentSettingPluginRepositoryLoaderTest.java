@@ -31,7 +31,7 @@ import org.junit.Test;
 /**
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingRepositoryLoaderTest {
+public class EnvironmentSettingPluginRepositoryLoaderTest {
 
     private final ConsoleLogger logger = new ConsoleLogger();
 
@@ -40,19 +40,19 @@ public class EnvironmentSettingRepositoryLoaderTest {
         EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader() {
             @Override
             public String getEnvSetting(String name) {
-                Assert.assertEquals(ExtensionSettings.REPOSITORIES_SETTING_ENV, name);
+                Assert.assertEquals(ExtensionSettings.PLUGIN_REPOSITORIES_SETTING_ENV, name);
                 return "central=https://repo.maven.apache.org/maven2/,jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/";
             }
         };
 
-        List<Repository> repositoryList = loader.load(logger, false);
+        List<Repository> repositoryList = loader.load(logger, true);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
     public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
         EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader();
-        List<Repository> repositoryList = loader.load(logger, false);
+        List<Repository> repositoryList = loader.load(logger, true);
         Assertions.assertThat(repositoryList).isEmpty();
     }
 }

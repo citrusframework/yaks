@@ -69,13 +69,13 @@ import org.codehaus.plexus.logging.Logger;
 public class JsonFileRepositoryLoader extends AbstractConfigFileRepositoryLoader {
 
     @Override
-    protected List<Repository> load(Path filePath, Logger logger) throws LifecycleExecutionException {
+    protected List<Repository> load(Path filePath, Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         List<Repository> repositoryList = new ArrayList<>();
 
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode root = mapper.readTree(new StringReader(new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)));
-            ArrayNode repositories = (ArrayNode) root.get("repositories");
+            ArrayNode repositories = (ArrayNode) root.get(asPluginRepository ? "pluginRepositories" : "repositories");
             for (Object o : repositories) {
                 ObjectNode model = (ObjectNode) o;
                 Repository repository = new Repository();

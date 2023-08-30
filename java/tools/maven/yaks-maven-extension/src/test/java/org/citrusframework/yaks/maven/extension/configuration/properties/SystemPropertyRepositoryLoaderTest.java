@@ -41,14 +41,14 @@ public class SystemPropertyRepositoryLoaderTest {
         System.setProperty(ExtensionSettings.REPOSITORIES_SETTING_KEY,
                 "central=https://repo.maven.apache.org/maven2/,jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/");
 
-        List<Repository> repositoryList = loader.load(logger);
+        List<Repository> repositoryList = loader.load(logger, false);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
     public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
         System.setProperty(ExtensionSettings.REPOSITORIES_SETTING_KEY, "");
-        List<Repository> repositoryList = loader.load(logger);
+        List<Repository> repositoryList = loader.load(logger, false);
         Assertions.assertThat(repositoryList).isEmpty();
     }
 

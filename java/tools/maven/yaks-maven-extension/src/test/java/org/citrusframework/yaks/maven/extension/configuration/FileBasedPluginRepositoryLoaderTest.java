@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.maven.extension.configuration.env;
+package org.citrusframework.yaks.maven.extension.configuration;
 
 import java.util.List;
 
@@ -23,36 +23,38 @@ import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Repository;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.maven.extension.ExtensionSettings;
-import org.citrusframework.yaks.maven.extension.configuration.TestHelper;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingRepositoryLoaderTest {
+public class FileBasedPluginRepositoryLoaderTest {
+
+    private final FileBasedRepositoryLoader loader = new FileBasedRepositoryLoader();
 
     private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
-    public void shouldLoadFromEnv() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader() {
-            @Override
-            public String getEnvSetting(String name) {
-                Assert.assertEquals(ExtensionSettings.REPOSITORIES_SETTING_ENV, name);
-                return "central=https://repo.maven.apache.org/maven2/,jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/";
-            }
-        };
+    public void shouldLoadFromPropertyFile() throws LifecycleExecutionException {
+        System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.properties");
+        List<Repository> repositoryList = loader.load(logger, true);
+        TestHelper.verifyRepositories(repositoryList);
 
-        List<Repository> repositoryList = loader.load(logger, false);
+        System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.settings.yaml");
+        repositoryList = loader.load(logger, true);
+        TestHelper.verifyRepositories(repositoryList);
+
+        System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "classpath:yaks.settings.json");
+        repositoryList = loader.load(logger, true);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
-    public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader();
-        List<Repository> repositoryList = loader.load(logger, false);
+    public void shouldHandleNonExistingFile() throws LifecycleExecutionException {
+        System.setProperty(ExtensionSettings.SETTINGS_FILE_KEY, "doesNotExist");
+        List<Repository> repositoryList = loader.load(logger, true);
         Assertions.assertThat(repositoryList).isEmpty();
     }
+
 }

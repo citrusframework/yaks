@@ -96,9 +96,10 @@ type EnvConfig struct {
 }
 
 type SettingsConfig struct {
-	Repositories []RepositoryConfig `yaml:"repositories"`
-	Dependencies []DependencyConfig `yaml:"dependencies"`
-	Loggers      []LoggerConfig     `yaml:"loggers"`
+	Repositories       []RepositoryConfig `yaml:"repositories"`
+	PluginRepositories []RepositoryConfig `yaml:"pluginRepositories"`
+	Dependencies       []DependencyConfig `yaml:"dependencies"`
+	Loggers            []LoggerConfig     `yaml:"loggers"`
 }
 
 type RepositoryConfig struct {
