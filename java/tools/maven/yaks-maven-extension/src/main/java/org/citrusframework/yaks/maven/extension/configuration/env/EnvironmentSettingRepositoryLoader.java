@@ -35,10 +35,11 @@ import org.codehaus.plexus.logging.Logger;
 public class EnvironmentSettingRepositoryLoader implements RepositoryLoader, EnvironmentSettingLoader {
 
     @Override
-    public List<Repository> load(Logger logger) throws LifecycleExecutionException {
+    public List<Repository> load(Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         List<Repository> repositoryList = new ArrayList<>();
 
-        String settings = getEnvSetting(ExtensionSettings.REPOSITORIES_SETTING_ENV);
+        String settings = getEnvSetting(asPluginRepository ?
+                ExtensionSettings.PLUGIN_REPOSITORIES_SETTING_ENV : ExtensionSettings.REPOSITORIES_SETTING_ENV);
 
         if (settings.length() > 0) {
             for (String scalar : settings.split(",")) {

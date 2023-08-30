@@ -24,21 +24,22 @@ import (
 )
 
 const (
-	WatchNamespaceEnv    = "WATCH_NAMESPACE"
-	PodNameEnv           = "POD_NAME"
-	OperatorNamespaceEnv = "NAMESPACE"
-	NamespaceEnv         = "YAKS_NAMESPACE"
-	LoggersEnv           = "YAKS_LOGGERS"
-	TestIDEnv            = "YAKS_TEST_ID"
-	TestNameEnv          = "YAKS_TEST_NAME"
-	TestPathEnv          = "YAKS_TESTS_PATH"
-	TestStatusEnv        = "YAKS_TEST_STATUS"
-	SecretsPathEnv       = "YAKS_SECRETS_PATH" //nolint: gosec
-	SettingsFileEnv      = "YAKS_SETTINGS_FILE"
-	ClusterTypeEnv       = "YAKS_CLUSTER_TYPE"
-	TerminationLogEnv    = "YAKS_TERMINATION_LOG"
-	RepositoriesEnv      = "YAKS_REPOSITORIES"
-	DependenciesEnv      = "YAKS_DEPENDENCIES"
+	WatchNamespaceEnv     = "WATCH_NAMESPACE"
+	PodNameEnv            = "POD_NAME"
+	OperatorNamespaceEnv  = "NAMESPACE"
+	NamespaceEnv          = "YAKS_NAMESPACE"
+	LoggersEnv            = "YAKS_LOGGERS"
+	TestIDEnv             = "YAKS_TEST_ID"
+	TestNameEnv           = "YAKS_TEST_NAME"
+	TestPathEnv           = "YAKS_TESTS_PATH"
+	TestStatusEnv         = "YAKS_TEST_STATUS"
+	SecretsPathEnv        = "YAKS_SECRETS_PATH" //nolint: gosec
+	SettingsFileEnv       = "YAKS_SETTINGS_FILE"
+	ClusterTypeEnv        = "YAKS_CLUSTER_TYPE"
+	TerminationLogEnv     = "YAKS_TERMINATION_LOG"
+	RepositoriesEnv       = "YAKS_REPOSITORIES"
+	PluginRepositoriesEnv = "YAKS_PLUGIN_REPOSITORIES"
+	DependenciesEnv       = "YAKS_DEPENDENCIES"
 )
 
 // Get --.

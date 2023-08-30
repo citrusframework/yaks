@@ -58,14 +58,14 @@ import org.yaml.snakeyaml.Yaml;
 public class YamlFileRepositoryLoader extends AbstractConfigFileRepositoryLoader {
 
     @Override
-    protected List<Repository> load(Path filePath, Logger logger) throws LifecycleExecutionException {
+    protected List<Repository> load(Path filePath, Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         try {
             List<Repository> repositoryList = new ArrayList<>();
             Yaml yaml = new Yaml();
 
             HashMap<String, List<Map<String, Object>>> root = yaml.load(new StringReader(new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8)));
             if (root.containsKey("repositories")) {
-                for (Map<String, Object> model : root.get("repositories")) {
+                for (Map<String, Object> model : root.get(asPluginRepository ? "pluginRepositories" : "repositories")) {
                     Repository repository = new Repository();
 
                     repository.setId(Objects.toString(model.get("id")));

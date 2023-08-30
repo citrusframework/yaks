@@ -166,10 +166,10 @@ yaks run --settings yaks.settings.yaml camel-route.feature
 ----
 
 [[configuration-repositories]]
-== Maven repositories
+== Maven repositories and pluginRepositories
 
 When adding custom runtime dependencies those artifacts might not be available on the public central Maven repository.
-Instead you may need to add a custom repository that holds your artifacts.
+Instead you may need to add a custom Maven repository that holds your artifacts.
 
 You can do this with several configuration options:
 
@@ -181,6 +181,11 @@ You can add repositories also by specifying the repositories as command line par
 [source,shell script]
 ----
 yaks run --maven-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
+----
+
+[source,shell script]
+----
+yaks run --maven-plugin-repository jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/ my.feature
 ----
 
 This will add a environment setting in the YAKS runtime container and the repository will be added to the Maven runtime project model.
@@ -196,6 +201,10 @@ Maven repository id and url in the property file using a common property key pre
 # Maven repositories
 yaks.repository.central=https://repo.maven.apache.org/maven2/
 yaks.repository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
+
+# Maven plugin repositories
+yaks.pluginRepository.central=https://repo.maven.apache.org/maven2/
+yaks.pluginRepository.jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/
 ----
 
 You can add the property file when running the test via `yaks` CLI like follows:
@@ -227,12 +236,46 @@ repositories:
     name: "JBoss Community Early Access Release Repository"
     url: "https://repository.jboss.org/nexus/content/groups/ea/"
     layout: "default"
+
+pluginRepositories:
+  - id: "central"
+    name: "Maven Central"
+    url: "https://repo.maven.apache.org/maven2/"
+    releases:
+      enabled: "true"
+      updatePolicy: "daily"
+    snapshots:
+      enabled: "false"
+  - id: "jboss-ea"
+    name: "JBoss Community Early Access Release Repository"
+    url: "https://repository.jboss.org/nexus/content/groups/ea/"
+    layout: "default"
 ----
 
 [source,json]
 ----
 {
   "repositories": [
+      {
+        "id": "central",
+        "name": "Maven Central",
+        "url": "https://repo.maven.apache.org/maven2/",
+        "releases": {
+          "enabled": "true",
+          "updatePolicy": "daily"
+        },
+        "snapshots": {
+          "enabled": "false"
+        }
+      },
+      {
+        "id": "jboss-ea",
+        "name": "JBoss Community Early Access Release Repository",
+        "url": "https://repository.jboss.org/nexus/content/groups/ea/",
+        "layout": "default"
+      }
+    ],
+    "pluginRepositories": [
       {
         "id": "central",
         "name": "Maven Central",

@@ -35,10 +35,11 @@ import org.codehaus.plexus.logging.Logger;
 public class SystemPropertyRepositoryLoader implements RepositoryLoader {
 
     @Override
-    public List<Repository> load(Logger logger) throws LifecycleExecutionException {
+    public List<Repository> load(Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         List<Repository> repositoryList = new ArrayList<>();
 
-        String coordinates = System.getProperty(ExtensionSettings.REPOSITORIES_SETTING_KEY, "");
+        String coordinates = System.getProperty(asPluginRepository ?
+                ExtensionSettings.PLUGIN_REPOSITORIES_SETTING_KEY : ExtensionSettings.REPOSITORIES_SETTING_KEY, "");
 
         if (coordinates.length() > 0) {
             for (String scalar : coordinates.split(",")) {

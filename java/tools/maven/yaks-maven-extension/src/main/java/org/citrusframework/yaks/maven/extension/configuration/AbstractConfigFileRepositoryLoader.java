@@ -31,7 +31,7 @@ import org.codehaus.plexus.logging.Logger;
 public abstract class AbstractConfigFileRepositoryLoader implements RepositoryLoader  {
 
     @Override
-    public List<Repository> load(Logger logger) {
+    public List<Repository> load(Logger logger, boolean asPluginRepository) {
         return Collections.emptyList();
     }
 
@@ -39,8 +39,9 @@ public abstract class AbstractConfigFileRepositoryLoader implements RepositoryLo
      * Load repositories from given file.
      * @param filePath
      * @param logger
+     * @param asPluginRepository
      * @return
      * @throws LifecycleExecutionException
      */
-    protected abstract List<Repository> load(Path filePath, Logger logger) throws LifecycleExecutionException;
+    protected abstract List<Repository> load(Path filePath, Logger logger, boolean asPluginRepository) throws LifecycleExecutionException;
 }

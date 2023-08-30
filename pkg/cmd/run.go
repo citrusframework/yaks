@@ -83,6 +83,7 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	}
 
 	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
+	cmd.Flags().StringArray("maven-plugin-repository", nil, "Adds custom Maven plugin repository URL that is added to the runtime.")
 	cmd.Flags().StringArrayP("logger", "l", nil, "Adds logger configuration by setting log levels. E.g \"-l org.example=INFO\"")
 	cmd.Flags().StringArrayP("dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringArrayP("upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
@@ -112,24 +113,25 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 
 type runCmdOptions struct {
 	*RootCmdOptions
-	Repositories  []string            `mapstructure:"maven-repository"`
-	Dependencies  []string            `mapstructure:"dependency"`
-	Logger        []string            `mapstructure:"logger"`
-	Uploads       []string            `mapstructure:"upload"`
-	Settings      string              `mapstructure:"settings"`
-	Env           []string            `mapstructure:"env"`
-	Tags          []string            `mapstructure:"tag"`
-	Features      []string            `mapstructure:"feature"`
-	Resources     []string            `mapstructure:"resources"`
-	PropertyFiles []string            `mapstructure:"property-files"`
-	Glue          []string            `mapstructure:"glue"`
-	Options       string              `mapstructure:"options"`
-	Dump          bool                `mapstructure:"dump"`
-	PrintFormat   string              `mapstructure:"print"`
-	ReportFormat  report.OutputFormat `mapstructure:"report"`
-	Timeout       string              `mapstructure:"timeout"`
-	Wait          bool                `mapstructure:"wait"`
-	Logs          bool                `mapstructure:"logs"`
+	Repositories       []string            `mapstructure:"maven-repository"`
+	PluginRepositories []string            `mapstructure:"maven-plugin-repository"`
+	Dependencies       []string            `mapstructure:"dependency"`
+	Logger             []string            `mapstructure:"logger"`
+	Uploads            []string            `mapstructure:"upload"`
+	Settings           string              `mapstructure:"settings"`
+	Env                []string            `mapstructure:"env"`
+	Tags               []string            `mapstructure:"tag"`
+	Features           []string            `mapstructure:"feature"`
+	Resources          []string            `mapstructure:"resources"`
+	PropertyFiles      []string            `mapstructure:"property-files"`
+	Glue               []string            `mapstructure:"glue"`
+	Options            string              `mapstructure:"options"`
+	Dump               bool                `mapstructure:"dump"`
+	PrintFormat        string              `mapstructure:"print"`
+	ReportFormat       report.OutputFormat `mapstructure:"report"`
+	Timeout            string              `mapstructure:"timeout"`
+	Wait               bool                `mapstructure:"wait"`
+	Logs               bool                `mapstructure:"logs"`
 }
 
 func (o *runCmdOptions) validateArgs(_ *cobra.Command, args []string) error {
@@ -627,6 +629,10 @@ func (o *runCmdOptions) setupEnvSettings(test *v1alpha1.Test, runConfig *config.
 		env = append(env, envvar.RepositoriesEnv+"="+strings.Join(o.Repositories, ","))
 	}
 
+	if len(o.PluginRepositories) > 0 {
+		env = append(env, envvar.PluginRepositoriesEnv+"="+strings.Join(o.PluginRepositories, ","))
+	}
+
 	if len(o.Dependencies) > 0 {
 		env = append(env, envvar.DependenciesEnv+"="+strings.Join(o.Dependencies, ","))
 	}
@@ -663,6 +669,7 @@ func (o *runCmdOptions) newSettings(ctx context.Context, runConfig *config.RunCo
 
 	if len(runConfig.Config.Runtime.Settings.Dependencies) > 0 ||
 		len(runConfig.Config.Runtime.Settings.Repositories) > 0 ||
+		len(runConfig.Config.Runtime.Settings.PluginRepositories) > 0 ||
 		len(runConfig.Config.Runtime.Settings.Loggers) > 0 {
 		configData, err := yaml.Marshal(runConfig.Config.Runtime.Settings)
 

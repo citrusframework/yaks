@@ -33,9 +33,10 @@ public interface RepositoryLoader {
     /**
      * Load Maven repositories from configuration source.
      * @param logger
+     * @param asPluginRepository
      * @return
      */
-    List<Repository> load(Logger logger) throws LifecycleExecutionException;
+    List<Repository> load(Logger logger, boolean asPluginRepository) throws LifecycleExecutionException;
 
     /**
      * Construct repository instance from given url. Query parameters are translated to fields on the target repository.

@@ -39,14 +39,14 @@ public class PropertyFileRepositoryLoaderTest {
 
     @Test
     public void shouldLoadFromPropertyFile() throws LifecycleExecutionException, URISyntaxException {
-        List<Repository> repositoryList = loader.load(TestHelper.getClasspathResource("yaks.properties"), logger);
+        List<Repository> repositoryList = loader.load(TestHelper.getClasspathResource("yaks.properties"), logger, false);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
     public void shouldHandleNonExistingFile() {
         Assertions.assertThatExceptionOfType(LifecycleExecutionException.class)
-                .isThrownBy(() -> loader.load(Paths.get("doesNotExist"), logger));
+                .isThrownBy(() -> loader.load(Paths.get("doesNotExist"), logger, false));
     }
 
 }

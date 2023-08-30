@@ -15,44 +15,37 @@
  * limitations under the License.
  */
 
-package org.citrusframework.yaks.maven.extension.configuration.env;
+package org.citrusframework.yaks.maven.extension.configuration.yaml;
 
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Repository;
 import org.assertj.core.api.Assertions;
-import org.citrusframework.yaks.maven.extension.ExtensionSettings;
 import org.citrusframework.yaks.maven.extension.configuration.TestHelper;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author Christoph Deppisch
  */
-public class EnvironmentSettingRepositoryLoaderTest {
+public class YamlFilePluginRepositoryLoaderTest {
+
+    private final YamlFileRepositoryLoader loader = new YamlFileRepositoryLoader();
 
     private final ConsoleLogger logger = new ConsoleLogger();
 
     @Test
-    public void shouldLoadFromEnv() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader() {
-            @Override
-            public String getEnvSetting(String name) {
-                Assert.assertEquals(ExtensionSettings.REPOSITORIES_SETTING_ENV, name);
-                return "central=https://repo.maven.apache.org/maven2/,jboss-ea=https://repository.jboss.org/nexus/content/groups/ea/";
-            }
-        };
-
-        List<Repository> repositoryList = loader.load(logger, false);
+    public void shouldLoadFromYaml() throws LifecycleExecutionException, URISyntaxException {
+        List<Repository> repositoryList = loader.load(TestHelper.getClasspathResource("yaks.settings.yaml"), logger, true);
         TestHelper.verifyRepositories(repositoryList);
     }
 
     @Test
-    public void shouldHandleNonExistingSystemProperty() throws LifecycleExecutionException {
-        EnvironmentSettingRepositoryLoader loader = new EnvironmentSettingRepositoryLoader();
-        List<Repository> repositoryList = loader.load(logger, false);
-        Assertions.assertThat(repositoryList).isEmpty();
+    public void shouldHandleNonExistingYaml() {
+        Assertions.assertThatExceptionOfType(LifecycleExecutionException.class)
+                .isThrownBy(() -> loader.load(Paths.get("doesNotExist"), logger, true));
     }
 }

@@ -58,14 +58,14 @@ public class FileBasedRepositoryLoader implements RepositoryLoader {
     }
 
     @Override
-    public List<Repository> load(Logger logger) throws LifecycleExecutionException {
+    public List<Repository> load(Logger logger, boolean asPluginRepository) throws LifecycleExecutionException {
         Path settingsFile = getSettingsFile();
 
         if (Files.exists(settingsFile)) {
             Optional<String> fileExtension = getFileNameExtension(settingsFile.getFileName().toString());
             return fileExtension.flatMap(this::getFileConfigLoader)
                                 .orElse(new PropertyFileRepositoryLoader())
-                                .load(settingsFile, logger);
+                                .load(settingsFile, logger, asPluginRepository);
         }
 
         return Collections.emptyList();

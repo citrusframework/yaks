@@ -17,12 +17,12 @@
 
 package org.citrusframework.yaks.maven.extension;
 
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Singleton;
 
 import org.apache.maven.lifecycle.LifecycleExecutionException;
 import org.apache.maven.model.Model;
@@ -50,17 +50,19 @@ public class ProjectModelReader extends DefaultModelReader {
     private Logger logger;
 
     private List<Repository> repositoryList;
+    private List<Repository> pluginRepositoryList;
 
     @Override
     public Model read(InputStream input, Map<String, ?> options) throws IOException {
         Model projectModel = super.read(input, options);
         projectModel.getRepositories().addAll(loadDynamicRepositories());
+        projectModel.getPluginRepositories().addAll(loadDynamicPluginRepositories());
         return projectModel;
     }
 
     /**
      * Dynamically add project repositories based on different configuration sources such as environment variables,
-     * system properties configuration files.
+     * system properties and configuration files.
      */
     private List<Repository> loadDynamicRepositories() {
         if (repositoryList == null) {
@@ -68,14 +70,35 @@ public class ProjectModelReader extends DefaultModelReader {
             logger.info("Add dynamic project repositories ...");
 
             try {
-                repositoryList.addAll(new FileBasedRepositoryLoader().load(logger));
-                repositoryList.addAll(new SystemPropertyRepositoryLoader().load(logger));
-                repositoryList.addAll(new EnvironmentSettingRepositoryLoader().load(logger));
+                repositoryList.addAll(new FileBasedRepositoryLoader().load(logger, false));
+                repositoryList.addAll(new SystemPropertyRepositoryLoader().load(logger, false));
+                repositoryList.addAll(new EnvironmentSettingRepositoryLoader().load(logger, false));
             } catch (LifecycleExecutionException e) {
                 throw new RuntimeException(e);
             }
         }
 
         return repositoryList;
+    }
+
+    /**
+     * Dynamically add plugin repositories based on different configuration sources such as environment variables,
+     * system properties and configuration files.
+     */
+    private List<Repository> loadDynamicPluginRepositories() {
+        if (pluginRepositoryList == null) {
+            pluginRepositoryList = new ArrayList<>();
+            logger.info("Add dynamic plugin repositories ...");
+
+            try {
+                pluginRepositoryList.addAll(new FileBasedRepositoryLoader().load(logger, true));
+                pluginRepositoryList.addAll(new SystemPropertyRepositoryLoader().load(logger, true));
+                pluginRepositoryList.addAll(new EnvironmentSettingRepositoryLoader().load(logger, true));
+            } catch (LifecycleExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return pluginRepositoryList;
     }
 }
