@@ -51,7 +51,7 @@ public class Pipe extends CustomResource<PipeSpec, PipeStatus> implements Namesp
     public static class Builder {
         protected String name;
         private int replicas;
-        private Integration integration;
+        private IntegrationSpec integration;
         private PipeSpec.Endpoint source;
         private PipeSpec.Endpoint sink;
         private final List<PipeSpec.Endpoint> steps = new ArrayList<>();
@@ -61,7 +61,7 @@ public class Pipe extends CustomResource<PipeSpec, PipeStatus> implements Namesp
             return this;
         }
 
-        public Builder integration(Integration integration) {
+        public Builder integration(IntegrationSpec integration) {
             this.integration = integration;
             return this;
         }

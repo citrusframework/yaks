@@ -22,7 +22,7 @@ import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.CamelKSupport;
-import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 import org.citrusframework.yaks.camelk.model.Pipe;
 import org.citrusframework.yaks.camelk.model.PipeSpec;
 
@@ -47,7 +47,7 @@ public class KameletBinding extends Pipe {
             return this;
         }
 
-        public Builder integration(Integration integration) {
+        public Builder integration(IntegrationSpec integration) {
             delegate.integration(integration);
             return this;
         }

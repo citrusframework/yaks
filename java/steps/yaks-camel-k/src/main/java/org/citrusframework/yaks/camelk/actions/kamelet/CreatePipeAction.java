@@ -32,10 +32,10 @@ import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
+import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 import org.citrusframework.yaks.camelk.model.Pipe;
 import org.citrusframework.yaks.camelk.model.PipeList;
 import org.citrusframework.yaks.camelk.model.PipeSpec;
-import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -57,7 +57,7 @@ public class CreatePipeAction extends AbstractKameletAction {
     private static final Logger LOG = LoggerFactory.getLogger(CreatePipeAction.class);
 
     private final String pipeName;
-    private final Integration integration;
+    private final IntegrationSpec integration;
     private final PipeSpec.Endpoint source;
     private final PipeSpec.Endpoint sink;
     private final Resource resource;
@@ -218,7 +218,7 @@ public class CreatePipeAction extends AbstractKameletAction {
     public static final class Builder extends AbstractKameletAction.Builder<CreatePipeAction, Builder> {
 
         private String pipeName;
-        private Integration integration;
+        private IntegrationSpec integration;
         private PipeSpec.Endpoint source;
         private PipeSpec.Endpoint sink;
         private Resource resource;
@@ -234,7 +234,7 @@ public class CreatePipeAction extends AbstractKameletAction {
             return this;
         }
 
-        public Builder integration(Integration integration) {
+        public Builder integration(IntegrationSpec integration) {
             this.integration = integration;
             return this;
         }
