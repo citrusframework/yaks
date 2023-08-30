@@ -53,6 +53,10 @@ public class HttpSettings {
     private static final String SECURE_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PASSWORD";
     private static final String SECURE_KEYSTORE_PASSWORD_DEFAULT = "secret";
 
+    private static final String HEADER_NAME_IGNORE_CASE_PROPERTY = HTTP_PROPERTY_PREFIX + "header.name.ignore.case";
+    private static final String HEADER_NAME_IGNORE_CASE_ENV = HTTP_ENV_PREFIX + "HEADER_NAME_IGNORE_CASE";
+    private static final String HEADER_NAME_IGNORE_CASE_DEFAULT = "false";
+
     private HttpSettings() {
         // prevent instantiation of utility class
     }
@@ -120,5 +124,11 @@ public class HttpSettings {
         return System.getProperty(SECURE_KEYSTORE_PASSWORD_PROPERTY,
                 System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) != null ? System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) :
                         SECURE_KEYSTORE_PASSWORD_DEFAULT);
+    }
+
+    public static boolean isHeaderNameIgnoreCase() {
+        return Boolean.parseBoolean(System.getProperty(HEADER_NAME_IGNORE_CASE_PROPERTY,
+                System.getenv(HEADER_NAME_IGNORE_CASE_ENV) != null ? System.getenv(HEADER_NAME_IGNORE_CASE_ENV) :
+                        HEADER_NAME_IGNORE_CASE_DEFAULT));
     }
 }

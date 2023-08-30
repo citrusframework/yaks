@@ -84,6 +84,8 @@ public class HttpServerSteps implements HttpSteps {
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
 
+    private boolean headerNameIgnoreCase = HttpSettings.isHeaderNameIgnoreCase();
+
     private Map<String, Object> bodyValidationExpressions = new HashMap<>();
 
     private String requestMessageType;
@@ -138,6 +140,11 @@ public class HttpServerSteps implements HttpSteps {
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
             httpServer = citrus.getCitrusContext().getReferenceResolver().resolve(name, HttpServer.class);
         }
+    }
+
+    @Given("^HTTP server header name ignore case is (enabled|disabled)$")
+    public void configureHeaderNameIgnoreCase(String mode) {
+        this.headerNameIgnoreCase = "enabled".equals(mode);
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\" with configuration$")
@@ -355,6 +362,8 @@ public class HttpServerSteps implements HttpSteps {
         } else {
             requestBuilder = receiveBuilder.post().message(request);
         }
+
+        requestBuilder.headerNameIgnoreCase(headerNameIgnoreCase);
 
         if (!bodyValidationExpressions.isEmpty()) {
             requestBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
