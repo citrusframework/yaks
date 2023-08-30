@@ -101,10 +101,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-m2-
     - name: Kind Cluster
-      uses: container-tools/kind-action@v1
+      uses: container-tools/kind-action@v2.0.1
       with:
-        version: v0.14.0
-        node_image: kindest/node:v1.23.6@sha256:b1fa224cc6c7ff32455e0b1fd9cbfd3d3bc87ecaa8fcb06961ed1afb3db0f9ae
+        version: v0.17.0
+        node_image: kindest/node:v1.28.0@sha256:9f3ff58f19dcf1a0611d11e8ac989fdb30a28f40f236f59f0bea31fb956ccf5c
     - name: Info
       run: |
         kubectl version

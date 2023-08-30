@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.s3.S3Client
 
 S3Client s3 = S3Client
         .builder()
-        .endpointOverride(URI.create("${YAKS_TESTCONTAINERS_LOCALSTACK_S3_LOCAL_URL}"))
+        .endpointOverride(URI.create("${YAKS_TESTCONTAINERS_LOCALSTACK_S3_LOCAL_URL}".replace('localhost', '127.0.0.1')))
         .credentialsProvider(StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(
                         "${YAKS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}",
