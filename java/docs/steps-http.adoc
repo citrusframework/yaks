@@ -266,6 +266,20 @@ Then expect HTTP response headers
   | Content-Type | application/json |
 ----
 
+==== Header name ignore case
+
+Header names are not case-sensitive per Http specification. This means servers and clients may choose the header name case individually. In order to avoid verification errors when expecting headers in Http the header validation mechanism in Citrus is able to ignore the header name case.
+
+.@Given("^HTTP header name ignore case is (enabled|disabled)$")
+[source,gherkin]
+----
+Given HTTP header name ignore case is enabled
+----
+
+This will enable the mode where header name verification is case-insensitive.
+
+You may also use a environment setting `YAKS_HTTP_HEADER_NAME_IGNORE_CASE=true/false` in `yaks-config` to enable/disable the setting for the whole test suite. By default, the setting is disabled so header names are verified with case-sensitive mode.
+
 ==== Response body
 
 .@Then("^expect HTTP response body: {body}$")

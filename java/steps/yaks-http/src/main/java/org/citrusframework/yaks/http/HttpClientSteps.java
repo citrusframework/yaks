@@ -17,13 +17,13 @@
 
 package org.citrusframework.yaks.http;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.SSLContext;
 
 import com.consol.citrus.Citrus;
 import com.consol.citrus.CitrusSettings;
@@ -78,6 +78,7 @@ public class HttpClientSteps implements HttpSteps {
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
 
+    private boolean headerNameIgnoreCase = HttpSettings.isHeaderNameIgnoreCase();
     private Map<String, Object> bodyValidationExpressions = new HashMap<>();
 
     private String requestMessageType;
@@ -145,6 +146,11 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^HTTP request fork mode is (enabled|disabled)$")
     public void configureForkMode(String mode) {
         this.forkMode = "enabled".equals(mode);
+    }
+
+    @Given("^HTTP header name ignore case is (enabled|disabled)$")
+    public void configureHeaderNameIgnoreCase(String mode) {
+        this.headerNameIgnoreCase = "enabled".equals(mode);
     }
 
     @Given("^(?:URL|url) is healthy$")
@@ -350,7 +356,8 @@ public class HttpClientSteps implements HttpSteps {
     private void receiveClientResponse(HttpMessage response) {
         HttpClientResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().client(httpClient).receive()
                 .response(response.getStatusCode())
-                .message(response);
+                .message(response)
+                .headerNameIgnoreCase(headerNameIgnoreCase);
 
         responseBuilder.validate(pathExpression().expressions(bodyValidationExpressions));
         bodyValidationExpressions.clear();
