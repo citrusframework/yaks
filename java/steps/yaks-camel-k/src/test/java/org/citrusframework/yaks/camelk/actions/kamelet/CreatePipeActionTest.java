@@ -21,13 +21,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.context.TestContextFactory;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
+import org.citrusframework.spi.Resources;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationActionTest;
@@ -39,7 +40,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
 import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
@@ -67,7 +67,7 @@ public class CreatePipeActionTest {
                 .client(kubernetesClient)
                 .apiVersion(CamelKSettings.V1ALPHA1)
                 .binding("kafka-source-binding")
-                .resource(new ClassPathResource("kafka-source-binding.yaml"))
+                .resource(Resources.fromClasspath("kafka-source-binding.yaml"))
                 .build();
 
         context.setVariable("YAKS_NAMESPACE", "default");
@@ -89,7 +89,7 @@ public class CreatePipeActionTest {
                 .apiVersion(CamelKSettings.V1ALPHA1)
                 .binding("timer-to-log-binding")
                 .clusterType(YaksClusterType.LOCAL)
-                .resource(new ClassPathResource("timer-to-log-binding.yaml"))
+                .resource(Resources.fromClasspath("timer-to-log-binding.yaml"))
                 .build();
 
         action.execute(context);
@@ -123,7 +123,7 @@ public class CreatePipeActionTest {
                 .client(kubernetesClient)
                 .apiVersion(CamelKSettings.V1)
                 .pipe("kafka-source-pipe")
-                .resource(new ClassPathResource("kafka-source-pipe.yaml"))
+                .resource(Resources.fromClasspath("kafka-source-pipe.yaml"))
                 .build();
 
         context.setVariable("YAKS_NAMESPACE", "default");

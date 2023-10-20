@@ -33,10 +33,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
-import com.consol.citrus.variable.VariableUtils;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.util.FileUtils;
+import org.citrusframework.variable.VariableUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;

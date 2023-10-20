@@ -19,15 +19,15 @@ package org.citrusframework.yaks.camelk;
 
 import java.io.IOException;
 
-import com.consol.citrus.util.FileUtils;
-import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
+import org.citrusframework.spi.Resources;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.Pipe;
 import org.citrusframework.yaks.camelk.model.PipeSpec;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBinding;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
 public class PipeBuilderTest {
@@ -58,7 +58,7 @@ public class PipeBuilderTest {
 
 		final String json = KubernetesSupport.json().writeValueAsString(pipe);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("kamelet-binding.json", PipeBuilderTest.class))),
+				FileUtils.readToString(Resources.create("kamelet-binding.json", PipeBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
 	}
 
@@ -88,7 +88,7 @@ public class PipeBuilderTest {
 
 		final String json = KubernetesSupport.json().writeValueAsString(pipe);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("pipe.json", PipeBuilderTest.class))),
+				FileUtils.readToString(Resources.create("pipe.json", PipeBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
 	}
 }

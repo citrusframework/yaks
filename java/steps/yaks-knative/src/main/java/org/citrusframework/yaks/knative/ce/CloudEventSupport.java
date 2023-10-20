@@ -21,8 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.message.MessageType;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.message.MessageType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

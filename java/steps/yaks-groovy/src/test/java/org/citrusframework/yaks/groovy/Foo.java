@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.groovy;
 
-import com.consol.citrus.common.InitializingPhase;
+import org.citrusframework.common.InitializingPhase;
 
 /**
  * @author Christoph Deppisch

@@ -21,11 +21,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-import com.consol.citrus.report.AbstractTestSuiteListener;
-import com.consol.citrus.report.LoggingReporter;
-import com.consol.citrus.report.OutputStreamReporter;
-import com.consol.citrus.report.TestReporter;
-import com.consol.citrus.report.TestResults;
+import org.citrusframework.report.AbstractTestSuiteListener;
+import org.citrusframework.report.LoggingReporter;
+import org.citrusframework.report.OutputStreamReporter;
+import org.citrusframework.report.TestReporter;
+import org.citrusframework.report.TestResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

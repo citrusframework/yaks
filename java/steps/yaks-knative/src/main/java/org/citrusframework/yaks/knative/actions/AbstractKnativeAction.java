@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import com.consol.citrus.AbstractTestActionBuilder;
-import com.consol.citrus.actions.AbstractTestAction;
+import org.citrusframework.AbstractTestActionBuilder;
+import org.citrusframework.actions.AbstractTestAction;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;

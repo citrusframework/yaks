@@ -21,9 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.CitrusSettings;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.message.MessageType;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.message.MessageType;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

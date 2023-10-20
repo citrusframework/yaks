@@ -17,14 +17,14 @@
 
 package org.citrusframework.yaks.jms.connection;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSContext;
-import javax.jms.JMSException;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
+import jakarta.jms.Connection;
+import jakarta.jms.ConnectionFactory;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSException;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.jms.connection.activemq.ActiveMQConnectionFactoryCreator;
+import org.citrusframework.yaks.jms.connection.activemq.artemis.ActiveMQArtemisConnectionFactoryCreator;
 import org.junit.Test;
 
 /**
@@ -34,14 +34,17 @@ public class ConnectionFactoryCreatorTest {
 
     @Test
     public void shouldLookup() throws ClassNotFoundException {
-        ConnectionFactoryCreator creator = ConnectionFactoryCreator.lookup(ActiveMQConnectionFactory.class.getName());
-        Assertions.assertThat(ActiveMQConnectionFactoryCreator.class).isEqualTo(creator.getClass());
+        ConnectionFactoryCreator creator = ConnectionFactoryCreator.lookup(org.apache.activemq.ActiveMQConnectionFactory.class.getName());
+        Assertions.assertThat(creator.getClass()).isEqualTo(ActiveMQConnectionFactoryCreator.class);
+
+        creator = ConnectionFactoryCreator.lookup(ActiveMQConnectionFactory.class.getName());
+        Assertions.assertThat(creator.getClass()).isEqualTo(ActiveMQArtemisConnectionFactoryCreator.class);
     }
 
     @Test
     public void shouldLookupDefault() throws ClassNotFoundException {
         ConnectionFactoryCreator creator = ConnectionFactoryCreator.lookup(DummyConnectionFactory.class.getName());
-        Assertions.assertThat(DefaultConnectionFactoryCreator.class).isEqualTo(creator.getClass());
+        Assertions.assertThat(creator.getClass()).isEqualTo(DefaultConnectionFactoryCreator.class);
     }
 
     @Test(expected = ClassNotFoundException.class)

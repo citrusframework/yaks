@@ -17,9 +17,9 @@
 
 package org.citrusframework.yaks.standard;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.message.DefaultMessageQueue;
+import org.citrusframework.Citrus;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.message.DefaultMessageQueue;
 import io.cucumber.java.en.Given;
 
 /**

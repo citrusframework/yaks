@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**

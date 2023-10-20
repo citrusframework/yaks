@@ -35,12 +35,12 @@ import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.consol.citrus.CitrusInstanceManager;
-import com.consol.citrus.cucumber.CucumberTestEngine;
-import com.consol.citrus.main.TestRunConfiguration;
-import com.consol.citrus.report.TestReporter;
-import com.consol.citrus.report.TestResults;
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.CitrusInstanceManager;
+import org.citrusframework.cucumber.CucumberTestEngine;
+import org.citrusframework.main.TestRunConfiguration;
+import org.citrusframework.report.TestReporter;
+import org.citrusframework.report.TestResults;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;

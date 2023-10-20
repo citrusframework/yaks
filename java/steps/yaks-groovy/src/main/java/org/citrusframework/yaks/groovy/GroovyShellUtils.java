@@ -20,8 +20,8 @@ package org.citrusframework.yaks.groovy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.context.TestContext;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;

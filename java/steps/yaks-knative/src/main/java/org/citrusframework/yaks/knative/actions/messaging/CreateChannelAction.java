@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions.messaging;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import io.fabric8.knative.messaging.v1.Channel;
 import io.fabric8.knative.messaging.v1.ChannelBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;

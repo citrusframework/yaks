@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import com.consol.citrus.AbstractTestActionBuilder;
-import com.consol.citrus.actions.AbstractTestAction;
+import org.citrusframework.AbstractTestActionBuilder;
+import org.citrusframework.actions.AbstractTestAction;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.kubernetes.KubernetesActor;
 import org.slf4j.Logger;

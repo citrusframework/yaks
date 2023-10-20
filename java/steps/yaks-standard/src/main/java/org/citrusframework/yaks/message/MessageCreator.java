@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.message;
 
-import com.consol.citrus.message.Message;
+import org.citrusframework.message.Message;
 
 /**
  * @author Christoph Deppisch

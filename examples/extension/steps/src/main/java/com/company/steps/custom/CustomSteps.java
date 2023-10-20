@@ -17,11 +17,11 @@
 
 package com.company.steps.custom;
 
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusResource;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusResource;
 import io.cucumber.java.en.Then;
 
-import static com.consol.citrus.actions.EchoAction.Builder.echo;
+import static org.citrusframework.actions.EchoAction.Builder.echo;
 
 public class CustomSteps {
 

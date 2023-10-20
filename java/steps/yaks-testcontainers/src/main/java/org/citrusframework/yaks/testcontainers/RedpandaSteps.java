@@ -21,11 +21,11 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -35,7 +35,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.redpanda.RedpandaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class RedpandaSteps {

@@ -17,18 +17,18 @@
 
 package org.citrusframework.yaks.standard;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.endpoint.Endpoint;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.server.Server;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.endpoint.Endpoint;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.server.Server;
 import io.cucumber.java.en.Given;
 
-import static com.consol.citrus.actions.PurgeEndpointAction.Builder.purgeEndpoints;
-import static com.consol.citrus.actions.StartServerAction.Builder.start;
-import static com.consol.citrus.actions.StopServerAction.Builder.stop;
+import static org.citrusframework.actions.PurgeEndpointAction.Builder.purgeEndpoints;
+import static org.citrusframework.actions.StartServerAction.Builder.start;
+import static org.citrusframework.actions.StopServerAction.Builder.stop;
 
 /**
  * @author Christoph Deppisch

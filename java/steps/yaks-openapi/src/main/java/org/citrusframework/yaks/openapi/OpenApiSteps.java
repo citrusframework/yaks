@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.variable.dictionary.AbstractDataDictionary;
-import com.consol.citrus.variable.dictionary.json.JsonPathMappingDataDictionary;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.variable.dictionary.AbstractDataDictionary;
+import org.citrusframework.variable.dictionary.json.JsonPathMappingDataDictionary;
 import io.apicurio.datamodels.openapi.models.OasDocument;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;

@@ -21,19 +21,19 @@ Feature: JDBC steps
 
   Scenario: Verify column
     Given SQL query: SELECT task FROM todo WHERE id=1
-    Then verify column TASK=Learn some CamelK!
+    Then verify column TASK=Learn some Camel K!
 
   Scenario: Verify result set
     Given SQL query: SELECT * FROM todo ORDER BY id
     Then verify columns
       | ID        | 1                  | 2             | 3          | 4            | @ignore@               |
-      | TASK      | Learn some CamelK! | Get some milk | Do laundry | Wash the dog | Test CamelK with YAKS! |
+      | TASK      | Learn some Camel K! | Get some milk | Do laundry | Wash the dog | Test CamelK with YAKS! |
       | COMPLETED | 0                  | 0             | 0          |            0 | 0                      |
 
   Scenario: Verify script
     Given SQL query: SELECT * FROM todo WHERE id=1
     Then verify result set
       """
-      assert rows.size == 1
-      assert rows[0].TASK == 'Learn some CamelK!'
+      assert rows.size() == 1
+      assert rows[0].TASK == 'Learn some Camel K!'
       """

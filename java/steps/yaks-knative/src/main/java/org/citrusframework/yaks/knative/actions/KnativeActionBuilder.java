@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import com.consol.citrus.TestActionBuilder;
+import org.citrusframework.TestActionBuilder;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.knative.actions.eventing.CreateBrokerAction;

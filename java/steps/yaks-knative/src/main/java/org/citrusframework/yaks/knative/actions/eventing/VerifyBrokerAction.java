@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.knative.actions.eventing;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ValidationException;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ValidationException;
 import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;

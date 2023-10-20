@@ -21,10 +21,10 @@ import java.io.File;
 import java.net.URL;
 import java.util.stream.Stream;
 
-import com.consol.citrus.functions.DefaultFunctionLibrary;
-import com.consol.citrus.functions.FunctionLibrary;
-import com.consol.citrus.variable.GlobalVariables;
-import com.consol.citrus.variable.GlobalVariablesPropertyLoader;
+import org.citrusframework.functions.DefaultFunctionLibrary;
+import org.citrusframework.functions.FunctionLibrary;
+import org.citrusframework.variable.GlobalVariables;
+import org.citrusframework.variable.GlobalVariablesPropertyLoader;
 import org.citrusframework.yaks.report.SystemOutTestReporter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

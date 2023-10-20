@@ -19,11 +19,11 @@ package org.citrusframework.yaks.hooks;
 
 import java.util.Optional;
 
-import com.consol.citrus.DefaultTestCaseRunner;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusAnnotations;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.context.TestContextFactory;
+import org.citrusframework.DefaultTestCaseRunner;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusAnnotations;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import org.assertj.core.api.Assertions;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.YaksVariableNames;

@@ -23,8 +23,8 @@ import java.io.InputStreamReader;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.LogWatch;

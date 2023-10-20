@@ -20,7 +20,7 @@ package org.citrusframework.yaks.knative.ce;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.http.message.HttpMessage;
+import org.citrusframework.http.message.HttpMessage;
 
 /**
  * @author Christoph Deppisch

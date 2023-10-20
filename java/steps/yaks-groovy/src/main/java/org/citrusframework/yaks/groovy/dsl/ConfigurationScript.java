@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.groovy.dsl;
 
-import com.consol.citrus.Citrus;
+import org.citrusframework.Citrus;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 

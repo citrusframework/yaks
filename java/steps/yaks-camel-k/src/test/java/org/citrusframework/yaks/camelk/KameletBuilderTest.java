@@ -22,14 +22,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.citrusframework.spi.Resources;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
 public class KameletBuilderTest {
@@ -65,14 +65,14 @@ public class KameletBuilderTest {
 
 		final String json = KubernetesSupport.json().writeValueAsString(kamelet);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("kamelet.json", KameletBuilderTest.class))),
+				FileUtils.readToString(Resources.create("kamelet.json", KameletBuilderTest.class))),
 				StringUtils.trimAllWhitespace(json));
 	}
 
 	@Test
 	public void shouldDeserializeKamelet() throws IOException {
 		Kamelet deserialized = new ObjectMapper().readValue(
-				FileUtils.readToString(new ClassPathResource("timer-source.kamelet.json")), Kamelet.class);
+				FileUtils.readToString(Resources.create("timer-source.kamelet.json")), Kamelet.class);
 
 		Assert.assertNull(deserialized.getSpec().getFlow());
 		Assert.assertNotNull(deserialized.getSpec().getTemplate());

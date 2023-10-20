@@ -17,12 +17,12 @@
 
 package org.citrusframework.yaks.knative;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusAnnotations;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusAnnotations;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;

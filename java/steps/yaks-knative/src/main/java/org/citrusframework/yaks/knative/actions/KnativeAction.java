@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import com.consol.citrus.TestAction;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.TestAction;
+import org.citrusframework.context.TestContext;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.knative.KnativeSettings;

@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.context.TestContext;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -40,7 +38,9 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.context.TestContext;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.Property;
@@ -134,51 +134,50 @@ public final class KubernetesSupport {
     }
 
     public static GenericKubernetesResource getResource(KubernetesClient k8sClient, String namespace,
-                                                        CustomResourceDefinitionContext context, String resourceName) {
-        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind()).inNamespace(namespace)
+                                                        ResourceDefinitionContext context, String resourceName) {
+        return k8sClient.genericKubernetesResources(context).inNamespace(namespace)
                 .withName(resourceName)
                 .get();
     }
 
     public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
-                                                             CustomResourceDefinitionContext context) {
-        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                                                             ResourceDefinitionContext context) {
+        return k8sClient.genericKubernetesResources(context)
                 .inNamespace(namespace)
                 .list();
     }
 
     public static GenericKubernetesResourceList getResources(KubernetesClient k8sClient, String namespace,
-                                                             CustomResourceDefinitionContext context, String labelKey, String labelValue) {
-        return k8sClient.genericKubernetesResources(context.getGroup() + "/" + context.getVersion(), context.getKind())
+                                                             ResourceDefinitionContext context, String labelKey, String labelValue) {
+        return k8sClient.genericKubernetesResources(context)
                 .inNamespace(namespace)
                 .withLabel(labelKey, labelValue)
                 .list();
     }
 
     public static <T> void createResource(KubernetesClient k8sClient, String namespace,
-                                   CustomResourceDefinitionContext context, T resource) {
+                                   ResourceDefinitionContext context, T resource) {
         createResource(k8sClient, namespace, context, yaml().dumpAsMap(resource));
     }
 
     public static void createResource(KubernetesClient k8sClient, String namespace,
-                                   CustomResourceDefinitionContext context, String yaml) {
+                                      ResourceDefinitionContext context, String yaml) {
         k8sClient.genericKubernetesResources(context).inNamespace(namespace)
                 .load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))).createOrReplace();
     }
 
     public static void deleteResource(KubernetesClient k8sClient, String namespace,
-                                      CustomResourceDefinitionContext context, String resourceName) {
+                                      ResourceDefinitionContext context, String resourceName) {
         k8sClient.genericKubernetesResources(context).inNamespace(namespace).withName(resourceName).delete();
     }
 
-    public static CustomResourceDefinitionContext crdContext(String resourceType, String group, String kind, String version) {
-        return new CustomResourceDefinitionContext.Builder()
-                .withName(resourceType.contains(".") ? resourceType : String.format("%s.%s", resourceType, group))
+    public static ResourceDefinitionContext crdContext(String resourceType, String group, String kind, String version) {
+        return new ResourceDefinitionContext.Builder()
                 .withGroup(group)
                 .withKind(kind)
                 .withVersion(version)
                 .withPlural(resourceType.contains(".") ? resourceType.substring(0, resourceType.indexOf(".")) : resourceType)
-                .withScope("Namespaced")
+                .withNamespaced(true)
                 .build();
     }
 

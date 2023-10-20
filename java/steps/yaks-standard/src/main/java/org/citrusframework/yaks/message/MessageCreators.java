@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.message.Message;
-import org.springframework.util.ReflectionUtils;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.message.Message;
+import org.citrusframework.util.ReflectionHelper;
 
 /**
  * @author Christoph Deppisch
@@ -50,7 +50,11 @@ public class MessageCreators {
 
         final Message[] message = { null };
         for (final Object messageCreator : pojoCreators) {
-            ReflectionUtils.doWithMethods(messageCreator.getClass(), method -> {
+            ReflectionHelper.doWithMethods(messageCreator.getClass(), method -> {
+                if (method.getAnnotationsByType(CreatesMessage.class).length == 0) {
+                    return;
+                }
+
                 if (method.getAnnotation(CreatesMessage.class).value().equals(messageName)) {
                     try {
                         message[0] = (Message) method.invoke(messageCreator);
@@ -58,7 +62,7 @@ public class MessageCreators {
                         throw new CitrusRuntimeException("Unsupported message creator method: " + method.getName(), e);
                     }
                 }
-            }, method -> method.getAnnotationsByType(CreatesMessage.class).length > 0);
+            });
         }
 
         if (message[0] == null) {

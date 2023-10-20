@@ -24,10 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.Resource;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.KameletSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;
@@ -36,7 +37,6 @@ import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1List;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
-import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
 /**

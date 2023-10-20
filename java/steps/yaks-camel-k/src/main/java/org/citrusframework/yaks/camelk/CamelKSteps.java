@@ -23,27 +23,27 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ActionTimeoutException;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ActionTimeoutException;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.Resource;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
-import org.springframework.core.io.Resource;
 
-import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
-import static com.consol.citrus.container.Assert.Builder.assertException;
-import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
+import static org.citrusframework.container.Assert.Builder.assertException;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.camelk.actions.CamelKActionBuilder.camelk;
 
 public class CamelKSteps {
@@ -285,7 +285,7 @@ public class CamelKSteps {
         if (!openApiSpec.isEmpty()) {
             try {
                 Resource file = FileUtils.getFileResource(openApiSpec);
-                create.openApi(file.getFilename(), FileUtils.readToString(file));
+                create.openApi(FileUtils.getFileName(file.getLocation()), FileUtils.readToString(file));
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to read openapi spec form file path %s", openApiSpec));
             }

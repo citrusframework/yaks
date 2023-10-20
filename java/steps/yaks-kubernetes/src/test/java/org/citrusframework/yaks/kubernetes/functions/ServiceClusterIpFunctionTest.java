@@ -19,10 +19,10 @@ package org.citrusframework.yaks.kubernetes.functions;
 
 import java.util.List;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.functions.DefaultFunctionLibrary;
+import org.citrusframework.Citrus;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.functions.DefaultFunctionLibrary;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceSpec;

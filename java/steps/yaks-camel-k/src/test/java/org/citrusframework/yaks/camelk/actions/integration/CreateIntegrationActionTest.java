@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.context.TestContextFactory;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;

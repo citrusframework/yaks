@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
             "org.citrusframework.yaks.standard",
             "org.citrusframework.yaks.http"
         },
-        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+        plugin = { "pretty", "org.citrusframework.cucumber.CitrusReporter" }
 )
 public class SeleniumFeature_IT {
 }

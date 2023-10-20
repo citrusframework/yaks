@@ -1,9 +1,7 @@
 Feature: JMS multiline steps
 
   Background:
-    Given JMS connection factory
-      | type       | org.apache.activemq.ActiveMQConnectionFactory |
-      | brokerUrl  | tcp://localhost:61616 |
+    Given JMS connection factory jmsConnectionFactory
 
   Scenario: Predefined multiline body
     Given JMS message body

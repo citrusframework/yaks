@@ -27,7 +27,7 @@ public class KafkaSettings {
 
     private static final String KAFKA_VERSION_PROPERTY = KAFKA_PROPERTY_PREFIX + "version";
     private static final String KAFKA_VERSION_ENV = KAFKA_ENV_PREFIX + "KAFKA_VERSION";
-    private static final String KAFKA_VERSION_DEFAULT = "7.0.1";
+    private static final String KAFKA_VERSION_DEFAULT = "7.5.1";
 
     private static final String KAFKA_IMAGE_NAME_PROPERTY = KAFKA_PROPERTY_PREFIX + "image.name";
     private static final String KAFKA_IMAGE_NAME_ENV = KAFKA_ENV_PREFIX + "KAFKA_IMAGE_NAME";

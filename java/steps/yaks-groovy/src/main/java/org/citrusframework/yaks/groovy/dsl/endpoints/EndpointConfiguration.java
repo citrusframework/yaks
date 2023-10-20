@@ -19,9 +19,9 @@ package org.citrusframework.yaks.groovy.dsl.endpoints;
 
 import java.util.function.Supplier;
 
-import com.consol.citrus.endpoint.AbstractEndpointBuilder;
-import com.consol.citrus.endpoint.Endpoint;
-import com.consol.citrus.endpoint.EndpointBuilder;
+import org.citrusframework.endpoint.AbstractEndpointBuilder;
+import org.citrusframework.endpoint.Endpoint;
+import org.citrusframework.endpoint.EndpointBuilder;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;

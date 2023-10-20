@@ -17,9 +17,9 @@
 
 package org.citrusframework.yaks.jms.connection.activemq;
 
-import javax.jms.ConnectionFactory;
 import java.util.Map;
 
+import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
 

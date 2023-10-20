@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 

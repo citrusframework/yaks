@@ -19,12 +19,12 @@ package org.citrusframework.yaks.kubernetes;
 
 import java.util.Collections;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.actions.AbstractTestAction;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.actions.AbstractTestAction;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.api.model.Pod;

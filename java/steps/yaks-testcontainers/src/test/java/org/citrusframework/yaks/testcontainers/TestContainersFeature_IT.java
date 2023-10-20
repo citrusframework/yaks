@@ -32,7 +32,7 @@ import org.junit.runner.RunWith;
                 "org.citrusframework.yaks.jdbc",
                 "org.citrusframework.yaks.kafka"
         },
-        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+        plugin = { "pretty", "org.citrusframework.cucumber.CitrusReporter" }
 )
 public class TestContainersFeature_IT {
 }

@@ -17,30 +17,32 @@
 
 package org.citrusframework.yaks.knative;
 
-import javax.net.ssl.SSLContext;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import javax.net.ssl.SSLContext;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
-import com.consol.citrus.http.client.HttpClient;
-import com.consol.citrus.http.client.HttpClientBuilder;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.ssl.SSLContexts;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.http.actions.HttpClientRequestActionBuilder;
+import org.citrusframework.http.client.HttpClient;
+import org.citrusframework.http.client.HttpClientBuilder;
 import org.citrusframework.yaks.knative.ce.CloudEventMessage;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.springframework.http.HttpStatus;
@@ -48,7 +50,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
+import static org.citrusframework.http.actions.HttpActionBuilder.http;
 
 /**
  * @author Christoph Deppisch
@@ -178,7 +180,7 @@ public class SendEventSteps {
      * Get secure http client implementation with trust all strategy and noop host name verifier.
      * @return
      */
-    private org.apache.http.client.HttpClient sslClient() {
+    private org.apache.hc.client5.http.classic.HttpClient sslClient() {
         try {
             SSLContext sslcontext = SSLContexts
                     .custom()
@@ -188,10 +190,12 @@ public class SendEventSteps {
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
                     sslcontext, NoopHostnameVerifier.INSTANCE);
 
-            return HttpClients
-                    .custom()
+            PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                     .setSSLSocketFactory(sslSocketFactory)
-                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                    .build();
+
+            return HttpClients.custom()
+                    .setConnectionManager(connectionManager)
                     .build();
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new CitrusRuntimeException("Failed to create http client for ssl connection", e);

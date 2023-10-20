@@ -17,9 +17,9 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ActionTimeoutException;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ActionTimeoutException;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;

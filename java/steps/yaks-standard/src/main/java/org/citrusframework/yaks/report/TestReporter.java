@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.consol.citrus.cucumber.CitrusReporter;
+import org.citrusframework.cucumber.CitrusReporter;
 import io.cucumber.java.PendingException;
 import io.cucumber.plugin.event.EventPublisher;
 import io.cucumber.plugin.event.HookTestStep;

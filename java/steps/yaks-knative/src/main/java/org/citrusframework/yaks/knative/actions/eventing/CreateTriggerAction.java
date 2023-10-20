@@ -20,7 +20,7 @@ package org.citrusframework.yaks.knative.actions.eventing;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import io.fabric8.knative.eventing.v1.Trigger;
 import io.fabric8.knative.eventing.v1.TriggerBuilder;
 import io.fabric8.knative.eventing.v1.TriggerSpecBuilder;

@@ -16,24 +16,40 @@
  */
 package org.citrusframework.yaks.jms;
 
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.springframework.beans.factory.BeanCreationException;
+import java.util.Collections;
+
+import jakarta.jms.ConnectionFactory;
+import org.apache.activemq.artemis.core.config.impl.SecurityConfiguration;
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager;
+import org.apache.activemq.artemis.spi.core.security.jaas.InVMLoginModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 @Configuration
 public class JmsBrokerConfiguration {
 
-	@Bean(initMethod = "start", destroyMethod = "stop")
-	public BrokerService messageBroker() {
-		try {
-			BrokerService messageBroker = BrokerFactory.createBroker("broker:tcp://localhost:61616");
-			messageBroker.setPersistent(false);
-			messageBroker.setUseJmx(false);
-			return messageBroker;
-		} catch (Exception e) {
-			throw new BeanCreationException("Failed to create embedded message broker", e);
-		}
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public EmbeddedActiveMQ messageBroker() {
+        EmbeddedActiveMQ broker = new EmbeddedActiveMQ();
+        broker.setSecurityManager(securityManager());
+        return broker;
+    }
+
+    @Bean
+    public ActiveMQSecurityManager securityManager() {
+        SecurityConfiguration securityConfiguration = new SecurityConfiguration(Collections.singletonMap("citrus", "citrus"),
+                Collections.singletonMap("citrus", Collections.singletonList("citrus")));
+        securityConfiguration.setDefaultUser("citrus");
+        return new ActiveMQJAASSecurityManager(InVMLoginModule.class.getName(), securityConfiguration);
+    }
+
+	@Bean
+	@DependsOn("messageBroker")
+	public ConnectionFactory jmsConnectionFactory() {
+		return new ActiveMQConnectionFactory("tcp://localhost:61616", "citrus", "citrus");
 	}
 }

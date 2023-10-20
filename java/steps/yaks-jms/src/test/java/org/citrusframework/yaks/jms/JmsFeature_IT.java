@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         extraGlue = { "org.citrusframework.yaks.standard" },
-        plugin = { "pretty", "com.consol.citrus.cucumber.CitrusReporter" }
+        plugin = { "pretty", "org.citrusframework.cucumber.CitrusReporter" }
 )
 public class JmsFeature_IT {
 }

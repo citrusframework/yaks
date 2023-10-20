@@ -20,9 +20,9 @@ package org.citrusframework.yaks.camel;
 import java.util.Map;
 import java.util.Set;
 
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.spi.ReferenceResolver;
-import com.consol.citrus.spi.SimpleReferenceResolver;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.ReferenceResolver;
+import org.citrusframework.spi.SimpleReferenceResolver;
 import org.apache.camel.CamelContext;
 
 /**

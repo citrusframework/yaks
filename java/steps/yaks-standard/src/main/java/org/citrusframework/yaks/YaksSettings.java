@@ -25,7 +25,7 @@ import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Optional;
 
-import com.consol.citrus.CitrusSettings;
+import org.citrusframework.CitrusSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

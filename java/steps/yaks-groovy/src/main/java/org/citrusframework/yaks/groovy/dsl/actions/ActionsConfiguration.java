@@ -19,13 +19,13 @@ package org.citrusframework.yaks.groovy.dsl.actions;
 
 import java.util.function.Supplier;
 
-import com.consol.citrus.TestAction;
-import com.consol.citrus.TestActionBuilder;
-import com.consol.citrus.TestActionRunner;
-import com.consol.citrus.actions.SleepAction;
-import com.consol.citrus.container.FinallySequence;
-import com.consol.citrus.container.Wait;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.TestAction;
+import org.citrusframework.TestActionBuilder;
+import org.citrusframework.TestActionRunner;
+import org.citrusframework.actions.SleepAction;
+import org.citrusframework.container.FinallySequence;
+import org.citrusframework.container.Wait;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.lang.GroovyObjectSupport;
