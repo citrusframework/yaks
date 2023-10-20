@@ -17,29 +17,29 @@
 
 package org.citrusframework.yaks.jdbc;
 
-import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.sql.DataSource;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.actions.ExecuteSQLQueryAction;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.actions.ExecuteSQLQueryAction;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
-import static com.consol.citrus.actions.ExecuteSQLAction.Builder.sql;
-import static com.consol.citrus.actions.ExecuteSQLQueryAction.Builder.query;
-import static com.consol.citrus.container.RepeatOnErrorUntilTrue.Builder.repeatOnError;
+import static org.citrusframework.actions.ExecuteSQLAction.Builder.sql;
+import static org.citrusframework.actions.ExecuteSQLQueryAction.Builder.query;
+import static org.citrusframework.container.RepeatOnErrorUntilTrue.Builder.repeatOnError;
 
 /**
  * @author Christoph Deppisch

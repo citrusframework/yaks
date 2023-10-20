@@ -27,7 +27,7 @@ public class LocalStackSettings {
 
     private static final String VERSION_PROPERTY = LOCALSTACK_PROPERTY_PREFIX + "version";
     private static final String VERSION_ENV = LOCALSTACK_ENV_PREFIX + "VERSION";
-    public static final String VERSION_DEFAULT = "1.4.0";
+    public static final String VERSION_DEFAULT = "2.3.2";
 
     private static final String STARTUP_TIMEOUT_PROPERTY = LOCALSTACK_PROPERTY_PREFIX + "startup.timeout";
     private static final String STARTUP_TIMEOUT_ENV = LOCALSTACK_ENV_PREFIX + "STARTUP_TIMEOUT";

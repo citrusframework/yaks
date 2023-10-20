@@ -19,8 +19,8 @@ package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import java.util.Arrays;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ValidationException;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ValidationException;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;

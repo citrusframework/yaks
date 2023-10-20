@@ -17,9 +17,9 @@
 
 package org.citrusframework.yaks.groovy.dsl.actions;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestActionRunner;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestActionRunner;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.yaks.groovy.GroovyShellUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 

@@ -27,7 +27,7 @@ public class RedpandaSettings {
 
     private static final String REDPANDA_VERSION_PROPERTY = REDPANDA_PROPERTY_PREFIX + "version";
     private static final String REDPANDA_VERSION_ENV = REDPANDA_ENV_PREFIX + "REDPANDA_VERSION";
-    private static final String REDPANDA_VERSION_DEFAULT = "v22.2.1";
+    private static final String REDPANDA_VERSION_DEFAULT = "v23.1.19";
 
     private static final String REDPANDA_IMAGE_NAME_PROPERTY = REDPANDA_PROPERTY_PREFIX + "image.name";
     private static final String REDPANDA_IMAGE_NAME_ENV = REDPANDA_ENV_PREFIX + "REDPANDA_IMAGE_NAME";

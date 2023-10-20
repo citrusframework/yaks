@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.yaks.camelk.KameletSettings;
 import org.citrusframework.yaks.camelk.VariableNames;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;

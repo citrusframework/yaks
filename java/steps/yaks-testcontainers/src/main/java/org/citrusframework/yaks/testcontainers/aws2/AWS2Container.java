@@ -27,7 +27,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.yaks.testcontainers.LocalStackSettings;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;

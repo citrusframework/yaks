@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.knative;
 
-import com.consol.citrus.Citrus;
+import org.citrusframework.Citrus;
 import io.fabric8.knative.client.DefaultKnativeClient;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;

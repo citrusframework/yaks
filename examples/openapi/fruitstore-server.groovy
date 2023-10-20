@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-import com.consol.citrus.endpoint.EndpointAdapter
-import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter
-import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter
-import com.consol.citrus.endpoint.adapter.mapping.HeaderMappingKeyExtractor
-import com.consol.citrus.endpoint.adapter.mapping.SimpleMappingStrategy
-import com.consol.citrus.http.message.HttpMessage
-import com.consol.citrus.http.message.HttpMessageHeaders
-import com.consol.citrus.message.Message
-import com.consol.citrus.util.FileUtils
+import org.citrusframework.endpoint.EndpointAdapter
+import org.citrusframework.endpoint.adapter.RequestDispatchingEndpointAdapter
+import org.citrusframework.endpoint.adapter.StaticEndpointAdapter
+import org.citrusframework.endpoint.adapter.mapping.HeaderMappingKeyExtractor
+import org.citrusframework.endpoint.adapter.mapping.SimpleMappingStrategy
+import org.citrusframework.http.message.HttpMessage
+import org.citrusframework.http.message.HttpMessageHeaders
+import org.citrusframework.message.Message
+import org.citrusframework.util.FileUtils
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 

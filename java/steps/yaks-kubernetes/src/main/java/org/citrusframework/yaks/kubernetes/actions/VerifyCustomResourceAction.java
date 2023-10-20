@@ -23,9 +23,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ActionTimeoutException;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ActionTimeoutException;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -175,7 +176,7 @@ public class VerifyCustomResourceAction extends AbstractKubernetesAction {
      * @param context
      * @return
      */
-    private CustomResourceDefinitionContext getCrdContext(TestContext context) {
+    private ResourceDefinitionContext getCrdContext(TestContext context) {
         return KubernetesSupport.crdContext(
                 context.replaceDynamicContentInString(type),
                 context.replaceDynamicContentInString(group),

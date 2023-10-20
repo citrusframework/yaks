@@ -22,25 +22,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.selenium.actions.FindElementAction;
-import com.consol.citrus.selenium.endpoint.SeleniumBrowser;
-import com.consol.citrus.selenium.endpoint.SeleniumBrowserBuilder;
-import com.consol.citrus.selenium.model.PageValidator;
-import com.consol.citrus.selenium.model.WebPage;
-import com.consol.citrus.variable.VariableUtils;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.selenium.actions.FindElementAction;
+import org.citrusframework.selenium.endpoint.SeleniumBrowser;
+import org.citrusframework.selenium.endpoint.SeleniumBrowserBuilder;
+import org.citrusframework.selenium.model.PageValidator;
+import org.citrusframework.selenium.model.WebPage;
+import org.citrusframework.variable.VariableUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.springframework.util.StringUtils;
 
-import static com.consol.citrus.selenium.actions.SeleniumActionBuilder.selenium;
+import static org.citrusframework.selenium.actions.SeleniumActionBuilder.selenium;
 
 /**
  * @author Christoph Deppisch
@@ -194,7 +193,7 @@ public class SeleniumSteps {
             }
 
             if (propertyEntry.getKey().equals("styles") || propertyEntry.getKey().equals("style")) {
-                String[] propertyExpressions = StringUtils.delimitedListToStringArray(propertyEntry.getValue(), ";");
+                String[] propertyExpressions = propertyEntry.getValue().split(";");
                 for (String propertyExpression : propertyExpressions) {
                     String[] keyValue = propertyExpression.split("=");
                     elementBuilder.style(keyValue[0].trim(), VariableUtils.cutOffDoubleQuotes(keyValue[1].trim()));
@@ -202,7 +201,7 @@ public class SeleniumSteps {
             }
 
             if (propertyEntry.getKey().equals("attributes") || propertyEntry.getKey().equals("attribute")) {
-                String[] propertyExpressions = StringUtils.commaDelimitedListToStringArray(propertyEntry.getValue());
+                String[] propertyExpressions = propertyEntry.getValue().split(",");
                 for (String propertyExpression : propertyExpressions) {
                     String[] keyValue = propertyExpression.split("=");
                     elementBuilder.attribute(keyValue[0].trim(), VariableUtils.cutOffDoubleQuotes(keyValue[1].trim()));

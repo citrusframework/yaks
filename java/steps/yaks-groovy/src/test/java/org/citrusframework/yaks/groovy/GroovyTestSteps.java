@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.groovy;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.annotations.CitrusFramework;
+import org.citrusframework.Citrus;
+import org.citrusframework.annotations.CitrusFramework;
 import io.cucumber.java.en.Then;
 import org.assertj.core.api.Assertions;
 

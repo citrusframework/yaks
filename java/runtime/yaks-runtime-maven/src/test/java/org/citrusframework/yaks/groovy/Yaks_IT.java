@@ -23,11 +23,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
-import com.consol.citrus.annotations.CitrusTestSource;
-import com.consol.citrus.common.TestLoader;
-import com.consol.citrus.junit.spring.JUnit4CitrusSpringSupport;
-import com.consol.citrus.report.TestReporter;
-import com.consol.citrus.report.TestResults;
+import org.citrusframework.annotations.CitrusTestSource;
+import org.citrusframework.common.TestLoader;
+import org.citrusframework.junit.spring.JUnit4CitrusSpringSupport;
+import org.citrusframework.report.TestReporter;
+import org.citrusframework.report.TestResults;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.report.TestResult;
 import org.junit.Test;

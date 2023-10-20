@@ -23,9 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Stack;
 
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
-import org.springframework.util.StreamUtils;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -58,7 +57,7 @@ public class Init extends YaksCommand {
                 System.out.println("Error: Unsupported file type: " + ext);
                 return 1;
             }
-            content = StreamUtils.copyToString(is, StandardCharsets.UTF_8);
+            content = FileUtils.readToString(is, StandardCharsets.UTF_8);
         }
 
         if (!directory.equals(".")) {

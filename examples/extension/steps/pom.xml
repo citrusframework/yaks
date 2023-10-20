@@ -24,8 +24,8 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <citrus.version>3.4.0</citrus.version>
-        <cucumber.version>7.11.0</cucumber.version>
+        <citrus.version>4.0.0</citrus.version>
+        <cucumber.version>7.14.0</cucumber.version>
     </properties>
     <dependencies>
 
@@ -36,12 +36,12 @@
         </dependency>
 
         <dependency>
-            <groupId>com.consol.citrus</groupId>
+            <groupId>org.citrusframework</groupId>
             <artifactId>citrus-core</artifactId>
             <version>${citrus.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.consol.citrus</groupId>
+            <groupId>org.citrusframework</groupId>
             <artifactId>citrus-cucumber</artifactId>
             <version>${citrus.version}</version>
         </dependency>

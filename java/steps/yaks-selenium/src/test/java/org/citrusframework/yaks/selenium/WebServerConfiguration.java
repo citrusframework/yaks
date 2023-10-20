@@ -21,22 +21,23 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.container.AfterSuite;
-import com.consol.citrus.container.SequenceAfterSuite;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.endpoint.EndpointAdapter;
-import com.consol.citrus.endpoint.adapter.RequestDispatchingEndpointAdapter;
-import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter;
-import com.consol.citrus.endpoint.adapter.mapping.HeaderMappingKeyExtractor;
-import com.consol.citrus.endpoint.adapter.mapping.SimpleMappingStrategy;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.http.message.HttpMessageHeaders;
-import com.consol.citrus.http.server.HttpServer;
-import com.consol.citrus.http.server.HttpServerBuilder;
-import com.consol.citrus.message.Message;
-import com.consol.citrus.selenium.endpoint.SeleniumBrowser;
-import com.consol.citrus.selenium.endpoint.SeleniumBrowserBuilder;
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.container.AfterSuite;
+import org.citrusframework.container.SequenceAfterSuite;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.endpoint.EndpointAdapter;
+import org.citrusframework.endpoint.adapter.RequestDispatchingEndpointAdapter;
+import org.citrusframework.endpoint.adapter.StaticEndpointAdapter;
+import org.citrusframework.endpoint.adapter.mapping.HeaderMappingKeyExtractor;
+import org.citrusframework.endpoint.adapter.mapping.SimpleMappingStrategy;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.http.message.HttpMessageHeaders;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.http.server.HttpServerBuilder;
+import org.citrusframework.message.Message;
+import org.citrusframework.selenium.endpoint.SeleniumBrowser;
+import org.citrusframework.selenium.endpoint.SeleniumBrowserBuilder;
+import org.citrusframework.spi.Resources;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.selenium.page.UserFormPage;
 import org.openqa.selenium.remote.Browser;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -44,11 +45,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Scope;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
-import static com.consol.citrus.selenium.actions.SeleniumActionBuilder.selenium;
+import static org.citrusframework.selenium.actions.SeleniumActionBuilder.selenium;
 
 /**
  * @author Christoph Deppisch
@@ -118,7 +118,7 @@ public class WebServerConfiguration {
             @Override
             protected Message handleMessageInternal(Message request) {
                 try {
-                    return new HttpMessage(FileUtils.readToString(new ClassPathResource("templates/index.html")))
+                    return new HttpMessage(FileUtils.readToString(Resources.fromClasspath("templates/index.html")))
                             .contentType(MediaType.TEXT_HTML_VALUE)
                             .status(HttpStatus.OK);
                 } catch (IOException e) {
@@ -134,7 +134,7 @@ public class WebServerConfiguration {
             @Override
             protected Message handleMessageInternal(Message request) {
                 try {
-                    return new HttpMessage(FileUtils.readToString(new ClassPathResource("templates/form.html")))
+                    return new HttpMessage(FileUtils.readToString(Resources.fromClasspath("templates/form.html")))
                             .contentType(MediaType.TEXT_HTML_VALUE)
                             .status(HttpStatus.OK);
                 } catch (IOException e) {

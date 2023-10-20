@@ -23,14 +23,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import org.springframework.core.io.Resource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.Resource;
+import org.citrusframework.util.FileUtils;
 
 /**
  * @author Christoph Deppisch
@@ -56,7 +55,9 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
             try {
                 Resource file = FileUtils.getFileResource(context.replaceDynamicContentInString(filePath));
                 String resolvedFileContent = context.replaceDynamicContentInString(FileUtils.readToString(file, StandardCharsets.UTF_8));
-                data.put(Optional.ofNullable(file.getFilename()).orElse("application.properties"),
+
+
+                data.put(FileUtils.getFileName(file.getLocation()),
                         Base64.getEncoder().encodeToString(resolvedFileContent.getBytes(StandardCharsets.UTF_8)));
             } catch (IOException e) {
                 throw new CitrusRuntimeException("Failed to read properties file", e);

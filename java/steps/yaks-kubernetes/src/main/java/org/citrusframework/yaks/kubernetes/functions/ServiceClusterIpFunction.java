@@ -19,10 +19,10 @@ package org.citrusframework.yaks.kubernetes.functions;
 
 import java.util.List;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.exceptions.InvalidFunctionUsageException;
-import com.consol.citrus.functions.Function;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.exceptions.InvalidFunctionUsageException;
+import org.citrusframework.functions.Function;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;

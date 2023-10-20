@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions.eventing;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.knative.eventing.v1.BrokerBuilder;
 import org.citrusframework.yaks.knative.KnativeSettings;

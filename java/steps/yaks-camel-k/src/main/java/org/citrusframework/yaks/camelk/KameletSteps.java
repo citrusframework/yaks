@@ -20,31 +20,30 @@ package org.citrusframework.yaks.camelk;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.citrusframework.yaks.camelk.model.Pipe;
-import org.citrusframework.yaks.camelk.model.PipeSpec;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.Resource;
+import org.citrusframework.spi.Resources;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
+import org.citrusframework.yaks.camelk.model.Pipe;
+import org.citrusframework.yaks.camelk.model.PipeSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
 
-import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
-import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.camelk.actions.CamelKActionBuilder.camelk;
-
 
 public class KameletSteps {
 
@@ -218,7 +217,7 @@ public class KameletSteps {
 
     @Given("^load Kamelet ([a-z0-9-]+).kamelet.yaml$")
     public void loadKameletFromFile(String fileName) {
-        Resource resource = new ClassPathResource(fileName + ".kamelet.yaml");
+        Resource resource = Resources.fromClasspath(fileName + ".kamelet.yaml");
         runner.run(camelk()
                 .client(k8sClient)
                 .createKamelet(fileName)
@@ -236,7 +235,7 @@ public class KameletSteps {
 
     @Given("^load (?:Pipe|KameletBinding) ([a-z0-9-]+).yaml$")
     public void loadPipeFromFile(String fileName) {
-        Resource resource = new ClassPathResource(fileName + ".yaml");
+        Resource resource = Resources.fromClasspath(fileName + ".yaml");
         runner.run(camelk()
                 .client(k8sClient)
                 .createPipe(fileName)

@@ -19,8 +19,8 @@ package org.citrusframework.yaks.kafka;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServer;
-import com.consol.citrus.kafka.embedded.EmbeddedKafkaServerBuilder;
+import org.citrusframework.kafka.embedded.EmbeddedKafkaServer;
+import org.citrusframework.kafka.embedded.EmbeddedKafkaServerBuilder;
 
 @Configuration
 public class EmbeddedKafkaConfiguration {

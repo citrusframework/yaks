@@ -17,13 +17,15 @@
 
 package org.citrusframework.yaks.jms.connection.activemq;
 
-import javax.jms.ConnectionFactory;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
+import jakarta.jms.ConnectionFactory;
+import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.assertj.core.api.Assertions;
+import org.citrusframework.yaks.jms.connection.activemq.artemis.ActiveMQArtemisConnectionFactoryCreator;
 import org.junit.Test;
 
 /**
@@ -31,33 +33,51 @@ import org.junit.Test;
  */
 public class ActiveMQConnectionFactoryCreatorTest {
 
-    private ActiveMQConnectionFactoryCreator connectionFactoryCreator = new ActiveMQConnectionFactoryCreator();
+    private final ActiveMQConnectionFactoryCreator connectionFactoryCreator = new ActiveMQConnectionFactoryCreator();
+    private final ActiveMQArtemisConnectionFactoryCreator artemisConnectionFactoryCreator = new ActiveMQArtemisConnectionFactoryCreator();
 
     @Test
-    public void shouldCreate() {
+    public void shouldCreate() throws IOException {
         ConnectionFactory connectionFactory = connectionFactoryCreator.create(Collections.emptyMap());
 
-        Assertions.assertThat(ActiveMQConnectionFactory.class).isEqualTo(connectionFactory.getClass());
-        Assertions.assertThat(ActiveMQConnectionFactory.DEFAULT_BROKER_URL).isEqualTo(((ActiveMQConnectionFactory)connectionFactory).getBrokerURL());
+        Assertions.assertThat(connectionFactory.getClass()).isEqualTo(org.apache.activemq.ActiveMQConnectionFactory.class);
+        Assertions.assertThat(((org.apache.activemq.ActiveMQConnectionFactory)connectionFactory).getBrokerURL()).isEqualTo(org.apache.activemq.ActiveMQConnectionFactory.DEFAULT_BROKER_URL);
+
+        connectionFactory = artemisConnectionFactoryCreator.create(Collections.emptyMap());
+
+        Assertions.assertThat(connectionFactory.getClass()).isEqualTo(ActiveMQConnectionFactory.class);
+        Assertions.assertThat(((ActiveMQConnectionFactory)connectionFactory).toURI().toString()).startsWith("tcp://localhost:61616");
     }
 
     @Test
     public void shouldCreateWithProperties() {
         Map<String, String> connectionSettings = new LinkedHashMap<>();
-        connectionSettings.put("brokerUrl", "typ://localhost:61617");
+        connectionSettings.put("brokerUrl", "tcp://localhost:61617");
         connectionSettings.put("username", "foo");
         connectionSettings.put("password", "secret");
         ConnectionFactory connectionFactory = connectionFactoryCreator.create(connectionSettings);
 
-        Assertions.assertThat(ActiveMQConnectionFactory.class).isEqualTo(connectionFactory.getClass());
-        Assertions.assertThat("typ://localhost:61617").isEqualTo(((ActiveMQConnectionFactory)connectionFactory).getBrokerURL());
-        Assertions.assertThat("foo").isEqualTo(((ActiveMQConnectionFactory)connectionFactory).getUserName());
-        Assertions.assertThat("secret").isEqualTo(((ActiveMQConnectionFactory)connectionFactory).getPassword());
+        Assertions.assertThat(org.apache.activemq.ActiveMQConnectionFactory.class).isEqualTo(connectionFactory.getClass());
+        Assertions.assertThat("tcp://localhost:61617").isEqualTo(((org.apache.activemq.ActiveMQConnectionFactory)connectionFactory).getBrokerURL());
+        Assertions.assertThat("foo").isEqualTo(((org.apache.activemq.ActiveMQConnectionFactory)connectionFactory).getUserName());
+        Assertions.assertThat("secret").isEqualTo(((org.apache.activemq.ActiveMQConnectionFactory)connectionFactory).getPassword());
+
+        connectionSettings = new LinkedHashMap<>();
+        connectionSettings.put("brokerUrl", "tcp://localhost:61617");
+        connectionSettings.put("username", "foo");
+        connectionSettings.put("password", "secret");
+        connectionFactory = artemisConnectionFactoryCreator.create(connectionSettings);
+
+        Assertions.assertThat(connectionFactory.getClass()).isEqualTo(ActiveMQConnectionFactory.class);
+        Assertions.assertThat(((ActiveMQConnectionFactory)connectionFactory).getUser()).isEqualTo("foo");
+        Assertions.assertThat(((ActiveMQConnectionFactory)connectionFactory).getPassword()).isEqualTo("secret");
     }
 
     @Test
     public void shouldSupport() {
-        Assertions.assertThat(connectionFactoryCreator.supports(ActiveMQConnectionFactory.class)).isTrue();
+        Assertions.assertThat(connectionFactoryCreator.supports(org.apache.activemq.ActiveMQConnectionFactory.class)).isTrue();
         Assertions.assertThat(connectionFactoryCreator.supports(ConnectionFactory.class)).isFalse();
+        Assertions.assertThat(artemisConnectionFactoryCreator.supports(ActiveMQConnectionFactory.class)).isTrue();
+        Assertions.assertThat(artemisConnectionFactoryCreator.supports(ConnectionFactory.class)).isFalse();
     }
 }

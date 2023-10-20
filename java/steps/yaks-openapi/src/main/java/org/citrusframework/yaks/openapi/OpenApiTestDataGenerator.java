@@ -20,8 +20,8 @@ package org.citrusframework.yaks.openapi;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.consol.citrus.CitrusSettings;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.context.TestContext;
 import io.apicurio.datamodels.openapi.models.OasSchema;
 import org.citrusframework.yaks.openapi.model.OasModelHelper;
 import org.springframework.util.CollectionUtils;

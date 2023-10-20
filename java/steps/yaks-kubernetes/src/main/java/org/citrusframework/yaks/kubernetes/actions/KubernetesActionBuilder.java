@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.kubernetes.actions;
 
-import com.consol.citrus.TestActionBuilder;
+import org.citrusframework.TestActionBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.springframework.util.Assert;
 

@@ -85,49 +85,49 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>11</maven.compiler.release>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
 
-    <apache.camel.version>3.20.4</apache.camel.version>
-    <activemq.artemis.version>2.17.0</activemq.artemis.version>
-    <activemq.version>5.17.0</activemq.version>
-    <apicurio.version>1.1.2</apicurio.version>
+    <apache.camel.version>4.1.0</apache.camel.version>
+    <activemq.artemis.version>2.31.0</activemq.artemis.version>
+    <activemq.version>5.18.2</activemq.version>
+    <apicurio.version>1.1.27</apicurio.version>
     <ascii-table-version>1.8.0</ascii-table-version>
     <assertj-core.version>3.24.2</assertj-core.version>
     <awaitility.version>4.2.0</awaitility.version>
-    <aws-java-sdk2.version>2.20.17</aws-java-sdk2.version>
-    <citrus.version>3.4.0</citrus.version>
-    <commons.dbcp2.version>2.9.0</commons.dbcp2.version>
-    <cucumber.version>7.11.0</cucumber.version>
-    <groovy.version>3.0.14</groovy.version>
-    <jackson.version>2.14.1</jackson.version>
+    <aws-java-sdk2.version>2.21.2</aws-java-sdk2.version>
+    <citrus.version>4.0.0</citrus.version>
+    <commons.dbcp2.version>2.10.0</commons.dbcp2.version>
+    <cucumber.version>7.14.0</cucumber.version>
+    <groovy.version>3.0.19</groovy.version>
+    <jackson.version>2.15.3</jackson.version>
     <junit.version>4.13.2</junit.version>
-    <knative-client.version>6.1.1</knative-client.version>
-    <kubernetes-client.version>6.4.0</kubernetes-client.version>
-    <log4j2.version>2.19.0</log4j2.version>
-    <mockito.version>4.11.0</mockito.version>
-    <netty.version>4.1.87.Final</netty.version>
-    <okhttp.version>4.10.0</okhttp.version>
-    <picoli-version>4.7.0</picoli-version>
-    <plexus-component-metadata.version>2.1.0</plexus-component-metadata.version>
-    <postgresql.version>42.5.1</postgresql.version>
-    <slf4j.version>1.7.36</slf4j.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
-    <spring.version>5.3.25</spring.version>
-    <testcontainers.version>1.17.6</testcontainers.version>
+    <knative-client.version>6.9.0</knative-client.version>
+    <kubernetes-client.version>6.9.0</kubernetes-client.version>
+    <log4j2.version>2.21.0</log4j2.version>
+    <mockito.version>5.6.0</mockito.version>
+    <netty.version>4.1.100.Final</netty.version>
+    <okhttp.version>4.12.0</okhttp.version>
+    <picoli-version>4.7.5</picoli-version>
+    <plexus-component-metadata.version>2.1.1</plexus-component-metadata.version>
+    <postgresql.version>42.6.0</postgresql.version>
+    <slf4j.version>2.0.9</slf4j.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
+    <spring.version>6.0.13</spring.version>
+    <testcontainers.version>1.19.1</testcontainers.version>
 
-    <asciidoctor-maven-plugin.version>2.1.0</asciidoctor-maven-plugin.version>
+    <asciidoctor-maven-plugin.version>2.2.4</asciidoctor-maven-plugin.version>
     <asciidoctorj-pdf.version>1.5.3</asciidoctorj-pdf.version>
-    <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+    <exec-maven-plugin.version>3.1.0</exec-maven-plugin.version>
     <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
     <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
     <maven-checkstyle.version>7.6.1</maven-checkstyle.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
     <maven-remote-resources-plugin.version>1.5</maven-remote-resources-plugin.version>
-    <maven-scm-plugin.version>1.9.5</maven-scm-plugin.version>
+    <maven-scm-plugin.version>1.11.2</maven-scm-plugin.version>
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
     <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
@@ -154,18 +154,6 @@
         <artifactId>knative-client</artifactId>
         <version>${knative-client.version}</version>
       </dependency>
-      <dependency>
-        <groupId>io.fabric8</groupId>
-        <artifactId>knative-mock</artifactId>
-        <version>${knative-client.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-          </exclusion>
-        </exclusions>
-        <scope>test</scope>
-      </dependency>
 
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
@@ -180,102 +168,102 @@
 
       <!-- Citrus -->
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-base</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-main</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-junit</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-spring</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-groovy</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-xml</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-yaml</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-validation-json</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-validation-text</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-validation-groovy</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-validation-hamcrest</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-http</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-cucumber</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-camel</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-jms</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-kafka</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-mail</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-ws</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-selenium</artifactId>
         <version>${citrus.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.consol.citrus</groupId>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-sql</artifactId>
         <version>${citrus.version}</version>
       </dependency>
@@ -322,20 +310,20 @@
       <!-- JMS connection factory dependencies in provided scope -->
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-client</artifactId>
+        <artifactId>activemq-client-jakarta</artifactId>
         <version>${activemq.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>artemis-jms-client</artifactId>
+        <artifactId>artemis-jakarta-client</artifactId>
         <version>${activemq.artemis.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-broker</artifactId>
-        <version>${activemq.version}</version>
+        <artifactId>artemis-jakarta-server</artifactId>
+        <version>${activemq.artemis.version}</version>
         <scope>test</scope>
       </dependency>
 
@@ -528,12 +516,17 @@
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j2.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-core</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j-slf4j-impl</artifactId>
+        <artifactId>log4j-slf4j2-impl</artifactId>
         <version>${log4j2.version}</version>
       </dependency>
 
@@ -579,7 +572,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
+      <artifactId>log4j-slf4j2-impl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -2,8 +2,10 @@ Feature: JMS steps
 
   Background:
     Given JMS connection factory
-      | type       | org.apache.activemq.ActiveMQConnectionFactory |
+      | type       | org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory |
       | brokerUrl  | tcp://localhost:61616 |
+      | username   | citrus |
+      | password   | citrus |
     Given JMS destination: test
     Given variable body is "citrus:randomString(10)"
     Given variable key is "citrus:randomString(10)"

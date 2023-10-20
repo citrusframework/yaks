@@ -20,7 +20,7 @@ package org.citrusframework.yaks.kubernetes.actions;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.context.TestContext;
 
 /**
  * @author Christoph Deppisch

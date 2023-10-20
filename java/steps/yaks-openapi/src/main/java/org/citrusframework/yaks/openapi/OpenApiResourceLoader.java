@@ -17,8 +17,6 @@
 
 package org.citrusframework.yaks.openapi;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -26,29 +24,25 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 
-import com.consol.citrus.util.FileUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.apicurio.datamodels.Library;
 import io.apicurio.datamodels.openapi.models.OasDocument;
-import org.apache.http.HttpHeaders;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.ssl.SSLContexts;
+import org.citrusframework.util.FileUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 /**
  * Loads Open API specifications from different locations like file resource or web resource.
  * @author Christoph Deppisch
  */
 public final class OpenApiResourceLoader {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Yaml YAML_PARSER = new Yaml(new SafeConstructor());
 
     /**
      * Prevent instantiation of utility class.
@@ -143,7 +137,7 @@ public final class OpenApiResourceLoader {
             return (OasDocument) Library.readDocumentFromJSONString(specification);
         }
 
-        final JsonNode node = OBJECT_MAPPER.convertValue(YAML_PARSER.load(specification), JsonNode.class);
+        final JsonNode node = OpenApiSupport.json().convertValue(OpenApiSupport.yaml().load(specification), JsonNode.class);
         return (OasDocument) Library.readDocument(node);
     }
 

@@ -17,10 +17,10 @@
 
 package org.citrusframework.yaks.jms.connection;
 
-import javax.jms.ConnectionFactory;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import jakarta.jms.ConnectionFactory;
 import org.springframework.util.Assert;
 
 /**

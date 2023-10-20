@@ -21,18 +21,18 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.kafka.endpoint.KafkaEndpoint;
-import com.consol.citrus.kafka.endpoint.KafkaEndpointBuilder;
-import com.consol.citrus.kafka.message.KafkaMessage;
-import com.consol.citrus.kafka.message.KafkaMessageHeaders;
-import com.consol.citrus.message.Message;
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.kafka.endpoint.KafkaEndpoint;
+import org.citrusframework.kafka.endpoint.KafkaEndpointBuilder;
+import org.citrusframework.kafka.message.KafkaMessage;
+import org.citrusframework.kafka.message.KafkaMessageHeaders;
+import org.citrusframework.message.Message;
+import org.citrusframework.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -41,8 +41,8 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.citrusframework.yaks.YaksSettings;
 
-import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
-import static com.consol.citrus.actions.SendMessageAction.Builder.send;
+import static org.citrusframework.actions.ReceiveMessageAction.Builder.receive;
+import static org.citrusframework.actions.SendMessageAction.Builder.send;
 
 public class KafkaSteps {
 

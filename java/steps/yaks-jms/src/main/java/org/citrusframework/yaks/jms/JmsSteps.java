@@ -17,32 +17,32 @@
 
 package org.citrusframework.yaks.jms;
 
-import javax.jms.ConnectionFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.jms.endpoint.JmsEndpoint;
-import com.consol.citrus.jms.endpoint.JmsEndpointBuilder;
-import com.consol.citrus.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import jakarta.jms.ConnectionFactory;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.jms.endpoint.JmsEndpoint;
+import org.citrusframework.jms.endpoint.JmsEndpointBuilder;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
 
-import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
-import static com.consol.citrus.actions.SendMessageAction.Builder.send;
+import static org.citrusframework.actions.ReceiveMessageAction.Builder.receive;
+import static org.citrusframework.actions.SendMessageAction.Builder.send;
 
 public class JmsSteps {
 
@@ -101,6 +101,7 @@ public class JmsSteps {
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
             connectionFactory = citrus.getCitrusContext().getReferenceResolver().resolve(name, ConnectionFactory.class);
             jmsEndpoint.getEndpointConfiguration().setConnectionFactory(connectionFactory);
+            jmsEndpoint.getEndpointConfiguration().getJmsTemplate().setConnectionFactory(connectionFactory);
         } else {
             throw new CitrusRuntimeException(String.format("Unable to find connection factory '%s'", name));
         }
@@ -117,11 +118,13 @@ public class JmsSteps {
 
         citrus.getCitrusContext().getReferenceResolver().bind("connectionFactory", connectionFactory);
         jmsEndpoint.getEndpointConfiguration().setConnectionFactory(connectionFactory);
+        jmsEndpoint.getEndpointConfiguration().getJmsTemplate().setConnectionFactory(connectionFactory);
     }
 
     @Given("^(?:JMS|jms) destination: ([^\\s]+)$")
     public void setDestination(String destination) {
         jmsEndpoint.getEndpointConfiguration().setDestinationName(destination);
+        jmsEndpoint.getEndpointConfiguration().getJmsTemplate().setDefaultDestinationName(destination);
     }
 
     @Given("^(?:JMS|jms) endpoint \"([^\"\\s]+)\"$")

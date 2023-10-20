@@ -22,7 +22,6 @@ import java.util.HashMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
-import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.context.annotation.Bean;
@@ -37,10 +36,6 @@ public class KubernetesServiceConfiguration {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
-
-    public KubernetesServiceConfiguration() {
-        KubernetesDeserializer.registerCustomKind("yaks.dev/v1", "Foo", Foo.class);
-    }
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public KubernetesMockServer k8sMockServer() {

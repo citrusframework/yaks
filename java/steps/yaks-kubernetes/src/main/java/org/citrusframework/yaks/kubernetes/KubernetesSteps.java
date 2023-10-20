@@ -25,16 +25,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusAnnotations;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.ActionTimeoutException;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusAnnotations;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.ActionTimeoutException;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -46,9 +46,9 @@ import org.citrusframework.yaks.kubernetes.actions.CreateServiceAction;
 import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
 import org.springframework.http.HttpStatus;
 
-import static com.consol.citrus.actions.CreateVariablesAction.Builder.createVariable;
-import static com.consol.citrus.container.Assert.Builder.assertException;
-import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
+import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
+import static org.citrusframework.container.Assert.Builder.assertException;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static org.citrusframework.yaks.kubernetes.actions.KubernetesActionBuilder.kubernetes;
 
 public class KubernetesSteps {

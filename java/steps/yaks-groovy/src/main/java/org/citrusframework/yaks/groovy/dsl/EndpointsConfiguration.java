@@ -19,9 +19,9 @@ package org.citrusframework.yaks.groovy.dsl;
 
 import java.util.function.Supplier;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.common.InitializingPhase;
-import com.consol.citrus.endpoint.Endpoint;
+import org.citrusframework.Citrus;
+import org.citrusframework.common.InitializingPhase;
+import org.citrusframework.endpoint.Endpoint;
 import groovy.lang.Closure;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MissingMethodException;

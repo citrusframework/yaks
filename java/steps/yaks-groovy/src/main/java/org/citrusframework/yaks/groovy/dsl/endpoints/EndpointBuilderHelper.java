@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.groovy.dsl.endpoints;
 
-import com.consol.citrus.endpoint.EndpointBuilder;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import org.citrusframework.endpoint.EndpointBuilder;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 
 /**
  * @author Christoph Deppisch

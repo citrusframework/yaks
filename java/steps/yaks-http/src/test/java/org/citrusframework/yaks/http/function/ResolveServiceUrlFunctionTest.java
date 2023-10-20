@@ -20,10 +20,10 @@ package org.citrusframework.yaks.http.function;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.context.TestContextFactory;
-import com.consol.citrus.functions.DefaultFunctionLibrary;
-import com.consol.citrus.http.server.HttpServerBuilder;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
+import org.citrusframework.functions.DefaultFunctionLibrary;
+import org.citrusframework.http.server.HttpServerBuilder;
 import org.citrusframework.yaks.YaksClusterType;
 import org.junit.Assert;
 import org.junit.Test;

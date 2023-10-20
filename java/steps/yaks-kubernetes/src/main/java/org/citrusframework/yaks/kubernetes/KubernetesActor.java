@@ -17,7 +17,7 @@
 
 package org.citrusframework.yaks.kubernetes;
 
-import com.consol.citrus.TestActor;
+import org.citrusframework.TestActor;
 import org.citrusframework.yaks.YaksSettings;
 
 /**

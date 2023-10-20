@@ -147,7 +147,7 @@ The data table is able to verify a matrix of rows and columns. Each column can h
 Given SQL query: SELECT ID, TASK, COMPLETED FROM todo ORDER BY id
 Then verify columns
 | ID        | 1                  | 2             | 3          | 4            | @ignore@               |
-| TASK      | Learn some CamelK! | Get some milk | Do laundry | Wash the dog | Test CamelK with YAKS! |
+| TASK      | Learn some Camel K! | Get some milk | Do laundry | Wash the dog | Test CamelK with YAKS! |
 | COMPLETED | 0                  | 0             | 0          |            0 | 0                      |
 ----
 
@@ -172,6 +172,6 @@ Given SQL query: SELECT TASK FROM todo
 Then verify result set
 """
 assert rows.size == 1
-assert rows[0].TASK == 'Learn some CamelK!'
+assert rows[0].TASK == 'Learn some Camel K!'
 """
 ----

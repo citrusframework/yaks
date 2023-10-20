@@ -25,7 +25,7 @@ The configuration step receives a data table that defines the connection setting
 [source,gherkin]
 ----
 Given JMS connection factory
-| type       | org.apache.activemq.ActiveMQConnectionFactory |
+| type       | org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory |
 | brokerUrl  | tcp://localhost:61616 |
 | username   | ${activemq.user}      |
 | password  | ${activemq.password}  |

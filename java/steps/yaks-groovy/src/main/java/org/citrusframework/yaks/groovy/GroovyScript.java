@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.groovy;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.Citrus;
+import org.citrusframework.context.TestContext;
 import groovy.lang.MissingPropertyException;
 import groovy.util.DelegatingScript;
 

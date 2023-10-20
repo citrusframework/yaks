@@ -17,14 +17,14 @@
 
 package org.citrusframework.yaks.jms.connection;
 
-import javax.jms.ConnectionFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import com.consol.citrus.exceptions.CitrusRuntimeException;
+import jakarta.jms.ConnectionFactory;
+import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.springframework.util.Assert;
 
 /**

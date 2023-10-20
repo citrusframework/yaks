@@ -17,36 +17,22 @@
 
 package org.citrusframework.yaks.jms.connection.activemq.artemis;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
 import java.util.Map;
 
+import jakarta.jms.ConnectionFactory;
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
+import org.apache.activemq.artemis.jms.client.DefaultConnectionProperties;
 import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
 
 public class ActiveMQArtemisConnectionFactoryCreator implements ConnectionFactoryCreator {
 
     @Override
     public ConnectionFactory create(Map<String, String> properties) {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
+        String brokerUrl = properties.getOrDefault("brokerUrl", DefaultConnectionProperties.DEFAULT_BROKER_URL);
+        String user = properties.getOrDefault("username", DefaultConnectionProperties.DEFAULT_USER);
+        String password = properties.getOrDefault("password", DefaultConnectionProperties.DEFAULT_PASSWORD);
 
-        try {
-            if (properties.containsKey("brokerUrl")) {
-                connectionFactory.setBrokerURL(properties.get("brokerUrl"));
-            }
-
-            if (properties.containsKey("username")) {
-                connectionFactory.setUser(properties.get("username"));
-            }
-
-            if (properties.containsKey("password")) {
-                connectionFactory.setPassword(properties.get("password"));
-            }
-        } catch (JMSException e) {
-            throw new IllegalStateException("Error in initialization ConnectionFactory", e);
-        }
-
-        return connectionFactory;
+        return new ActiveMQConnectionFactory(brokerUrl, user, password);
     }
 
     @Override

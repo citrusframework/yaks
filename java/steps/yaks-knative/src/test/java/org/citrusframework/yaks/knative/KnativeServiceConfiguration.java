@@ -19,19 +19,19 @@ package org.citrusframework.yaks.knative;
 
 import java.util.HashMap;
 
-import com.consol.citrus.endpoint.EndpointAdapter;
-import com.consol.citrus.endpoint.adapter.StaticEndpointAdapter;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.http.server.HttpServer;
-import com.consol.citrus.http.server.HttpServerBuilder;
-import com.consol.citrus.message.Message;
 import io.fabric8.knative.client.KnativeClient;
-import io.fabric8.knative.mock.KnativeMockServer;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
+import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
 import org.assertj.core.api.Assertions;
+import org.citrusframework.endpoint.EndpointAdapter;
+import org.citrusframework.endpoint.adapter.StaticEndpointAdapter;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.http.server.HttpServerBuilder;
+import org.citrusframework.message.Message;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -46,24 +46,24 @@ public class KnativeServiceConfiguration {
 
     private static final int HTTP_PORT = 8080;
 
-    private final KnativeMockServer knativeServer = new KnativeMockServer(new Context(), new MockWebServer(),
+    private final KubernetesMockServer kubernetesServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
-    public KnativeMockServer knativeMockServer() {
-        return knativeServer;
+    public KubernetesMockServer kubernetesMockServer() {
+        return kubernetesServer;
     }
 
     @Bean(destroyMethod = "close")
-    @DependsOn("knativeMockServer")
+    @DependsOn("kubernetesMockServer")
     public KnativeClient knativeClient() {
-        return knativeServer.createKnative();
+        return kubernetesClient().adapt(KnativeClient.class);
     }
 
     @Bean(destroyMethod = "close")
-    @DependsOn("knativeMockServer")
+    @DependsOn("kubernetesMockServer")
     public KubernetesClient kubernetesClient() {
-        return knativeServer.createClient();
+        return kubernetesServer.createClient();
     }
 
     @Bean

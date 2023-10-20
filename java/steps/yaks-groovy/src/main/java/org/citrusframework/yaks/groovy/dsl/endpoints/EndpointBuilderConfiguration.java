@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.consol.citrus.endpoint.Endpoint;
-import com.consol.citrus.endpoint.EndpointBuilder;
+import org.citrusframework.endpoint.Endpoint;
+import org.citrusframework.endpoint.EndpointBuilder;
 import groovy.lang.MissingPropertyException;
 import org.springframework.util.ReflectionUtils;
 

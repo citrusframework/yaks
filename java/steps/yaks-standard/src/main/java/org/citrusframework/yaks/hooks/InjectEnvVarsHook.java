@@ -19,10 +19,10 @@ package org.citrusframework.yaks.hooks;
 
 import java.util.Optional;
 
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.actions.AbstractTestAction;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.actions.AbstractTestAction;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import org.citrusframework.yaks.YaksSettings;

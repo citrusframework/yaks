@@ -27,27 +27,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.CitrusSettings;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.actions.HttpServerActionBuilder;
-import com.consol.citrus.http.actions.HttpServerRequestActionBuilder;
-import com.consol.citrus.http.actions.HttpServerResponseActionBuilder;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.http.server.HttpServer;
-import com.consol.citrus.http.server.HttpServerBuilder;
-import com.consol.citrus.util.FileUtils;
-import com.consol.citrus.variable.dictionary.DataDictionary;
+import org.citrusframework.Citrus;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.http.actions.HttpServerActionBuilder;
+import org.citrusframework.http.actions.HttpServerRequestActionBuilder;
+import org.citrusframework.http.actions.HttpServerResponseActionBuilder;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.http.server.HttpServerBuilder;
+import org.citrusframework.util.FileUtils;
+import org.citrusframework.variable.dictionary.DataDictionary;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
@@ -59,8 +60,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
-import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
+import static org.citrusframework.http.actions.HttpActionBuilder.http;
+import static org.citrusframework.validation.PathExpressionValidationContext.Builder.pathExpression;
 
 /**
  * @author Christoph Deppisch
@@ -442,7 +443,7 @@ public class HttpServerSteps implements HttpSteps {
 
         HttpServerResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().server(httpServer)
                 .send()
-                .response(response.getStatusCode())
+                .response(HttpStatus.resolve(response.getStatusCode().value()))
                 .message(response);
 
         if (outboundDictionary != null) {
@@ -465,7 +466,7 @@ public class HttpServerSteps implements HttpSteps {
 
     private ServerConnector sslConnector() {
         ServerConnector connector = new ServerConnector(new Server(),
-                new SslConnectionFactory(sslContextFactory(), "http/1.1"),
+                new SslConnectionFactory(sslContextFactory(), HttpVersion.HTTP_1_1.asString()),
                 new HttpConnectionFactory(httpConfiguration()));
         connector.setPort(securePort);
         return connector;
@@ -476,11 +477,13 @@ public class HttpServerSteps implements HttpSteps {
         parent.setSecureScheme("https");
         parent.setSecurePort(securePort);
         HttpConfiguration configuration = new HttpConfiguration(parent);
-        configuration.setCustomizers(Collections.singletonList(new SecureRequestCustomizer()));
+        SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
+        secureRequestCustomizer.setSniHostCheck(false);
+        configuration.setCustomizers(Collections.singletonList(secureRequestCustomizer));
         return configuration;
     }
 
-    private SslContextFactory sslContextFactory() {
+    private SslContextFactory.Server sslContextFactory() {
         try {
             SslContextFactory.Server contextFactory = new SslContextFactory.Server();
             contextFactory.setKeyStorePath(getKeyStorePathPath());

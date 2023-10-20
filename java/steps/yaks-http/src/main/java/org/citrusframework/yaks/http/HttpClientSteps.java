@@ -25,39 +25,42 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.CitrusSettings;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.actions.HttpClientActionBuilder;
-import com.consol.citrus.http.actions.HttpClientRequestActionBuilder;
-import com.consol.citrus.http.actions.HttpClientResponseActionBuilder;
-import com.consol.citrus.http.client.HttpClient;
-import com.consol.citrus.http.client.HttpClientBuilder;
-import com.consol.citrus.http.message.HttpMessage;
-import com.consol.citrus.util.FileUtils;
-import com.consol.citrus.variable.dictionary.DataDictionary;
+import org.citrusframework.Citrus;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.http.actions.HttpClientActionBuilder;
+import org.citrusframework.http.actions.HttpClientRequestActionBuilder;
+import org.citrusframework.http.actions.HttpClientResponseActionBuilder;
+import org.citrusframework.http.client.HttpClient;
+import org.citrusframework.http.client.HttpClientBuilder;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.util.FileUtils;
+import org.citrusframework.variable.dictionary.DataDictionary;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustAllStrategy;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.ssl.SSLContexts;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
 
-import static com.consol.citrus.container.Wait.Builder.waitFor;
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
-import static com.consol.citrus.validation.PathExpressionValidationContext.Builder.pathExpression;
+import static org.citrusframework.container.Wait.Builder.waitFor;
+import static org.citrusframework.http.actions.HttpActionBuilder.http;
+import static org.citrusframework.validation.PathExpressionValidationContext.Builder.pathExpression;
 
 /**
  * @author Christoph Deppisch
@@ -355,7 +358,7 @@ public class HttpClientSteps implements HttpSteps {
      */
     private void receiveClientResponse(HttpMessage response) {
         HttpClientResponseActionBuilder.HttpMessageBuilderSupport responseBuilder = http().client(httpClient).receive()
-                .response(response.getStatusCode())
+                .response(HttpStatus.resolve(response.getStatusCode().value()))
                 .message(response)
                 .headerNameIgnoreCase(headerNameIgnoreCase);
 
@@ -384,7 +387,7 @@ public class HttpClientSteps implements HttpSteps {
      * Get secure http client implementation with trust all strategy and noop host name verifier.
      * @return
      */
-    private org.apache.http.client.HttpClient sslClient() {
+    private org.apache.hc.client5.http.classic.HttpClient sslClient() {
         try {
             SSLContext sslcontext = SSLContexts
                     .custom()
@@ -394,10 +397,12 @@ public class HttpClientSteps implements HttpSteps {
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
                     sslcontext, NoopHostnameVerifier.INSTANCE);
 
-            return HttpClients
-                    .custom()
+            PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                     .setSSLSocketFactory(sslSocketFactory)
-                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                    .build();
+
+            return HttpClients.custom()
+                    .setConnectionManager(connectionManager)
                     .build();
         } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             throw new CitrusRuntimeException("Failed to create http client for ssl connection", e);

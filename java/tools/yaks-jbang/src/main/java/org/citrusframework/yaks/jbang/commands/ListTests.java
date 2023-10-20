@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.util.FileUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;

@@ -23,7 +23,7 @@ config:
           level: INFO
         - name: org.citrusframework.yaks
           level: DEBUG
-        - name: com.consol.citrus
+        - name: org.citrusframework
           level: INFO
         - name: Logger.Message_IN
           level: DEBUG

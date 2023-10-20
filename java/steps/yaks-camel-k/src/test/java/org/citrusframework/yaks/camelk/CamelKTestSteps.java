@@ -19,8 +19,8 @@ package org.citrusframework.yaks.camelk;
 
 import java.util.Collections;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.annotations.CitrusFramework;
+import org.citrusframework.Citrus;
+import org.citrusframework.annotations.CitrusFramework;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;

@@ -20,13 +20,13 @@ package org.citrusframework.yaks.standard;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.CitrusSettings;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.message.DefaultMessage;
-import com.consol.citrus.message.Message;
+import org.citrusframework.Citrus;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.message.DefaultMessage;
+import org.citrusframework.message.Message;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -36,8 +36,8 @@ import io.cucumber.java.en.When;
 import org.citrusframework.yaks.message.MessageCreator;
 import org.citrusframework.yaks.message.MessageCreators;
 
-import static com.consol.citrus.actions.ReceiveMessageAction.Builder.receive;
-import static com.consol.citrus.actions.SendMessageAction.Builder.send;
+import static org.citrusframework.actions.ReceiveMessageAction.Builder.receive;
+import static org.citrusframework.actions.SendMessageAction.Builder.send;
 
 /**
  * @author Christoph Deppisch

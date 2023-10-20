@@ -23,13 +23,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.spi.Resources;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
 public class IntegrationBuilderTest {
@@ -92,7 +92,7 @@ public class IntegrationBuilderTest {
 
 		final String json = KubernetesSupport.json().writeValueAsString(i);
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("integration.json", IntegrationBuilderTest.class))), json);
+				FileUtils.readToString(Resources.create("integration.json", IntegrationBuilderTest.class))), json);
 	}
 
 	@Test
@@ -105,6 +105,6 @@ public class IntegrationBuilderTest {
 
 		final String json = StringUtils.trimAllWhitespace(KubernetesSupport.json().writeValueAsString(i));
 		Assert.assertEquals(StringUtils.trimAllWhitespace(
-				FileUtils.readToString(new ClassPathResource("integration-api.json", IntegrationBuilderTest.class))), json);
+				FileUtils.readToString(Resources.create("integration-api.json", IntegrationBuilderTest.class))), json);
 	}
 }

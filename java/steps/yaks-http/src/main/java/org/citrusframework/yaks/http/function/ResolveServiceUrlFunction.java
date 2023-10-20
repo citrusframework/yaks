@@ -20,10 +20,10 @@ package org.citrusframework.yaks.http.function;
 import java.util.List;
 import java.util.Locale;
 
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.functions.Function;
-import com.consol.citrus.http.server.HttpServer;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.functions.Function;
+import org.citrusframework.http.server.HttpServer;
 import org.citrusframework.yaks.YaksSettings;
 
 public class ResolveServiceUrlFunction implements Function {

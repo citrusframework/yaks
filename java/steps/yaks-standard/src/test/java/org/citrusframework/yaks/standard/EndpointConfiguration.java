@@ -17,11 +17,11 @@
 
 package org.citrusframework.yaks.standard;
 
-import com.consol.citrus.camel.endpoint.CamelSyncEndpoint;
-import com.consol.citrus.camel.endpoint.CamelSyncEndpointConfiguration;
-import com.consol.citrus.endpoint.direct.DirectEndpoint;
-import com.consol.citrus.endpoint.direct.DirectEndpoints;
-import com.consol.citrus.message.DefaultMessage;
+import org.citrusframework.camel.endpoint.CamelSyncEndpoint;
+import org.citrusframework.camel.endpoint.CamelSyncEndpointConfiguration;
+import org.citrusframework.endpoint.direct.DirectEndpoint;
+import org.citrusframework.endpoint.direct.DirectEndpoints;
+import org.citrusframework.message.DefaultMessage;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spring.SpringCamelContext;

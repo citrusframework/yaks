@@ -21,17 +21,17 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 
-import static com.consol.citrus.actions.EchoAction.Builder.echo;
-import static com.consol.citrus.actions.LoadPropertiesAction.Builder.load;
-import static com.consol.citrus.actions.SleepAction.Builder.sleep;
+import static org.citrusframework.actions.EchoAction.Builder.echo;
+import static org.citrusframework.actions.LoadPropertiesAction.Builder.load;
+import static org.citrusframework.actions.SleepAction.Builder.sleep;
 
 public class StandardSteps {
 

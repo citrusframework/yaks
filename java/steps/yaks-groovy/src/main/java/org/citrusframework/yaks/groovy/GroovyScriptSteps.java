@@ -22,25 +22,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.TestCaseRunner;
-import com.consol.citrus.annotations.CitrusFramework;
-import com.consol.citrus.annotations.CitrusResource;
-import com.consol.citrus.common.InitializingPhase;
-import com.consol.citrus.context.TestContext;
-import com.consol.citrus.endpoint.Endpoint;
-import com.consol.citrus.endpoint.EndpointBuilder;
-import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.util.FileUtils;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import org.citrusframework.Citrus;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.common.InitializingPhase;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.endpoint.Endpoint;
+import org.citrusframework.endpoint.EndpointBuilder;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.spi.Resource;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.groovy.dsl.ConfigurationScript;
 import org.citrusframework.yaks.groovy.dsl.actions.ActionScript;
 import org.citrusframework.yaks.groovy.dsl.endpoints.EndpointConfigurationScript;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.springframework.core.io.Resource;
 
 /**
  * @author Christoph Deppisch
@@ -95,7 +95,7 @@ public class GroovyScriptSteps {
     public void loadEndpoint(String filePath) throws IOException {
         Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
         String script = FileUtils.readToString(scriptFile);
-        final String fileName = scriptFile.getFilename();
+        final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
                 .map(f -> f.lastIndexOf("."))
                 .filter(index -> index >= 0)
@@ -120,7 +120,7 @@ public class GroovyScriptSteps {
     public void loadComponent(String filePath) throws IOException {
         Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
         String script = FileUtils.readToString(scriptFile);
-        final String fileName = scriptFile.getFilename();
+        final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
                 .map(f -> f.lastIndexOf("."))
                 .filter(index -> index >= 0)
@@ -138,7 +138,7 @@ public class GroovyScriptSteps {
     public void loadActionScript(String filePath) throws IOException {
         Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
         String script = FileUtils.readToString(scriptFile);
-        final String fileName = scriptFile.getFilename();
+        final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
                 .map(f -> f.lastIndexOf("."))
                 .filter(index -> index >= 0)

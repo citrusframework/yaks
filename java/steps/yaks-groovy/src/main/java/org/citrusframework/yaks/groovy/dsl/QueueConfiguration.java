@@ -17,8 +17,8 @@
 
 package org.citrusframework.yaks.groovy.dsl;
 
-import com.consol.citrus.Citrus;
-import com.consol.citrus.message.DefaultMessageQueue;
+import org.citrusframework.Citrus;
+import org.citrusframework.message.DefaultMessageQueue;
 
 /**
  * @author Christoph Deppisch

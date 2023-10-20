@@ -17,9 +17,9 @@
 
 package org.citrusframework.yaks.camelk.actions;
 
-import com.consol.citrus.AbstractTestActionBuilder;
-import com.consol.citrus.actions.AbstractTestAction;
-import com.consol.citrus.context.TestContext;
+import org.citrusframework.AbstractTestActionBuilder;
+import org.citrusframework.actions.AbstractTestAction;
+import org.citrusframework.context.TestContext;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksClusterType;
 import org.slf4j.Logger;
