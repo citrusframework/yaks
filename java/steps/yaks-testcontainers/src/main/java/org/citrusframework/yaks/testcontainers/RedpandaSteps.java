@@ -86,6 +86,7 @@ public class RedpandaSteps {
     public void startRedpanda() {
         redpandaContainer = new RedpandaContainer(DockerImageName.parse(RedpandaSettings.getImageName()).withTag(redpandaVersion))
                 .withLabel("app", "yaks")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-redpanda")
                 .withLabel("app.kubernetes.io/name", "redpanda")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
@@ -126,11 +127,16 @@ public class RedpandaSteps {
         }
 
         String containerId = redpandaContainer.getContainerId().substring(0, 12);
+        String containerName = redpandaContainer.getContainerName();
+
+        if (containerName.startsWith("/")) {
+            containerName = containerName.substring(1);
+        }
 
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_HOST", redpandaContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_CONTAINER_IP", redpandaContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_CONTAINER_ID", containerId);
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_CONTAINER_NAME", redpandaContainer.getContainerName());
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_CONTAINER_NAME", containerName);
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_PORT", String.valueOf(redpandaContainer.getMappedPort(REDPANDA_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_PORT", String.valueOf(redpandaContainer.getMappedPort(REDPANDA_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_LOCAL_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
@@ -139,10 +145,10 @@ public class RedpandaSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", "redpanda");
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", String.format("kd-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", String.format("kd-%s:%s", containerId, redpandaContainer.getMappedPort(REDPANDA_PORT)));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", String.format("yaks-redpanda-%s", containerId));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", String.format("yaks-redpanda-%s:%s", containerId, redpandaContainer.getMappedPort(REDPANDA_PORT)));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_KUBE_DOCK_HOST", String.format("kd-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_KUBE_DOCK_HOST", String.format("yaks-redpanda-%s", containerId));
     }
 }
