@@ -887,7 +887,7 @@ func addLogger(test *v1alpha1.Test, job *batchv1.Job) {
 	} else if test.Spec.Source.Language != gherkin.GetName() {
 		job.Spec.Template.Spec.Containers[0].Env = append(job.Spec.Template.Spec.Containers[0].Env, v1.EnvVar{
 			Name:  envvar.LoggersEnv,
-			Value: "com.consol.citrus=INFO,org.citrusframework.yaks=INFO",
+			Value: "org.citrusframework=INFO,org.citrusframework.yaks=INFO",
 		})
 	}
 }
