@@ -17,7 +17,6 @@
 
 package org.citrusframework.yaks.report;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
@@ -43,7 +42,7 @@ public class SystemOutTestReporter extends AbstractTestSuiteListener implements 
     private final OutputStreamReporter delegate;
 
     public SystemOutTestReporter() {
-        this.delegate = new OutputStreamReporter(new BufferedWriter(new OutputStreamWriter(System.out)));
+        this.delegate = new OutputStreamReporter(new OutputStreamWriter(System.out));
         this.delegate.setFormat("%s | %s%n");
     }
 
@@ -62,16 +61,17 @@ public class SystemOutTestReporter extends AbstractTestSuiteListener implements 
     @Override
     public void generateReport(TestResults testResults) {
         if (!LoggerFactory.getLogger(LoggingReporter.class).isInfoEnabled()) {
-            try {
-                delegate.generateReport(testResults);
-                delegate.getLogWriter().flush();
-            } catch (IOException e) {
-                LOG.warn("Failed to write test summary report", e);
-            }
+            delegate.generateReport(testResults);
         }
     }
 
     public void destroy() throws Exception {
+        try {
+            delegate.getLogWriter().flush();
+        } catch (IOException e) {
+            // do nothing
+        }
+
         delegate.getLogWriter().close();
     }
 }
