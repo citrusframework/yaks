@@ -83,6 +83,7 @@ public class MongoDBSteps {
     public void startMongo() {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
                 .withLabel("app", "yaks")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-mongodb")
                 .withLabel("app.kubernetes.io/name", "mongodb")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
@@ -120,10 +121,15 @@ public class MongoDBSteps {
     private void setConnectionSettings(MongoDBContainer mongoDBContainer, TestContext context) {
         if (mongoDBContainer.isRunning()) {
             String containerId = mongoDBContainer.getContainerId().substring(0, 12);
+            String containerName = mongoDBContainer.getContainerName();
+
+            if (containerName.startsWith("/")) {
+                containerName = containerName.substring(1);
+            }
 
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_IP", mongoDBContainer.getHost());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_ID", containerId);
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_NAME", mongoDBContainer.getContainerName());
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_CONTAINER_NAME", containerName);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_PORT", mongoDBContainer.getMappedPort(27017));
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_LOCAL_URL", mongoDBContainer.getReplicaSetUrl());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_LOCAL_URL", mongoDBContainer.getReplicaSetUrl());
@@ -133,13 +139,13 @@ public class MongoDBSteps {
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", mongoDBContainer.getReplicaSetUrl());
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", mongoDBContainer.getReplicaSetUrl());
             } else {
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", String.format("kd-%s", containerId));
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", String.format("mongodb://kd-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", String.format("mongodb://kd-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", String.format("yaks-mongodb-%s", containerId));
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", String.format("mongodb://yaks-mongodb-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", String.format("mongodb://yaks-mongodb-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
             }
 
 
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_KUBE_DOCK_HOST", String.format("kd-%s", containerId));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_KUBE_DOCK_HOST", String.format("yaks-mongodb-%s", containerId));
         }
     }
 }

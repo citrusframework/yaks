@@ -83,6 +83,7 @@ public class KafkaSteps {
     public void startKafka() {
         kafkaContainer = new KafkaContainer(DockerImageName.parse(KafkaSettings.getImageName()).withTag(kafkaVersion))
                 .withLabel("app", "yaks")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-kafka")
                 .withLabel("app.kubernetes.io/name", "kafka")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
@@ -122,11 +123,16 @@ public class KafkaSteps {
         }
 
         String containerId = kafkaContainer.getContainerId().substring(0, 12);
+        String containerName = kafkaContainer.getContainerName();
+
+        if (containerName.startsWith("/")) {
+            containerName = containerName.substring(1);
+        }
 
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_HOST", kafkaContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_CONTAINER_IP", kafkaContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_CONTAINER_ID", containerId);
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_CONTAINER_NAME", kafkaContainer.getContainerName());
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_CONTAINER_NAME", containerName);
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_PORT", String.valueOf(kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_PORT", String.valueOf(kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_LOCAL_BOOTSTRAP_SERVERS", kafkaContainer.getBootstrapServers());
@@ -135,10 +141,10 @@ public class KafkaSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", "kafka");
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", kafkaContainer.getBootstrapServers());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", String.format("kd-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", String.format("kd-%s:%s", containerId, kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", String.format("yaks-kafka-%s", containerId));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", String.format("yaks-kafka-%s:%s", containerId, kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_KUBE_DOCK_HOST", String.format("kd-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_KUBE_DOCK_HOST", String.format("yaks-kafka-%s", containerId));
     }
 }

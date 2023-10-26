@@ -113,6 +113,7 @@ public class PostgreSQLSteps {
                 .withPassword(password)
                 .withDatabaseName(databaseName)
                 .withLabel("app", "yaks")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-postgresql")
                 .withLabel("app.kubernetes.io/name", "postgresql")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
@@ -169,11 +170,16 @@ public class PostgreSQLSteps {
         }
 
         String containerId = postgreSQLContainer.getContainerId().substring(0, 12);
+        String containerName = postgreSQLContainer.getContainerName();
+
+        if (containerName.startsWith("/")) {
+            containerName = containerName.substring(1);
+        }
 
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_HOST", postgreSQLContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_IP", postgreSQLContainer.getHost());
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_ID", containerId);
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_NAME", postgreSQLContainer.getContainerName());
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_CONTAINER_NAME", containerName);
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_PORT", String.valueOf(postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_PORT", String.valueOf(postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)));
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_USERNAME", postgreSQLContainer.getUsername());
@@ -188,11 +194,11 @@ public class PostgreSQLSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", postgreSQLContainer.getJdbcUrl());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", postgreSQLContainer.getJdbcUrl());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", String.format("kd-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", String.format("jdbc:postgresql://kd-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", String.format("jdbc:postgresql://kd-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", String.format("yaks-postgresql-%s", containerId));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", String.format("jdbc:postgresql://yaks-postgresql-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", String.format("jdbc:postgresql://yaks-postgresql-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_KUBE_DOCK_HOST", String.format("kd-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_KUBE_DOCK_HOST", String.format("yaks-postgresql-%s", containerId));
     }
 }
