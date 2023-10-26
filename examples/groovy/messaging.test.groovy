@@ -53,13 +53,13 @@ given:
     }
 
 when:
-    - send().endpoint(hello)
-            .message()
-            .body('${text}')
-            .header("operation", "say-hello")
+    $(send().endpoint(hello)
+        .message()
+        .body('${text}')
+        .header("operation", "say-hello"))
 
 then:
-    - receive().endpoint(hello)
-            .message()
-            .header("operation", "say-hello")
-            .body('${text}')
+    $(receive().endpoint(hello)
+        .message()
+        .header("operation", "say-hello")
+        .body('${text}'))

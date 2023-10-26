@@ -16,4 +16,4 @@
  */
 
 given:
-  - echo("Hello! YAKS rocks!")
+    $(echo("Hello! YAKS rocks!"))
