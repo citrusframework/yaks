@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 import org.citrusframework.endpoint.EndpointAdapter
 import org.citrusframework.endpoint.adapter.RequestDispatchingEndpointAdapter
 import org.citrusframework.endpoint.adapter.StaticEndpointAdapter
@@ -24,16 +23,15 @@ import org.citrusframework.endpoint.adapter.mapping.SimpleMappingStrategy
 import org.citrusframework.http.message.HttpMessage
 import org.citrusframework.http.message.HttpMessageHeaders
 import org.citrusframework.message.Message
+import org.citrusframework.spi.Resources
 import org.citrusframework.util.FileUtils
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.core.io.ClassPathResource
 
 EndpointAdapter templateResponseAdapter() {
     RequestDispatchingEndpointAdapter dispatchingEndpointAdapter = new RequestDispatchingEndpointAdapter()
 
     Map<String, EndpointAdapter> mappings = new HashMap<>()
-
     mappings.put("/", indexPageHandler())
     mappings.put("/favicon.ico", faviconHandler())
 
@@ -51,7 +49,7 @@ static EndpointAdapter indexPageHandler() {
         @Override
         protected Message handleMessageInternal(Message message) {
             try {
-                return new HttpMessage(FileUtils.readToString(new ClassPathResource("index.html")))
+                return new HttpMessage(FileUtils.readToString(Resources.fromClasspath("index.html")))
                         .contentType(MediaType.TEXT_HTML_VALUE)
                         .status(HttpStatus.OK)
             } catch (IOException ignored) {

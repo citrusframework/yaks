@@ -19,7 +19,7 @@ config:
   runtime:
     selenium:
       enabled: true
-      image: selenium/standalone-chrome:109.0
+      image: selenium/standalone-chrome:118.0
       noVNC: true
       env:
         - name: SE_VNC_NO_PASSWORD
