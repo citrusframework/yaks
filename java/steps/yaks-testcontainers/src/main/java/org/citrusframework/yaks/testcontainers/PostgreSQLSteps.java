@@ -22,26 +22,27 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.script.ScriptException;
 
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusFramework;
 import org.citrusframework.annotations.CitrusResource;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
-import io.cucumber.java.en.Given;
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.citrusframework.yaks.YaksSettings;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 
 public class PostgreSQLSteps {
 
@@ -66,6 +67,8 @@ public class PostgreSQLSteps {
 
     private Map<String, String> env = new HashMap<>();
 
+    private String serviceName = PostgreSQLSettings.getServiceName();
+
     @Before
     public void before(Scenario scenario) {
         if (postgreSQLContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(PostgreSQLContainer.class)) {
@@ -77,6 +80,11 @@ public class PostgreSQLSteps {
     @Given("^PostgreSQL version (^\\s+)$")
     public void setPostgreSQLVersion(String version) {
         this.postgreSQLVersion = version;
+    }
+
+    @Given("^PostgreSQL service name (^\\s+)$")
+    public void setPostgreSQLServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     @Given("^PostgreSQL startup timeout is (\\d+)(?: s| seconds)$")
@@ -113,11 +121,12 @@ public class PostgreSQLSteps {
                 .withPassword(password)
                 .withDatabaseName(databaseName)
                 .withLabel("app", "yaks")
-                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-postgresql")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", serviceName)
                 .withLabel("app.kubernetes.io/name", "postgresql")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
-                .withNetworkAliases("postgresql")
+                .withNetwork(Network.newNetwork())
+                .withNetworkAliases(serviceName)
                 .withEnv(env)
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
@@ -190,15 +199,15 @@ public class PostgreSQLSteps {
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_LOCAL_URL", postgreSQLContainer.getJdbcUrl());
 
         if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", "postgresql");
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", serviceName);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", postgreSQLContainer.getJdbcUrl());
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", postgreSQLContainer.getJdbcUrl());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", String.format("yaks-postgresql-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", String.format("jdbc:postgresql://yaks-postgresql-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", String.format("jdbc:postgresql://yaks-postgresql-%s:%s/%s", containerId, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_NAME", serviceName);
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_SERVICE_URL", String.format("jdbc:postgresql://%s:%s/%s", serviceName, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_URL", String.format("jdbc:postgresql://%s:%s/%s", serviceName, postgreSQLContainer.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT), postgreSQLContainer.getDatabaseName()));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_KUBE_DOCK_HOST", String.format("yaks-postgresql-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "POSTGRESQL_KUBE_DOCK_HOST", serviceName);
     }
 }

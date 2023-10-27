@@ -29,6 +29,10 @@ public class KafkaSettings {
     private static final String KAFKA_VERSION_ENV = KAFKA_ENV_PREFIX + "KAFKA_VERSION";
     private static final String KAFKA_VERSION_DEFAULT = "7.5.1";
 
+    private static final String KAFKA_SERVICE_NAME_PROPERTY = KAFKA_PROPERTY_PREFIX + "service.name";
+    private static final String KAFKA_SERVICE_NAME_ENV = KAFKA_ENV_PREFIX + "KAFKA_SERVICE_NAME";
+    private static final String KAFKA_SERVICE_NAME_DEFAULT = "yaks-kafka";
+
     private static final String KAFKA_IMAGE_NAME_PROPERTY = KAFKA_PROPERTY_PREFIX + "image.name";
     private static final String KAFKA_IMAGE_NAME_ENV = KAFKA_ENV_PREFIX + "KAFKA_IMAGE_NAME";
     private static final String KAFKA_IMAGE_NAME_DEFAULT = "confluentinc/cp-kafka";
@@ -57,6 +61,15 @@ public class KafkaSettings {
     public static String getVersion() {
         return System.getProperty(KAFKA_VERSION_PROPERTY,
                 System.getenv(KAFKA_VERSION_ENV) != null ? System.getenv(KAFKA_VERSION_ENV) : KAFKA_VERSION_DEFAULT);
+    }
+
+    /**
+     * Kafka service name.
+     * @return
+     */
+    public static String getServiceName() {
+        return System.getProperty(KAFKA_SERVICE_NAME_PROPERTY,
+                System.getenv(KAFKA_SERVICE_NAME_ENV) != null ? System.getenv(KAFKA_SERVICE_NAME_ENV) : KAFKA_SERVICE_NAME_DEFAULT);
     }
 
     /**

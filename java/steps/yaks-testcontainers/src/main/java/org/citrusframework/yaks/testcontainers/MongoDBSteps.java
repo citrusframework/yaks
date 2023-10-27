@@ -32,6 +32,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.citrusframework.yaks.YaksSettings;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
@@ -56,6 +57,8 @@ public class MongoDBSteps {
 
     private Map<String, String> env = new HashMap<>();
 
+    private String serviceName = MongoDBSettings.getServiceName();
+
     @Before
     public void before(Scenario scenario) {
         if (mongoDBContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(MongoDBContainer.class)) {
@@ -67,6 +70,11 @@ public class MongoDBSteps {
     @Given("^MongoDB version (^\\s+)$")
     public void setMongoDBVersion(String version) {
         this.mongoDBVersion = version;
+    }
+
+    @Given("^MongoDB service name (^\\s+)$")
+    public void setMongoDBServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     @Given("^MongoDB startup timeout is (\\d+)(?: s| seconds)$")
@@ -83,11 +91,12 @@ public class MongoDBSteps {
     public void startMongo() {
         mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo").withTag(mongoDBVersion))
                 .withLabel("app", "yaks")
-                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-mongodb")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", serviceName)
                 .withLabel("app.kubernetes.io/name", "mongodb")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
-                .withNetworkAliases("mongodb")
+                .withNetwork(Network.newNetwork())
+                .withNetworkAliases(serviceName)
                 .withEnv(env)
                 .waitingFor(Wait.forLogMessage("(?i).*waiting for connections.*", 1)
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
@@ -135,17 +144,16 @@ public class MongoDBSteps {
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_LOCAL_URL", mongoDBContainer.getReplicaSetUrl());
 
             if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", "mongodb");
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", serviceName);
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", mongoDBContainer.getReplicaSetUrl());
                 context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", mongoDBContainer.getReplicaSetUrl());
             } else {
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", String.format("yaks-mongodb-%s", containerId));
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", String.format("mongodb://yaks-mongodb-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
-                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", String.format("mongodb://yaks-mongodb-%s:%d/test", containerId, mongoDBContainer.getMappedPort(27017)));
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_NAME", serviceName);
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_SERVICE_URL", String.format("mongodb://%s:%d/test", serviceName, mongoDBContainer.getMappedPort(27017)));
+                context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_URL", String.format("mongodb://%s:%d/test", serviceName, mongoDBContainer.getMappedPort(27017)));
             }
 
-
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_KUBE_DOCK_HOST", String.format("yaks-mongodb-%s", containerId));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "MONGODB_KUBE_DOCK_HOST", serviceName);
         }
     }
 }
