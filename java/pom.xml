@@ -117,6 +117,7 @@
     <snakeyaml.version>2.2</snakeyaml.version>
     <spring.version>6.0.13</spring.version>
     <testcontainers.version>1.19.1</testcontainers.version>
+    <xstream.version>1.4.20</xstream.version>
 
     <asciidoctor-maven-plugin.version>2.2.4</asciidoctor-maven-plugin.version>
     <asciidoctorj-pdf.version>1.5.3</asciidoctorj-pdf.version>
@@ -670,6 +671,16 @@
           <groupId>org.sonatype.plugins</groupId>
           <artifactId>nexus-staging-maven-plugin</artifactId>
           <version>${nexus-staging-maven-plugin.version}</version>
+          <dependencies>
+            <!--
+              TODO: Remove after OSSRH-66257, NEXUS-26993 are fixed,
+            -->
+            <dependency>
+              <groupId>com.thoughtworks.xstream</groupId>
+              <artifactId>xstream</artifactId>
+              <version>${xstream.version}</version>
+            </dependency>
+          </dependencies>
           <configuration>
             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
             <serverId>sonatype-nexus-staging</serverId>
