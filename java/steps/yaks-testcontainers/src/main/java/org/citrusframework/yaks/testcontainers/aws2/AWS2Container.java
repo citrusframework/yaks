@@ -60,7 +60,6 @@ public class AWS2Container extends GenericContainer<AWS2Container> {
 
         withServices(services);
         withExposedPorts(PORT);
-        withNetworkAliases("localstack");
         waitingFor(Wait.forLogMessage(".*Ready\\.\n", 1));
     }
 

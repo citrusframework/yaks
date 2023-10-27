@@ -32,6 +32,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.citrusframework.yaks.YaksSettings;
 import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.citrusframework.container.FinallySequence.Builder.doFinally;
@@ -54,6 +55,8 @@ public class KafkaSteps {
 
     private int startupTimeout = KafkaSettings.getStartupTimeout();
 
+    private String serviceName = KafkaSettings.getServiceName();
+
     private Map<String, String> env = new HashMap<>();
 
     @Before
@@ -67,6 +70,11 @@ public class KafkaSteps {
     @Given("^Kafka container version (^\\s+)$")
     public void setKafkaVersion(String version) {
         this.kafkaVersion = version;
+    }
+
+    @Given("^Kafka service name (^\\s+)$")
+    public void setKafkaServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     @Given("^Kafka container startup timeout is (\\d+)(?: s| seconds)$")
@@ -83,11 +91,12 @@ public class KafkaSteps {
     public void startKafka() {
         kafkaContainer = new KafkaContainer(DockerImageName.parse(KafkaSettings.getImageName()).withTag(kafkaVersion))
                 .withLabel("app", "yaks")
-                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-kafka")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", serviceName)
                 .withLabel("app.kubernetes.io/name", "kafka")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
-                .withNetworkAliases("kafka")
+                .withNetwork(Network.newNetwork())
+                .withNetworkAliases(serviceName)
                 .withEnv(env)
                 .withStartupTimeout(Duration.of(startupTimeout, SECONDS));
 
@@ -138,13 +147,13 @@ public class KafkaSteps {
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_LOCAL_BOOTSTRAP_SERVERS", kafkaContainer.getBootstrapServers());
 
         if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", "kafka");
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", serviceName);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", kafkaContainer.getBootstrapServers());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", String.format("yaks-kafka-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", String.format("yaks-kafka-%s:%s", containerId, kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_SERVICE_NAME", serviceName);
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_BOOTSTRAP_SERVERS", String.format("%s:%s", serviceName, kafkaContainer.getMappedPort(KafkaContainer.KAFKA_PORT)));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_KUBE_DOCK_HOST", String.format("yaks-kafka-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "KAFKA_KUBE_DOCK_HOST", serviceName);
     }
 }

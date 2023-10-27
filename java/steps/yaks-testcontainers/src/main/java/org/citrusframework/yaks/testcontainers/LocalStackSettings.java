@@ -29,6 +29,10 @@ public class LocalStackSettings {
     private static final String VERSION_ENV = LOCALSTACK_ENV_PREFIX + "VERSION";
     public static final String VERSION_DEFAULT = "2.3.2";
 
+    private static final String SERVICE_NAME_PROPERTY = LOCALSTACK_PROPERTY_PREFIX + "service.name";
+    private static final String SERVICE_NAME_ENV = LOCALSTACK_ENV_PREFIX + "SERVICE_NAME";
+    public static final String SERVICE_NAME_DEFAULT = "yaks-localstack";
+
     private static final String STARTUP_TIMEOUT_PROPERTY = LOCALSTACK_PROPERTY_PREFIX + "startup.timeout";
     private static final String STARTUP_TIMEOUT_ENV = LOCALSTACK_ENV_PREFIX + "STARTUP_TIMEOUT";
     private static final String STARTUP_TIMEOUT_DEFAULT = "180";
@@ -44,6 +48,15 @@ public class LocalStackSettings {
     public static String getVersion() {
         return System.getProperty(VERSION_PROPERTY,
                 System.getenv(VERSION_ENV) != null ? System.getenv(VERSION_ENV) : VERSION_DEFAULT);
+    }
+
+    /**
+     * LocalStack service name.
+     * @return the service name.
+     */
+    public static String getServiceName() {
+        return System.getProperty(SERVICE_NAME_PROPERTY,
+                System.getenv(SERVICE_NAME_ENV) != null ? System.getenv(SERVICE_NAME_ENV) : SERVICE_NAME_DEFAULT);
     }
 
     /**

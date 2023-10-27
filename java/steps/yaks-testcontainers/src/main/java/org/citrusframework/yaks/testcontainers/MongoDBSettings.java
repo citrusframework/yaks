@@ -29,6 +29,10 @@ public class MongoDBSettings {
     private static final String VERSION_ENV = MONGODB_ENV_PREFIX + "VERSION";
     private static final String VERSION_DEFAULT = "4.0.10";
 
+    private static final String SERVICE_NAME_PROPERTY = MONGODB_PROPERTY_PREFIX + "service.name";
+    private static final String SERVICE_NAME_ENV = MONGODB_ENV_PREFIX + "SERVICE_NAME";
+    private static final String SERVICE_NAME_DEFAULT = "yaks-mongodb";
+
     private static final String STARTUP_TIMEOUT_PROPERTY = MONGODB_PROPERTY_PREFIX + "startup.timeout";
     private static final String STARTUP_TIMEOUT_ENV = MONGODB_ENV_PREFIX + "STARTUP_TIMEOUT";
     private static final String STARTUP_TIMEOUT_DEFAULT = "180";
@@ -44,6 +48,15 @@ public class MongoDBSettings {
     public static String getMongoDBVersion() {
         return System.getProperty(VERSION_PROPERTY,
                 System.getenv(VERSION_ENV) != null ? System.getenv(VERSION_ENV) : VERSION_DEFAULT);
+    }
+
+    /**
+     * MongoDB service name.
+     * @return
+     */
+    public static String getServiceName() {
+        return System.getProperty(SERVICE_NAME_PROPERTY,
+                System.getenv(SERVICE_NAME_ENV) != null ? System.getenv(SERVICE_NAME_ENV) : SERVICE_NAME_DEFAULT);
     }
 
     /**

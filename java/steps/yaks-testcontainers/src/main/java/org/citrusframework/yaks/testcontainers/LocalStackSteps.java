@@ -24,27 +24,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
 import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusFramework;
 import org.citrusframework.annotations.CitrusResource;
 import org.citrusframework.context.TestContext;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
-import io.cucumber.java.en.Given;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
-import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesVariableNames;
 import org.citrusframework.yaks.testcontainers.aws2.AWS2Container;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.citrusframework.container.FinallySequence.Builder.doFinally;
 
 public class LocalStackSteps {
 
@@ -65,6 +64,8 @@ public class LocalStackSteps {
 
     private Map<String, String> env = new HashMap<>();
 
+    private String serviceName = LocalStackSettings.getServiceName();
+
     @Before
     public void before(Scenario scenario) {
         if (aws2Container == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(AWS2Container.class)) {
@@ -77,6 +78,11 @@ public class LocalStackSteps {
     @Given("^LocalStack version (^\\s+)$")
     public void setLocalStackVersion(String version) {
         this.localStackVersion = version;
+    }
+
+    @Given("^LocalStack service name (^\\s+)$")
+    public void setLocalStackServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     @Given("^LocalStack env settings$")
@@ -99,10 +105,12 @@ public class LocalStackSteps {
         aws2Container = new AWS2Container(localStackVersion)
                 .withServices(services.toArray(AWS2Container.AWS2Service[]::new))
                 .withLabel("app", "yaks")
-                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-aws2")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", serviceName)
                 .withLabel("app.kubernetes.io/name", "build")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
+                .withNetwork(Network.newNetwork())
+                .withNetworkAliases(serviceName)
                 .withEnv(env)
                 .waitingFor(Wait.forListeningPort()
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
@@ -155,36 +163,28 @@ public class LocalStackSteps {
             context.setVariable(getEnvVarName("SERVICE_LOCAL_URL"), String.format("http://localhost:%s", serviceEndpoint.getPort()));
 
             if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-                context.setVariable(getEnvVarName("SERVICE_NAME"), "localstack");
-                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
+                context.setVariable(getEnvVarName("SERVICE_NAME"), serviceName);
+                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://localhost:%s", serviceEndpoint.getPort()));
             } else {
-                context.setVariable(getEnvVarName("SERVICE_NAME"), String.format("yaks-aws2-%s", containerId));
-                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://yaks-aws2-%s:%s", containerId, serviceEndpoint.getPort()));
+                context.setVariable(getEnvVarName("SERVICE_NAME"), serviceName);
+                context.setVariable(getEnvVarName("SERVICE_URL"), String.format("http://%s:%s", serviceName, serviceEndpoint.getPort()));
             }
 
             services.forEach(service -> {
-                String serviceName = service.getServiceName().toUpperCase(Locale.US);
+                String aws2ServiceName = service.getServiceName().toUpperCase(Locale.US);
 
                 if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", aws2Container.getHostIpAddress(), serviceEndpoint.getPort()));
-                } else if (service == AWS2Container.AWS2Service.S3) {
-                    // Explicitly use cluster IP address in order to enable path-style access on S3 service
-                    Optional<String> clusterIp = KubernetesSupport.getServiceClusterIp(citrus, String.format("yaks-aws2-%s", containerId), getNamespace(context));
-                    if (clusterIp.isPresent()) {
-                        context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://%s:%s", clusterIp.get(), serviceEndpoint.getPort()));
-                    } else {
-                        context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://yaks-aws2-%s:%s", containerId, serviceEndpoint.getPort()));
-                    }
+                    context.setVariable(getEnvVarName(String.format("%s_URL", aws2ServiceName)), String.format("http://localhost:%s", serviceEndpoint.getPort()));
                 } else {
-                    context.setVariable(getEnvVarName(String.format("%s_URL", serviceName)), String.format("http://yaks-aws2-%s:%s", containerId, serviceEndpoint.getPort()));
+                    context.setVariable(getEnvVarName(String.format("%s_URL", aws2ServiceName)), String.format("http://%s:%s", serviceName, serviceEndpoint.getPort()));
                 }
 
-                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", serviceName)), String.format("http://localhost:%s", serviceEndpoint.getPort()));
-                context.setVariable(getEnvVarName(String.format("%s_PORT", serviceName)), serviceEndpoint.getPort());
+                context.setVariable(getEnvVarName(String.format("%s_LOCAL_URL", aws2ServiceName)), String.format("http://localhost:%s", serviceEndpoint.getPort()));
+                context.setVariable(getEnvVarName(String.format("%s_PORT", aws2ServiceName)), serviceEndpoint.getPort());
             });
 
-            context.setVariable(getEnvVarName("KUBE_DOCK_SERVICE_URL"), String.format("http://yaks-aws2-%s:%s", containerId, serviceEndpoint.getPort()));
-            context.setVariable(getEnvVarName("KUBE_DOCK_HOST"), String.format("yaks-aws2-%s", containerId));
+            context.setVariable(getEnvVarName("KUBE_DOCK_SERVICE_URL"), String.format("http://%s:%s", serviceName, serviceEndpoint.getPort()));
+            context.setVariable(getEnvVarName("KUBE_DOCK_HOST"), serviceName);
 
             for (Map.Entry<Object, Object> connectionProperty : aws2Container.getConnectionProperties().entrySet()) {
                 context.setVariable(connectionProperty.getKey().toString(), connectionProperty.getValue().toString());

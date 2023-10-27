@@ -28,6 +28,7 @@ S3Client s3 = S3Client
                         "${YAKS_TESTCONTAINERS_LOCALSTACK_ACCESS_KEY}",
                         "${YAKS_TESTCONTAINERS_LOCALSTACK_SECRET_KEY}")
         ))
+        .forcePathStyle(true)
         .region(Region.of("${YAKS_TESTCONTAINERS_LOCALSTACK_REGION}"))
         .build()
 

@@ -31,6 +31,10 @@ public class PostgreSQLSettings {
     private static final String POSTGRESQL_VERSION_ENV = POSTGRESQL_ENV_PREFIX + "POSTGRESQL_VERSION";
     private static final String POSTGRESQL_VERSION_DEFAULT = PostgreSQLContainer.DEFAULT_TAG;
 
+    private static final String SERVICE_NAME_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "service.name";
+    private static final String SERVICE_NAME_ENV = POSTGRESQL_ENV_PREFIX + "SERVICE_NAME";
+    private static final String SERVICE_NAME_DEFAULT = "yaks-postgresql";
+
     private static final String DATABASE_NAME_PROPERTY = POSTGRESQL_PROPERTY_PREFIX + "db.name";
     private static final String DATABASE_NAME_ENV = POSTGRESQL_ENV_PREFIX + "DB_NAME";
     private static final String DATABASE_NAME_DEFAULT = "test";
@@ -49,6 +53,15 @@ public class PostgreSQLSettings {
 
     private PostgreSQLSettings() {
         // prevent instantiation of utility class
+    }
+
+    /**
+     * PostgreSQL service name.
+     * @return default service name.
+     */
+    public static String getServiceName() {
+        return System.getProperty(SERVICE_NAME_PROPERTY,
+                System.getenv(SERVICE_NAME_ENV) != null ? System.getenv(SERVICE_NAME_ENV) : SERVICE_NAME_DEFAULT);
     }
 
     /**

@@ -29,6 +29,10 @@ public class RedpandaSettings {
     private static final String REDPANDA_VERSION_ENV = REDPANDA_ENV_PREFIX + "REDPANDA_VERSION";
     private static final String REDPANDA_VERSION_DEFAULT = "v23.1.19";
 
+    private static final String REDPANDA_SERVICE_NAME_PROPERTY = REDPANDA_PROPERTY_PREFIX + "service.name";
+    private static final String REDPANDA_SERVICE_NAME_ENV = REDPANDA_ENV_PREFIX + "REDPANDA_SERVICE_NAME";
+    private static final String REDPANDA_SERVICE_NAME_DEFAULT = "yaks-redpanda";
+
     private static final String REDPANDA_IMAGE_NAME_PROPERTY = REDPANDA_PROPERTY_PREFIX + "image.name";
     private static final String REDPANDA_IMAGE_NAME_ENV = REDPANDA_ENV_PREFIX + "REDPANDA_IMAGE_NAME";
     private static final String REDPANDA_IMAGE_NAME_DEFAULT = "docker.redpanda.com/vectorized/redpanda";
@@ -57,6 +61,15 @@ public class RedpandaSettings {
     public static String getVersion() {
         return System.getProperty(REDPANDA_VERSION_PROPERTY,
                 System.getenv(REDPANDA_VERSION_ENV) != null ? System.getenv(REDPANDA_VERSION_ENV) : REDPANDA_VERSION_DEFAULT);
+    }
+
+    /**
+     * Redpanda service name setting.
+     * @return
+     */
+    public static String getServiceName() {
+        return System.getProperty(REDPANDA_SERVICE_NAME_PROPERTY,
+                System.getenv(REDPANDA_SERVICE_NAME_ENV) != null ? System.getenv(REDPANDA_SERVICE_NAME_ENV) : REDPANDA_SERVICE_NAME_DEFAULT);
     }
 
     /**

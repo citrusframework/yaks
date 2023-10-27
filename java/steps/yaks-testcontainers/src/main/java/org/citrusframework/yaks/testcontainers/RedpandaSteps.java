@@ -31,6 +31,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import org.citrusframework.yaks.YaksSettings;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.redpanda.RedpandaContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -59,6 +60,8 @@ public class RedpandaSteps {
 
     private Map<String, String> env = new HashMap<>();
 
+    private String serviceName = RedpandaSettings.getServiceName();
+
     @Before
     public void before(Scenario scenario) {
         if (redpandaContainer == null && citrus.getCitrusContext().getReferenceResolver().isResolvable(RedpandaContainer.class)) {
@@ -70,6 +73,11 @@ public class RedpandaSteps {
     @Given("^Redpanda version (^\\s+)$")
     public void setRedpandaVersion(String version) {
         this.redpandaVersion = version;
+    }
+
+    @Given("^Redpanda service name (^\\s+)$")
+    public void setRedpandaServiceName(String serviceName) {
+        this.serviceName = serviceName;
     }
 
     @Given("^Redpanda startup timeout is (\\d+)(?: s| seconds)$")
@@ -86,11 +94,12 @@ public class RedpandaSteps {
     public void startRedpanda() {
         redpandaContainer = new RedpandaContainer(DockerImageName.parse(RedpandaSettings.getImageName()).withTag(redpandaVersion))
                 .withLabel("app", "yaks")
-                .withLabel("com.joyrex2001.kubedock.name-prefix", "yaks-redpanda")
+                .withLabel("com.joyrex2001.kubedock.name-prefix", serviceName)
                 .withLabel("app.kubernetes.io/name", "redpanda")
                 .withLabel("app.kubernetes.io/part-of", TestContainersSettings.getTestName())
                 .withLabel("app.openshift.io/connects-to", TestContainersSettings.getTestId())
-                .withNetworkAliases("redpanda")
+                .withNetwork(Network.newNetwork())
+                .withNetworkAliases(serviceName)
                 .withEnv(env)
                 .waitingFor(Wait.forLogMessage(".*Started Kafka API server.*", 1)
                         .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
@@ -142,13 +151,13 @@ public class RedpandaSteps {
         context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_LOCAL_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
 
         if (YaksSettings.isLocal() || !TestContainersSettings.isKubedockEnabled()) {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", "redpanda");
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", serviceName);
             context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", redpandaContainer.getBootstrapServers());
         } else {
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", String.format("yaks-redpanda-%s", containerId));
-            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", String.format("yaks-redpanda-%s:%s", containerId, redpandaContainer.getMappedPort(REDPANDA_PORT)));
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_SERVICE_NAME", serviceName);
+            context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_BOOTSTRAP_SERVERS", String.format("%s:%s", serviceName, redpandaContainer.getMappedPort(REDPANDA_PORT)));
         }
 
-        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_KUBE_DOCK_HOST", String.format("yaks-redpanda-%s", containerId));
+        context.setVariable(TestContainersSteps.TESTCONTAINERS_VARIABLE_PREFIX + "REDPANDA_KUBE_DOCK_HOST", serviceName);
     }
 }
