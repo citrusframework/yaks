@@ -55,38 +55,38 @@ release() {
     local maven_opts="$(extract_maven_opts)"
 
     # Set release version in sources
-    set_version "$working_dir" "$release_version" "$snapshot_version" "$image"
-    update_olm "$working_dir" "$release_version" "$snapshot_version"
+#    set_version "$working_dir" "$release_version" "$snapshot_version" "$image"
+#    update_olm "$working_dir" "$release_version" "$snapshot_version"
 
-    echo "Building virtual file system ..."
-    eval go run ${working_dir}/cmd/util/vfs-gen/ config
+#    echo "Building virtual file system ..."
+#    eval go run ${working_dir}/cmd/util/vfs-gen/ config
 
     # Cross compile binaries
     local build_dir=${working_dir}/xtmp
     local build_flags=$(readopt --go-flags)
 
-    cross_compile "$working_dir" yaks-${release_version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
-    cross_compile "$working_dir" yaks-${release_version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
-    cross_compile "$working_dir" yaks-${release_version}-mac-arm64bit "$build_dir" darwin arm64 "$build_flags"
-    cross_compile "$working_dir" yaks-${release_version}-windows-64bit "$build_dir" windows amd64 "$build_flags"
+#    cross_compile "$working_dir" yaks-${release_version}-linux-64bit "$build_dir" linux amd64 "$build_flags"
+#    cross_compile "$working_dir" yaks-${release_version}-mac-64bit "$build_dir" darwin amd64 "$build_flags"
+#    cross_compile "$working_dir" yaks-${release_version}-mac-arm64bit "$build_dir" darwin arm64 "$build_flags"
+#    cross_compile "$working_dir" yaks-${release_version}-windows-64bit "$build_dir" windows amd64 "$build_flags"
 
     # Update project metadata to new release version
-    if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
-        update_project_metadata "$working_dir" "$release_version" "$next_version"
-    else
-        update_project_metadata "$working_dir" "$release_version" "$snapshot_version"
-    fi
+#    if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
+#        update_project_metadata "$working_dir" "$release_version" "$next_version"
+#    else
+#        update_project_metadata "$working_dir" "$release_version" "$snapshot_version"
+#    fi
 
-    if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --snapshot-release) ]; then
+#    if [ ! $(hasflag --local-release) ] && [ ! $(hasflag --snapshot-release) ]; then
         # Commit project metadata for new version
-        git_commit "$working_dir" project.yml "Update project metadata for $release_version"
+#        git_commit "$working_dir" project.yml "Update project metadata for $release_version"
 
         # Commit docs overview.adoc
-        git_commit "$working_dir" overview.adoc "Update docs overview for $release_version"
-    fi
+#        git_commit "$working_dir" overview.adoc "Update docs overview for $release_version"
+#    fi
 
     # Build and stage artifacts
-    build_artifacts "$working_dir" "$release_version" "$maven_opts"
+#    build_artifacts "$working_dir" "$release_version" "$maven_opts"
 
     # For a test run, we are done
     if [ $(hasflag --dry-run -n) ]; then
@@ -103,10 +103,10 @@ release() {
     # Commit, tag, release, push
     # --------------------------
 
-    if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
+#    if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
         # Release staging repo
-        release_staging_repo "$working_dir" "$maven_opts"
-    fi
+#        release_staging_repo "$working_dir" "$maven_opts"
+#    fi
 
     # Build Docker image
     mkdir -p ${working_dir}/build/_output/bin

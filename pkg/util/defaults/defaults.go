@@ -23,7 +23,7 @@ package defaults
 
 const (
 	// Version --
-	Version = "0.17.0-SNAPSHOT"
+	Version = "0.17.0"
 
 	// LocalRepository --
 	LocalRepository = "/tmp/artifacts/m2"
