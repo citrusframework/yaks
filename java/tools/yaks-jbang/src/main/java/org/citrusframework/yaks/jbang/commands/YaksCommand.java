@@ -57,7 +57,7 @@ public abstract class YaksCommand implements Callable<Integer> {
 
     public File getOutputFile(String pid) {
         if (yaksDir == null) {
-            yaksDir = new File(System.getProperty("user.home"), ".camel");
+            yaksDir = new File(System.getProperty("user.home"), ".yaks");
         }
         return new File(yaksDir, pid + "-output.json");
     }

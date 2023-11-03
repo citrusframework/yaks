@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-//JAVA 11+
+//JAVA 17+
 //REPOS mavencentral
 //DEPS org.citrusframework.yaks:yaks-parent:${yaks.jbang.version:0.17.0}@pom
 //DEPS org.citrusframework.yaks:yaks-jbang:${yaks.jbang.version:0.17.0}
