@@ -94,13 +94,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
+        <version>${maven-antrun-plugin.version}</version>
         <executions>
           <execution>
             <phase>prepare-package</phase>
             <configuration>
-              <tasks>
+              <target>
                 <chmod file="${basedir}/dist/*.java" perm="u+x" />
-              </tasks>
+              </target>
             </configuration>
             <goals>
               <goal>run</goal>
