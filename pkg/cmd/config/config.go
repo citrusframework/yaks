@@ -23,7 +23,7 @@ const (
 )
 
 var DefaultVersions = Versions{
-	"citrus.version":           "4.0.0",
+	"citrus.version":           "4.0.1",
 	"camel.version":            "4.1.0",
 	"apache.camel.version":     "4.1.0",
 	"spring.version":           "6.0.13",

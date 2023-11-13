@@ -98,7 +98,7 @@
     <assertj-core.version>3.24.2</assertj-core.version>
     <awaitility.version>4.2.0</awaitility.version>
     <aws-java-sdk2.version>2.21.2</aws-java-sdk2.version>
-    <citrus.version>4.0.0</citrus.version>
+    <citrus.version>4.0.1</citrus.version>
     <commons.dbcp2.version>2.10.0</commons.dbcp2.version>
     <cucumber.version>7.14.0</cucumber.version>
     <groovy.version>3.0.19</groovy.version>
