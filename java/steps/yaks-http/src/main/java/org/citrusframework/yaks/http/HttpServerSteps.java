@@ -27,6 +27,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.citrusframework.Citrus;
 import org.citrusframework.CitrusSettings;
 import org.citrusframework.TestCaseRunner;
@@ -38,16 +44,13 @@ import org.citrusframework.http.actions.HttpServerActionBuilder;
 import org.citrusframework.http.actions.HttpServerRequestActionBuilder;
 import org.citrusframework.http.actions.HttpServerResponseActionBuilder;
 import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.http.security.BasicAuthConstraint;
+import org.citrusframework.http.security.SecurityHandlerFactory;
+import org.citrusframework.http.security.User;
 import org.citrusframework.http.server.HttpServer;
 import org.citrusframework.http.server.HttpServerBuilder;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -57,9 +60,10 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RequestMethod;
 
+import static org.citrusframework.TestActionBuilder.logger;
 import static org.citrusframework.http.actions.HttpActionBuilder.http;
 import static org.citrusframework.validation.PathExpressionValidationContext.Builder.pathExpression;
 
@@ -104,6 +108,12 @@ public class HttpServerSteps implements HttpSteps {
 
     private String sslKeyStorePath = HttpSettings.getSslKeyStorePath();
     private String sslKeyStorePassword = HttpSettings.getSslKeyStorePassword();
+
+    private String authMethod = HttpSettings.getServerAuthMethod();
+    private String authPath = HttpSettings.getServerAuthPath();
+    private String[] authUserRoles = HttpSettings.getServerAuthUserRoles();
+    private String authUser = HttpSettings.getServerAuthUser();
+    private String authPassword = HttpSettings.getServerAuthPassword();
 
     private long timeout = HttpSettings.getTimeout();
 
@@ -178,12 +188,50 @@ public class HttpServerSteps implements HttpSteps {
     @Given("^HTTP server secure port (\\d+)$")
     public void setSecureServerPort(int port) {
         this.securePort = port;
-        enableSecureConnector();
+        setSecureConnector("enable");
     }
 
-    @Given("^enable secure HTTP server$")
-    public void enableSecureConnector() {
-        sslConnector = sslConnector();
+    @Given("^HTTP server (enable|disable) basic auth$")
+    public void setBasicAuth(String mode) {
+        if ("enable".equals(mode)) {
+            this.authMethod = "basic";
+        } else {
+            this.authMethod = "none";
+        }
+    }
+
+    @Given("^HTTP server auth method (basic|digest|ntlm)$")
+    public void setAuthMethod(String authMethod) {
+        this.authMethod = authMethod;
+    }
+
+    @Given("^HTTP server auth path ([^\\s]+)$")
+    public void setAuthPath(String authPath) {
+        this.authPath = authPath;
+    }
+
+    @Given("^HTTP server auth user roles ([^\\s]+)$")
+    public void setAuthUserRoles(String authUserRoles) {
+        this.authUserRoles = authUserRoles.split(",");
+    }
+
+    @Given("^HTTP server auth user ([^\\s]+)$")
+    public void setAuthUser(String authUser) {
+        this.authUser = authUser;
+    }
+
+    @Given("^HTTP server auth password ([^\\s]+)$")
+    public void setAuthPassword(String authPassword) {
+        this.authPassword = authPassword;
+    }
+
+    @Given("^HTTP server (enable|disable) SSL$")
+    public void setSecureConnector(String mode) {
+        if ("enable".equals(mode)) {
+            this.sslConnector = sslConnector();
+        } else {
+            this.sslConnector = null;
+        }
     }
 
     @Given("^HTTP server SSL keystore path ([^\\s]+)$")
@@ -344,21 +392,21 @@ public class HttpServerSteps implements HttpSteps {
         HttpServerActionBuilder.HttpServerReceiveActionBuilder receiveBuilder = http().server(httpServer).receive();
         HttpServerRequestActionBuilder.HttpMessageBuilderSupport requestBuilder;
 
-        if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
+        if (request.getRequestMethod() == null || request.getRequestMethod().equals(RequestMethod.POST)) {
             requestBuilder = receiveBuilder.post().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.GET)) {
             requestBuilder = receiveBuilder.get().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.PUT)) {
             requestBuilder = receiveBuilder.put().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.DELETE)) {
             requestBuilder = receiveBuilder.delete().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.HEAD)) {
             requestBuilder = receiveBuilder.head().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.TRACE)) {
             requestBuilder = receiveBuilder.trace().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.PATCH)) {
             requestBuilder = receiveBuilder.patch().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.OPTIONS)) {
             requestBuilder = receiveBuilder.options().message(request);
         } else {
             requestBuilder = receiveBuilder.post().message(request);
@@ -410,6 +458,18 @@ public class HttpServerSteps implements HttpSteps {
             httpServer.setConnector(sslConnector);
         }
 
+        if ("basic".equals(authMethod)) {
+            try {
+                SecurityHandlerFactory securityHandlerFactory = basicAuthSecurityHandler();
+                securityHandlerFactory.initialize();
+                httpServer.setSecurityHandler(securityHandlerFactory.getObject());
+            } catch (Exception e) {
+                throw new CitrusRuntimeException("Failed to configure basic auth on server", e);
+            }
+        } else {
+            logger.warn("Unsupported auth method for Http server: '%s'".formatted(authMethod));
+        }
+
         citrus.getCitrusContext().getReferenceResolver().bind(serverName, httpServer);
         httpServer.initialize();
 
@@ -430,8 +490,17 @@ public class HttpServerSteps implements HttpSteps {
         if (settings.containsKey("securePort")) {
             setSecureServerPort(Integer.parseInt(context.replaceDynamicContentInString(settings.get("securePort"))));
         } else if (Boolean.parseBoolean(context.replaceDynamicContentInString(settings.getOrDefault("secure", "false")))) {
-            enableSecureConnector();
+            setSecureConnector("enable");
         }
+
+        setAuthMethod(context.replaceDynamicContentInString(settings.getOrDefault("authMethod", authMethod)));
+        setAuthUser(context.replaceDynamicContentInString(settings.getOrDefault("authUser", authUser)));
+        setAuthPassword(context.replaceDynamicContentInString(settings.getOrDefault("authPassword", authPassword)));
+
+        if (settings.containsKey("authUserRoles")) {
+            setAuthUserRoles(context.replaceDynamicContentInString(settings.get("authUserRoles")));
+        }
+        setAuthPath(context.replaceDynamicContentInString(settings.getOrDefault("authPath", authPath)));
     }
 
     /**
@@ -503,8 +572,16 @@ public class HttpServerSteps implements HttpSteps {
                 return tmpKeyStore.getPath();
             }
         } else {
-            return FileUtils.getFileResource(context.replaceDynamicContentInString(sslKeyStorePath)).getURL().getFile();
+            return FileUtils.getFileResource(context.replaceDynamicContentInString(sslKeyStorePath)).getLocation();
         }
+    }
+
+    private SecurityHandlerFactory basicAuthSecurityHandler() {
+        SecurityHandlerFactory securityHandlerFactory = new SecurityHandlerFactory();
+        securityHandlerFactory.setUsers(Collections.singletonList(new User(authUser, authPassword, authUserRoles)));
+        securityHandlerFactory.setConstraints(Collections.singletonMap(authPath, new BasicAuthConstraint(authUserRoles)));
+
+        return securityHandlerFactory;
     }
 
     /**

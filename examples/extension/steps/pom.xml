@@ -24,7 +24,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <citrus.version>4.0.0</citrus.version>
+        <citrus.version>4.0.1</citrus.version>
         <cucumber.version>7.14.0</cucumber.version>
     </properties>
     <dependencies>

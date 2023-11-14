@@ -25,11 +25,49 @@ public class HttpSettings {
     private static final String HTTP_PROPERTY_PREFIX = "yaks.http.";
     private static final String HTTP_ENV_PREFIX = "YAKS_HTTP_";
 
-    private static final String TIMEOUT_PROPERTY = HTTP_PROPERTY_PREFIX + ".timeout";
+    private static final String TIMEOUT_PROPERTY = HTTP_PROPERTY_PREFIX + "timeout";
     private static final String TIMEOUT_ENV = HTTP_ENV_PREFIX + "TIMEOUT";
     private static final String TIMEOUT_DEFAULT = "2000";
 
-    private static final String FORK_MODE_PROPERTY = HTTP_PROPERTY_PREFIX + ".fork.mode";
+    private static final String SERVER_AUTH_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "server.auth.path";
+    private static final String SERVER_AUTH_PATH_ENV = HTTP_ENV_PREFIX + "SERVER_AUTH_PATH";
+    private static final String SERVER_AUTH_PATH_DEFAULT = "/secure/*";
+
+    private static final String SERVER_AUTH_USER_ROLES_PROPERTY = HTTP_PROPERTY_PREFIX + "server.auth.user.roles";
+    private static final String SERVER_AUTH_USER_ROLES_ENV = HTTP_ENV_PREFIX + "SERVER_AUTH_USER_ROLES";
+    private static final String SERVER_AUTH_USER_ROLES_DEFAULT = "citrus";
+
+    private static final String AUTH_METHOD_PROPERTY = HTTP_PROPERTY_PREFIX + "auth.method";
+    private static final String AUTH_METHOD_ENV = HTTP_ENV_PREFIX + "AUTH_METHOD";
+    private static final String AUTH_METHOD_DEFAULT = "none";
+
+    private static final String SERVER_AUTH_METHOD_PROPERTY = HTTP_PROPERTY_PREFIX + "server.auth.method";
+    private static final String SERVER_AUTH_METHOD_ENV = HTTP_ENV_PREFIX + "SERVER_AUTH_METHOD";
+
+    private static final String CLIENT_AUTH_METHOD_PROPERTY = HTTP_PROPERTY_PREFIX + "client.auth.method";
+    private static final String CLIENT_AUTH_METHOD_ENV = HTTP_ENV_PREFIX + "CLIENT_AUTH_METHOD";
+
+    private static final String AUTH_USER_PROPERTY = HTTP_PROPERTY_PREFIX + "auth.user";
+    private static final String AUTH_USER_ENV = HTTP_ENV_PREFIX + "AUTH_USER";
+    private static final String AUTH_USER_DEFAULT = "citrus";
+
+    private static final String SERVER_AUTH_USER_PROPERTY = HTTP_PROPERTY_PREFIX + "server.auth.user";
+    private static final String SERVER_AUTH_USER_ENV = HTTP_ENV_PREFIX + "SERVER_AUTH_USER";
+
+    private static final String CLIENT_AUTH_USER_PROPERTY = HTTP_PROPERTY_PREFIX + "client.auth.user";
+    private static final String CLIENT_AUTH_USER_ENV = HTTP_ENV_PREFIX + "CLIENT_AUTH_USER";
+
+    private static final String AUTH_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "auth.password";
+    private static final String AUTH_PASSWORD_ENV = HTTP_ENV_PREFIX + "AUTH_PASSWORD";
+    private static final String AUTH_PASSWORD_DEFAULT = "secr3t";
+
+    private static final String SERVER_AUTH_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "server.auth.password";
+    private static final String SERVER_AUTH_PASSWORD_ENV = HTTP_ENV_PREFIX + "SERVER_AUTH_PASSWORD";
+
+    private static final String CLIENT_AUTH_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "client.auth.password";
+    private static final String CLIENT_AUTH_PASSWORD_ENV = HTTP_ENV_PREFIX + "CLIENT_AUTH_PASSWORD";
+
+    private static final String FORK_MODE_PROPERTY = HTTP_PROPERTY_PREFIX + "fork.mode";
     private static final String FORK_MODE_ENV = HTTP_ENV_PREFIX + "FORK_MODE";
     private static final String FORK_MODE_DEFAULT = "false";
 
@@ -130,5 +168,71 @@ public class HttpSettings {
         return Boolean.parseBoolean(System.getProperty(HEADER_NAME_IGNORE_CASE_PROPERTY,
                 System.getenv(HEADER_NAME_IGNORE_CASE_ENV) != null ? System.getenv(HEADER_NAME_IGNORE_CASE_ENV) :
                         HEADER_NAME_IGNORE_CASE_DEFAULT));
+    }
+
+    public static String getServerAuthPath() {
+        return System.getProperty(SERVER_AUTH_PATH_PROPERTY,
+                System.getenv(SERVER_AUTH_PATH_ENV) != null ? System.getenv(SERVER_AUTH_PATH_ENV) :
+                        SERVER_AUTH_PATH_DEFAULT);
+    }
+
+    public static String[] getServerAuthUserRoles() {
+        return System.getProperty(SERVER_AUTH_USER_ROLES_PROPERTY,
+                System.getenv(SERVER_AUTH_USER_ROLES_ENV) != null ? System.getenv(SERVER_AUTH_USER_ROLES_ENV) :
+                        SERVER_AUTH_USER_ROLES_DEFAULT).split(",");
+    }
+
+    public static String getAuthMethod() {
+        return System.getProperty(AUTH_METHOD_PROPERTY,
+                System.getenv(AUTH_METHOD_ENV) != null ? System.getenv(AUTH_METHOD_ENV) :
+                        AUTH_METHOD_DEFAULT);
+    }
+
+    public static String getClientAuthMethod() {
+        return System.getProperty(CLIENT_AUTH_METHOD_PROPERTY,
+                System.getenv(CLIENT_AUTH_METHOD_ENV) != null ? System.getenv(CLIENT_AUTH_METHOD_ENV) :
+                        getAuthMethod());
+    }
+
+    public static String getServerAuthMethod() {
+        return System.getProperty(SERVER_AUTH_METHOD_PROPERTY,
+                System.getenv(SERVER_AUTH_METHOD_ENV) != null ? System.getenv(SERVER_AUTH_METHOD_ENV) :
+                        getAuthMethod());
+    }
+
+    public static String getAuthUser() {
+        return System.getProperty(AUTH_USER_PROPERTY,
+                System.getenv(AUTH_USER_ENV) != null ? System.getenv(AUTH_USER_ENV) :
+                        AUTH_USER_DEFAULT);
+    }
+
+    public static String getClientAuthUser() {
+        return System.getProperty(CLIENT_AUTH_USER_PROPERTY,
+                System.getenv(CLIENT_AUTH_USER_ENV) != null ? System.getenv(CLIENT_AUTH_USER_ENV) :
+                        getAuthUser());
+    }
+
+    public static String getServerAuthUser() {
+        return System.getProperty(SERVER_AUTH_USER_PROPERTY,
+                System.getenv(SERVER_AUTH_USER_ENV) != null ? System.getenv(SERVER_AUTH_USER_ENV) :
+                        getAuthUser());
+    }
+
+    public static String getAuthPassword() {
+        return System.getProperty(AUTH_PASSWORD_PROPERTY,
+                System.getenv(AUTH_PASSWORD_ENV) != null ? System.getenv(AUTH_PASSWORD_ENV) :
+                        AUTH_PASSWORD_DEFAULT);
+    }
+
+    public static String getClientAuthPassword() {
+        return System.getProperty(CLIENT_AUTH_PASSWORD_PROPERTY,
+                System.getenv(CLIENT_AUTH_PASSWORD_ENV) != null ? System.getenv(CLIENT_AUTH_PASSWORD_ENV) :
+                        getAuthPassword());
+    }
+
+    public static String getServerAuthPassword() {
+        return System.getProperty(SERVER_AUTH_PASSWORD_PROPERTY,
+                System.getenv(SERVER_AUTH_PASSWORD_ENV) != null ? System.getenv(SERVER_AUTH_PASSWORD_ENV) :
+                        getAuthPassword());
     }
 }
