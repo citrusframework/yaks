@@ -1,6 +1,8 @@
-Feature: Https support
+Feature: Http SSL support
 
   Background:
+    Given HTTP server SSL keystore path classpath:keystore/http-server.jks
+    Given HTTP server SSL keystore password secret
     Given create HTTP server "secureHttpServer" with configuration
     | secure     | true |
     | securePort | 8443 |

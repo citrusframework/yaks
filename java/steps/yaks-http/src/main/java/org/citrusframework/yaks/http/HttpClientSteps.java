@@ -18,6 +18,7 @@
 package org.citrusframework.yaks.http;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -25,26 +26,14 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 
-import org.citrusframework.Citrus;
-import org.citrusframework.CitrusSettings;
-import org.citrusframework.TestCaseRunner;
-import org.citrusframework.annotations.CitrusFramework;
-import org.citrusframework.annotations.CitrusResource;
-import org.citrusframework.exceptions.CitrusRuntimeException;
-import org.citrusframework.http.actions.HttpClientActionBuilder;
-import org.citrusframework.http.actions.HttpClientRequestActionBuilder;
-import org.citrusframework.http.actions.HttpClientResponseActionBuilder;
-import org.citrusframework.http.client.HttpClient;
-import org.citrusframework.http.client.HttpClientBuilder;
-import org.citrusframework.http.message.HttpMessage;
-import org.citrusframework.util.FileUtils;
-import org.citrusframework.variable.dictionary.DataDictionary;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
@@ -52,12 +41,29 @@ import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
+import org.citrusframework.Citrus;
+import org.citrusframework.CitrusSettings;
+import org.citrusframework.TestCaseRunner;
+import org.citrusframework.annotations.CitrusFramework;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.http.actions.HttpClientActionBuilder;
+import org.citrusframework.http.actions.HttpClientRequestActionBuilder;
+import org.citrusframework.http.actions.HttpClientResponseActionBuilder;
+import org.citrusframework.http.client.BasicAuthClientHttpRequestFactory;
+import org.citrusframework.http.client.HttpClient;
+import org.citrusframework.http.client.HttpClientBuilder;
+import org.citrusframework.http.message.HttpMessage;
+import org.citrusframework.util.FileUtils;
+import org.citrusframework.variable.dictionary.DataDictionary;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMethod;
 
+import static org.citrusframework.TestActionBuilder.logger;
 import static org.citrusframework.container.Wait.Builder.waitFor;
 import static org.citrusframework.http.actions.HttpActionBuilder.http;
 import static org.citrusframework.validation.PathExpressionValidationContext.Builder.pathExpression;
@@ -72,6 +78,9 @@ public class HttpClientSteps implements HttpSteps {
 
     @CitrusFramework
     private Citrus citrus;
+
+    @CitrusResource
+    private TestContext context;
 
     private HttpClient httpClient;
 
@@ -96,6 +105,10 @@ public class HttpClientSteps implements HttpSteps {
     private long timeout;
 
     private boolean forkMode = HttpSettings.getForkMode();
+
+    private String authMethod = HttpSettings.getClientAuthMethod();
+    private String authUser = HttpSettings.getClientAuthUser();
+    private String authPassword = HttpSettings.getClientAuthPassword();
 
     @Before
     public void before(Scenario scenario) {
@@ -139,6 +152,30 @@ public class HttpClientSteps implements HttpSteps {
         }
 
         this.requestUrl = url;
+    }
+
+    @Given("^HTTP client (enable|disable) basic auth$")
+    public void setBasicAuth(String mode) {
+        if ("enable".equals(mode)) {
+            this.authMethod = "basic";
+        } else {
+            this.authMethod = "none";
+        }
+    }
+
+    @Given("^HTTP client auth method (basic|digest|ntlm)$")
+    public void setAuthMethod(String authMethod) {
+        this.authMethod = authMethod;
+    }
+
+    @Given("^HTTP client auth user ([^\\s]+)$")
+    public void setAuthUser(String authUser) {
+        this.authUser = authUser;
+    }
+
+    @Given("^HTTP client auth password ([^\\s]+)$")
+    public void setAuthPassword(String authPassword) {
+        this.authPassword = authPassword;
     }
 
     @Given("^HTTP request timeout is (\\d+)(?: ms| milliseconds)$")
@@ -213,10 +250,10 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^HTTP request header ([^\\s]+)(?:=| is )\"(.+)\"$")
     public void addRequestHeader(String name, String value) {
         if (name.equals(HttpHeaders.CONTENT_TYPE)) {
-            requestMessageType = getMessageType(value);
+            requestMessageType = getMessageType(context.replaceDynamicContentInString(value));
         }
 
-        requestHeaders.put(name, value);
+        requestHeaders.put(name, context.replaceDynamicContentInString(value));
     }
 
     @Given("^HTTP request query parameter ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -317,21 +354,21 @@ public class HttpClientSteps implements HttpSteps {
         HttpClientActionBuilder.HttpClientSendActionBuilder sendBuilder = http().client(httpClient).send();
         HttpClientRequestActionBuilder.HttpMessageBuilderSupport requestBuilder;
 
-        if (request.getRequestMethod() == null || request.getRequestMethod().equals(HttpMethod.POST)) {
+        if (request.getRequestMethod() == null || request.getRequestMethod().equals(RequestMethod.GET)) {
             requestBuilder = sendBuilder.post().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.GET)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.GET)) {
             requestBuilder = sendBuilder.get().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.PUT)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.PUT)) {
             requestBuilder = sendBuilder.put().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.DELETE)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.DELETE)) {
             requestBuilder = sendBuilder.delete().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.HEAD)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.HEAD)) {
             requestBuilder = sendBuilder.head().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.TRACE)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.TRACE)) {
             requestBuilder = sendBuilder.trace().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.PATCH)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.PATCH)) {
             requestBuilder = sendBuilder.patch().message(request);
-        } else if (request.getRequestMethod().equals(HttpMethod.OPTIONS)) {
+        } else if (request.getRequestMethod().equals(RequestMethod.OPTIONS)) {
             requestBuilder = sendBuilder.options().message(request);
         } else {
             requestBuilder = sendBuilder.post().message(request);
@@ -347,6 +384,16 @@ public class HttpClientSteps implements HttpSteps {
 
         if (outboundDictionary != null) {
             requestBuilder.dictionary(outboundDictionary);
+        }
+
+        if ("basic".equals(authMethod)) {
+            try {
+                httpClient.getEndpointConfiguration().setRequestFactory(basicAuthRequestFactory());
+            } catch (Exception e) {
+                throw new CitrusRuntimeException("Failed to configure basic auth on server", e);
+            }
+        } else {
+            logger.warn("Unsupported auth method for Http server: '%s'".formatted(authMethod));
         }
 
         runner.run(requestBuilder);
@@ -422,15 +469,46 @@ public class HttpClientSteps implements HttpSteps {
             return urlOrPath;
         }
 
-        if (!StringUtils.hasText(requestUrl)) {
-            throw new IllegalStateException("Must provide a base request URL first when using relative resource path: " + urlOrPath);
+        String url;
+        if (StringUtils.hasText(requestUrl)) {
+            url = requestUrl;
+        } else if (StringUtils.hasText(httpClient.getEndpointConfiguration().getRequestUrl())) {
+            url = httpClient.getEndpointConfiguration().getRequestUrl();
+        } else {
+            throw new CitrusRuntimeException("Must provide a base request URL first when using relative resource path: " + urlOrPath);
         }
 
         if (!StringUtils.hasText(urlOrPath) || urlOrPath.equals("/")) {
-            return requestUrl;
+            return url;
         }
 
-        return (requestUrl.endsWith("/") ? requestUrl : requestUrl + "/") + (urlOrPath.startsWith("/") ? urlOrPath.substring(1) : urlOrPath);
+        return (url.endsWith("/") ? url : url + "/") + (urlOrPath.startsWith("/") ? urlOrPath.substring(1) : urlOrPath);
+    }
+
+    private HttpComponentsClientHttpRequestFactory basicAuthRequestFactory() {
+        try {
+            BasicAuthClientHttpRequestFactory requestFactory = new BasicAuthClientHttpRequestFactory();
+
+            URL url;
+            if (StringUtils.hasText(requestUrl)) {
+                url = new URL(requestUrl);
+            } else if (StringUtils.hasText(httpClient.getEndpointConfiguration().getRequestUrl())) {
+                url = new URL(httpClient.getEndpointConfiguration().getRequestUrl());
+            } else {
+                throw new CitrusRuntimeException("Must provide a base request URL when configuring basic auth on Http client");
+            }
+
+            AuthScope authScope = new AuthScope(url.getProtocol(), url.getHost(), url.getPort(), "", "basic");
+            requestFactory.setAuthScope(authScope);
+
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(authUser, authPassword.toCharArray());
+            requestFactory.setCredentials(credentials);
+
+            requestFactory.initialize();
+            return requestFactory.getObject();
+        } catch (Exception e) {
+            throw new CitrusRuntimeException("Failed to configure basic auth on Http client", e);
+        }
     }
 
     /**
