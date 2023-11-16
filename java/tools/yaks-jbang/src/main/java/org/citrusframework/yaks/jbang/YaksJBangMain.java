@@ -17,17 +17,16 @@
 
 package org.citrusframework.yaks.jbang;
 
-import java.util.concurrent.Callable;
-
+import org.citrusframework.jbang.CitrusJBangMain;
+import org.citrusframework.jbang.commands.Init;
 import org.citrusframework.yaks.jbang.commands.Complete;
-import org.citrusframework.yaks.jbang.commands.Init;
 import org.citrusframework.yaks.jbang.commands.ListTests;
 import org.citrusframework.yaks.jbang.commands.Run;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "yaks", description = "YAKS CLI", mixinStandardHelpOptions = true)
-public class YaksJBangMain implements Callable<Integer> {
+public class YaksJBangMain extends CitrusJBangMain {
     private static CommandLine commandLine;
 
     public static void run(String... args) {

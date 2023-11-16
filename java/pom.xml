@@ -181,6 +181,11 @@
       </dependency>
       <dependency>
         <groupId>org.citrusframework</groupId>
+        <artifactId>citrus-jbang</artifactId>
+        <version>${citrus.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.citrusframework</groupId>
         <artifactId>citrus-junit</artifactId>
         <version>${citrus.version}</version>
       </dependency>
