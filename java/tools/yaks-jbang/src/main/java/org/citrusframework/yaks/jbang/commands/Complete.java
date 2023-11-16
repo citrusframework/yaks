@@ -21,9 +21,13 @@ import java.io.PrintStream;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
 import picocli.AutoComplete;
 import picocli.CommandLine;
+import picocli.CommandLine.Model.CommandSpec;
 
 @CommandLine.Command(name = "complete", description = "Generate completion script for bash/zsh")
 public class Complete extends YaksCommand {
+
+    @CommandLine.Spec
+    CommandSpec spec;
 
     public Complete(YaksJBangMain main) {
         super(main);

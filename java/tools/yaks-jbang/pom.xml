@@ -40,7 +40,7 @@
     </dependency>
     <dependency>
       <groupId>org.citrusframework</groupId>
-      <artifactId>citrus-main</artifactId>
+      <artifactId>citrus-jbang</artifactId>
     </dependency>
 
     <dependency>

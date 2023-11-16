@@ -17,30 +17,17 @@
 package org.citrusframework.yaks.jbang.commands;
 
 import java.io.File;
-import java.util.Stack;
-import java.util.concurrent.Callable;
 
+import org.citrusframework.jbang.commands.CitrusCommand;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
-import picocli.CommandLine;
-import picocli.CommandLine.IParameterConsumer;
-import picocli.CommandLine.Model.ArgSpec;
-import picocli.CommandLine.Model.CommandSpec;
-import picocli.CommandLine.ParameterException;
 
-public abstract class YaksCommand implements Callable<Integer> {
-
-    @CommandLine.Spec
-    CommandSpec spec;
+public abstract class YaksCommand extends CitrusCommand {
 
     private final YaksJBangMain main;
     private File yaksDir;
 
-    //CHECKSTYLE:OFF
-    @CommandLine.Option(names = { "-h", "--help" }, usageHelp = true, description = "Display the help and sub-commands")
-    private boolean helpRequested = false;
-    //CHECKSTYLE:ON
-
     public YaksCommand(YaksJBangMain main) {
+        super(main);
         this.main = main;
     }
 
@@ -60,20 +47,6 @@ public abstract class YaksCommand implements Callable<Integer> {
             yaksDir = new File(System.getProperty("user.home"), ".yaks");
         }
         return new File(yaksDir, pid + "-output.json");
-    }
-
-    protected abstract static class ParameterConsumer<T> implements IParameterConsumer {
-
-        @Override
-        public void consumeParameters(Stack<String> args, ArgSpec argSpec, CommandSpec cmdSpec) {
-            if (args.isEmpty()) {
-                throw new ParameterException(cmdSpec.commandLine(), "Error: missing required parameter");
-            }
-            T cmd = (T) cmdSpec.userObject();
-            doConsumeParameters(args, cmd);
-        }
-
-        protected abstract void doConsumeParameters(Stack<String> args, T cmd);
     }
 
 }
