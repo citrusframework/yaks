@@ -16,22 +16,16 @@
  */
 package org.citrusframework.yaks.jbang.commands;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import main.YaksJBang;
-import org.citrusframework.jbang.JsonSupport;
-import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.jbang.YaksJBangMain;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -138,21 +132,6 @@ public class ListTests extends YaksCommand {
             default:
                 return 0;
         }
-    }
-
-    private JsonNode loadStatus(long pid) {
-        try {
-            File f = getStatusFile("" + pid);
-            if (f != null && f.exists()) {
-                try (FileInputStream fis = new FileInputStream(f)) {
-                    String text = FileUtils.readToString(fis);
-                    return JsonSupport.json().reader().readTree(text);
-                }
-            }
-        } catch (IOException e) {
-            // ignore
-        }
-        return null;
     }
 
     static long extractSince(ProcessHandle ph) {

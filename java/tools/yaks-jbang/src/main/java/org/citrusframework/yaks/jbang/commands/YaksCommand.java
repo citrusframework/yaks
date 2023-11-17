@@ -36,17 +36,19 @@ public abstract class YaksCommand extends CitrusCommand {
     }
 
     public File getStatusFile(String pid) {
-        if (yaksDir == null) {
-            yaksDir = new File(System.getProperty("user.home"), ".yaks");
-        }
-        return new File(yaksDir, pid + "-status.json");
+        return new File(getYaksDir(), pid + "-status.json");
     }
 
     public File getOutputFile(String pid) {
+        return new File(getYaksDir(), pid + "-output.json");
+    }
+
+    private File getYaksDir() {
         if (yaksDir == null) {
             yaksDir = new File(System.getProperty("user.home"), ".yaks");
         }
-        return new File(yaksDir, pid + "-output.json");
+
+        return yaksDir;
     }
 
 }
