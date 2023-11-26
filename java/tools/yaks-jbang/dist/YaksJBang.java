@@ -22,7 +22,7 @@
 //DEPS org.citrusframework.yaks:yaks-parent:${yaks.jbang.version:0.17.1}@pom
 //DEPS org.citrusframework.yaks:yaks-jbang:${yaks.jbang.version:0.17.1}
 //DEPS org.citrusframework.yaks:yaks-runtime-core:${yaks.jbang.version:0.17.1}
-//DEPS org.citrusframework:citrus-jbang:${citrus.jbang.version:4.0.1}
+//DEPS org.citrusframework:citrus-jbang:${citrus.jbang.version:4.0.2}
 package main;
 
 import org.citrusframework.yaks.jbang.YaksJBangMain;
