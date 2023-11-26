@@ -69,7 +69,9 @@ public class EndpointSteps {
     public void purgeEndpoint(String name) {
         if (citrus.getCitrusContext().getReferenceResolver().isResolvable(name)) {
             Endpoint endpoint = citrus.getCitrusContext().getReferenceResolver().resolve(name, Endpoint.class);
-            runner.run(purgeEndpoints().endpoint(endpoint));
+            runner.run(purgeEndpoints()
+                    .timeout(endpoint.getEndpointConfiguration().getTimeout())
+                    .endpoint(endpoint));
         } else {
             throw new CitrusRuntimeException(String.format("Unable to find endpoint '%s'", name));
         }
