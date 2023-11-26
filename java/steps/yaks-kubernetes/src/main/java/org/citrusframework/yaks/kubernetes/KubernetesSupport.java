@@ -41,6 +41,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import org.citrusframework.Citrus;
 import org.citrusframework.context.TestContext;
+import org.citrusframework.yaks.YaksSettings;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.Property;
@@ -77,6 +78,10 @@ public final class KubernetesSupport {
      * @return
      */
     public static KubernetesClient getKubernetesClient(Citrus citrus) {
+        if (YaksSettings.isLocal()) {
+            return null;
+        }
+
         if (citrus.getCitrusContext().getReferenceResolver().resolveAll(KubernetesClient.class).size() == 1L) {
             return citrus.getCitrusContext().getReferenceResolver().resolve(KubernetesClient.class);
         } else {
