@@ -22,6 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusFramework;
@@ -33,11 +38,7 @@ import org.citrusframework.selenium.endpoint.SeleniumBrowserBuilder;
 import org.citrusframework.selenium.model.PageValidator;
 import org.citrusframework.selenium.model.WebPage;
 import org.citrusframework.variable.VariableUtils;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import org.citrusframework.yaks.YaksSettings;
 
 import static org.citrusframework.selenium.actions.SeleniumActionBuilder.selenium;
 
@@ -72,10 +73,17 @@ public class SeleniumSteps {
         } else if (citrus.getCitrusContext().getReferenceResolver().isResolvable(browserName)) {
             browser = citrus.getCitrusContext().getReferenceResolver().resolve(browserName, SeleniumBrowser.class);
         } else {
-            browser = new SeleniumBrowserBuilder()
-                    .type(browserType)
-                    .remoteServer(browserRemoteServerUrl)
-                    .build();
+            if (YaksSettings.isLocal()) {
+                browser = new SeleniumBrowserBuilder()
+                        .type(browserType)
+                        .build();
+            } else {
+                browser = new SeleniumBrowserBuilder()
+                        .type(browserType)
+                        .remoteServer(browserRemoteServerUrl)
+                        .build();
+            }
+
             citrus.getCitrusContext().bind(browserName, browser);
         }
 
