@@ -33,17 +33,15 @@
       <groupId>org.citrusframework.yaks</groupId>
       <artifactId>yaks-standard</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.citrusframework.yaks</groupId>
-      <artifactId>yaks-kafka</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.citrusframework.yaks</groupId>
       <artifactId>yaks-kubernetes</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.citrusframework.yaks</groupId>
+      <artifactId>yaks-kafka</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
