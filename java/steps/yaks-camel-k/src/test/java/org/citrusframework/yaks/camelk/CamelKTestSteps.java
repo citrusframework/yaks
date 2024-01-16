@@ -64,6 +64,6 @@ public class CamelKTestSteps {
                 .endStatus()
                 .build();
 
-        k8sClient.pods().inNamespace(CamelKSettings.getNamespace()).create(pod);
+        k8sClient.pods().inNamespace(CamelKSettings.getNamespace()).resource(pod).create();
     }
 }
