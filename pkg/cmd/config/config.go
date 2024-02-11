@@ -23,16 +23,16 @@ const (
 )
 
 var DefaultVersions = Versions{
-	"citrus.version":           "4.0.2",
-	"camel.version":            "4.1.0",
-	"apache.camel.version":     "4.1.0",
-	"spring.version":           "6.0.13",
-	"cucumber.version":         "7.14.0",
+	"citrus.version":           "4.1.1",
+	"camel.version":            "4.2.0",
+	"apache.camel.version":     "4.2.0",
+	"spring.version":           "6.1.3",
+	"cucumber.version":         "7.15.0",
 	"postgresql.version":       "42.6.0",
-	"testcontainers.version":   "1.19.1",
-	"aws-java-sdk2.version":    "2.21.2",
+	"testcontainers.version":   "1.19.4",
+	"aws-java-sdk2.version":    "2.23.20",
 	"activemq.version":         "5.18.2",
-	"activemq.artemis.version": "2.31.0",
+	"activemq.artemis.version": "2.31.2",
 }
 
 type RunConfig struct {
