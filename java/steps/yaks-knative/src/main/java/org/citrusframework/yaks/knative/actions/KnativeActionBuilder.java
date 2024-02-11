@@ -17,11 +17,12 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import org.citrusframework.TestActionBuilder;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.TestActionBuilder;
 import org.citrusframework.yaks.knative.actions.eventing.CreateBrokerAction;
 import org.citrusframework.yaks.knative.actions.eventing.CreateTriggerAction;
+import org.citrusframework.yaks.knative.actions.eventing.DeleteBrokerAction;
 import org.citrusframework.yaks.knative.actions.eventing.VerifyBrokerAction;
 import org.citrusframework.yaks.knative.actions.messaging.CreateChannelAction;
 import org.citrusframework.yaks.knative.actions.messaging.CreateSubscriptionAction;
@@ -222,12 +223,10 @@ public class KnativeActionBuilder implements TestActionBuilder.DelegatingTestAct
          * Delete broker instance.
          * @param brokerName the name of the Knative broker.
          */
-        public DeleteKnativeResourceAction.Builder delete(String brokerName) {
-            DeleteKnativeResourceAction.Builder builder = new DeleteKnativeResourceAction.Builder()
+        public DeleteBrokerAction.Builder delete(String brokerName) {
+            DeleteBrokerAction.Builder builder = new DeleteBrokerAction.Builder()
                     .client(kubernetesClient)
                     .client(knativeClient)
-                    .component("eventing")
-                    .kind("brokers")
                     .name(brokerName);
             delegate = builder;
             return builder;

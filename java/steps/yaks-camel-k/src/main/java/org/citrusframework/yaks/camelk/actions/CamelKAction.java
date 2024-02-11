@@ -73,7 +73,7 @@ public interface CamelKAction extends TestAction {
 
     /**
      * Resolves cluster type from given test context using the stored test variable.
-     * Fallback to retreiving the cluster type from environment settings when no test variable is present.
+     * Fallback to retrieving the cluster type from environment settings when no test variable is present.
      *
      * @param context
      * @return

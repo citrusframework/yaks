@@ -22,7 +22,9 @@ package org.citrusframework.yaks.knative;
  */
 public enum KnativeVariableNames {
 
+    CLUSTER_TYPE("YAKS_CLUSTER_TYPE"),
     BROKER_NAME("KNATIVE_BROKER"),
+    BROKER_PORT("KNATIVE_BROKER_PORT"),
     NAMESPACE("KNATIVE_NAMESPACE");
 
     private final String variableName;

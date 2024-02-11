@@ -21,6 +21,8 @@ import org.citrusframework.AbstractTestActionBuilder;
 import org.citrusframework.actions.AbstractTestAction;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.yaks.YaksClusterType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +37,14 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
     private final KnativeClient knativeClient;
     private final KubernetesClient kubernetesClient;
 
+    private final YaksClusterType clusterType;
+
     public AbstractKnativeAction(String name, Builder<?, ?> builder) {
         super("knative:" + name, builder);
 
         this.knativeClient = builder.knativeClient;
         this.kubernetesClient = builder.kubernetesClient;
+        this.clusterType = builder.clusterType;
     }
 
     @Override
@@ -52,6 +57,15 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
         return knativeClient;
     }
 
+    @Override
+    public YaksClusterType clusterType(TestContext context) {
+        if (clusterType != null) {
+            return clusterType;
+        }
+
+        return KnativeAction.super.clusterType(context);
+    }
+
     /**
      * Action builder.
      */
@@ -59,6 +73,8 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
 
         private KnativeClient knativeClient;
         private KubernetesClient kubernetesClient;
+
+        private YaksClusterType clusterType;
 
         /**
          * Use a custom Kubernetes client.
@@ -73,6 +89,14 @@ public abstract class AbstractKnativeAction extends AbstractTestAction implement
          */
         public B client(KnativeClient knativeClient) {
             this.knativeClient = knativeClient;
+            return self;
+        }
+
+        /**
+         * Explicitly set cluster type for this action.
+         */
+        public B clusterType(YaksClusterType clusterType) {
+            this.clusterType = clusterType;
             return self;
         }
 

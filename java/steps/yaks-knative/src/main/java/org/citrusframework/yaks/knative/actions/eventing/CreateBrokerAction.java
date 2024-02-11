@@ -17,11 +17,15 @@
 
 package org.citrusframework.yaks.knative.actions.eventing;
 
-import org.citrusframework.context.TestContext;
 import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.knative.eventing.v1.BrokerBuilder;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.http.server.HttpServerBuilder;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
+import org.citrusframework.yaks.knative.KnativeVariableNames;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
 
 /**
@@ -39,12 +43,46 @@ public class CreateBrokerAction extends AbstractKnativeAction {
 
     @Override
     public void doExecute(TestContext context) {
+        if (YaksSettings.isLocal(clusterType(context))) {
+            createLocalBroker(context);
+        } else {
+            createBroker(context);
+        }
+    }
+
+    /**
+     * Creates Http server as a local Knative broker.
+     * @param context
+     */
+    private void createLocalBroker(TestContext context) {
+        String resolvedBrokerName = context.replaceDynamicContentInString(brokerName);
+
+        if (!context.getReferenceResolver().isResolvable(resolvedBrokerName, HttpServer.class)) {
+            HttpServer brokerServer = new HttpServerBuilder()
+                    .autoStart(true)
+                    .port(Integer.parseInt(KnativeSettings.getServicePort()))
+                    .referenceResolver(context.getReferenceResolver())
+                    .build();
+
+            brokerServer.initialize();
+            context.getReferenceResolver()
+                    .bind(resolvedBrokerName, brokerServer);
+
+            context.setVariable(KnativeVariableNames.BROKER_PORT.value(), brokerServer.getPort());
+        }
+    }
+
+    /**
+     * Creates Knative broker on current namespace.
+     * @param context
+     */
+    private void createBroker(TestContext context) {
         Broker broker = new BrokerBuilder()
                 .withApiVersion(String.format("%s/%s", KnativeSupport.knativeEventingGroup(), KnativeSupport.knativeApiVersion()))
                 .withNewMetadata()
-                    .withNamespace(namespace(context))
-                    .withName(context.replaceDynamicContentInString(brokerName))
-                    .withLabels(KnativeSettings.getDefaultLabels())
+                .withNamespace(namespace(context))
+                .withName(context.replaceDynamicContentInString(brokerName))
+                .withLabels(KnativeSettings.getDefaultLabels())
                 .endMetadata()
                 .build();
 

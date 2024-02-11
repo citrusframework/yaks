@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ValidationException;
-import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
@@ -60,7 +60,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
 
     @Override
     public boolean isDisabled(TestContext context) {
-        return clusterType(context) == YaksClusterType.LOCAL;
+        return YaksSettings.isLocal(clusterType(context));
     }
 
     /**

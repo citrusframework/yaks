@@ -52,12 +52,12 @@ Feature: Knative event consumer
   Scenario: Receive event http
     Given expect Knative event data: {"msg": "Hello Knative!"}
     When receive Knative event
-      | Ce-Specversion     | 1.0 |
-      | Ce-Type            | greeting |
-      | Ce-Source          | https://github.com/citrusframework/yaks |
-      | Ce-Subject         | hello |
-      | Ce-Id              | say-hello-${id} |
-      | Ce-Time            | @matchesDatePattern('yyyy-MM-dd'T'HH:mm:ss')@ |
+      | ce-specversion     | 1.0 |
+      | ce-type            | greeting |
+      | ce-source          | https://github.com/citrusframework/yaks |
+      | ce-subject         | hello |
+      | ce-id              | say-hello-${id} |
+      | ce-time            | @matchesDatePattern('yyyy-MM-dd'T'HH:mm:ss')@ |
       | Content-Type       | application/json;charset=UTF-8 |
     Then verify test event accepted
 
