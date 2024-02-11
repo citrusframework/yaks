@@ -28,6 +28,8 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.knative.ce.CloudEventMessage;
 import org.citrusframework.yaks.knative.ce.CloudEventSupport;
 import org.citrusframework.yaks.kubernetes.KubernetesSteps;
@@ -99,12 +101,28 @@ public class ReceiveEventSteps {
 
     @Given("^create Knative event consumer service ([^\\s]+)$")
     public void createService(String serviceName) {
-        kubernetesSteps.createService(serviceName);
+        if (YaksSettings.isLocal() && context.getVariables().containsKey(KnativeVariableNames.BROKER_NAME.value()) &&
+                context.getReferenceResolver().isResolvable(context.getVariable(KnativeVariableNames.BROKER_NAME.value()))) {
+            HttpServer brokerServer = context.getReferenceResolver().resolve(context.getVariable(KnativeVariableNames.BROKER_NAME.value()), HttpServer.class);
+            context.getReferenceResolver().bind(serviceName, brokerServer);
+            setServiceName(serviceName);
+            setServicePort(String.valueOf(brokerServer.getPort()));
+        } else {
+            kubernetesSteps.createService(serviceName);
+        }
     }
 
     @Given("^create Knative event consumer service ([^\\s]+) with target port ([^\\s]+)$")
     public void createService(String serviceName, String targetPort) {
-        kubernetesSteps.createService(serviceName, targetPort);
+        if (YaksSettings.isLocal() && context.getVariables().containsKey(KnativeVariableNames.BROKER_NAME.value()) &&
+                context.getReferenceResolver().isResolvable(context.getVariable(KnativeVariableNames.BROKER_NAME.value()))) {
+            HttpServer brokerServer = context.getReferenceResolver().resolve(context.getVariable(KnativeVariableNames.BROKER_NAME.value()), HttpServer.class);
+            context.getReferenceResolver().bind(serviceName, brokerServer);
+            setServiceName(serviceName);
+            setServicePort(String.valueOf(brokerServer.getPort()));
+        } else {
+            kubernetesSteps.createService(serviceName, targetPort);
+        }
     }
 
     /**

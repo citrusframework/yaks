@@ -264,11 +264,11 @@ As we are using the Http cloud event model we can also use Http property equival
 [source,gherkin]
 ----
 When send Knative event
-| Ce-Specversion     | 1.0 |
-| Ce-Type            | greeting |
-| Ce-Source          | https://github.com/citrusframework/yaks |
-| Ce-Subject         | hello |
-| Ce-Id              | say-hello-${id} |
+| ce-specversion     | 1.0 |
+| ce-type            | greeting |
+| ce-source          | https://github.com/citrusframework/yaks |
+| ce-subject         | hello |
+| ce-id              | say-hello-${id} |
 | Content-Type       | application/json;charset=UTF-8 |
 | data               | {"msg": "Hello Knative!"} |
 ----
@@ -409,11 +409,11 @@ As we are using the Http cloud event model we can also use Http property equival
 [source,gherkin]
 ----
 Then receive Knative event
-| Ce-Specversion     | 1.0 |
-| Ce-Type            | greeting |
-| Ce-Source          | https://github.com/citrusframework/yaks |
-| Ce-Subject         | hello |
-| Ce-Id              | say-hello-${id} |
+| ce-specversion     | 1.0 |
+| ce-type            | greeting |
+| ce-source          | https://github.com/citrusframework/yaks |
+| ce-subject         | hello |
+| ce-id              | say-hello-${id} |
 | Content-Type       | application/json;charset=UTF-8 |
 | data               | {"msg": "Hello Knative!"} |
 ----

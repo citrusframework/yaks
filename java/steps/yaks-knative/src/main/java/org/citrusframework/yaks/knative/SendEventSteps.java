@@ -21,6 +21,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.UUID;
 import javax.net.ssl.SSLContext;
 
 import io.cucumber.datatable.DataTable;
@@ -138,15 +139,15 @@ public class SendEventSteps {
         }
 
         if (request.getEventId() == null) {
-            request.eventId("yaks-test-event");
+            request.eventId(UUID.randomUUID().toString());
         }
 
         if (request.getEventType() == null) {
-            request.eventType("yaks-test");
+            request.eventType("org.citrusframework.yaks.event.test");
         }
 
         if (request.getSource() == null) {
-            request.source("yaks-test-source");
+            request.source("yaks-test");
         }
 
         request.setHeader("Host", KnativeSettings.getBrokerHost());
@@ -162,10 +163,12 @@ public class SendEventSteps {
 
         runner.run(requestBuilder);
 
-        runner.run(http().client(httpClient)
-                .receive()
-                .response(HttpStatus.ACCEPTED)
-                .timeout(timeout));
+        if (KnativeSettings.isVerifyBrokerResponse()) {
+            runner.run(http().client(httpClient)
+                    .receive()
+                    .response(HttpStatus.valueOf(KnativeSettings.getBrokerResponseStatus()))
+                    .timeout(timeout));
+        }
     }
 
     /**

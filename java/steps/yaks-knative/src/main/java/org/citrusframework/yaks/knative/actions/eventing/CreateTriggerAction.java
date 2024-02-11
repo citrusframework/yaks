@@ -24,6 +24,7 @@ import org.citrusframework.context.TestContext;
 import io.fabric8.knative.eventing.v1.Trigger;
 import io.fabric8.knative.eventing.v1.TriggerBuilder;
 import io.fabric8.knative.eventing.v1.TriggerSpecBuilder;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeSupport;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
@@ -102,6 +103,11 @@ public class CreateTriggerAction extends AbstractKnativeAction {
                     .endRef()
                     .endSubscriber();
         }
+    }
+
+    @Override
+    public boolean isDisabled(TestContext context) {
+        return YaksSettings.isLocal(clusterType(context));
     }
 
     /**

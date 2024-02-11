@@ -80,11 +80,11 @@ public class KnativeServiceConfiguration {
         return new StaticEndpointAdapter() {
             @Override
             protected Message handleMessageInternal(Message message) {
-                Assertions.assertThat(message.getHeader("Ce-Id")).isEqualTo("say-hello");
-                Assertions.assertThat(message.getHeader("Ce-Specversion")).isEqualTo("1.0");
-                Assertions.assertThat(message.getHeader("Ce-Subject")).isEqualTo("hello");
-                Assertions.assertThat(message.getHeader("Ce-Type")).isEqualTo("greeting");
-                Assertions.assertThat(message.getHeader("Ce-Source")).isEqualTo("https://github.com/citrusframework/yaks");
+                Assertions.assertThat(message.getHeader("ce-id")).isEqualTo("say-hello");
+                Assertions.assertThat(message.getHeader("ce-specversion")).isEqualTo("1.0");
+                Assertions.assertThat(message.getHeader("ce-subject")).isEqualTo("hello");
+                Assertions.assertThat(message.getHeader("ce-type")).isEqualTo("greeting");
+                Assertions.assertThat(message.getHeader("ce-source")).isEqualTo("https://github.com/citrusframework/yaks");
                 Assertions.assertThat(message.getHeader("Content-Type").toString()).isEqualTo(MediaType.APPLICATION_JSON_UTF8_VALUE);
                 Assertions.assertThat(message.getPayload(String.class)).isEqualTo("{\"msg\": \"Hello Knative!\"}");
 

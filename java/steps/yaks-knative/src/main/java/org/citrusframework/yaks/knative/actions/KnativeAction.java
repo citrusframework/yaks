@@ -17,10 +17,12 @@
 
 package org.citrusframework.yaks.knative.actions;
 
-import org.citrusframework.TestAction;
-import org.citrusframework.context.TestContext;
 import io.fabric8.knative.client.KnativeClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.TestAction;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.yaks.YaksClusterType;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.knative.KnativeVariableNames;
 
@@ -73,6 +75,27 @@ public interface KnativeAction extends TestAction {
         }
 
         return KnativeSettings.getBrokerName();
+    }
+
+    /**
+     * Resolves cluster type from given test context using the stored test variable.
+     * Fallback to retrieving the cluster type from environment settings when no test variable is present.
+     *
+     * @param context
+     * @return
+     */
+    default YaksClusterType clusterType(TestContext context) {
+        if (context.getVariables().containsKey(KnativeVariableNames.CLUSTER_TYPE.value())) {
+            Object clusterType = context.getVariableObject(KnativeVariableNames.CLUSTER_TYPE.value());
+
+            if (clusterType instanceof YaksClusterType) {
+                return (YaksClusterType) clusterType;
+            } else {
+                return YaksClusterType.valueOf(clusterType.toString());
+            }
+        }
+
+        return YaksSettings.getClusterType();
     }
 }
 

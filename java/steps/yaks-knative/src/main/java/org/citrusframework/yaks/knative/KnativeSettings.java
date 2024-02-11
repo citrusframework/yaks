@@ -72,6 +72,13 @@ public class KnativeSettings {
     private static final String AUTO_REMOVE_RESOURCES_ENV = KNATIVE_ENV_PREFIX + "AUTO_REMOVE_RESOURCES";
     private static final String AUTO_REMOVE_RESOURCES_DEFAULT = "true";
 
+    private static final String VERIFY_BROKER_RESPONSE_PROPERTY = KNATIVE_PROPERTY_PREFIX + "verify.broker.resources";
+    private static final String VERIFY_BROKER_RESPONSE_ENV = KNATIVE_ENV_PREFIX + "VERIFY_BROKER_RESPONSE";
+    private static final String VERIFY_BROKER_RESPONSE_DEFAULT = "true";
+
+    private static final String BROKER_RESPONSE_STATUS_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.response";
+    private static final String BROKER_RESPONSE_STATUS_ENV = KNATIVE_ENV_PREFIX + "BROKER_RESPONSE_STATUS";
+
     private static final String DEFAULT_LABELS_PROPERTY = KNATIVE_PROPERTY_PREFIX + "default.labels";
     private static final String DEFAULT_LABELS_ENV = KNATIVE_ENV_PREFIX + "DEFAULT_LABELS";
 
@@ -207,6 +214,23 @@ public class KnativeSettings {
                 System.getenv(AUTO_REMOVE_RESOURCES_ENV) != null ? System.getenv(AUTO_REMOVE_RESOURCES_ENV) : AUTO_REMOVE_RESOURCES_DEFAULT));
     }
 
+    public static boolean isVerifyBrokerResponse() {
+        return Boolean.parseBoolean(System.getProperty(VERIFY_BROKER_RESPONSE_PROPERTY,
+                System.getenv(VERIFY_BROKER_RESPONSE_ENV) != null ? System.getenv(VERIFY_BROKER_RESPONSE_ENV) : VERIFY_BROKER_RESPONSE_DEFAULT));
+    }
+
+    public static int getBrokerResponseStatus() {
+        String defaultResponseStatus;
+        if (YaksSettings.isLocal()) {
+            defaultResponseStatus = "204"; // NO_CONTENT
+        } else {
+            defaultResponseStatus = "202"; // ACCEPTED
+        }
+
+        return Integer.parseInt(System.getProperty(BROKER_RESPONSE_STATUS_PROPERTY,
+                System.getenv(BROKER_RESPONSE_STATUS_ENV) != null ? System.getenv(BROKER_RESPONSE_STATUS_ENV) : defaultResponseStatus));
+    }
+
     public static String getKnativeMessagingGroup() {
         return "messaging.knative.dev";
     }
@@ -214,5 +238,4 @@ public class KnativeSettings {
     public static String getKnativeEventingGroup() {
         return "eventing.knative.dev";
     }
-
 }

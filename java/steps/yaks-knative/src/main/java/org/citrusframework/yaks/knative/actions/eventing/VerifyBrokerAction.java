@@ -21,6 +21,8 @@ import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ValidationException;
 import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.citrusframework.http.server.HttpServer;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.knative.actions.AbstractKnativeAction;
 
 /**
@@ -38,6 +40,29 @@ public class VerifyBrokerAction extends AbstractKnativeAction {
 
     @Override
     public void doExecute(TestContext context) {
+        if (YaksSettings.isLocal(clusterType(context))) {
+            verifyLocalBroker(context);
+        } else {
+            verifyBroker(context);
+        }
+    }
+
+    private void verifyLocalBroker(TestContext context) {
+        String resolvedBrokerName = context.replaceDynamicContentInString(brokerName);
+
+        if (!context.getReferenceResolver().isResolvable(resolvedBrokerName, HttpServer.class)) {
+            throw new ValidationException(String.format("Knative broker '%s' not found", brokerName));
+        }
+
+        HttpServer brokerServer = context.getReferenceResolver().resolve(resolvedBrokerName, HttpServer.class);
+        if (!brokerServer.isRunning()) {
+            throw new ValidationException(String.format("Knative broker '%s' is not ready", brokerName));
+        }
+
+        LOG.info(String.format("Knative broker %s is ready", brokerName));
+    }
+
+    private void verifyBroker(TestContext context) {
         try {
             Broker broker = getKnativeClient().brokers()
                     .inNamespace(namespace(context))
