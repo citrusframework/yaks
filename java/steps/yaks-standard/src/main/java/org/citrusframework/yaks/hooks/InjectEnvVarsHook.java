@@ -38,7 +38,7 @@ public class InjectEnvVarsHook {
     @CitrusResource
     private TestCaseRunner runner;
 
-    @Before
+    @Before(order = Integer.MAX_VALUE)
     public void injectEnvVars(Scenario scenario) {
         runner.run(new AbstractTestAction() {
             @Override
