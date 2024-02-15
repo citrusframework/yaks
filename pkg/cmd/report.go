@@ -113,7 +113,8 @@ func (o *reportCmdOptions) FetchResults() (*v1alpha1.TestResults, error) {
 		}
 	}
 
-	for _, suite := range results.Suites {
+	for i := range results.Suites {
+		suite := results.Suites[i]
 		report.AppendSummary(&results.Summary, &suite.Summary)
 	}
 

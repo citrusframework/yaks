@@ -60,8 +60,8 @@ type Client interface {
 
 // Injectable identifies objects that can receive a Client and the rest config.
 type Injectable interface {
-	InjectClient(Client)
-	InjectConfig(*rest.Config)
+	InjectClient(client Client)
+	InjectConfig(config *rest.Config)
 }
 
 // Provider is used to provide a new instance of the Client each time it's required.

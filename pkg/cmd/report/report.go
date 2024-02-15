@@ -170,7 +170,8 @@ func LoadTestResults() (*v1alpha1.TestResults, error) {
 		}
 	}
 
-	for _, suite := range results.Suites {
+	for i := range results.Suites {
+		suite := results.Suites[i]
 		AppendSummary(&results.Summary, &suite.Summary)
 	}
 
