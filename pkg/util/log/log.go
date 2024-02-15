@@ -36,7 +36,7 @@ func init() {
 
 // Injectable identifies objects that can receive a Logger.
 type Injectable interface {
-	InjectLogger(Logger)
+	InjectLogger(log Logger)
 }
 
 // Logger --.

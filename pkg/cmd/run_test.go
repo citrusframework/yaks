@@ -26,6 +26,7 @@ import (
 	"github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1"
 	"github.com/citrusframework/yaks/pkg/cmd/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var timeout, _ = time.ParseDuration("10s")
@@ -50,12 +51,12 @@ func TestStepOsCheck(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
-	assert.Nil(t, scriptError)
+	require.NoError(t, scriptError)
 }
 
 func TestStepEnvCheck(t *testing.T) {
 	err := os.Setenv("foo", "bar")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	steps := []config.StepConfig{
 		{
@@ -86,12 +87,12 @@ func TestStepEnvCheck(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
-	assert.Nil(t, scriptError)
+	require.NoError(t, scriptError)
 }
 
 func TestStepCheckCombinations(t *testing.T) {
 	err := os.Setenv("foo", "bar")
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	steps := []config.StepConfig{
 		{
@@ -122,13 +123,13 @@ func TestStepCheckCombinations(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
-	assert.Nil(t, scriptError)
+	require.NoError(t, scriptError)
 }
 
 func TestResolveScriptFileName(t *testing.T) {
-	assert.Equal(t, resolve("pre.sh"), "pre.sh")
-	assert.Equal(t, resolve("pre-{{os.type}}.sh"), fmt.Sprintf("pre-%s.sh", r.GOOS))
-	assert.Equal(t, resolve("pre-{{os.type}}-{{os.arch}}.sh"), fmt.Sprintf("pre-%s-%s.sh", r.GOOS, r.GOARCH))
+	assert.Equal(t, "pre.sh", resolve("pre.sh"))
+	assert.Equal(t, fmt.Sprintf("pre-%s.sh", r.GOOS), resolve("pre-{{os.type}}.sh"))
+	assert.Equal(t, fmt.Sprintf("pre-%s-%s.sh", r.GOOS, r.GOARCH), resolve("pre-{{os.type}}-{{os.arch}}.sh"))
 }
 
 func TestStepOnFailure(t *testing.T) {
@@ -151,5 +152,5 @@ func TestStepOnFailure(t *testing.T) {
 	}
 	runSteps(steps, "default", "", &v1alpha1.TestResults{}, timeout, saveErr)
 
-	assert.Nil(t, scriptError)
+	require.NoError(t, scriptError)
 }
