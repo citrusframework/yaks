@@ -54,5 +54,5 @@ jobs:
         env:
           GOGC: 20
         with:
-          version: v1.53.3
+          version: v1.55.2
           args: --verbose --deadline 15m --config .golangci.yml
