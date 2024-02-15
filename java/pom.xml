@@ -782,6 +782,7 @@
     <module>steps</module>
     <module>runtime</module>
     <module>tools</module>
+    <module>bom</module>
   </modules>
 
   <profiles>
