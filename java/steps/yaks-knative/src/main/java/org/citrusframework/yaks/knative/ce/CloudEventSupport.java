@@ -64,7 +64,7 @@ public final class CloudEventSupport {
                 .forEach(entry -> {
                     Optional<CloudEvent.Attribute> attribute = CloudEvent.v1_0().attributes()
                             .stream()
-                            .filter(a -> a.http().equals(entry.getKey()) || a.json().equals(entry.getKey()))
+                            .filter(a -> a.http().equalsIgnoreCase(entry.getKey()) || a.json().equals(entry.getKey()))
                             .findFirst();
 
                     if (attribute.isPresent()) {

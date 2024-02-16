@@ -68,13 +68,13 @@ public class CloudEvent {
      */
     public enum Attribute {
 
-        ID("ce-id", "id"),
-        SOURCE("ce-source", "source"),
-        SPEC_VERSION("ce-specversion", "specversion", "1.0"),
-        TYPE("ce-type", "type"),
-        SUBJECT("ce-subject", "subject"),
-        DATA_SCHEMA("ce-dataschema", "dataschema"),
-        TIME("ce-time", "time"),
+        ID("Ce-Id", "id"),
+        SOURCE("Ce-Source", "source"),
+        SPEC_VERSION("Ce-Specversion", "specversion", "1.0"),
+        TYPE("Ce-Type", "type"),
+        SUBJECT("Ce-Subject", "subject"),
+        DATA_SCHEMA("Ce-Dataschema", "dataschema"),
+        TIME("Ce-Time", "time"),
         CONTENT_TYPE("Content-Type", "datacontenttype");
 
         private final String http;
