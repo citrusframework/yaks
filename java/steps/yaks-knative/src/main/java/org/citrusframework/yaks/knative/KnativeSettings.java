@@ -58,6 +58,10 @@ public class KnativeSettings {
     private static final String BROKER_NAME_ENV = KNATIVE_ENV_PREFIX + "BROKER_NAME";
     private static final String BROKER_NAME_DEFAULT = "default";
 
+    private static final String BROKER_PORT_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.port";
+    private static final String BROKER_PORT_ENV = KNATIVE_ENV_PREFIX + "BROKER_PORT";
+    private static final String BROKER_PORT_DEFAULT = "8080";
+
     private static final String BROKER_URL_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.url";
     private static final String BROKER_URL_ENV = KNATIVE_ENV_PREFIX + "BROKER_URL";
 
@@ -151,6 +155,15 @@ public class KnativeSettings {
     }
 
     /**
+     * Broker port to use when producing/consuming cloud events in local environment.
+     * @return
+     */
+    public static String getBrokerPort() {
+        return System.getProperty(BROKER_PORT_PROPERTY,
+                System.getenv(BROKER_PORT_ENV) != null ? System.getenv(BROKER_PORT_ENV) : BROKER_PORT_DEFAULT);
+    }
+
+    /**
      * Broker URL to use when producing/consuming cloud events.
      * @return
      */
@@ -160,6 +173,8 @@ public class KnativeSettings {
             brokerUrlDefault = String.format("http://%s", getBrokerHost());
         } else if (YaksSettings.isKubernetesCluster()) {
             brokerUrlDefault = String.format("http://%s/%s/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
+        } else if (YaksSettings.isLocal()) {
+            brokerUrlDefault = String.format("http://%s%s", getBrokerHost(), StringUtils.hasText(getBrokerPort()) ? ":" + getBrokerPort() : "");
         } else {
             brokerUrlDefault = String.format("http://%s", getBrokerHost());
         }
