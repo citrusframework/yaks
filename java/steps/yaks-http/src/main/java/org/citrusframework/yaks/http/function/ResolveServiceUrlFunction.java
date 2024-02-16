@@ -37,8 +37,17 @@ public class ResolveServiceUrlFunction implements Function {
         String serviceName = parameterList.get(0);
 
         boolean secure = false;
+        int servicePort = 0;
         if (parameterList.size() > 1) {
-            secure = Boolean.parseBoolean(parameterList.get(1).toLowerCase(Locale.US));
+            try {
+                servicePort = Integer.parseInt(parameterList.get(1));
+            } catch (IllegalArgumentException e) {
+                secure = Boolean.parseBoolean(parameterList.get(1).toLowerCase(Locale.US));
+            }
+        }
+
+        if (parameterList.size() > 2) {
+            secure = Boolean.parseBoolean(parameterList.get(2).toLowerCase(Locale.US));
         }
 
         String scheme = "http://";
@@ -47,13 +56,12 @@ public class ResolveServiceUrlFunction implements Function {
         }
 
         if (YaksSettings.isLocal()) {
-            int port = 0;
             if (context.getReferenceResolver().isResolvable(serviceName)) {
                 HttpServer server = context.getReferenceResolver().resolve(serviceName, HttpServer.class);
-                port = server.getPort();
+                servicePort = server.getPort();
             }
 
-            return String.format("%slocalhost%s", scheme, port > 0 ? ":" + port : "");
+            return String.format("%slocalhost%s", scheme, servicePort > 0 ? ":" + servicePort : "");
         } else {
             return String.format("%s%s.%s", scheme, serviceName, context.getVariable("YAKS_NAMESPACE"));
         }

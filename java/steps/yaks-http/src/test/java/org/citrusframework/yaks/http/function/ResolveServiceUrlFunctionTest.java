@@ -30,24 +30,26 @@ import org.junit.Test;
 
 public class ResolveServiceUrlFunctionTest {
 
+    private final ResolveServiceUrlFunction function = new ResolveServiceUrlFunction();
+
     @Test
     public void shouldResolveService() {
-        ResolveServiceUrlFunction function = new ResolveServiceUrlFunction();
         TestContext context = TestContextFactory.newInstance().getObject();
 
         context.setVariable("YAKS_NAMESPACE", "default");
 
-        Assert.assertEquals(function.execute(Collections.singletonList("test-service"), context), "http://test-service.default");
+        Assert.assertEquals("http://test-service.default", function.execute(Collections.singletonList("test-service"), context));
+        Assert.assertEquals("http://test-service.default", function.execute(Arrays.asList("test-service", "8080"), context));
     }
 
     @Test
     public void shouldResolveSecureService() {
-        ResolveServiceUrlFunction function = new ResolveServiceUrlFunction();
         TestContext context = TestContextFactory.newInstance().getObject();
 
         context.setVariable("YAKS_NAMESPACE", "default");
 
-        Assert.assertEquals(function.execute(Arrays.asList("test-service", "TRUE"), context), "https://test-service.default");
+        Assert.assertEquals("https://test-service.default", function.execute(Arrays.asList("test-service", "TRUE"), context));
+        Assert.assertEquals("https://test-service.default", function.execute(Arrays.asList("test-service", "8080", "TRUE"), context));
 
     }
 
@@ -55,7 +57,6 @@ public class ResolveServiceUrlFunctionTest {
     public void shouldResolveLocalService() {
         try {
             System.setProperty("yaks.cluster.type", YaksClusterType.LOCAL.name());
-            ResolveServiceUrlFunction function = new ResolveServiceUrlFunction();
             TestContext context = TestContextFactory.newInstance().getObject();
 
             context.getReferenceResolver().bind("test-service", new HttpServerBuilder()
@@ -63,7 +64,9 @@ public class ResolveServiceUrlFunctionTest {
                     .port(8888)
                     .build());
 
-            Assert.assertEquals(function.execute(Collections.singletonList("test-service"), context), "http://localhost:8888");
+            Assert.assertEquals("http://localhost:8888", function.execute(Collections.singletonList("test-service"), context));
+            Assert.assertEquals("http://localhost", function.execute(Collections.singletonList("foo-service"), context));
+            Assert.assertEquals("http://localhost:8080", function.execute(Arrays.asList("foo-service", "8080"), context));
         } finally {
             System.setProperty("yaks.cluster.type", YaksClusterType.KUBERNETES.name());
         }
