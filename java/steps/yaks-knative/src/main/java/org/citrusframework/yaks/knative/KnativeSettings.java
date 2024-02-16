@@ -51,8 +51,7 @@ public class KnativeSettings {
 
     private static final String BROKER_HOST_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.host";
     private static final String BROKER_HOST_ENV = KNATIVE_ENV_PREFIX + "BROKER_HOST";
-    private static final String BROKER_HOST_KUBERNETES_DEFAULT = String.format("broker-ingress.knative-eventing.%s", YaksSettings.DEFAULT_DOMAIN_SUFFIX);
-    private static final String BROKER_HOST_OPENSHIFT_DEFAULT = String.format("${%s}-broker.%s.%s", KnativeVariableNames.BROKER_NAME.value(), getNamespace(), YaksSettings.DEFAULT_DOMAIN_SUFFIX);
+    private static final String BROKER_HOST_DEFAULT = String.format("broker-ingress.knative-eventing.%s", YaksSettings.DEFAULT_DOMAIN_SUFFIX);
 
     private static final String BROKER_NAME_PROPERTY = KNATIVE_PROPERTY_PREFIX + "broker.name";
     private static final String BROKER_NAME_ENV = KNATIVE_ENV_PREFIX + "BROKER_NAME";
@@ -133,10 +132,8 @@ public class KnativeSettings {
     public static String getBrokerHost() {
         String brokerHostDefault;
 
-        if (YaksSettings.isOpenshiftCluster()) {
-            brokerHostDefault = BROKER_HOST_OPENSHIFT_DEFAULT;
-        } else if (YaksSettings.isKubernetesCluster()) {
-            brokerHostDefault = BROKER_HOST_KUBERNETES_DEFAULT;
+        if (YaksSettings.isKubernetesCluster() || YaksSettings.isOpenshiftCluster()) {
+            brokerHostDefault = BROKER_HOST_DEFAULT;
         } else {
             brokerHostDefault = "localhost";
         }
@@ -169,9 +166,7 @@ public class KnativeSettings {
      */
     public static String getBrokerUrl() {
         String brokerUrlDefault;
-        if (YaksSettings.isOpenshiftCluster()) {
-            brokerUrlDefault = String.format("http://%s", getBrokerHost());
-        } else if (YaksSettings.isKubernetesCluster()) {
+        if (YaksSettings.isKubernetesCluster() || YaksSettings.isOpenshiftCluster()) {
             brokerUrlDefault = String.format("http://%s/%s/${%s}", getBrokerHost(), getNamespace(), KnativeVariableNames.BROKER_NAME.value());
         } else if (YaksSettings.isLocal()) {
             brokerUrlDefault = String.format("http://%s%s", getBrokerHost(), StringUtils.hasText(getBrokerPort()) ? ":" + getBrokerPort() : "");
