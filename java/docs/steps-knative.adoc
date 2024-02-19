@@ -167,6 +167,18 @@ Given create Knative trigger {trigger} on channel {channel} with filter on attri
 The step uses a data table with attributes and values that should be added to the filter. As a result
 the trigger will only handle events matching the given filters.
 
+==== Delete Knative trigger
+
+You can delete a trigger by giving its name in the current namespace.
+
+.@Given("^delete Knative trigger {trigger}$")
+[source,gherkin]
+----
+Given delete Knative trigger {trigger}
+----
+
+This removes the Knative trigger from the current namespace.
+
 [[knative-channels]]
 === Create channels
 

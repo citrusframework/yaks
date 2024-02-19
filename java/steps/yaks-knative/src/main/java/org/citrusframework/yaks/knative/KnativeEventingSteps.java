@@ -165,6 +165,13 @@ public class KnativeEventingSteps {
         }
     }
 
+    @Given("^delete Knative trigger ([^\\s]+)$")
+    public void deleteTrigger(String triggerName) {
+        runner.then(knative().client(k8sClient).client(knativeClient)
+                .trigger()
+                .delete(triggerName));
+    }
+
     private void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
 
