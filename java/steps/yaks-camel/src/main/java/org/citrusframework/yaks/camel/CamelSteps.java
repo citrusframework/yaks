@@ -55,6 +55,7 @@ import org.citrusframework.common.InitializingPhase;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
+import org.citrusframework.spi.Resources;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.xml.StringSource;
 import org.citrusframework.yaks.groovy.GroovyShellUtils;
@@ -263,6 +264,19 @@ public class CamelSteps {
         };
 
         camelContext().addRoutes(routeBuilder);
+    }
+
+    @Given("^load Camel route ([^\\s]+)\\.(groovy|xml)")
+    public void loadCamelRoute(String fileName, String language) throws Exception {
+        String route = FileUtils.readToString(Resources.create(fileName));
+        switch (language) {
+            case "groovy":
+                camelRouteGroovy(fileName, route);
+                break;
+            case "xml":
+                camelRouteXml(fileName, route);
+                break;
+        }
     }
 
     @Given("^start Camel route ([^\\s]+)$")

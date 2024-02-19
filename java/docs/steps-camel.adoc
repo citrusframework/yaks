@@ -53,7 +53,7 @@ Given New Spring Camel context
 In Apache Camel you need to create routes in order to start producing/consuming data from endpoints. The routes can be defined
 in XML or Groovy.
 
-.@Given("^Camel route {name}\\.xml")
+.@Given("^Camel route {name}.xml")
 [source,gherkin]
 ----
 Given Camel route hello.xml
@@ -71,7 +71,7 @@ Given Camel route hello.xml
 
 In addition to XML route definitions YAKS also supports the Groovy DSL.
 
-.@Given("^Camel route {name}\\.groovy")
+.@Given("^Camel route {name}.groovy")
 [source,gherkin]
 ----
 Given Camel route hello.groovy
@@ -86,6 +86,16 @@ from("direct:hello")
 
 The above steps create the Camel routes and automatically starts them in the current context. The given routes start
 to consume messages from the endpoint `direct:hello`.
+
+You can also load the Camel route from a file resource.
+
+.@Given("^load Camel route path/to/{name}.{language}")
+[source,gherkin]
+----
+Given load Camel route hello.groovy
+----
+
+Currently, the languages `xml` and `groovy` are supported.
 
 [[camel-routes-manage]]
 === Start/stop Camel routes
