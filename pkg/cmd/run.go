@@ -85,6 +85,7 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	cmd.Flags().StringArray("maven-repository", nil, "Adds custom Maven repository URL that is added to the runtime.")
 	cmd.Flags().StringArray("maven-plugin-repository", nil, "Adds custom Maven plugin repository URL that is added to the runtime.")
 	cmd.Flags().StringArrayP("logger", "l", nil, "Adds logger configuration by setting log levels. E.g \"-l org.example=INFO\"")
+	cmd.Flags().String("logging-level", "", "Set root logger log level")
 	cmd.Flags().StringArrayP("dependency", "d", nil, "Adds runtime dependencies that get automatically loaded before the test is executed.")
 	cmd.Flags().StringArrayP("upload", "u", nil, "Upload a given library to the cluster to allow it to be used by tests.")
 	cmd.Flags().StringP("settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
@@ -117,6 +118,7 @@ type runCmdOptions struct {
 	PluginRepositories []string            `mapstructure:"maven-plugin-repository"`
 	Dependencies       []string            `mapstructure:"dependency"`
 	Logger             []string            `mapstructure:"logger"`
+	LoggingLevel       string              `mapstructure:"logging-level"`
 	Uploads            []string            `mapstructure:"upload"`
 	Settings           string              `mapstructure:"settings"`
 	Env                []string            `mapstructure:"env"`
@@ -504,6 +506,11 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 		},
 	}
 
+	if o.LoggingLevel != "" {
+		// set root logger logging level
+		test.Spec.Runtime.Logger = append(test.Spec.Runtime.Logger, fmt.Sprintf("root=%s", o.LoggingLevel))
+	}
+
 	for _, resource := range runConfig.Config.Runtime.Resources {
 		data, err := loadData(ctx, resolvePath(runConfig, resource))
 		if err != nil {
@@ -808,7 +815,7 @@ func (o *runCmdOptions) executeLocal(ctx context.Context, test *v1alpha1.Test, s
 	defer cancel()
 	shellCommand, shellArgs := getShellCommand()
 
-	args := []string{"jbang run"}
+	args := []string{"jbang", "run"}
 	if baseDir, err := filepath.Abs(runConfig.BaseDir); err == nil {
 		args = append(args, fmt.Sprintf("--class-path=%s", baseDir))
 	} else {
@@ -819,7 +826,11 @@ func (o *runCmdOptions) executeLocal(ctx context.Context, test *v1alpha1.Test, s
 	args = jbang.AddDependencies(args, runConfig, append(getModelineDeps(test.Spec.Source.Content), o.Dependencies...)...)
 	args = jbang.AddRepositories(args, runConfig, o.Repositories...)
 
-	args = append(args, jbang.YaksApp, "run", path.Base(source))
+	args = append(args, jbang.YaksApp, "run", "--logging-level=debug")
+
+	args = jbang.AddOptions(args, runConfig)
+
+	args = append(args, path.Base(source))
 
 	argLine := strings.Join(args, " ")
 	shellArgs = append(shellArgs, argLine)

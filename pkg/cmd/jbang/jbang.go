@@ -71,3 +71,12 @@ func AddRepositories(args []string, runConfig *config.RunConfig, repositories ..
 
 	return args
 }
+
+func AddOptions(args []string, runConfig *config.RunConfig) []string {
+	for _, logger := range runConfig.Config.Runtime.Settings.Loggers {
+		if logger.Name == "root" {
+			args = append(args, fmt.Sprintf("--logging-level=%s", logger.Level))
+		}
+	}
+	return args
+}
