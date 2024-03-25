@@ -430,7 +430,7 @@ spec:
   minKubeVersion: 1.16.0
   provider:
     name: Citrus Framework
-  replaces: yaks-operator.v0.16.0
+  replaces: yaks-operator.v0.18.0
   selector:
     matchLabels:
       name: yaks-operator
