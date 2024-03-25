@@ -104,11 +104,6 @@ release() {
     # Commit, tag, release, push
     # --------------------------
 
-    if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
-        # Release staging repo
-        release_staging_repo "$working_dir" "$maven_opts"
-    fi
-
     # Build Docker image
     mkdir -p ${working_dir}/build/_output/bin
     export GOOS=linux
@@ -117,11 +112,17 @@ release() {
     eval go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
     docker build --platform=linux/amd64 -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 
-    # Push everything (if configured)
-    git_push "$working_dir" "$release_version"
+    if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
+        # Release staging repo
+        # NOTE: not working recently (because of timeouts) - fallback to doing this manually
+        # release_staging_repo "$working_dir" "$maven_opts"
 
-    # Push Docker image (if configured)
-    docker_push "${working_dir}" "$image" "$release_version"
+        # Push everything (if configured)
+        git_push "$working_dir" "$release_version"
+
+        # Push Docker image (if configured)
+        docker_push "${working_dir}" "$image" "$release_version"
+    fi
 
     # Use next snapshot version for major release only
     if [ $(hasflag --major-release) ] && [ ! $(hasflag --snapshot-release) ]; then
