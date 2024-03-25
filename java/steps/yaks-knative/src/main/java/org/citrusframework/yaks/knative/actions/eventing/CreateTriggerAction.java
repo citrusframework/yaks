@@ -20,6 +20,7 @@ package org.citrusframework.yaks.knative.actions.eventing;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import io.fabric8.knative.eventing.v1.Trigger;
 import io.fabric8.knative.eventing.v1.TriggerBuilder;
@@ -70,7 +71,8 @@ public class CreateTriggerAction extends AbstractKnativeAction {
 
         getKnativeClient().triggers()
                 .inNamespace(namespace(context))
-                .createOrReplace(trigger);
+                .resource(trigger)
+                .createOr(Updatable::update);
     }
 
     private void addFilterOnAttributes(TriggerSpecBuilder triggerSpec, TestContext context) {

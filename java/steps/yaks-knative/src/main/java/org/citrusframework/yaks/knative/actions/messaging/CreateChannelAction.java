@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions.messaging;
 
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import io.fabric8.knative.messaging.v1.Channel;
 import io.fabric8.knative.messaging.v1.ChannelBuilder;
@@ -50,7 +51,8 @@ public class CreateChannelAction extends AbstractKnativeAction {
 
         getKnativeClient().channels()
                 .inNamespace(namespace(context))
-                .createOrReplace(channel);
+                .resource(channel)
+                .createOr(Updatable::update);
     }
 
     /**

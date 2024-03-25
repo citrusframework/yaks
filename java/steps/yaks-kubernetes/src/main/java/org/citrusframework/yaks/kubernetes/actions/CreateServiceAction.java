@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Service;
@@ -85,7 +86,7 @@ public class CreateServiceAction extends AbstractKubernetesAction {
 
         Service created = getKubernetesClient().services().inNamespace(namespace(context))
                 .resource(service)
-                .createOrReplace();
+                .createOr(Updatable::update);
 
         if (created.getSpec().getClusterIP() != null) {
             context.setVariable("YAKS_KUBERNETES_SERVICE_CLUSTER_IP", created.getSpec().getClusterIP());

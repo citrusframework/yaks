@@ -141,7 +141,7 @@ public class KubernetesTestSteps {
                         .endStatus()
                         .build();
 
-                getKubernetesClient().pods().inNamespace(namespace(context)).create(pod);
+                getKubernetesClient().pods().inNamespace(namespace(context)).resource(pod).create();
             }
         });
     }

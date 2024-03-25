@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
@@ -160,12 +161,12 @@ public class CreateKameletAction extends AbstractKameletAction {
             getKubernetesClient().resources(KameletV1Alpha1.class, KameletV1Alpha1List.class)
                     .inNamespace(kameletNamespace(context))
                     .resource(kameletV1Alpha1)
-                    .createOrReplace();
+                    .createOr(Updatable::update);
         } else {
             getKubernetesClient().resources(Kamelet.class, KameletList.class)
                     .inNamespace(kameletNamespace(context))
                     .resource(kamelet)
-                    .createOrReplace();
+                    .createOr(Updatable::update);
         }
 
         LOG.info(String.format("Successfully created Kamelet '%s'", kamelet.getMetadata().getName()));

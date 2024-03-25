@@ -33,6 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.util.FileUtils;
@@ -144,7 +145,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         k8sClient.resources(Integration.class, IntegrationList.class)
                 .inNamespace(namespace)
                 .resource(integration)
-                .createOrReplace();
+                .createOr(Updatable::update);
     }
 
     /**

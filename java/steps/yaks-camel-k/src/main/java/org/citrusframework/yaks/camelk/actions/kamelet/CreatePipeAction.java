@@ -25,6 +25,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
@@ -151,12 +152,12 @@ public class CreatePipeAction extends AbstractKameletAction {
             k8sClient.resources(KameletBinding.class, KameletBindingList.class)
                     .inNamespace(namespace)
                     .resource(kb)
-                    .createOrReplace();
+                    .createOr(Updatable::update);
         } else {
             k8sClient.resources(Pipe.class, PipeList.class)
                     .inNamespace(namespace)
                     .resource(pipe)
-                    .createOrReplace();
+                    .createOr(Updatable::update);
         }
     }
 

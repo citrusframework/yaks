@@ -19,6 +19,7 @@ package org.citrusframework.yaks.knative.actions.eventing;
 
 import io.fabric8.knative.eventing.v1.Broker;
 import io.fabric8.knative.eventing.v1.BrokerBuilder;
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.http.server.HttpServer;
 import org.citrusframework.http.server.HttpServerBuilder;
@@ -88,7 +89,8 @@ public class CreateBrokerAction extends AbstractKnativeAction {
 
         getKnativeClient().brokers()
                 .inNamespace(namespace(context))
-                .createOrReplace(broker);
+                .resource(broker)
+                .createOr(Updatable::update);
     }
 
     /**

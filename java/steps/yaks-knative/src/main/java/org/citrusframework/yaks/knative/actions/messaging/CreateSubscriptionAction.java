@@ -17,6 +17,7 @@
 
 package org.citrusframework.yaks.knative.actions.messaging;
 
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import io.fabric8.knative.internal.pkg.apis.duck.v1.KReferenceBuilder;
 import io.fabric8.knative.messaging.v1.Subscription;
@@ -69,7 +70,8 @@ public class CreateSubscriptionAction extends AbstractKnativeAction {
 
         getKnativeClient().subscriptions()
                 .inNamespace(namespace(context))
-                .createOrReplace(subscription);
+                .resource(subscription)
+                .createOr(Updatable::update);
     }
 
     /**
