@@ -38,7 +38,7 @@ spec:
       serviceAccountName: yaks-operator
       containers:
         - name: yaks-operator
-          image: docker.io/citrusframework/yaks:0.18.0-SNAPSHOT
+          image: docker.io/citrusframework/yaks:0.18.0
           command:
           - yaks
           - operator
