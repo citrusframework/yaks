@@ -84,93 +84,93 @@
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-standard</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Steps modules -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-camel</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-camel-k</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-groovy</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-http</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jdbc</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jms</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-kafka</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-knative</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-kubernetes</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-openapi</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-selenium</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-testcontainers</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Runtime -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-runtime-core</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-runtime-maven</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Tools -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-maven-extension</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jbang</artifactId>
-        <version>${project.version}</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
