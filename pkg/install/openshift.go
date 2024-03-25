@@ -124,7 +124,7 @@ func OpenShiftConsoleDownloadLink(ctx context.Context, c client.Client) error {
 		Spec: console.ConsoleCLIDownloadSpec{
 			DisplayName: YaksCLIDownloadDisplayName,
 			Description: YaksCLIDownloadDescription,
-			Links: []console.Link{
+			Links: []console.CLIDownloadLink{
 				{
 					Text: "Download the yaks binary for Linux",
 					Href: fmt.Sprintf(YaksCLIDownloadURLTemplate, defaults.Version, defaults.Version, "linux"),

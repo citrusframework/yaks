@@ -115,7 +115,7 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 	var newLogMsg = ""
 
 	ctx, cancel := context.WithCancel(o.Context)
-	err = wait.PollImmediate(pollInterval, waitTimeout, func() (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, pollInterval, waitTimeout, true, func(deadlineCtx context.Context) (bool, error) {
 
 		//
 		// Reduce repetition of messages by tracking the last message
@@ -129,7 +129,7 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 		//
 		// Try and find the test
 		//
-		err = c.Get(ctx, key, &test)
+		err = c.Get(deadlineCtx, key, &test)
 		if err != nil && !k8errors.IsNotFound(err) {
 			// different error so return
 			return false, err
@@ -169,14 +169,14 @@ func (o *logCmdOptions) run(cmd *cobra.Command, args []string) error {
 			// Found the running test so step over to scraping its pod log
 			//
 			fmt.Printf("Test '%s' is now running. Showing log ...\n", name)
-			err := k8slog.Print(ctx, c, o.Namespace, name, cmd.OutOrStdout())
+			err := k8slog.Print(deadlineCtx, c, o.Namespace, name, cmd.OutOrStdout())
 			return err == nil, err
 		case v1alpha1.TestPhasePassed, v1alpha1.TestPhaseFailed, v1alpha1.TestPhaseError:
 			//
 			// Test is finished or even in error
 			//
 			fmt.Printf("Test '%s' is finished. Showing logs ...\n", name)
-			err := printLogs(ctx, c, o.Namespace, name, test.Status.TestID, cmd.OutOrStdout())
+			err := printLogs(deadlineCtx, c, o.Namespace, name, test.Status.TestID, cmd.OutOrStdout())
 			if err != nil {
 				return false, err
 			}

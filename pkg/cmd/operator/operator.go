@@ -173,14 +173,12 @@ func Run(leaderElection bool, leaderElectionID string) {
 		LeaderElectionID:              leaderElectionID,
 		LeaderElectionResourceLock:    resourcelock.LeasesResourceLock,
 		LeaderElectionReleaseOnCancel: true,
-		NewCache: cache.BuilderWithOptions(
-			cache.Options{
-				SelectorsByObject: cache.SelectorsByObject{
-					&corev1.Pod{}:  {Label: selector},
-					&batchv1.Job{}: {Label: selector},
-				},
+		Cache: cache.Options{
+			ByObject: map[k8sclient.Object]cache.ByObject{
+				&corev1.Pod{}:  {Label: selector},
+				&batchv1.Job{}: {Label: selector},
 			},
-		),
+		},
 	})
 	exitOnError(err, "")
 

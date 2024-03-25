@@ -72,7 +72,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for changes to primary resource Test
-	err = c.Watch(&source.Kind{Type: &v1alpha1.Test{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	err = c.Watch(source.Kind(mgr.GetCache(), &v1alpha1.Test{}), &handler.EnqueueRequestForObject{}, predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			oldTest, ok := e.ObjectOld.(*v1alpha1.Test)
 			if !ok {
@@ -98,8 +98,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// Watch for related Jobs changing
-	err = c.Watch(&source.Kind{Type: &batchv1.Job{}},
-		handler.EnqueueRequestsFromMapFunc(func(a k8sclient.Object) []reconcile.Request {
+	err = c.Watch(source.Kind(mgr.GetCache(), &batchv1.Job{}),
+		handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, a k8sclient.Object) []reconcile.Request {
 			var requests []reconcile.Request
 
 			if job, ok := a.(*batchv1.Job); ok {
