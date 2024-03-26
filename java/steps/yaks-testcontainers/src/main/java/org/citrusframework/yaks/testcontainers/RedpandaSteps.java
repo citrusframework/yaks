@@ -100,8 +100,15 @@ public class RedpandaSteps {
                 .withNetwork(Network.newNetwork())
                 .withNetworkAliases(serviceName)
                 .withEnv(env)
-                .waitingFor(Wait.forLogMessage(".*Started Kafka API server.*", 1)
-                        .withStartupTimeout(Duration.of(startupTimeout, SECONDS)));
+                .waitingFor(Wait.forLogMessage(".*Successfully started Redpanda!.*", 1)
+                        .withStartupTimeout(Duration.of(startupTimeout, SECONDS)))
+                // TODO: Remove once Redpanda container works with Podman
+                . withCreateContainerCmdModifier(cmd -> {
+                    cmd.withEntrypoint();
+                    cmd.withEntrypoint("/entrypoint-tc.sh");
+                    cmd.withUser("root:root");
+                })
+                .withCommand("redpanda", "start", "--mode=dev-container", "--smp=1", "--memory=1G");
 
         redpandaContainer.start();
 
