@@ -28,9 +28,9 @@ import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusFramework;
 import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
-import org.citrusframework.spi.Resources;
 import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletSpec;
 import org.citrusframework.yaks.camelk.model.Pipe;
@@ -38,6 +38,7 @@ import org.citrusframework.yaks.camelk.model.PipeSpec;
 import org.citrusframework.yaks.kafka.KafkaSettings;
 import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
@@ -51,6 +52,9 @@ public class KameletSteps {
 
     @CitrusFramework
     private Citrus citrus;
+
+    @CitrusResource
+    private TestContext context;
 
     private KubernetesClient k8sClient;
 
@@ -216,7 +220,7 @@ public class KameletSteps {
 
     @Given("^load Kamelet ([a-z0-9-]+).kamelet.yaml$")
     public void loadKameletFromFile(String fileName) {
-        Resource resource = Resources.fromClasspath(fileName + ".kamelet.yaml");
+        Resource resource = ResourceUtils.resolve(fileName + ".kamelet.yaml", context);
         runner.run(camelk()
                 .client(k8sClient)
                 .createKamelet(fileName)
@@ -234,7 +238,7 @@ public class KameletSteps {
 
     @Given("^load (?:Pipe|KameletBinding) ([a-z0-9-]+).yaml$")
     public void loadPipeFromFile(String fileName) {
-        Resource resource = Resources.fromClasspath(fileName + ".yaml");
+        Resource resource = ResourceUtils.resolve(fileName + ".yaml", context);
         runner.run(camelk()
                 .client(k8sClient)
                 .createPipe(fileName)

@@ -44,6 +44,7 @@ public class ActionScript {
 
     private String normalize(String script) {
         String normalized = GroovyShellUtils.removeComments(script);
+        normalized = GroovyShellUtils.removePackageDeclaration(normalized);
 
         if (isActionScript(normalized)) {
             if (normalized.startsWith("$(")) {

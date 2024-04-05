@@ -95,4 +95,17 @@ public final class GroovyShellUtils {
             return script.trim();
         }
     }
+
+    /**
+     * Remove package declaration.
+     * @param script
+     * @return
+     */
+    public static String removePackageDeclaration(String script) {
+        if (script.startsWith("package ")) {
+            return script.substring(script.indexOf("\n")).trim();
+        } else {
+            return script.trim();
+        }
+    }
 }

@@ -46,6 +46,7 @@ import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
 import org.citrusframework.yaks.camelk.model.IntegrationSpec;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -327,7 +328,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             for (String pf : propertyFiles){
                 try {
                     Properties props = new Properties();
-                    props.load(FileUtils.getFileResource(context.replaceDynamicContentInString(pf)).getInputStream());
+                    props.load(ResourceUtils.resolve(pf, context).getInputStream());
                     props.forEach((key, value) -> configurationList.add(
                             new IntegrationSpec.Configuration("property", createPropertySpec(key.toString(), value.toString(), context))));
                 } catch (IOException e) {
@@ -361,7 +362,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             for (String pf : buildPropertyFiles){
                 try {
                     Properties props = new Properties();
-                    props.load(FileUtils.getFileResource(context.replaceDynamicContentInString(pf)).getInputStream());
+                    props.load(ResourceUtils.resolve(pf, context).getInputStream());
                     props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
                             traitName,
                             createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));

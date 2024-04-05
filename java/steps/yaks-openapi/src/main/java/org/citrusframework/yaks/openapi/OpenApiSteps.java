@@ -24,17 +24,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import org.citrusframework.annotations.CitrusResource;
-import org.citrusframework.context.TestContext;
-import org.citrusframework.exceptions.CitrusRuntimeException;
-import org.citrusframework.variable.dictionary.AbstractDataDictionary;
-import org.citrusframework.variable.dictionary.json.JsonPathMappingDataDictionary;
 import io.apicurio.datamodels.openapi.models.OasDocument;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
+import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.exceptions.CitrusRuntimeException;
+import org.citrusframework.variable.dictionary.AbstractDataDictionary;
+import org.citrusframework.variable.dictionary.json.JsonPathMappingDataDictionary;
 import org.citrusframework.yaks.openapi.model.OasModelHelper;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -104,7 +105,7 @@ public class OpenApiSteps {
                 throw new IllegalStateException("Failed to retrieve Open API specification as web resource: " + location, e);
             }
         } else {
-            openApiDoc = OpenApiResourceLoader.fromFile(location);
+            openApiDoc = OpenApiResourceLoader.fromFile(ResourceUtils.resolve(location, context));
 
             String schemeToUse = Optional.ofNullable(OasModelHelper.getSchemes(openApiDoc))
                     .orElse(Collections.singletonList("http"))

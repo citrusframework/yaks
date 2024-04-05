@@ -16,9 +16,10 @@
 
 package org.citrusframework.yaks.util;
 
-import java.io.File;
+import java.net.URI;
 
 import io.cucumber.java.Scenario;
+import org.citrusframework.util.FileUtils;
 
 /**
  * @author Christoph Deppisch
@@ -33,29 +34,83 @@ public class CucumberUtils {
     }
 
     /**
-     * Extract feature file name from given uri. This utility method extracts the feature file name from the given file path.
+     * Extract feature file name from given uri.
+     * This utility method extracts the feature file name from the given file path.
      * @param uri
      * @return
      */
-    public static String extractFeatureFileName(String uri) {
+    public static String extractFeatureFileName(URI uri) {
         if (uri == null) {
             return "";
         }
 
-        if (uri.contains(File.separator)) {
-            return uri.substring(uri.lastIndexOf(File.separatorChar) + 1);
+        if (uri.toString().contains("/")) {
+            return FileUtils.getFileName(uri.toString());
         }
 
-        return uri;
+        return uri.toString();
     }
 
     /**
-     * Extract feature file name from given scenario. The scenario id usually holds the full qualified feature file path.
+     * Extract feature file path from given uri.
+     * This utility method extracts the feature file path with null safe check.
+     * @param uri
+     * @return
+     */
+    public static String extractFeatureFile(URI uri) {
+        if (uri == null) {
+            return "";
+        }
+
+        return uri.toString();
+    }
+
+    /**
+     * Extract feature file base path as package from given uri.
+     * This utility method extracts the feature file path with null safe check.
+     * @param uri
+     * @return
+     */
+    public static String extractFeaturePackage(URI uri) {
+        if (uri == null) {
+            return "";
+        }
+
+        if (uri.getSchemeSpecificPart().contains("/")) {
+            return FileUtils.getBasePath(uri.getSchemeSpecificPart()).replaceAll("/", ".");
+        }
+
+        return "";
+    }
+
+    /**
+     * Extract feature file name from given scenario. The scenario URI usually holds the full qualified feature file path.
      * This utility method extracts the feature file name from this path.
      * @param scenario
      * @return
      */
     public static String extractFeatureFileName(Scenario scenario) {
-        return extractFeatureFileName(scenario.getId());
+        return extractFeatureFileName(scenario.getUri());
+    }
+
+    /**
+     * Extract feature file from given scenario. The scenario URI usually holds the full qualified feature file path.
+     * This utility method extracts the feature file path.
+     * @param scenario
+     * @return
+     */
+    public static String extractFeatureFile(Scenario scenario) {
+        return extractFeatureFile(scenario.getUri());
+    }
+
+    /**
+     * Extract feature file base path from given scenario.
+     * The scenario URI usually holds the full qualified feature file path.
+     * This utility method extracts the feature file path as package name.
+     * @param scenario
+     * @return
+     */
+    public static String extractFeaturePackage(Scenario scenario) {
+        return extractFeaturePackage(scenario.getUri());
     }
 }

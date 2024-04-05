@@ -43,6 +43,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.http.HttpServerSteps;
 import org.citrusframework.yaks.kubernetes.actions.CreateServiceAction;
 import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.http.HttpStatus;
 
 import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
@@ -150,7 +151,7 @@ public class KubernetesSteps {
     @Given("^load Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
     public void createCustomResourceFromFile(String fileName, String resourceType) {
         try {
-            createCustomResource(resourceType, FileUtils.readToString(FileUtils.getFileResource(fileName)));
+            createCustomResource(resourceType, FileUtils.readToString(ResourceUtils.resolve(fileName, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read custom resource from file", e);
         }
@@ -171,7 +172,7 @@ public class KubernetesSteps {
     @Given("^delete Kubernetes custom resource ([^\\s]+) in ([^\\s]+)$")
     public void deleteCustomResourceFromFile(String fileName, String resourceType) {
         try {
-            deleteCustomResource(resourceType, FileUtils.readToString(FileUtils.getFileResource(fileName)));
+            deleteCustomResource(resourceType, FileUtils.readToString(ResourceUtils.resolve(fileName, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read custom resource from file", e);
         }
@@ -195,7 +196,7 @@ public class KubernetesSteps {
     @Given("^load Kubernetes resource ([^\\s]+)$")
     public void createResourceFromFile(String fileName) {
         try {
-            createResource(FileUtils.readToString(FileUtils.getFileResource(fileName)));
+            createResource(FileUtils.readToString(ResourceUtils.resolve(fileName, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read resource from file", e);
         }
@@ -211,7 +212,7 @@ public class KubernetesSteps {
     @Given("^delete Kubernetes resource ([^\\s]+)$")
     public void deleteResourceFromFile(String fileName) {
         try {
-            deleteResource(FileUtils.readToString(FileUtils.getFileResource(fileName)));
+            deleteResource(FileUtils.readToString(ResourceUtils.resolve(fileName, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read resource from file", e);
         }

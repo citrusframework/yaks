@@ -56,6 +56,7 @@ import org.citrusframework.http.client.HttpClientBuilder;
 import org.citrusframework.http.message.HttpMessage;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
@@ -285,7 +286,7 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^load HTTP request body ([^\\s]+)$")
     public void loadRequestBody(String file) {
         try {
-            setRequestBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setRequestBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }
@@ -304,7 +305,7 @@ public class HttpClientSteps implements HttpSteps {
     @Given("^(?:expect|verify) HTTP response body loaded from ([^\\s]+)$")
     public void loadResponseBody(String file) {
         try {
-            setResponseBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setResponseBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }

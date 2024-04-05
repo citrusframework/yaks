@@ -39,6 +39,7 @@ import org.citrusframework.spi.Resource;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
+import org.citrusframework.yaks.util.ResourceUtils;
 
 import static org.citrusframework.actions.CreateVariablesAction.Builder.createVariable;
 import static org.citrusframework.container.Assert.Builder.assertException;
@@ -167,7 +168,7 @@ public class CamelKSteps {
 	@Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+)$")
 	public void loadIntegrationFromFile(String name, String language) {
         try {
-            createIntegration(name, language, FileUtils.readToString(FileUtils.getFileResource(name + "." + language)));
+            createIntegration(name, language, FileUtils.readToString(ResourceUtils.resolve(name + "." + language, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
@@ -176,7 +177,7 @@ public class CamelKSteps {
     @Given("^load Camel K integration ([a-zA-Z0-9][a-zA-Z0-9-\\.]+[a-zA-Z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void loadIntegrationFromFile(String name, String language, Map<String, String> configuration) {
         try {
-            createIntegration(name, language, FileUtils.readToString(FileUtils.getFileResource(name + "." + language)), configuration);
+            createIntegration(name, language, FileUtils.readToString(ResourceUtils.resolve(name + "." + language, context)), configuration);
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load Camel K integration from resource %s", name + "." + language), e);
         }
@@ -283,7 +284,7 @@ public class CamelKSteps {
         String openApiSpec = configuration.getOrDefault("openapi", "");
         if (!openApiSpec.isEmpty()) {
             try {
-                Resource file = FileUtils.getFileResource(openApiSpec);
+                Resource file = ResourceUtils.resolve(openApiSpec, context);
                 create.openApi(FileUtils.getFileName(file.getLocation()), FileUtils.readToString(file));
             } catch (IOException e) {
                 throw new CitrusRuntimeException(String.format("Failed to read openapi spec form file path %s", openApiSpec));

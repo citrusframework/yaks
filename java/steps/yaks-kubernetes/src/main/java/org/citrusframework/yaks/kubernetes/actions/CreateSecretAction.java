@@ -30,6 +30,7 @@ import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
 import org.citrusframework.util.FileUtils;
+import org.citrusframework.yaks.util.ResourceUtils;
 
 /**
  * @author Christoph Deppisch
@@ -53,7 +54,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
         Map<String, String> data = new LinkedHashMap<>();
         if (filePath != null) {
             try {
-                Resource file = FileUtils.getFileResource(context.replaceDynamicContentInString(filePath));
+                Resource file = ResourceUtils.resolve(filePath, context);
                 String resolvedFileContent = context.replaceDynamicContentInString(FileUtils.readToString(file, StandardCharsets.UTF_8));
 
 

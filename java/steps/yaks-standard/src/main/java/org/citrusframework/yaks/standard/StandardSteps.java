@@ -22,11 +22,13 @@ import java.util.Map;
 
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusResource;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.util.FileUtils;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import org.citrusframework.yaks.util.ResourceUtils;
 
 import static org.citrusframework.actions.EchoAction.Builder.echo;
 import static org.citrusframework.actions.LoadPropertiesAction.Builder.load;
@@ -36,6 +38,9 @@ public class StandardSteps {
 
     @CitrusResource
     private TestCaseRunner runner;
+
+    @CitrusResource
+    private TestContext context;
 
     @Given("^YAKS does Cloud-Native BDD testing$")
     public void itDoesBDD() {
@@ -70,7 +75,7 @@ public class StandardSteps {
     @Given("^load variable ([^\\s]+) from ([^\\s]+)$")
     public void loadVariableFromFile(String name, String file) {
         try {
-            variable(name, FileUtils.readToString(FileUtils.getFileResource(file)));
+            variable(name, FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }

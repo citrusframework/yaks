@@ -50,6 +50,7 @@ import org.citrusframework.http.server.HttpServer;
 import org.citrusframework.http.server.HttpServerBuilder;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -318,7 +319,7 @@ public class HttpServerSteps implements HttpSteps {
     @Given("^load HTTP response body ([^\\s]+)$")
     public void loadResponseBody(String file) {
         try {
-            setResponseBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setResponseBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }
@@ -337,7 +338,7 @@ public class HttpServerSteps implements HttpSteps {
     @Then("^(?:expect|verify) HTTP request body loaded from ([^\\s]+)$")
     public void loadRequestBody(String file) {
         try {
-            setRequestBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setRequestBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }
@@ -566,12 +567,12 @@ public class HttpServerSteps implements HttpSteps {
         if (sslKeyStorePath.equals(HttpSettings.SECURE_KEYSTORE_PATH_DEFAULT)) {
             File tmpKeyStore = File.createTempFile("http-server", ".jks");
 
-            try (InputStream in = FileUtils.getFileResource(sslKeyStorePath).getInputStream()) {
+            try (InputStream in = ResourceUtils.resolve(sslKeyStorePath, context).getInputStream()) {
                 Files.copy(in, tmpKeyStore.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 return tmpKeyStore.getPath();
             }
         } else {
-            return FileUtils.getFileResource(context.replaceDynamicContentInString(sslKeyStorePath)).getLocation();
+            return ResourceUtils.resolve(sslKeyStorePath, context).getLocation();
         }
     }
 

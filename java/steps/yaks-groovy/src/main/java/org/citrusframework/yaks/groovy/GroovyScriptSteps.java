@@ -39,6 +39,7 @@ import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.groovy.dsl.ConfigurationScript;
 import org.citrusframework.yaks.groovy.dsl.actions.ActionScript;
 import org.citrusframework.yaks.groovy.dsl.endpoints.EndpointConfigurationScript;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 
 /**
@@ -70,7 +71,7 @@ public class GroovyScriptSteps {
 
     @Given("^load configuration ([^\"\\s]+)\\.groovy$")
     public void loadConfiguration(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         String script = FileUtils.readToString(scriptFile);
         createConfiguration(script);
     }
@@ -92,7 +93,7 @@ public class GroovyScriptSteps {
 
     @Given("^load endpoint ([^\"\\s]+)\\.groovy$")
     public void loadEndpoint(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         String script = FileUtils.readToString(scriptFile);
         final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
@@ -117,7 +118,7 @@ public class GroovyScriptSteps {
 
     @Given("^load component ([^\"\\s]+)\\.groovy$")
     public void loadComponent(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         String script = FileUtils.readToString(scriptFile);
         final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
@@ -135,7 +136,7 @@ public class GroovyScriptSteps {
 
     @Given("^load actions ([^\"\\s]+)\\.groovy$")
     public void loadActionScript(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         String script = FileUtils.readToString(scriptFile);
         final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
@@ -183,7 +184,7 @@ public class GroovyScriptSteps {
 
     @Given("^(?:apply|run) script ([^\"\\s]+)\\.groovy$")
     public void applyScriptFile(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         applyScript(context.replaceDynamicContentInString(FileUtils.readToString(scriptFile)));
     }
 }

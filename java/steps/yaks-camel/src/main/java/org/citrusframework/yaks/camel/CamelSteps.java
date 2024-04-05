@@ -54,10 +54,10 @@ import org.citrusframework.common.InitializingPhase;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
-import org.citrusframework.spi.Resources;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.xml.StringSource;
 import org.citrusframework.yaks.groovy.GroovyShellUtils;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
@@ -187,7 +187,7 @@ public class CamelSteps {
 
     @Given("^load to Camel registry ([^\"\\s]+)\\.groovy$")
     public void loadComponent(String filePath) throws IOException {
-        Resource scriptFile = FileUtils.getFileResource(filePath + ".groovy");
+        Resource scriptFile = ResourceUtils.resolve(filePath + ".groovy", context);
         String script = FileUtils.readToString(scriptFile);
         final String fileName = FileUtils.getFileName(scriptFile.getLocation());
         final String baseName = Optional.ofNullable(fileName)
@@ -267,7 +267,7 @@ public class CamelSteps {
 
     @Given("^load Camel route ([^\\s]+)\\.(groovy|xml)")
     public void loadCamelRoute(String fileName, String language) throws Exception {
-        String route = FileUtils.readToString(Resources.create(fileName));
+        String route = FileUtils.readToString(ResourceUtils.resolve(fileName, context));
         switch (language) {
             case "groovy":
                 camelRouteGroovy(fileName, route);
@@ -330,7 +330,7 @@ public class CamelSteps {
     @Then("^(?:expect|verify) Camel exchange body loaded from ([^\\s]+)$")
     public void loadExchangeBody(String file) {
         try {
-            this.body = FileUtils.readToString(FileUtils.getFileResource(file));
+            this.body = FileUtils.readToString(ResourceUtils.resolve(file, context));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }

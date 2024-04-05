@@ -23,6 +23,7 @@ import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.util.FileUtils;
 import io.cucumber.java.en.Given;
+import org.citrusframework.yaks.util.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class DatabaseContainerSteps {
 
     @Given("^load database init script (^\\s+)$")
     public void loadInitScript(String file) throws IOException {
-        DatabaseContainerSteps.saveInitScript(context, FileUtils.readToString(FileUtils.getFileResource(context.replaceDynamicContentInString(file))));
+        DatabaseContainerSteps.saveInitScript(context, FileUtils.readToString(ResourceUtils.resolve(file, context)));
     }
 
     /**

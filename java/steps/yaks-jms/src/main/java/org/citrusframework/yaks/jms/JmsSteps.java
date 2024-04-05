@@ -39,6 +39,7 @@ import org.citrusframework.jms.endpoint.JmsEndpoint;
 import org.citrusframework.jms.endpoint.JmsEndpointBuilder;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.jms.connection.ConnectionFactoryCreator;
+import org.citrusframework.yaks.util.ResourceUtils;
 
 import static org.citrusframework.actions.ReceiveMessageAction.Builder.receive;
 import static org.citrusframework.actions.SendMessageAction.Builder.send;
@@ -169,7 +170,7 @@ public class JmsSteps {
     @Given("^(?:expect|verify) (?:JMS|jms) message body loaded from ([^\\s]+)$")
     public void loadMessageBody(String file) {
         try {
-            setMessageBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setMessageBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }

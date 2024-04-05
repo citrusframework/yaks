@@ -16,10 +16,10 @@
 
 package org.citrusframework.yaks.util;
 
+import java.net.URI;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Christoph Deppisch
@@ -28,10 +28,25 @@ public class CucumberUtilsTest {
 
     @Test
     public void extractFeatureFileName() {
-        Assert.assertEquals("", CucumberUtils.extractFeatureFileName((String) null));
-        Assert.assertEquals("", CucumberUtils.extractFeatureFileName(""));
-        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("foo.feature"));
-        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("/foo.feature"));
-        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName("classpath:org/citrusframework/yaks/foo/foo.feature"));
+        Assert.assertEquals("", CucumberUtils.extractFeatureFileName((URI) null));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName(URI.create("foo.feature")));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName(URI.create("/foo.feature")));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFileName(URI.create("classpath:org/citrusframework/yaks/foo/foo.feature")));
+    }
+
+    @Test
+    public void extractFeatureFile() {
+        Assert.assertEquals("", CucumberUtils.extractFeatureFile((URI) null));
+        Assert.assertEquals("foo.feature", CucumberUtils.extractFeatureFile(URI.create("foo.feature")));
+        Assert.assertEquals("/foo.feature", CucumberUtils.extractFeatureFile(URI.create("/foo.feature")));
+        Assert.assertEquals("classpath:org/citrusframework/yaks/foo/foo.feature", CucumberUtils.extractFeatureFile(URI.create("classpath:org/citrusframework/yaks/foo/foo.feature")));
+    }
+
+    @Test
+    public void extractFeaturePackage() {
+        Assert.assertEquals("", CucumberUtils.extractFeaturePackage((URI) null));
+        Assert.assertEquals("", CucumberUtils.extractFeaturePackage(URI.create("foo.feature")));
+        Assert.assertEquals("", CucumberUtils.extractFeaturePackage(URI.create("/foo.feature")));
+        Assert.assertEquals("org.citrusframework.yaks.foo", CucumberUtils.extractFeaturePackage(URI.create("classpath:org/citrusframework/yaks/foo/foo.feature")));
     }
 }

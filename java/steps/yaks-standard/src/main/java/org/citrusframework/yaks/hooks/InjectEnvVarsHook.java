@@ -43,10 +43,16 @@ public class InjectEnvVarsHook {
             @Override
             public void doExecute(TestContext context) {
                 if (scenario != null) {
-                    context.setVariable(YaksVariableNames.FEATURE_FILE.value(), CucumberUtils.extractFeatureFileName(scenario));
+                    context.setVariable(YaksVariableNames.FEATURE_FILE.value(), CucumberUtils.extractFeatureFile(scenario));
+                    context.setVariable(YaksVariableNames.FEATURE_FILENAME.value(), CucumberUtils.extractFeatureFileName(scenario));
+                    context.setVariable(YaksVariableNames.FEATURE_PACKAGE.value(), CucumberUtils.extractFeaturePackage(scenario));
+
                     context.setVariable(YaksVariableNames.SCENARIO_ID.value(), scenario.getId());
                     context.setVariable(YaksVariableNames.SCENARIO_NAME.value(), scenario.getName());
+
+                    scenario.getUri();
                 }
+
 
                 Optional<String> namespaceEnv = getNamespaceSetting();
                 Optional<String> domainEnv = getClusterWildcardSetting();
@@ -54,7 +60,7 @@ public class InjectEnvVarsHook {
                 if (namespaceEnv.isPresent()) {
                     context.setVariable(YaksVariableNames.NAMESPACE.value(), namespaceEnv.get());
 
-                    if (!domainEnv.isPresent()) {
+                    if (domainEnv.isEmpty()) {
                         context.setVariable(YaksVariableNames.CLUSTER_WILDCARD_DOMAIN.value(), namespaceEnv.get() + "." + YaksSettings.DEFAULT_DOMAIN_SUFFIX);
                     }
                 }

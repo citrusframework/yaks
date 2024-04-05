@@ -33,6 +33,7 @@ import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.ssl.SSLContexts;
+import org.citrusframework.spi.Resource;
 import org.citrusframework.util.FileUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -55,9 +56,9 @@ public final class OpenApiResourceLoader {
      * @param resource
      * @return
      */
-    public static OasDocument fromFile(String resource) {
+    public static OasDocument fromFile(Resource resource) {
         try {
-            return resolve(FileUtils.readToString(FileUtils.getFileResource(resource)));
+            return resolve(FileUtils.readToString(resource));
         } catch (IOException e) {
             throw new IllegalStateException("Failed to parse Open API specification: " + resource, e);
         }

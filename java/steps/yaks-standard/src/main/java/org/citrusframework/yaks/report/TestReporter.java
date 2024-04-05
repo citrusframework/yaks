@@ -66,7 +66,7 @@ public class TestReporter extends CitrusReporter {
 
     private void addTestDetail(TestCaseStarted event) {
         testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
-                CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine()));
+                CucumberUtils.extractFeatureFileName(event.getTestCase().getUri()) + ":" + event.getTestCase().getLine()));
     }
 
     /**
@@ -87,7 +87,7 @@ public class TestReporter extends CitrusReporter {
                 testDetail.get().setCause(event.getResult().getError());
             } else {
                 testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
-                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine(), event.getResult().getError()));
+                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri()) + ":" + event.getTestCase().getLine(), event.getResult().getError()));
             }
         }
 
@@ -97,7 +97,7 @@ public class TestReporter extends CitrusReporter {
                 testDetail.get().setCause(cause);
             } else {
                 testResults.addTestResult(new TestResult(event.getTestCase().getId(), event.getTestCase().getName(),
-                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri().toString()) + ":" + event.getTestCase().getLine(), cause));
+                        CucumberUtils.extractFeatureFileName(event.getTestCase().getUri()) + ":" + event.getTestCase().getLine(), cause));
             }
         }
     }

@@ -39,6 +39,7 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.util.ResourceUtils;
 
 import static org.citrusframework.actions.ReceiveMessageAction.Builder.receive;
 import static org.citrusframework.actions.SendMessageAction.Builder.send;
@@ -183,7 +184,7 @@ public class KafkaSteps {
     @Given("^(?:expect|verify) (?:Kafka|kafka) message body loaded from ([^\\s]+)$")
     public void loadMessageBody(String file) {
         try {
-            setMessageBody(FileUtils.readToString(FileUtils.getFileResource(file)));
+            setMessageBody(FileUtils.readToString(ResourceUtils.resolve(file, context)));
         } catch (IOException e) {
             throw new CitrusRuntimeException(String.format("Failed to load body from file resource %s", file));
         }
