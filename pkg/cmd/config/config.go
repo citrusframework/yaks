@@ -29,7 +29,7 @@ var DefaultVersions = Versions{
 	"cucumber.version":         "7.16.1",
 	"postgresql.version":       "42.7.3",
 	"testcontainers.version":   "1.19.7",
-	"aws-java-sdk2.version":    "2.25.10",
+	"aws-java-sdk2.version":    "2.25.24",
 	"activemq.version":         "6.0.1",
 	"activemq.artemis.version": "2.32.0",
 }
