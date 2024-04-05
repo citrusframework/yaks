@@ -9,15 +9,16 @@ Feature: AWS S3
     Given start LocalStack container
     And log 'Started LocalStack container: ${YAKS_TESTCONTAINERS_LOCALSTACK_CONTAINER_NAME}'
 
-  Scenario: Create S3 client
-    Given New global Camel context
+  Scenario: Upload file
+    # Create S3 client
+    Given New Camel context
     Given load to Camel registry amazonS3Client.groovy
 
-  Scenario: Upload file
+    # Publish event
     Given Camel exchange message header CamelAwsS3Key="yaks.txt"
     Given send Camel exchange to("aws2-s3://${bucketName}?amazonS3Client=#amazonS3Client") with body: YAKS rocks!
 
-  Scenario: Verify uploaded file
+    # Verify uploaded file
     Given Camel route getS3Object.groovy
     """
     from("direct:getObject")

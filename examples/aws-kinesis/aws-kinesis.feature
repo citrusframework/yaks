@@ -9,12 +9,14 @@ Feature: AWS KINESIS
     Given Enable service KINESIS
     Given start LocalStack container
     And log 'Started LocalStack container: ${YAKS_TESTCONTAINERS_LOCALSTACK_CONTAINER_NAME}'
+    And sleep 5000 ms
 
-  Scenario: Create Kinesis client
-    Given New global Camel context
+  Scenario: Verify Kinesis events
+    # Create AWS-S3 client
+    Given New Camel context
     Given load to Camel registry amazonKinesisClient.groovy
 
-  Scenario: Create event listener
+    # Create event listener
     Given Camel route kinesisEventListener.groovy
     """
     from("aws2-kinesis://${streamName}?amazonKinesisClient=#amazonKinesisClient")
@@ -23,16 +25,14 @@ Feature: AWS KINESIS
     """
     Given sleep 5000 ms
 
-  Scenario: Publish event
+    # Publish event
     Given Camel exchange message header CamelAwsKinesisPartitionKey="${partitionKey}"
     Given send Camel exchange to("aws2-kinesis://${streamName}?amazonKinesisClient=#amazonKinesisClient") with body: YAKS rocks!
 
-  Scenario: Verify event
+    # Verify event
     Given Camel exchange message header CamelAwsKinesisPartitionKey="${partitionKey}"
     Then receive Camel exchange from("seda:result") with body: YAKS rocks!
 
-  Scenario: Stop event listener
+  Scenario: Remove resources
     Given stop Camel route kinesisEventListener
-
-  Scenario: Stop container
     Given stop LocalStack container
