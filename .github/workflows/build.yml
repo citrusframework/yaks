@@ -48,7 +48,7 @@ jobs:
       with:
         go-version: 1.21.x
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Cache Go modules
       uses: actions/cache@v3
       with:
@@ -84,7 +84,7 @@ jobs:
       with:
         go-version: 1.21.x
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Cache Go modules
       uses: actions/cache@v3
       with:
@@ -100,10 +100,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-m2-
     - name: Kind Cluster
-      uses: container-tools/kind-action@v2.0.1
+      uses: container-tools/kind-action@v2.0.4
       with:
-        version: v0.17.0
-        node_image: kindest/node:v1.28.0@sha256:9f3ff58f19dcf1a0611d11e8ac989fdb30a28f40f236f59f0bea31fb956ccf5c
+        version: v0.22.0
+        node_image: kindest/node:v1.29.2@sha256:51a1434a5397193442f0be2a297b488b6c919ce8a3931be0ce822606ea5ca245
     - name: Info
       run: |
         kubectl version
@@ -112,7 +112,7 @@ jobs:
     - name: Camel K Tools
       uses: container-tools/camel-k-action@v1.0.3
       with:
-        version: v1.12.1
+        version: v2.2.0
     - name: Build
       run: |
         make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
@@ -121,7 +121,6 @@ jobs:
     - name: Install Camel K
       run: |
         # Configure install options
-        export KAMEL_INSTALL_BUILD_PUBLISH_STRATEGY=Spectrum
         export KAMEL_INSTALL_REGISTRY=$KIND_REGISTRY
         export KAMEL_INSTALL_REGISTRY_INSECURE=true
         
