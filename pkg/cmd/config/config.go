@@ -22,11 +22,11 @@ const (
 )
 
 var DefaultVersions = Versions{
-	"citrus.version":           "4.1.1",
-	"camel.version":            "4.4.1",
-	"apache.camel.version":     "4.4.1",
+	"citrus.version":           "4.2.0",
+	"camel.version":            "4.5.0",
+	"apache.camel.version":     "4.5.0",
 	"spring.version":           "6.1.5",
-	"cucumber.version":         "7.15.0",
+	"cucumber.version":         "7.16.1",
 	"postgresql.version":       "42.7.3",
 	"testcontainers.version":   "1.19.7",
 	"aws-java-sdk2.version":    "2.25.10",
