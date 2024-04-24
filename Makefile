@@ -26,6 +26,9 @@ OPERATOR_SDK_VERSION := v1.28.0
 KUSTOMIZE_VERSION := v4.5.4
 DEFAULT_IMAGE := docker.io/citrusframework/yaks
 IMAGE_NAME ?= $(DEFAULT_IMAGE)
+# Check for arm64, aarch64, fallback to amd64
+OS_ARCH = $(if $(filter arm64 aarch64,$(shell uname -m)),arm64,amd64)
+IMAGE_ARCH ?= $(OS_ARCH)
 
 RELEASE_GIT_REMOTE := upstream
 GIT_COMMIT := $(shell if [ -d .git ]; then git rev-list -1 HEAD; else echo "$(CUSTOM_VERSION)"; fi)
@@ -103,12 +106,19 @@ test: build
 	go test ./...
 
 build-yaks:
-	@echo "####### Building yaks CLI..."
-	@# Ensure the binary is statically linked when building on Linux due to ABI changes in newer glibc 2.32, otherwise it would not run on older versions.
-ifeq ($(shell uname -s 2>/dev/null || echo Unknown),Linux)
-	CGO_ENABLED=0 go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
-else
-	go build $(GOFLAGS) -o yaks ./cmd/manager/*.go
+	@echo "####### Building yaks CLI for linux/$(IMAGE_ARCH) architecture..."
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/yaks-$(IMAGE_ARCH) ./cmd/manager/*.go
+	go build $(GOFLAGS) -o build/_output/bin/yaks-$(IMAGE_ARCH) ./cmd/manager/*.go
+	# Symbolic link to a local CLI
+	ln -sf build/_output/bin/yaks-$(IMAGE_ARCH) ./yaks
+
+build-yaks-platform:
+	# Perform only when running on OS other than linux
+ifneq ($(shell uname -s 2>/dev/null || echo Unknown),Linux)
+	@echo "####### Building platform specific yaks CLI for $(OS_ARCH) architecture..."
+	CGO_ENABLED=0 GOARCH=$(OS_ARCH) go build $(GOFLAGS) -o build/_output/bin/yaks-$(OS_ARCH) ./cmd/manager/*.go
+	# Symbolic link to a local CLI
+	ln -sf build/_output/bin/yaks-$(OS_ARCH) ./yaks
 endif
 
 build-resources:
@@ -126,15 +136,34 @@ set-next-version:
 cross-compile:
 	./script/cross_compile.sh $(VERSION) '$(GOFLAGS)'
 
-docker-build:
-	./script/docker-build.sh $(IMAGE_NAME):$(VERSION) '$(GOFLAGS)'
+image-build:
+	./script/docker-build.sh $(IMAGE_NAME) $(IMAGE_ARCH) $(VERSION) '$(GOFLAGS)'
 
-images-no-test: build package-artifacts-no-test docker-build
+images-no-test: build package-artifacts-no-test image-build build-yaks-platform
 
-images: test package-artifacts docker-build
+images: test package-artifacts image-build build-yaks-platform
+
+# Make sure the current docker builder must supports the wanted platform list, which may not be the case for the default builder
+#
+# docker buildx inspect
+# ...
+# Platforms: linux/amd64*, linux/arm64*
+#
+# docker buildx create --name mybuilder --platform linux/amd64,linux/arm64
+# docker buildx use mybuilder
+images-all:
+	make IMAGE_ARCH=arm64 images-no-test
+	make IMAGE_ARCH=amd64 images-no-test
 
 images-push:
+	docker push $(IMAGE_NAME):$(VERSION)-amd64
 	docker push $(IMAGE_NAME):$(VERSION)
+	@if docker inspect $(IMAGE_NAME):$(VERSION)-arm64 &> /dev/null; then \
+		echo "Image $(IMAGE_NAME):$(VERSION)-arm64 exists, building the multiarch manifest"; \
+		docker push $(IMAGE_NAME):$(VERSION)-arm64; \
+		docker manifest create $(IMAGE_NAME):$(VERSION) --amend $(IMAGE_NAME):$(VERSION)-amd64 --amend $(IMAGE_NAME):$(VERSION)-arm64; \
+		docker manifest push --purge $(IMAGE_NAME):$(VERSION); \
+	fi
 
 prepare-release: check-repo clean check-licenses
 
@@ -180,7 +209,7 @@ snapshot-version:
 version:
 	@echo $(VERSION)
 
-.PHONY: clean build build-yaks build-resources generate-docs release-docs release-docs-dry-run release-docs-major update-olm cross-compile test docker-build images images-no-test images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
+.PHONY: clean build build-yaks build-yaks-platform build-resources generate-docs release-docs release-docs-dry-run release-docs-major update-olm cross-compile test image-build images images-no-test images-all images-push package-artifacts package-artifacts-no-test release release-snapshot set-version-file set-version set-next-version check-repo check-licenses snapshot-version version
 
 codegen-tools-install: controller-gen
 	@# We must force the installation to make sure we are using the correct version

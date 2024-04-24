@@ -16,20 +16,21 @@
 # limitations under the License.
 #
 
-if [ "$#" -ne 2 ]; then
-    echo "usage: $0 image:version flags"
+if [ "$#" -ne 4 ]; then
+    echo "usage: $0 image_name image_arch version build_flags"
     exit 1
 fi
 
 location=$(dirname $0)
-image="$1"
-build_flags="$2"
+image_name="$1"
+image_arch="$2"
+release_version="$3"
+build_flags="$4"
 
 cd $location/..
 
 export GOOS=linux
+export GOARCH=${image_arch}
 export CGO_ENABLED=0
 
-mkdir -p build/_output/bin
-eval go build "$build_flags" -o build/_output/bin/yaks ./cmd/manager/*.go
-docker build --load -t $image -f build/Dockerfile .
+docker buildx build --platform=linux/${image_arch} --build-arg IMAGE_ARCH=${image_arch} --load -t ${image_name}-${image_arch}:${release_version} -f build/Dockerfile .

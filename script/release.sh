@@ -104,13 +104,11 @@ release() {
     # Commit, tag, release, push
     # --------------------------
 
-    # Build Docker image
+    # Build Docker images
     mkdir -p ${working_dir}/build/_output/bin
-    export GOOS=linux
-    export GOARCH=amd64
-    export CGO_ENABLED=0
-    eval go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks ${working_dir}/cmd/manager/*.go
-    docker build --load -t ${image}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
+    docker_build "$working_dir" "$image" "$release_version" amd64 "$build_flags"
+    docker_build "$working_dir" "$image" "$release_version" arm64 "$build_flags"
+    docker tag ${image}:${release_version}-amd64 ${image}:${release_version}
 
     if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
         # Release staging repo
@@ -121,7 +119,15 @@ release() {
         git_push "$working_dir" "$release_version"
 
         # Push Docker image (if configured)
-        docker_push "${working_dir}" "$image" "$release_version"
+        if [ ! $(hasflag --no-docker-push) ]; then
+            echo "==== Pushing Docker images ${image}:${$release_version}"
+            # Push docker image
+            docker push ${image}:${release_version}-amd64
+            docker push ${image}:${release_version}-arm64
+            docker push ${image}:${release_version}
+            docker manifest create ${image}:${release_version} --amend ${image}:${release_version}-amd64 --amend ${image}:${release_version}-arm64; \
+            docker manifest push --purge ${image}:${release_version}
+        fi
     fi
 
     # Use next snapshot version for major release only
@@ -149,17 +155,16 @@ release() {
     echo "==== Finished release $release_version"
 }
 
-docker_push() {
+docker_build() {
     local working_dir="$1"
     local image="$2"
     local release_version="$3"
+    local image_arch="$4"
+    local build_flags="$5"
 
-    echo "==== Pushing Docker image"
-    if [ ! $(hasflag --no-docker-push) ]; then
-        echo "Pushing image $image:$release_version"
-        # Push docker image
-        docker push ${image}:${release_version}
-    fi
+    echo "==== Building Docker image ${image}-${image_arch}:${$release_version}"
+    eval CGO_ENABLED=0 GOOS=linux GOARCH=${image_arch} go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks-${image_arch} ${working_dir}/cmd/manager/*.go
+    docker buildx build --platform=linux/${image_arch} --build-arg IMAGE_ARCH=${image_arch} --load -t ${image}-${image_arch}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 }
 
 git_push() {

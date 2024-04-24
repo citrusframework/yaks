@@ -16,6 +16,8 @@
 
 FROM eclipse-temurin:17
 
+ARG IMAGE_ARCH
+
 ARG MAVEN_VERSION="3.9.5"
 ARG MAVEN_HOME="/usr/share/maven"
 ARG SHA="4810523ba025104106567d8a15a8aa19db35068c8c8be19e30b219a1d7e83bcab96124bf86dc424b1cd3c5edba25d69ec0b31751c136f88975d15406cab3842b"
@@ -58,4 +60,4 @@ RUN chgrp -R 0 ${APP_LIBS} && \
 USER ${USER_UID}
 
 # install operator binary
-COPY build/_output/bin/yaks /usr/local/bin/yaks
+COPY build/_output/bin/yaks-${IMAGE_ARCH} /usr/local/bin/yaks
