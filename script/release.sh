@@ -108,26 +108,26 @@ release() {
     mkdir -p ${working_dir}/build/_output/bin
     docker_build "$working_dir" "$image" "$release_version" amd64 "$build_flags"
     docker_build "$working_dir" "$image" "$release_version" arm64 "$build_flags"
-    docker tag ${image}:${release_version}-amd64 ${image}:${release_version}
+    docker tag ${image}-amd64:${release_version} ${image}:${release_version}
 
     if [ ! $(hasflag --snapshot-release) ] && [ ! $(hasflag --local-release) ]; then
         # Release staging repo
         # NOTE: not working recently (because of timeouts) - fallback to doing this manually
         # release_staging_repo "$working_dir" "$maven_opts"
 
-        # Push everything (if configured)
-        git_push "$working_dir" "$release_version"
-
-        # Push Docker image (if configured)
+        # Push Docker images (if configured)
         if [ ! $(hasflag --no-docker-push) ]; then
-            echo "==== Pushing Docker images ${image}:${$release_version}"
+            echo "==== Pushing Docker images $image:$release_version"
             # Push docker image
-            docker push ${image}:${release_version}-amd64
-            docker push ${image}:${release_version}-arm64
+            docker push ${image}-amd64:${release_version}
+            docker push ${image}-arm64:${release_version}
             docker push ${image}:${release_version}
-            docker manifest create ${image}:${release_version} --amend ${image}:${release_version}-amd64 --amend ${image}:${release_version}-arm64; \
+            docker manifest create ${image}:${release_version} --amend ${image}-amd64:${release_version} --amend ${image}-arm64:${release_version}
             docker manifest push --purge ${image}:${release_version}
         fi
+
+        # Push everything (if configured)
+        git_push "$working_dir" "$release_version"
     fi
 
     # Use next snapshot version for major release only
@@ -162,7 +162,7 @@ docker_build() {
     local image_arch="$4"
     local build_flags="$5"
 
-    echo "==== Building Docker image ${image}-${image_arch}:${$release_version}"
+    echo "==== Building Docker image $image-$image_arch:$release_version"
     eval CGO_ENABLED=0 GOOS=linux GOARCH=${image_arch} go build "$build_flags" -o ${working_dir}/build/_output/bin/yaks-${image_arch} ${working_dir}/cmd/manager/*.go
     docker buildx build --platform=linux/${image_arch} --build-arg IMAGE_ARCH=${image_arch} --load -t ${image}-${image_arch}:${release_version} -f ${working_dir}/build/Dockerfile ${working_dir}
 }
