@@ -18,7 +18,7 @@ VERSION := 0.20.0-SNAPSHOT
 SNAPSHOT_VERSION := 0.20.0-SNAPSHOT
 OPERATOR_VERSION := $(subst -SNAPSHOT,,$(VERSION))
 LAST_RELEASED_IMAGE_NAME := yaks-operator
-LAST_RELEASED_VERSION := 0.19.0
+LAST_RELEASED_VERSION := 0.19.1
 
 CONTROLLER_GEN_VERSION := v0.6.1
 CODEGEN_VERSION := v0.25.6
@@ -170,8 +170,8 @@ prepare-release: check-repo clean check-licenses
 release-dry-run: prepare-release
 	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests --dry-run --no-git-push --keep-staging-repo
 
-release: prepare-release
-	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests
+release:
+	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --next-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests
 
 release-local: prepare-release
 	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --local-release --no-git-push --no-docker-push
