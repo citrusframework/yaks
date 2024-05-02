@@ -267,7 +267,7 @@ public class CamelSteps {
 
     @Given("^load Camel route ([^\\s]+)\\.(groovy|xml)")
     public void loadCamelRoute(String fileName, String language) throws Exception {
-        String route = FileUtils.readToString(ResourceUtils.resolve(fileName, context));
+        String route = FileUtils.readToString(ResourceUtils.resolve("%s.%s".formatted(fileName, language), context));
         switch (language) {
             case "groovy":
                 camelRouteGroovy(fileName, route);
