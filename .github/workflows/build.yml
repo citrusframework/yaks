@@ -117,6 +117,7 @@ jobs:
       run: |
         make IMAGE_NAME=$YAKS_IMAGE_NAME VERSION=$YAKS_IMAGE_VERSION set-version-file build images-no-test
         sudo cp yaks /usr/local/bin/
+        docker tag $YAKS_IMAGE_NAME-amd64:$YAKS_IMAGE_VERSION $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
         docker push $YAKS_IMAGE_NAME:$YAKS_IMAGE_VERSION
     - name: Install Camel K
       run: |
