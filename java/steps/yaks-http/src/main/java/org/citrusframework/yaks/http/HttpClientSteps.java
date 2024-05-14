@@ -147,11 +147,13 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^(?:URL|url): ([^\\s]+)$")
     public void setUrl(String url) {
-        if (url.startsWith("https")) {
+        String resolvedUrl = context.replaceDynamicContentInString(url);
+
+        if (resolvedUrl.startsWith("https")) {
             httpClient.getEndpointConfiguration().setRequestFactory(sslRequestFactory());
         }
 
-        this.requestUrl = url;
+        this.requestUrl = resolvedUrl;
     }
 
     @Given("^HTTP client (enable|disable) basic auth$")
@@ -200,17 +202,17 @@ public class HttpClientSteps implements HttpSteps {
 
     @Given("^(?:URL|url|path) ([^\\s]+) is healthy$")
     public void healthCheck(String urlOrPath) {
-        waitForHttpUrl(getRequestUrl(urlOrPath));
+        waitForHttpUrl(getRequestUrl(urlOrPath, context));
     }
 
     @Given("^wait for (?:URL|url|path) ([^\\s]+)$")
     public void waitForHttpUrl(String urlOrPath) {
-        waitForHttpStatus(getRequestUrl(urlOrPath), 200);
+        waitForHttpStatus(getRequestUrl(urlOrPath, context), 200);
     }
 
     @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url|path) ([^\\s]+)$")
     public void waitForHttpUrlUsingMethod(String method, String urlOrPath) {
-        waitForHttpStatusUsingMethod(method, getRequestUrl(urlOrPath), 200);
+        waitForHttpStatusUsingMethod(method, getRequestUrl(urlOrPath, context), 200);
     }
 
     @Given("^wait for (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
@@ -219,7 +221,7 @@ public class HttpClientSteps implements HttpSteps {
                 .milliseconds(timeout)
                 .interval(timeout / 10)
                 .status(statusCode)
-                .url(getRequestUrl(urlOrPath)));
+                .url(getRequestUrl(urlOrPath, context)));
     }
 
     @Given("^wait for (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) on (?:URL|url|path) ([^\\s]+) to return (\\d+)(?: [^\\s]+)?$")
@@ -229,7 +231,7 @@ public class HttpClientSteps implements HttpSteps {
                 .method(method)
                 .interval(timeout / 10)
                 .status(statusCode)
-                .url(getRequestUrl(urlOrPath)));
+                .url(getRequestUrl(urlOrPath, context)));
     }
 
     @Then("^(?:expect|verify) HTTP response header ([^\\s]+)(?:=| is )\"(.+)\"$")
@@ -333,7 +335,7 @@ public class HttpClientSteps implements HttpSteps {
 
     @When("^send (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) ([^\"\\s]+)$")
     public void sendClientRequest(String method, String path) {
-        sendClientRequest(createRequest(requestBody, requestHeaders, requestParams, method, path));
+        sendClientRequest(createRequest(requestBody, requestHeaders, requestParams, method, path, context));
         requestBody = null;
         requestHeaders.clear();
         requestParams.clear();
@@ -341,7 +343,7 @@ public class HttpClientSteps implements HttpSteps {
 
     @Then("^receive HTTP (\\d+)(?: [^\\s]+)?$")
     public void receiveClientResponse(Integer status) {
-        receiveClientResponse(createResponse(responseBody, responseHeaders, status));
+        receiveClientResponse(createResponse(responseBody, responseHeaders, status, context));
         responseBody = null;
         responseHeaders.clear();
     }
@@ -462,11 +464,14 @@ public class HttpClientSteps implements HttpSteps {
      * separators in concatenated URLs.
      *
      * @param urlOrPath
+     * @param context
      * @return
      */
-    private String getRequestUrl(String urlOrPath) {
-        if (StringUtils.hasText(urlOrPath) && urlOrPath.startsWith("http")) {
-            return urlOrPath;
+    private String getRequestUrl(String urlOrPath, TestContext context) {
+        String resolvedUrlOrPath = context.replaceDynamicContentInString(urlOrPath);
+
+        if (StringUtils.hasText(resolvedUrlOrPath) && resolvedUrlOrPath.startsWith("http")) {
+            return resolvedUrlOrPath;
         }
 
         String url;
@@ -478,11 +483,11 @@ public class HttpClientSteps implements HttpSteps {
             throw new CitrusRuntimeException("Must provide a base request URL first when using relative resource path: " + urlOrPath);
         }
 
-        if (!StringUtils.hasText(urlOrPath) || urlOrPath.equals("/")) {
+        if (!StringUtils.hasText(resolvedUrlOrPath) || resolvedUrlOrPath.equals("/")) {
             return url;
         }
 
-        return (url.endsWith("/") ? url : url + "/") + (urlOrPath.startsWith("/") ? urlOrPath.substring(1) : urlOrPath);
+        return (url.endsWith("/") ? url : url + "/") + (resolvedUrlOrPath.startsWith("/") ? resolvedUrlOrPath.substring(1) : resolvedUrlOrPath);
     }
 
     private HttpComponentsClientHttpRequestFactory basicAuthRequestFactory() {

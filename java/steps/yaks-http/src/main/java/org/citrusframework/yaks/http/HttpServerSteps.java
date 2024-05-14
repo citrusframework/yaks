@@ -366,7 +366,7 @@ public class HttpServerSteps implements HttpSteps {
 
     @When("^receive (GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS|TRACE) ([^\"\\s]+)$")
     public void receiveServerRequest(String method, String path) {
-        receiveServerRequest(createRequest(requestBody, requestHeaders, requestParams, method, path));
+        receiveServerRequest(createRequest(requestBody, requestHeaders, requestParams, method, path, context));
         requestBody = null;
         requestHeaders.clear();
         requestParams.clear();
@@ -374,7 +374,7 @@ public class HttpServerSteps implements HttpSteps {
 
     @Then("^send HTTP (\\d+)(?: [^\\s]+)?$")
     public void sendServerResponse(Integer status) {
-        sendServerResponse(createResponse(responseBody, responseHeaders, status));
+        sendServerResponse(createResponse(responseBody, responseHeaders, status, context));
         responseBody = null;
         responseHeaders.clear();
     }

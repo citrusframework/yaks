@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.citrusframework.CitrusSettings;
+import org.citrusframework.context.TestContext;
 import org.citrusframework.http.message.HttpMessage;
 import org.citrusframework.message.MessageType;
 import org.springframework.http.HttpMethod;
@@ -71,9 +72,10 @@ public interface HttpSteps {
      * @param headers
      * @param method
      * @param path
+     * @param context
      * @return
      */
-    default HttpMessage createRequest(String body, Map<String, String> headers, Map<String, String> params, String method, String path) {
+    default HttpMessage createRequest(String body, Map<String, String> headers, Map<String, String> params, String method, String path, TestContext context) {
         HttpMessage request = new HttpMessage();
         request.method(HttpMethod.valueOf(method));
 
@@ -82,7 +84,7 @@ public interface HttpSteps {
         }
 
         if (StringUtils.hasText(body)) {
-            request.setPayload(body);
+            request.setPayload(context.replaceDynamicContentInString(body));
         }
 
         for (Map.Entry<String, String> headerEntry : headers.entrySet()) {
@@ -101,18 +103,19 @@ public interface HttpSteps {
      * @param body
      * @param headers
      * @param status
+     * @param context
      * @return
      */
-    default HttpMessage createResponse(String body, Map<String, String> headers, Integer status) {
+    default HttpMessage createResponse(String body, Map<String, String> headers, Integer status, TestContext context) {
         HttpMessage response = new HttpMessage();
         response.status(HttpStatus.valueOf(status));
 
         if (StringUtils.hasText(body)) {
-            response.setPayload(body);
+            response.setPayload(context.replaceDynamicContentInString(body));
         }
 
         for (Map.Entry<String, String> headerEntry : headers.entrySet()) {
-            response.setHeader(headerEntry.getKey(), headerEntry.getValue());
+            response.setHeader(headerEntry.getKey(), context.replaceDynamicContentInString(headerEntry.getValue()));
         }
 
         return response;
