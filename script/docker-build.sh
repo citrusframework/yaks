@@ -34,3 +34,4 @@ export GOARCH=${image_arch}
 export CGO_ENABLED=0
 
 docker buildx build --platform=linux/${image_arch} --build-arg IMAGE_ARCH=${image_arch} --load -t ${image_name}-${image_arch}:${release_version} -f build/Dockerfile .
+docker tag ${image_name}-${image_arch}:${release_version} ${image_name}:${release_version}

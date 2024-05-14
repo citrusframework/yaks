@@ -108,7 +108,6 @@ test: build
 build-yaks:
 	@echo "####### Building yaks CLI for linux/$(IMAGE_ARCH) architecture..."
 	CGO_ENABLED=0 GOOS=linux GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/yaks-$(IMAGE_ARCH) ./cmd/manager/*.go
-	go build $(GOFLAGS) -o build/_output/bin/yaks-$(IMAGE_ARCH) ./cmd/manager/*.go
 	# Symbolic link to a local CLI
 	ln -sf build/_output/bin/yaks-$(IMAGE_ARCH) ./yaks
 
