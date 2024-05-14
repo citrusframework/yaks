@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 @CucumberOptions(
         extraGlue = {
                 "org.citrusframework.yaks.standard",
+                "org.citrusframework.yaks.http",
                 "org.citrusframework.yaks.camel",
                 "org.citrusframework.yaks.jdbc",
                 "org.citrusframework.yaks.kafka"

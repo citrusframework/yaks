@@ -7,11 +7,11 @@ Feature: AWS S3
   Scenario: Start container
     Given Enable service S3
     Given start LocalStack container
-    And log 'Started LocalStack container: ${YAKS_TESTCONTAINERS_LOCALSTACK_CONTAINER_NAME}'
+    Given HTTP request timeout is 20000 ms
+    And wait for URL ${YAKS_TESTCONTAINERS_LOCALSTACK_SERVICE_URL}
 
-  Scenario: Upload file
+  Scenario: Verify upload file
     # Create S3 client
-    Given New Camel context
     Given load to Camel registry amazonS3Client.groovy
 
     # Publish event
