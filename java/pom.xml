@@ -90,33 +90,33 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.docs.version>${project.version}</project.docs.version>
 
-    <apache.camel.version>4.5.0</apache.camel.version>
-    <activemq.artemis.version>2.32.0</activemq.artemis.version>
-    <activemq.version>6.0.1</activemq.version>
+    <apache.camel.version>4.6.0</apache.camel.version>
+    <activemq.artemis.version>2.33.0</activemq.artemis.version>
+    <activemq.version>6.1.0</activemq.version>
     <apicurio.version>1.1.27</apicurio.version>
     <ascii-table-version>1.8.0</ascii-table-version>
     <assertj-core.version>3.25.3</assertj-core.version>
-    <awaitility.version>4.2.0</awaitility.version>
-    <aws-java-sdk2.version>2.25.24</aws-java-sdk2.version>
-    <citrus.version>4.2.0</citrus.version>
+    <awaitility.version>4.2.1</awaitility.version>
+    <aws-java-sdk2.version>2.25.53</aws-java-sdk2.version>
+    <citrus.version>4.2.1</citrus.version>
     <commons.dbcp2.version>2.12.0</commons.dbcp2.version>
     <cucumber.version>7.16.1</cucumber.version>
     <groovy.version>3.0.21</groovy.version>
-    <jackson.version>2.17.0</jackson.version>
+    <jackson.version>2.17.1</jackson.version>
     <junit.version>4.13.2</junit.version>
     <knative-client.version>6.10.0</knative-client.version>
     <kubernetes-client.version>6.10.0</kubernetes-client.version>
-    <log4j2.version>2.21.1</log4j2.version>
-    <mockito.version>5.11.0</mockito.version>
+    <log4j2.version>2.22.1</log4j2.version>
+    <mockito.version>5.12.0</mockito.version>
     <netty.version>4.1.105.Final</netty.version>
     <okhttp.version>4.12.0</okhttp.version>
-    <picoli-version>4.7.5</picoli-version>
+    <picoli-version>4.7.6</picoli-version>
     <plexus-component-metadata.version>2.1.1</plexus-component-metadata.version>
     <postgresql.version>42.7.3</postgresql.version>
     <slf4j.version>2.0.11</slf4j.version>
     <snakeyaml.version>2.2</snakeyaml.version>
-    <spring.version>6.1.5</spring.version>
-    <testcontainers.version>1.19.7</testcontainers.version>
+    <spring.version>6.1.7</spring.version>
+    <testcontainers.version>1.19.8</testcontainers.version>
     <xstream.version>1.4.20</xstream.version>
 
     <asciidoctor-maven-plugin.version>2.2.4</asciidoctor-maven-plugin.version>
