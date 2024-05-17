@@ -20,7 +20,7 @@
 
   <groupId>org.citrusframework.yaks</groupId>
   <artifactId>yaks-bom</artifactId>
-  <version>0.20.0-SNAPSHOT</version>
+  <version>0.19.2</version>
   <packaging>pom</packaging>
   <name>YAKS :: BOM</name>
   <description>This Bill of Materials POM can be used to ease dependency management when referencing multiple YAKS artifacts using Gradle or Maven</description>
@@ -84,93 +84,93 @@
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-standard</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
 
       <!-- Steps modules -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-camel</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-camel-k</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-groovy</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-http</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jdbc</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jms</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-kafka</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-knative</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-kubernetes</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-openapi</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-selenium</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-testcontainers</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
 
       <!-- Runtime -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-runtime-core</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-runtime-maven</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
 
       <!-- Tools -->
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-maven-extension</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
       <dependency>
         <groupId>org.citrusframework.yaks</groupId>
         <artifactId>yaks-jbang</artifactId>
-        <version>0.20.0-SNAPSHOT</version>
+        <version>0.19.2</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
