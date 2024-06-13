@@ -49,6 +49,7 @@ import org.citrusframework.http.security.User;
 import org.citrusframework.http.server.HttpServer;
 import org.citrusframework.http.server.HttpServerBuilder;
 import org.citrusframework.util.FileUtils;
+import org.citrusframework.util.StringUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
 import org.citrusframework.yaks.util.ResourceUtils;
 import org.eclipse.jetty.http.HttpVersion;
@@ -83,8 +84,6 @@ public class HttpServerSteps implements HttpSteps {
 
     private HttpServer httpServer;
 
-    private ServerConnector sslConnector;
-
     private Map<String, String> requestHeaders = new HashMap<>();
     private Map<String, String> responseHeaders = new HashMap<>();
     private Map<String, String> requestParams = new HashMap<>();
@@ -105,6 +104,9 @@ public class HttpServerSteps implements HttpSteps {
     private int securePort = HttpSettings.getSecurePort();
     private int serverPort = HttpSettings.getServerPort();
     private String serverName = HttpSettings.getServerName();
+
+    private boolean useSslConnector = HttpSettings.isUseSslConnector();
+    private boolean useSslKeyStore = HttpSettings.isUseSslKeyStore();
 
     private String sslKeyStorePath = HttpSettings.getSslKeyStorePath();
     private String sslKeyStorePassword = HttpSettings.getSslKeyStorePassword();
@@ -142,7 +144,6 @@ public class HttpServerSteps implements HttpSteps {
         bodyValidationExpressions = new HashMap<>();
         outboundDictionary = null;
         inboundDictionary = null;
-        sslConnector = null;
     }
 
     @Given("^HTTP server \"([^\"\\s]+)\"$")
@@ -227,16 +228,21 @@ public class HttpServerSteps implements HttpSteps {
 
     @Given("^HTTP server (enable|disable) SSL$")
     public void setSecureConnector(String mode) {
-        if ("enable".equals(mode)) {
-            this.sslConnector = sslConnector();
-        } else {
-            this.sslConnector = null;
+        useSslConnector = "enable".equals(mode);
+        if (useSslConnector) {
+            this.useSslKeyStore = true;
         }
+    }
+
+    @Given("^HTTP server (enable|disable) SSL keystore$")
+    public void setSecureKeyStore(String mode) {
+        this.useSslKeyStore = "enable".equals(mode);
     }
 
     @Given("^HTTP server SSL keystore path ([^\\s]+)$")
     public void setSslKeyStorePath(String sslKeyStorePath) {
         this.sslKeyStorePath = sslKeyStorePath;
+        this.useSslKeyStore = true;
     }
 
     @Given("^HTTP server SSL keystore password ([^\\s]+)$")
@@ -454,8 +460,8 @@ public class HttpServerSteps implements HttpSteps {
                 .name(serverName)
                 .build();
 
-        if (sslConnector != null) {
-            httpServer.setConnector(sslConnector);
+        if (useSslConnector) {
+            httpServer.setConnector(sslConnector());
         }
 
         if ("basic".equals(authMethod)) {
@@ -555,8 +561,10 @@ public class HttpServerSteps implements HttpSteps {
     private SslContextFactory.Server sslContextFactory() {
         try {
             SslContextFactory.Server contextFactory = new SslContextFactory.Server();
-            contextFactory.setKeyStorePath(getKeyStorePathPath());
-            contextFactory.setKeyStorePassword(context.replaceDynamicContentInString(sslKeyStorePassword));
+            if (useSslKeyStore && StringUtils.hasText(sslKeyStorePath)) {
+                contextFactory.setKeyStorePath(getKeyStorePathPath());
+                contextFactory.setKeyStorePassword(context.replaceDynamicContentInString(sslKeyStorePassword));
+            }
             return contextFactory;
         } catch (IOException e) {
             throw new CitrusRuntimeException("Failed to read keystore file in path: " + sslKeyStorePath);
