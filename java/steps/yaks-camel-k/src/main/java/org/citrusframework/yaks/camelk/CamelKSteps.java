@@ -67,6 +67,8 @@ public class CamelKSteps {
     private Map<String, String> properties;
     private List<String> buildPropertyFiles;
     private Map<String, String> buildProperties;
+    private List<String> envVarFiles;
+    private Map<String, String> envVars;
 
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
 
@@ -80,6 +82,8 @@ public class CamelKSteps {
         properties = new LinkedHashMap<>();
         buildPropertyFiles = new ArrayList<>();
         buildProperties = new LinkedHashMap<>();
+        envVarFiles = new ArrayList<>();
+        envVars = new LinkedHashMap<>();
 
         if (!context.getVariables().containsKey(VariableNames.OPERATOR_NAMESPACE.value())) {
             context.setVariable(VariableNames.OPERATOR_NAMESPACE.value(), CamelKSettings.getOperatorNamespace());
@@ -156,6 +160,22 @@ public class CamelKSteps {
         buildProperties.putAll(propertyTable.asMap(String.class, String.class));
     }
 
+    @Given("^Camel K integration environment variable file ([^\\s]+)$")
+    public void addEnVarFile(String filePath) {
+        envVarFiles.add(filePath);
+    }
+
+	@Given("^Camel K integration environment variable ([^\\s]+)=\"([^\"]*)\"$")
+    @Given("^Camel K integration environment variable ([^\\s]+) (?:is|=) \"([^\"]*)\"$")
+    public void addEnVar(String name, String value) {
+        envVars.put(name, value);
+    }
+
+	@Given("^Camel K integration environment variables$")
+    public void addEnvVars(DataTable propertyTable) {
+        envVars.putAll(propertyTable.asMap(String.class, String.class));
+    }
+
 	@Given("^(?:create|new) Camel K integration ([a-z0-9][a-z0-9-\\.]+[a-z0-9])\\.([a-z0-9-]+) with configuration:?$")
 	public void createIntegration(String name, String language, Map<String, String> configuration) {
 		if (configuration.get("source") == null) {
@@ -192,6 +212,8 @@ public class CamelKSteps {
                     .propertyFiles(propertyFiles)
                     .buildProperties(buildProperties)
                     .buildPropertyFiles(buildPropertyFiles)
+                    .envVars(envVars)
+                    .envVarFiles(envVarFiles)
                     .supportVariables(supportVariablesInSources)
                     .source(name + "." + language, source));
 
@@ -274,6 +296,8 @@ public class CamelKSteps {
                 .buildProperties(configuration.getOrDefault("build-properties", "").trim())
                 .buildProperties(buildProperties)
                 .buildPropertyFiles(buildPropertyFiles)
+                .envVars(envVars)
+                .envVarFiles(envVarFiles)
                 .properties(configuration.getOrDefault("properties", "").trim())
                 .properties(properties)
                 .propertyFiles(propertyFiles)
