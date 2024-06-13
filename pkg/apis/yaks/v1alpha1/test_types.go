@@ -51,7 +51,7 @@ type TestSpec struct {
 	Selenium  SeleniumSpec   `json:"selenium,omitempty"`
 	KubeDock  KubeDockSpec   `json:"kubedock,omitempty"`
 	Env       []string       `json:"env,omitempty"`
-	Secret    string         `json:"secret,omitempty"`
+	Secrets   []string       `json:"secrets,omitempty"`
 }
 
 // RuntimeSpec --.

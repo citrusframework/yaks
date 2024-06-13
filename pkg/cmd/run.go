@@ -90,6 +90,7 @@ func newCmdRun(rootCmdOptions *RootCmdOptions) (*cobra.Command, *runCmdOptions) 
 	cmd.Flags().StringP("settings", "s", "", "Path to runtime settings file. File content is added to the test runtime and can hold runtime dependency information for instance.")
 	cmd.Flags().StringArrayP("env", "e", nil, "Set an environment variable in the integration container. E.g \"-e MY_VAR=my-value\"")
 	cmd.Flags().StringArray("resource", nil, "Add a resource")
+	cmd.Flags().StringArray("secret", nil, "Bind a secret to the test")
 	cmd.Flags().StringArray("property-file", nil, "Bind a property file to the test. E.g. \"--property-file test.properties\"")
 	cmd.Flags().String("timeout", "", "Time to wait for individual test to complete")
 
@@ -124,6 +125,7 @@ type runCmdOptions struct {
 	Tags               []string            `mapstructure:"tag"`
 	Features           []string            `mapstructure:"feature"`
 	Resources          []string            `mapstructure:"resources"`
+	Secrets            []string            `mapstructure:"secrets"`
 	PropertyFiles      []string            `mapstructure:"property-files"`
 	Glue               []string            `mapstructure:"glue"`
 	Options            string              `mapstructure:"options"`
@@ -554,8 +556,12 @@ func (o *runCmdOptions) configureTest(ctx context.Context, namespace string, fil
 
 	o.setupEnvSettings(&test, runConfig)
 
-	if runConfig.Config.Runtime.Secret != "" {
-		test.Spec.Secret = runConfig.Config.Runtime.Secret
+	if len(o.Secrets) > 0 {
+		test.Spec.Secrets = append(test.Spec.Secrets, o.Secrets...)
+	}
+
+	if len(runConfig.Config.Runtime.Secrets) > 0 {
+		test.Spec.Secrets = append(test.Spec.Secrets, runConfig.Config.Runtime.Secrets...)
 	}
 
 	if runConfig.Config.Runtime.Selenium.Enabled {

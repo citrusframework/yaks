@@ -24,6 +24,10 @@ GO111MODULE=on
 # Entering the client module
 cd $rootdir/pkg/client/yaks
 
+rm -rf ./clientset
+rm -rf ./informers
+rm -rf ./listers
+
 echo "Generating Go client code..."
 
 $(go env GOPATH)/bin/client-gen \
@@ -31,29 +35,22 @@ $(go env GOPATH)/bin/client-gen \
 	--go-header-file=$rootdir/script/headers/default.txt \
 	--clientset-name "versioned"  \
 	--input-base=github.com/citrusframework/yaks/pkg/apis \
-	--output-base=. \
-	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/clientset
+	--output-dir=clientset \
+	--output-pkg=github.com/citrusframework/yaks/pkg/client/yaks/clientset
 
 $(go env GOPATH)/bin/lister-gen \
-	--input-dirs=github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1 \
+  $rootdir/pkg/apis/yaks/v1alpha1 \
 	--go-header-file=$rootdir/script/headers/default.txt \
-	--output-base=. \
-	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/listers
+	--output-dir=listers \
+	--output-pkg=github.com/citrusframework/yaks/pkg/client/yaks/listers
 
 $(go env GOPATH)/bin/informer-gen \
+  $rootdir/pkg/apis/yaks/v1alpha1 \
   --versioned-clientset-package=github.com/citrusframework/yaks/pkg/client/yaks/clientset/versioned \
 	--listers-package=github.com/citrusframework/yaks/pkg/client/yaks/listers \
-	--input-dirs=github.com/citrusframework/yaks/pkg/apis/yaks/v1alpha1 \
 	--go-header-file=$rootdir/script/headers/default.txt \
-	--output-base=. \
-	--output-package=github.com/citrusframework/yaks/pkg/client/yaks/informers
-
-# hack to fix non go-module compliance
-rm -rf ./clientset
-rm -rf ./informers
-rm -rf ./listers
-cp -R ./github.com/citrusframework/yaks/pkg/client/yaks/* .
-rm -rf ./github.com
+	--output-dir=informers \
+	--output-pkg=github.com/citrusframework/yaks/pkg/client/yaks/informers
 
 # hack to fix test custom resource generated fake. otherwise generated fake file is handled as test scoped file
 mv $rootdir/pkg/client/yaks/clientset/versioned/typed/yaks/v1alpha1/fake/fake_test.go \

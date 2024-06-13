@@ -162,23 +162,39 @@ func Run(leaderElection bool, leaderElectionID string) {
 
 	hasTestLabel, err := labels.NewRequirement(v1alpha1.TestLabel, selection.Exists, []string{})
 	exitOnError(err, "cannot create test label selector")
-	selector := labels.NewSelector().Add(*hasTestLabel)
+	labelsSelector := labels.NewSelector().Add(*hasTestLabel)
+
+	selector := cache.ByObject{
+		Label: labelsSelector,
+	}
+
+	if !envvar.IsCurrentOperatorGlobal() {
+		selector = cache.ByObject{
+			Label:      labelsSelector,
+			Namespaces: getNamespacesSelector(operatorNamespace, watchNamespace),
+		}
+	}
+
+	cacheOptions := cache.Options{
+		ByObject: map[k8sclient.Object]cache.ByObject{
+			&corev1.Pod{}:  selector,
+			&batchv1.Job{}: selector,
+		},
+	}
+
+	if !envvar.IsCurrentOperatorGlobal() {
+		cacheOptions.DefaultNamespaces = getNamespacesSelector(operatorNamespace, watchNamespace)
+	}
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(c.GetConfig(), manager.Options{
-		Namespace:                     watchNamespace,
 		EventBroadcaster:              broadcaster,
 		LeaderElection:                leaderElection,
 		LeaderElectionNamespace:       operatorNamespace,
 		LeaderElectionID:              leaderElectionID,
 		LeaderElectionResourceLock:    resourcelock.LeasesResourceLock,
 		LeaderElectionReleaseOnCancel: true,
-		Cache: cache.Options{
-			ByObject: map[k8sclient.Object]cache.ByObject{
-				&corev1.Pod{}:  {Label: selector},
-				&batchv1.Job{}: {Label: selector},
-			},
-		},
+		Cache:                         cacheOptions,
 	})
 	exitOnError(err, "")
 
@@ -214,6 +230,16 @@ func Run(leaderElection bool, leaderElectionID string) {
 
 	err = mgr.Start(signals.SetupSignalHandler())
 	exitOnError(err, "manager exited non-zero")
+}
+
+func getNamespacesSelector(operatorNamespace string, watchNamespace string) map[string]cache.Config {
+	namespacesSelector := map[string]cache.Config{
+		operatorNamespace: {},
+	}
+	if operatorNamespace != watchNamespace {
+		namespacesSelector[watchNamespace] = cache.Config{}
+	}
+	return namespacesSelector
 }
 
 func installInstance(ctx context.Context, c client.Client, global bool, version string) error {

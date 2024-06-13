@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import org.citrusframework.functions.DefaultFunctionLibrary;
 import org.citrusframework.functions.FunctionLibrary;
+import org.citrusframework.util.FileUtils;
 import org.citrusframework.variable.GlobalVariables;
 import org.citrusframework.variable.GlobalVariablesPropertyLoader;
 import org.citrusframework.yaks.report.SystemOutTestReporter;
@@ -43,16 +44,16 @@ public class YaksAutoConfiguration {
     public GlobalVariablesPropertyLoader globalVariablesPropertyLoader() {
         GlobalVariablesPropertyLoader propertyLoader = new GlobalVariablesPropertyLoader();
 
-        // Load mounted secrets as global variables
+        // Load mounted property files from secrets as global variables
         URL mountedSecrets = Thread.currentThread().getContextClassLoader().getResource("secrets");
         if (mountedSecrets != null) {
             File secretsDir = new File(mountedSecrets.getPath());
             if (secretsDir.exists() && secretsDir.isDirectory()) {
                 File[] propertyFiles = secretsDir.listFiles();
                 if (propertyFiles != null) {
-                    Stream.of(propertyFiles).forEach(file -> {
-                        propertyLoader.getPropertyFiles().add("file:" + file.getPath());
-                    });
+                    Stream.of(propertyFiles)
+                            .filter(file -> "properties".equals(FileUtils.getFileExtension(file.getName())))
+                            .forEach(file -> propertyLoader.getPropertyFiles().add("file:" + file.getPath()));
                 }
             }
         }
