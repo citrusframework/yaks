@@ -86,7 +86,7 @@ public class ProcessAndOutput {
                 builder.append(line).append(System.lineSeparator());
             }
 
-            if (builder.length() > 0) {
+            if (!builder.isEmpty()) {
                 output += builder;
             }
         } catch (IOException e) {
@@ -124,7 +124,7 @@ public class ProcessAndOutput {
             throw new CitrusRuntimeException("Failed to get JBang process output", e);
         }
 
-        if (builder.length() > 0) {
+        if (!builder.isEmpty()) {
             if (output == null) {
                 output = builder.toString();
             } else {

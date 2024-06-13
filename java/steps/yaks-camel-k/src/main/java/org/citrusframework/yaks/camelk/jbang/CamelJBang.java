@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -114,6 +115,12 @@ public class CamelJBang {
         if (CamelJBangSettings.isCamelDumpIntegrationOutput()) {
             Path workDir = CamelJBangSettings.getWorkDir();
             File outputFile = workDir.resolve(String.format("i-%s-output.txt", name)).toFile();
+
+            if (Stream.of(args).noneMatch(it -> it.contains("--logging-color"))) {
+                // disable logging colors when writing logs to file
+                runArgs.add("--logging-color=false");
+            }
+
             return executeAsync(camel(runArgs.toArray(String[]::new)), outputFile);
         } else {
             return executeAsync(camel(runArgs.toArray(String[]::new)));
