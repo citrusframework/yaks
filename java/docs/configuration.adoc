@@ -331,35 +331,37 @@ We can create a secret from that file and label it so that it will be picked up 
 kubectl create secret generic my-secret --from-file=mysecret.properties
 ----
 
-Once the secret is created you can bind it to tests by their name. Given the test `my-test.feature` you can bind the secret to the test
-by adding a label as follows:
+Once the secret is created you can bind it to a test via labels on the secret.
+Given the test named `my-test.feature` you can bind the secret to the test by adding a label as follows:
 
+.Bind secret to a test via labels
 [source,shell script]
 ----
 # Bind secret to the "my-test" test case
 kubectl label secret my-secret yaks.citrusframework.org/test=my-test
 ----
 
-For multiple secrets and variants of secrets on different environments (e.g. dev, test, staging) you can add a secret id and label that one
-explicitly in addition to the test name.
+When running a test the YAKS operator searches for all secrets labelled with the test name to automatically mount the secret to the test pod container.
+All secret volumes get mounted to the test pod in `/etc/yaks/secrets` folder.
+You can access this folder in the test in order to load the secrets and their content.
 
-[source,shell script]
-----
-# Bind secret to the named configuration "staging" of the "my-test" test case
-kubectl label secret my-secret yaks.citrusframework.org/test=my-test yaks.citrusframework.org/test.configuration=staging
-----
-
-With that in place you just need to set the secret id in your `yaks-config.yaml` for that test.
+Instead of using the label based binding you can also specify a list of secret names on the test runtime config.
+Each secret gets mounted to the test pod container.
+With that in place you just need to set the secret name in your `yaks-config.yaml` for that test.
 
 .yaks-config.yaml
 [source,yaml]
 ----
 config:
   runtime:
-    secret: staging
+    secrets:
+      - my-secret
 ----
 
-You can now write a test and use the secret properties as normal test variables:
+This assumes that there is a secret named `my-secret` available in the test namespace.
+You can now write a test and load the content of the secret (e.g. files).
+Also, property files in the secret get automatically loaded as test variables,
+so you can reference the secret properties with the normal test variable syntax:
 
 .my-test.feature
 [source,gherkin]

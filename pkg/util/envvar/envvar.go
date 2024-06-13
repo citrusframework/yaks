@@ -18,6 +18,7 @@ package envvar
 
 import (
 	"os"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 )
@@ -93,4 +94,13 @@ func GetOperatorNamespace() string {
 	}
 
 	return ""
+}
+
+// IsCurrentOperatorGlobal returns true if the operator is configured to watch all namespaces.
+func IsCurrentOperatorGlobal() bool {
+	if watchNamespace, envSet := os.LookupEnv(WatchNamespaceEnv); !envSet || strings.TrimSpace(watchNamespace) == "" {
+		return true
+	}
+
+	return false
 }

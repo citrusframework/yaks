@@ -154,10 +154,6 @@ func (action *startAction) newTestResources(ctx context.Context, test *v1alpha1.
 									Name:      "tests",
 									MountPath: "/etc/yaks/tests",
 								},
-								{
-									Name:      "secrets",
-									MountPath: "/etc/yaks/secrets",
-								},
 							},
 							Env: []v1.EnvVar{
 								{
@@ -777,34 +773,44 @@ func (action *startAction) bindSecrets(ctx context.Context, test *v1alpha1.Test,
 	var options = metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", v1alpha1.TestLabel, test.Name),
 	}
-	if test.Spec.Secret != "" {
-		options.LabelSelector = fmt.Sprintf("%s=%s",
-			v1alpha1.TestConfigurationLabel, test.Spec.Secret)
-	}
 	secrets, err := action.client.CoreV1().Secrets(test.Namespace).List(ctx, options)
 	if err != nil {
 		return err
 	}
 
-	var found bool
 	for _, item := range secrets.Items {
-		if item.Labels != nil && item.Labels[v1alpha1.TestConfigurationLabel] != test.Spec.Secret {
-			continue
-		}
-
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: "secrets",
+			Name: "secret-" + item.Name,
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
 					SecretName: item.Name,
 				},
 			},
 		})
-		found = true
-		break
+
+		job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, v1.VolumeMount{
+			Name:      "secret-" + item.Name,
+			MountPath: "/etc/yaks/secrets",
+		})
 	}
 
-	if !found {
+	for _, secretName := range test.Spec.Secrets {
+		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
+			Name: "secret-" + secretName,
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: secretName,
+				},
+			},
+		})
+
+		job.Spec.Template.Spec.Containers[0].VolumeMounts = append(job.Spec.Template.Spec.Containers[0].VolumeMounts, v1.VolumeMount{
+			Name:      "secret-" + secretName,
+			MountPath: "/etc/yaks/secrets",
+		})
+	}
+
+	if len(test.Spec.Secrets) == 0 && len(secrets.Items) == 0 {
 		job.Spec.Template.Spec.Volumes = append(job.Spec.Template.Spec.Volumes, v1.Volume{
 			Name: "secrets",
 			VolumeSource: v1.VolumeSource{

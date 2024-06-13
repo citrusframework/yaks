@@ -24,11 +24,7 @@ apidir=$location/../pkg/apis/yaks
 echo "Generating CRDs..."
 
 cd "$apidir"
-$(go env GOPATH)/bin/controller-gen crd \
-  paths=./... \
-  output:crd:artifacts:config=../../../config/crd/bases \
-  output:crd:dir=../../../config/crd/bases \
-  crd:crdVersions=v1
+$(go env GOPATH)/bin/controller-gen paths=./... output:crd:artifacts:config=../../../config/crd/bases output:crd:dir=../../../config/crd/bases crd:crdVersions=v1
 
 # cleanup working directory in $apidir
 rm -rf ./config
