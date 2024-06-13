@@ -10,16 +10,16 @@ YAKS provides steps to manage Kamelets.
 [[kamelet-api-version]]
 === API version
 
-The default Kamelet API version used to create and manage resources is `v1alpha1`. You can overwrite this
+The default Kamelet API version used to create and manage resources is `v1`. You can overwrite this
 version with a environment variable set on the YAKS configuration.
 
 .Overwrite Kamelet API version
 [source,bash]
 ----
-YAKS_KAMELET_API_VERSION=v1
+YAKS_KAMELET_API_VERSION=v1alpha1
 ----
 
-This sets the Kamelet API version for all operations.
+This sets the Kamelet API version for all operations to `v1alpha1`.
 
 [[kamelet-create]]
 === Create Kamelets
