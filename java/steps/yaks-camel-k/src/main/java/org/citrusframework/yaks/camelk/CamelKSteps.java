@@ -71,6 +71,7 @@ public class CamelKSteps {
     private Map<String, String> envVars;
 
     private boolean supportVariablesInSources = CamelKSettings.isSupportVariablesInSources();
+    private boolean stopOnErrorStatus = CamelKSettings.isStopOnErrorStatus();
 
     @Before
     public void before(Scenario scenario) {
@@ -108,6 +109,16 @@ public class CamelKSteps {
 	@Given("^Enable variable support in Camel K sources$")
     public void enableVariableSupport() {
         supportVariablesInSources = true;
+    }
+
+	@Given("^Disable stop on error status$")
+    public void disableStopOnErrorStatus() {
+        stopOnErrorStatus = false;
+    }
+
+	@Given("^Enable stop on error status$")
+    public void enableStopOnErrorStatus() {
+        stopOnErrorStatus = true;
     }
 
 	@Given("^Camel K resource polling configuration$")
@@ -264,6 +275,7 @@ public class CamelKSteps {
                 .client(k8sClient)
                 .verifyIntegration(name)
                 .printLogs(CamelKSettings.isPrintPodLogs())
+                .stopOnErrorStatus(stopOnErrorStatus)
                 .maxAttempts(maxAttempts)
                 .delayBetweenAttempts(delayBetweenAttempts)
                 .waitForLogMessage(message));
@@ -282,6 +294,7 @@ public class CamelKSteps {
                     .client(k8sClient)
                     .verifyIntegration(name)
                     .printLogs(CamelKSettings.isPrintPodLogs())
+                    .stopOnErrorStatus(stopOnErrorStatus)
                     .maxAttempts(maxAttempts)
                     .delayBetweenAttempts(delayBetweenAttempts)
                     .waitForLogMessage(message)));
