@@ -90,6 +90,14 @@ public class HttpSettings {
     private static final String SECURE_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PASSWORD";
     private static final String SECURE_KEYSTORE_PASSWORD_DEFAULT = "secret";
 
+    private static final String USE_SECURE_CONNECTOR_PROPERTY = HTTP_PROPERTY_PREFIX + "use.secure.connector";
+    private static final String USE_SECURE_CONNECTOR_ENV = HTTP_ENV_PREFIX + "USE_SECURE_CONNECTOR";
+    private static final String USE_SECURE_CONNECTOR_DEFAULT = "false";
+
+    private static final String USE_SECURE_KEYSTORE_PROPERTY = HTTP_PROPERTY_PREFIX + "use.secure.keystore";
+    private static final String USE_SECURE_KEYSTORE_ENV = HTTP_ENV_PREFIX + "USE_SECURE_KEYSTORE";
+    private static final String USE_SECURE_KEYSTORE_DEFAULT = "false";
+
     private static final String HEADER_NAME_IGNORE_CASE_PROPERTY = HTTP_PROPERTY_PREFIX + "header.name.ignore.case";
     private static final String HEADER_NAME_IGNORE_CASE_ENV = HTTP_ENV_PREFIX + "HEADER_NAME_IGNORE_CASE";
     private static final String HEADER_NAME_IGNORE_CASE_DEFAULT = "false";
@@ -141,6 +149,18 @@ public class HttpSettings {
     public static int getSecurePort() {
         return Integer.parseInt(System.getProperty(SECURE_PORT_PROPERTY,
                 System.getenv(SECURE_PORT_ENV) != null ? System.getenv(SECURE_PORT_ENV) : SECURE_PORT_DEFAULT));
+    }
+
+    public static boolean isUseSslConnector() {
+        return Boolean.parseBoolean(System.getProperty(USE_SECURE_CONNECTOR_PROPERTY,
+                System.getenv(USE_SECURE_CONNECTOR_ENV) != null ? System.getenv(USE_SECURE_CONNECTOR_ENV) :
+                        USE_SECURE_CONNECTOR_DEFAULT));
+    }
+
+    public static boolean isUseSslKeyStore() {
+        return Boolean.parseBoolean(System.getProperty(USE_SECURE_KEYSTORE_PROPERTY,
+                System.getenv(USE_SECURE_KEYSTORE_ENV) != null ? System.getenv(USE_SECURE_KEYSTORE_ENV) :
+                        USE_SECURE_KEYSTORE_DEFAULT));
     }
 
     /**

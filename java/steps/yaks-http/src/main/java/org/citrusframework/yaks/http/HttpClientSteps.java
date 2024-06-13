@@ -21,9 +21,10 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.net.ssl.SSLContext;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.Before;
@@ -33,12 +34,14 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.DefaultSchemePortResolver;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.TrustAllStrategy;
+import org.apache.hc.core5.ssl.SSLContextBuilder;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.citrusframework.Citrus;
 import org.citrusframework.CitrusSettings;
@@ -55,12 +58,13 @@ import org.citrusframework.http.client.HttpClient;
 import org.citrusframework.http.client.HttpClientBuilder;
 import org.citrusframework.http.message.HttpMessage;
 import org.citrusframework.util.FileUtils;
+import org.citrusframework.util.StringUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
+import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import static org.citrusframework.TestActionBuilder.logger;
@@ -110,6 +114,10 @@ public class HttpClientSteps implements HttpSteps {
     private String authUser = HttpSettings.getClientAuthUser();
     private String authPassword = HttpSettings.getClientAuthPassword();
 
+    private boolean useSslKeyStore = HttpSettings.isUseSslKeyStore();
+    private String sslKeyStorePath = HttpSettings.getSslKeyStorePath();
+    private String sslKeyStorePassword = HttpSettings.getSslKeyStorePassword();
+
     @Before
     public void before(Scenario scenario) {
         if (httpClient == null) {
@@ -154,6 +162,22 @@ public class HttpClientSteps implements HttpSteps {
         }
 
         this.requestUrl = resolvedUrl;
+    }
+
+    @Given("^HTTP client (enable|disable) SSL keystore$")
+    public void setSecureKeyStore(String mode) {
+        this.useSslKeyStore = "enable".equals(mode);
+    }
+
+    @Given("^HTTP client SSL keystore path ([^\\s]+)$")
+    public void setSslKeyStorePath(String sslKeyStorePath) {
+        this.sslKeyStorePath = sslKeyStorePath;
+        this.useSslKeyStore = true;
+    }
+
+    @Given("^HTTP client SSL keystore password ([^\\s]+)$")
+    public void setSslKeyStorePassword(String sslKeyStorePassword) {
+        this.sslKeyStorePassword = sslKeyStorePassword;
     }
 
     @Given("^HTTP client (enable|disable) basic auth$")
@@ -438,13 +462,17 @@ public class HttpClientSteps implements HttpSteps {
      */
     private org.apache.hc.client5.http.classic.HttpClient sslClient() {
         try {
-            SSLContext sslcontext = SSLContexts
+            SSLContextBuilder sslContextBuilder = SSLContexts
                     .custom()
-                    .loadTrustMaterial(TrustAllStrategy.INSTANCE)
-                    .build();
+                    .loadTrustMaterial(TrustAllStrategy.INSTANCE);
+
+            if (useSslKeyStore && StringUtils.hasText(sslKeyStorePath)) {
+                    sslContextBuilder.loadKeyMaterial(ResourceUtils.resolve(sslKeyStorePath, context).getURL(),
+                            sslKeyStorePassword.toCharArray(), sslKeyStorePassword.toCharArray());
+            }
 
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
-                    sslcontext, NoopHostnameVerifier.INSTANCE);
+                    sslContextBuilder.build(), NoopHostnameVerifier.INSTANCE);
 
             PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                     .setSSLSocketFactory(sslSocketFactory)
@@ -453,7 +481,7 @@ public class HttpClientSteps implements HttpSteps {
             return HttpClients.custom()
                     .setConnectionManager(connectionManager)
                     .build();
-        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+        } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException | IOException | UnrecoverableKeyException | CertificateException e) {
             throw new CitrusRuntimeException("Failed to create http client for ssl connection", e);
         }
     }
