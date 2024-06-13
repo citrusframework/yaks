@@ -157,6 +157,54 @@ public class CreateIntegrationActionTest {
     }
 
     @Test
+    public void shouldCreateIntegrationWithEnvVars() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("helloworld")
+                .fileName("helloworld.groovy")
+                .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .envVar("QUARKUS_FOO", "bar")
+                .envVar("QUARKUS_VERBOSE", "true")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
+        Assert.assertEquals(1, integration.getSpec().getTraits().size());
+        Assert.assertTrue(integration.getSpec().getTraits().containsKey("environment"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("environment").getConfiguration().size());
+        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("environment").getConfiguration().get("vars").getClass());
+        List<String> values = (List<String>) integration.getSpec().getTraits().get("environment").getConfiguration().get("vars");
+        Assert.assertEquals(2, values.size());
+        Assert.assertEquals("QUARKUS_FOO=bar", values.get(0));
+        Assert.assertEquals("QUARKUS_VERBOSE=true", values.get(1));
+    }
+
+    @Test
+    public void shouldCreateIntegrationWithEnvVarModeline() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("foo")
+                .fileName("foo.groovy")
+                .source("// camel-k: env=QUARKUS_FOO=bar\n" +
+                        "// camel-k: env=QUARKUS_VERBOSE=true\n" +
+                        "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
+        Assert.assertEquals(1, integration.getSpec().getTraits().size());
+        Assert.assertTrue(integration.getSpec().getTraits().containsKey("environment"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("environment").getConfiguration().size());
+        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("environment").getConfiguration().get("vars").getClass());
+        List<String> values = (List<String>) integration.getSpec().getTraits().get("environment").getConfiguration().get("vars");
+        Assert.assertEquals(2, values.size());
+        Assert.assertEquals("QUARKUS_FOO=bar", values.get(0));
+        Assert.assertEquals("QUARKUS_VERBOSE=true", values.get(1));
+    }
+
+    @Test
     public void shouldCreateIntegrationWithConfigModeline() {
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)

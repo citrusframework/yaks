@@ -67,6 +67,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final List<String> dependencies;
     private final List<String> buildProperties;
     private final List<String> buildPropertyFiles;
+    private final List<String> envVars;
+    private final List<String> envVarFiles;
     private final List<String> properties;
     private final List<String> propertyFiles;
     private final List<String> traits;
@@ -85,6 +87,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.dependencies = builder.dependencies;
         this.buildProperties = builder.buildProperties;
         this.buildPropertyFiles = builder.buildPropertyFiles;
+        this.envVars = builder.envVars;
+        this.envVarFiles = builder.envVarFiles;
         this.properties = builder.properties;
         this.propertyFiles = builder.propertyFiles;
         this.traits = builder.traits;
@@ -115,6 +119,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
         addPropertyConfigurationSpec(integrationBuilder, context);
         addBuildPropertyConfigurationSpec(integrationBuilder, resolvedSource, context);
+        addEnvVarConfigurationSpec(integrationBuilder, resolvedSource, context);
         addRuntimeConfigurationSpec(integrationBuilder, resolvedSource, context);
         addTraitSpec(integrationBuilder, resolvedSource, context);
         addOpenApiSpec(integrationBuilder, resolvedSource, context);
@@ -385,6 +390,47 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
     }
 
+    private void addEnvVarConfigurationSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
+        final String traitName = "environment.vars";
+        final Map<String, IntegrationSpec.TraitConfig> traitConfigMap = new HashMap<>();
+
+        if (envVars != null && !envVars.isEmpty()) {
+            for (String v : context.resolveDynamicValuesInList(envVars)){
+                //key=value
+                if (isValidPropertyFormat(v)) {
+                    final String[] property = v.split("=", 2);
+                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap);
+                } else {
+                    throw new IllegalArgumentException("EnvVar " + v + " does not match format key=value");
+                }
+            }
+        }
+
+        if (envVarFiles != null && !envVarFiles.isEmpty()) {
+            for (String vf : envVarFiles){
+                try {
+                    Properties props = new Properties();
+                    props.load(ResourceUtils.resolve(vf, context).getInputStream());
+                    props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
+                            traitName,
+                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));
+                } catch (IOException e) {
+                    throw new CitrusRuntimeException("Failed to load env var file", e);
+                }
+            }
+        }
+
+        Pattern pattern = getModelinePattern("env");
+        Matcher depMatcher = pattern.matcher(source);
+        while (depMatcher.find()) {
+            addTraitSpec(String.format("%s=%s", traitName, depMatcher.group(1)), traitConfigMap);
+        }
+
+        if (!traitConfigMap.isEmpty()) {
+            integrationBuilder.traits(traitConfigMap);
+        }
+    }
+
     private void addRuntimeConfigurationSpec(Integration.Builder integrationBuilder, String source, TestContext context) {
         final List<IntegrationSpec.Configuration> configurationList = new ArrayList<>();
 
@@ -474,6 +520,8 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private final List<String> dependencies = new ArrayList<>();
         private final List<String> buildProperties = new ArrayList<>();
         private final List<String> buildPropertyFiles = new ArrayList<>();
+        private final List<String> envVars = new ArrayList<>();
+        private final List<String> envVarFiles = new ArrayList<>();
         private final List<String> properties = new ArrayList<>();
         private final List<String> propertyFiles = new ArrayList<>();
         private final List<String> traits = new ArrayList<>();
@@ -580,6 +628,34 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return this;
         }
 
+        public Builder envVarFile(String envVarFile) {
+            this.envVarFiles.add(envVarFile);
+            return this;
+        }
+
+        public Builder envVarFiles(List<String> envVarFiles) {
+            this.envVarFiles.addAll(envVarFiles);
+            return this;
+        }
+
+        public Builder envVars(String vars) {
+            if (vars != null && !vars.isEmpty()) {
+                envVars(Arrays.asList(vars.split(",")));
+            }
+
+            return this;
+        }
+
+        public Builder envVars(List<String> vars) {
+            this.envVars.addAll(vars);
+            return this;
+        }
+
+        public Builder envVars(Map<String, String> vars) {
+            vars.forEach(this::envVar);
+            return this;
+        }
+
         public Builder dependencies(List<String> dependencies) {
             this.dependencies.addAll(dependencies);
             return this;
@@ -597,6 +673,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder buildProperty(String name, String value) {
             this.buildProperties.add(name + "=" + value);
+            return this;
+        }
+
+        public Builder envVar(String name, String value) {
+            this.envVars.add(name + "=" + value);
             return this;
         }
 
