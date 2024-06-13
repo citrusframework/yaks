@@ -90,6 +90,7 @@ public class CreateIntegrationActionTest {
                 .source("// camel-k: trait=quarkus.enabled=true\n" +
                         "// camel-k: trait=quarkus.native=true\n" +
                         "// camel-k: trait=route.enabled=true\n" +
+                        "// camel-k: trait=container.port=8443\n" +
                         "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
                 .build();
 
@@ -103,6 +104,8 @@ public class CreateIntegrationActionTest {
         Assert.assertTrue(integration.getSpec().getTraits().containsKey("route"));
         Assert.assertEquals(1, integration.getSpec().getTraits().get("route").getConfiguration().size());
         Assert.assertEquals(true, integration.getSpec().getTraits().get("route").getConfiguration().get("enabled"));
+        Assert.assertEquals(1, integration.getSpec().getTraits().get("container").getConfiguration().size());
+        Assert.assertEquals(8443, integration.getSpec().getTraits().get("container").getConfiguration().get("port"));
     }
 
     @Test

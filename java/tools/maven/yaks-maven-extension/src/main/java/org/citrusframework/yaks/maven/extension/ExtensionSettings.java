@@ -89,7 +89,7 @@ public final class ExtensionSettings {
      * @return
      */
     public static boolean hasMountedTests() {
-        return getMountedTestsPath().length() > 0;
+        return !getMountedTestsPath().isEmpty();
     }
 
     /**
@@ -97,7 +97,7 @@ public final class ExtensionSettings {
      * @return
      */
     public static boolean hasMountedSecrets() {
-        return getMountedSecretsPath().length() > 0;
+        return !getMountedSecretsPath().isEmpty();
     }
 
     /**

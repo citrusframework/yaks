@@ -17,7 +17,6 @@
 package org.citrusframework.yaks.camelk.actions.integration;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -30,14 +29,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.variable.VariableUtils;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
@@ -168,7 +166,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             Path workDir = CamelJBangSettings.getWorkDir();
             Files.createDirectories(workDir);
             Path file = workDir.resolve(String.format("i-%s.yaml", name));
-            Files.write(file, integrationYaml.getBytes(StandardCharsets.UTF_8),
+            Files.writeString(file, integrationYaml,
                     StandardOpenOption.WRITE,
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
@@ -203,7 +201,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             List<IntegrationSpec.Resource> openApiResources = integration.getSpec().getResources()
                     .stream()
                     .filter(r -> "openapi".equals(r.getType()))
-                    .collect(Collectors.toList());
+                    .toList();
 
             for (IntegrationSpec.Resource resource : openApiResources) {
                 args.add("--open-api");
@@ -306,7 +304,11 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             return Boolean.valueOf(value);
         }
 
-        return value;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return value;
+        }
     }
 
     private void addPropertyConfigurationSpec(Integration.Builder integrationBuilder, TestContext context) {
@@ -561,7 +563,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         }
 
         public Builder buildProperties(String properties) {
-            if (properties != null && properties.length() > 0) {
+            if (properties != null && !properties.isEmpty()) {
                 buildProperties(Arrays.asList(properties.split(",")));
             }
 
