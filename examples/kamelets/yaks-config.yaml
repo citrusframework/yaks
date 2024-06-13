@@ -17,8 +17,14 @@
 config:
   runtime:
     env:
-      - name: YAKS_KAMELET_API_VERSION
-        value: v1alpha1
+      - name: YAKS_CAMELK_MAX_ATTEMPTS
+        value: 100
+      - name: YAKS_CAMELK_DELAY_BETWEEN_ATTEMPTS
+        value: 1000
+      - name: YAKS_CAMELK_AUTO_REMOVE_RESOURCES
+        value: false
+      - name: YAKS_KAMELETS_AUTO_REMOVE_RESOURCES
+        value: false
     settings:
       loggers:
       - name: INTEGRATION_STATUS
