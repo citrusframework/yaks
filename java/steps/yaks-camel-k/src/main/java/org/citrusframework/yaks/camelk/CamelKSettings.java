@@ -60,6 +60,10 @@ public final class CamelKSettings {
     private static final String SUPPORT_VARIABLES_IN_SOURCES_ENV = CAMELK_ENV_PREFIX + "SUPPORT_VARIABLES_IN_SOURCES";
     private static final String SUPPORT_VARIABLES_IN_SOURCES_DEFAULT = "true";
 
+    private static final String STOP_ON_ERROR_STATUS_PROPERTY = CAMELK_PROPERTY_PREFIX + "stop.on.error.status";
+    private static final String STOP_ON_ERROR_STATUS_ENV = CAMELK_ENV_PREFIX + "STOP_ON_ERROR_STATUS";
+    private static final String STOP_ON_ERROR_STATUS_DEFAULT = "true";
+
     private static final String PRINT_POD_LOGS_PROPERTY = CAMELK_PROPERTY_PREFIX + "print.pod.logs";
     private static final String PRINT_POD_LOGS_ENV = CAMELK_ENV_PREFIX + "PRINT_POD_LOGS";
     private static final String PRINT_POD_LOGS_DEFAULT = String.valueOf(KubernetesSettings.isPrintPodLogs());
@@ -135,6 +139,16 @@ public final class CamelKSettings {
     public static boolean isSupportVariablesInSources() {
         return Boolean.parseBoolean(System.getProperty(SUPPORT_VARIABLES_IN_SOURCES_PROPERTY,
                 System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) != null ? System.getenv(SUPPORT_VARIABLES_IN_SOURCES_ENV) : SUPPORT_VARIABLES_IN_SOURCES_DEFAULT));
+    }
+
+    /**
+     * When set to true YAKS will stop the integration verification when integration is in error state.
+     * When verifying the integration status and pod logs the retry mechanism stops when integration status condition is in error state.
+     * @return
+     */
+    public static boolean isStopOnErrorStatus() {
+        return Boolean.parseBoolean(System.getProperty(STOP_ON_ERROR_STATUS_PROPERTY,
+                System.getenv(STOP_ON_ERROR_STATUS_ENV) != null ? System.getenv(STOP_ON_ERROR_STATUS_ENV) : STOP_ON_ERROR_STATUS_DEFAULT));
     }
 
     /**

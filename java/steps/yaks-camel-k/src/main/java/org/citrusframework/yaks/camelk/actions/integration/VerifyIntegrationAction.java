@@ -18,16 +18,20 @@ package org.citrusframework.yaks.camelk.actions.integration;
 
 import java.util.Map;
 
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
+import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.client.dsl.PodResource;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ActionTimeoutException;
 import org.citrusframework.exceptions.CitrusRuntimeException;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.client.dsl.PodResource;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
+import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.IntegrationList;
+import org.citrusframework.yaks.camelk.model.IntegrationStatus;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +58,8 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     private final String phase;
     private final boolean printLogs;
 
+    private final boolean stopOnErrorStatus;
+
     /**
      * Constructor using given builder.
      * @param builder
@@ -66,6 +72,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
         this.maxAttempts = builder.maxAttempts;
         this.delayBetweenAttempts = builder.delayBetweenAttempts;
         this.printLogs = builder.printLogs;
+        this.stopOnErrorStatus = builder.stopOnErrorStatus;
     }
 
     @Override
@@ -139,6 +146,11 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
                 if ((phase.equals("Stopped") && properties.isEmpty()) || (!properties.isEmpty() && properties.get("STATUS").equals(phase))) {
                     LOG.info(String.format("Verified integration '%s' state '%s' - All values OK!", integration, phase));
                     return pid;
+                } else if (phase.equals("Error")) {
+                    LOG.info(String.format("Integration '%s' is in state 'Error'", integration));
+                    if (stopOnErrorStatus) {
+                        throw new CitrusRuntimeException(String.format("Failed to verify integration '%s' - is in state 'Error'", integration));
+                    }
                 }
             }
 
@@ -244,10 +256,23 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
         INTEGRATION_STATUS_LOG.info(String.format("Waiting for integration '%s' to be in state '%s'", name, phase));
 
         for (int i = 0; i < maxAttempts; i++) {
-            Pod pod = getIntegrationPod(name, phase, namespace);
-            if (pod != null) {
-                LOG.info(String.format("Verified integration pod '%s' state '%s' - All values OK!", name, phase));
-                return pod;
+            Integration integration = getIntegration(name, namespace);
+            if (integration != null && integration.getStatus() != null) {
+                if ("Error".equals(integration.getStatus().getPhase())) {
+                    String readyConditionError = getReadyConditionErrorDetails(integration.getStatus());
+                    if (stopOnErrorStatus) {
+                        INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' is in state 'Error' - %s", name, readyConditionError));
+                        throw new CitrusRuntimeException(String.format("Failed to verify integration '%s' - is in state 'Error' - %s", name, readyConditionError));
+                    } else {
+                        INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' is in state 'Error' - %s. Will keep checking ...", name, readyConditionError));
+                    }
+                } else {
+                    Pod pod = getIntegrationPod(name, phase, namespace);
+                    if (pod != null) {
+                        LOG.info(String.format("Verified integration pod '%s' state '%s' - All values OK!", name, phase));
+                        return pod;
+                    }
+                }
             }
 
             LOG.info(String.format("Waiting for integration '%s' to be in state '%s'- retry in %s ms", name, phase, delayBetweenAttempts));
@@ -261,6 +286,13 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
         throw new ActionTimeoutException((maxAttempts * delayBetweenAttempts),
                 new CitrusRuntimeException(String.format("Failed to verify integration '%s' - " +
                         "is not in state '%s' after %d attempts", name, phase, maxAttempts)));
+    }
+
+    private Integration getIntegration(String name, String namespace) {
+        return getKubernetesClient().resources(Integration.class, IntegrationList.class)
+                .inNamespace(namespace)
+                .withName(name)
+                .get();
     }
 
     /**
@@ -285,13 +317,44 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
                     boolean verified = KubernetesSupport.verifyPodStatus(pod, phase);
 
                     if (!verified) {
-                        INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' not yet in state '%s'. Will keep checking ...", integration, phase));
+                        if (pod != null && pod.getStatus() != null &&
+                                "Error".equals(pod.getStatus().getPhase())) {
+                            String readyConditionError = getReadyConditionErrorDetails(pod);
+                            if (stopOnErrorStatus) {
+                                INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' is in state 'Error' - %s", integration, readyConditionError));
+                                throw new CitrusRuntimeException(String.format("Failed to verify integration '%s' - is in state 'Error' - %s", integration, readyConditionError));
+                            } else {
+                                INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' is in state 'Error' - %s. Will keep checking ...", integration, readyConditionError));
+                            }
+                        } else {
+                            INTEGRATION_STATUS_LOG.info(String.format("Integration '%s' not yet in state '%s'. Will keep checking ...", integration, phase));
+                        }
                     }
 
                     return verified;
                 })
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String getReadyConditionErrorDetails(IntegrationStatus status) {
+        for (IntegrationStatus.Condition condition : status.getConditions()) {
+            if ("Ready".equals(condition.getType()) && "False".equalsIgnoreCase(condition.getStatus())) {
+                return "%s: %s".formatted(condition.getReason(), condition.getMessage());
+            }
+        }
+
+        return "Unknown error";
+    }
+
+    private String getReadyConditionErrorDetails(Pod pod) {
+        for (PodCondition condition : pod.getStatus().getConditions()) {
+            if ("Ready".equals(condition.getType()) && "False".equalsIgnoreCase(condition.getStatus())) {
+                return "%s: %s".formatted(condition.getReason(), condition.getMessage());
+            }
+        }
+
+        return "Unknown error";
     }
 
     /**
@@ -307,6 +370,8 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
 
         private String phase = "Running";
         private boolean printLogs = true;
+
+        private boolean stopOnErrorStatus = true;
 
         public Builder isRunning() {
             this.phase = "Running";
@@ -340,6 +405,11 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
 
         public Builder delayBetweenAttempts(long delayBetweenAttempts) {
             this.delayBetweenAttempts = delayBetweenAttempts;
+            return this;
+        }
+
+        public Builder stopOnErrorStatus(boolean stopOnErrorStatus) {
+            this.stopOnErrorStatus = stopOnErrorStatus;
             return this;
         }
 

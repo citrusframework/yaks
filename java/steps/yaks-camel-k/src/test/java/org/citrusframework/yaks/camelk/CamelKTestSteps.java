@@ -26,6 +26,9 @@ import io.cucumber.java.en.Given;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.citrusframework.yaks.camelk.model.Integration;
+import org.citrusframework.yaks.camelk.model.IntegrationList;
+import org.citrusframework.yaks.camelk.model.IntegrationStatus;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 
 /**
@@ -52,6 +55,16 @@ public class CamelKTestSteps {
 
     @Given("^Camel K integration pod ([a-z0-9-]+) in phase (Running|Stopped)$")
     public void createIntegrationPod(String integrationName, String phase) {
+        Integration integration = new Integration.Builder()
+                .name(integrationName)
+                .build();
+
+        IntegrationStatus status = new IntegrationStatus();
+        status.setPhase(phase);
+        integration.setStatus(status);
+
+        k8sClient.resources(Integration.class, IntegrationList.class).inNamespace(CamelKSettings.getNamespace()).resource(integration).create();
+
         Pod pod = new PodBuilder()
                 .withNewMetadata()
                     .withName(integrationName)
