@@ -18,11 +18,12 @@ package org.citrusframework.yaks.camelk.actions.kamelet;
 
 import java.util.Arrays;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import org.apache.camel.v1.Kamelet;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ValidationException;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
-import org.citrusframework.yaks.camelk.model.Kamelet;
 import org.citrusframework.yaks.camelk.model.KameletList;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1;
 import org.citrusframework.yaks.camelk.model.v1alpha1.KameletV1Alpha1List;
@@ -73,7 +74,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
         return Arrays.stream(namespaces).distinct().anyMatch(namespace -> {
             LOG.info(String.format("Verify Kamlet '%s' exists in namespace '%s'", name, namespace));
 
-            Kamelet kamelet;
+            HasMetadata kamelet;
             if (getApiVersion(context).equals(CamelKSettings.V1ALPHA1)) {
                 kamelet = getKubernetesClient().resources(KameletV1Alpha1.class, KameletV1Alpha1List.class)
                         .inNamespace(namespace)
@@ -91,7 +92,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
                     LOG.debug(String.format("Kamelet '%s' is not present in namespace '%s'", name, namespace));
                 } else {
                     LOG.debug(String.format("Found Kamelet in namespace '%s'", namespace));
-                    LOG.debug(KubernetesSupport.yaml().dumpAsMap(kamelet));
+                    LOG.debug(KubernetesSupport.yaml(new KameletValuePropertyMapper()).dumpAsMap(kamelet));
                 }
             }
 

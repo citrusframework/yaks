@@ -24,24 +24,25 @@ import java.util.Map;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Updatable;
-import org.apache.camel.v1.Pipe;
-import org.apache.camel.v1.PipeBuilder;
-import org.apache.camel.v1.PipeSpecBuilder;
-import org.apache.camel.v1.pipespec.Integration;
-import org.apache.camel.v1.pipespec.Sink;
-import org.apache.camel.v1.pipespec.SinkBuilder;
-import org.apache.camel.v1.pipespec.Source;
-import org.apache.camel.v1.pipespec.SourceBuilder;
-import org.apache.camel.v1.pipespec.source.Ref;
+import org.apache.camel.v1alpha1.KameletBinding;
+import org.apache.camel.v1alpha1.KameletBindingBuilder;
+import org.apache.camel.v1alpha1.KameletBindingSpecBuilder;
+import org.apache.camel.v1alpha1.kameletbindingspec.Integration;
+import org.apache.camel.v1alpha1.kameletbindingspec.Sink;
+import org.apache.camel.v1alpha1.kameletbindingspec.SinkBuilder;
+import org.apache.camel.v1alpha1.kameletbindingspec.Source;
+import org.apache.camel.v1alpha1.kameletbindingspec.SourceBuilder;
+import org.apache.camel.v1alpha1.kameletbindingspec.source.Ref;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.util.IsJsonPredicate;
 import org.citrusframework.yaks.YaksSettings;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
-import org.citrusframework.yaks.camelk.model.PipeList;
+import org.citrusframework.yaks.camelk.model.v1alpha1.KameletBindingList;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +50,17 @@ import org.slf4j.LoggerFactory;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
 /**
- * Test action creates new Camel K pipe with given name and source code. Uses given Kubernetes client to
- * create a custom resource of type pipe.
+ * Test action creates new Camel K binding with given name and source code. Uses given Kubernetes client to
+ * create a custom resource of type binding.
  *
  * @author Christoph Deppisch
  */
-public class CreatePipeAction extends AbstractKameletAction {
+public class CreateKameletBindingAction extends AbstractKameletAction {
 
     /** Logger */
-    private static final Logger LOG = LoggerFactory.getLogger(CreatePipeAction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CreateKameletBindingAction.class);
 
-    private final String pipeName;
+    private final String bindingName;
     private final Integration integration;
     private final Source source;
     private final Sink sink;
@@ -69,9 +70,9 @@ public class CreatePipeAction extends AbstractKameletAction {
      * Constructor using given builder.
      * @param builder
      */
-    public CreatePipeAction(Builder builder) {
-        super("create-pipe", builder);
-        this.pipeName = builder.pipeName;
+    public CreateKameletBindingAction(Builder builder) {
+        super("create-binding", builder);
+        this.bindingName = builder.bindingName;
         this.integration = builder.integration;
         this.source = builder.source;
         this.sink = builder.sink;
@@ -80,31 +81,31 @@ public class CreatePipeAction extends AbstractKameletAction {
 
     @Override
     public void doExecute(TestContext context) {
-        final Pipe pipe;
+        final KameletBinding binding;
 
-        String pipeName = context.replaceDynamicContentInString(this.pipeName);
-        LOG.info(String.format("Creating Camel K pipe '%s'", pipeName));
+        String bindingName = context.replaceDynamicContentInString(this.bindingName);
+        LOG.info(String.format("Creating Camel K binding '%s'", bindingName));
 
         if (resource != null) {
             try {
                 String yamlOrJson = context.replaceDynamicContentInString(FileUtils.readToString(resource));
                 if (IsJsonPredicate.getInstance().test(yamlOrJson)) {
-                    pipe = KubernetesSupport.json().readValue(yamlOrJson, Pipe.class);
+                    binding = KubernetesSupport.json().readValue(yamlOrJson, KameletBinding.class);
                 } else {
                     // need to make a detour over Json to support additional properties set on Pipe
                     Map<String, Object> raw = KubernetesSupport.yaml().load(yamlOrJson);
-                    pipe = KubernetesSupport.json().convertValue(raw, Pipe.class);
+                    binding = KubernetesSupport.json().convertValue(raw, KameletBinding.class);
                 }
             } catch (IOException e) {
-                throw new CitrusRuntimeException(String.format("Failed to load pipe from resource %s", pipeName + ".yaml"), e);
+                throw new CitrusRuntimeException(String.format("Failed to load binding from resource %s", bindingName + ".yaml"), e);
             }
         } else {
-            final PipeBuilder builder = new PipeBuilder()
+            final KameletBindingBuilder builder = new KameletBindingBuilder()
                     .withNewMetadata()
-                    .withName(pipeName)
+                    .withName(bindingName)
                     .endMetadata();
 
-            PipeSpecBuilder specBuilder = new PipeSpecBuilder();
+            KameletBindingSpecBuilder specBuilder = new KameletBindingSpecBuilder();
             if (integration != null) {
                 specBuilder.withIntegration(integration);
             }
@@ -127,38 +128,38 @@ public class CreatePipeAction extends AbstractKameletAction {
                 specBuilder.withSink(sink);
             }
 
-            pipe = builder.withSpec(specBuilder.build()).build();
+            binding = builder.withSpec(specBuilder.build()).build();
         }
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            createLocal(KubernetesSupport.yaml(new PipeValuePropertyMapper()).dumpAsMap(pipe), pipeName, context);
+            createLocal(KubernetesSupport.yaml(new KameletBindingValuePropertyMapper()).dumpAsMap(binding), bindingName, context);
         } else {
-            createPipe(getKubernetesClient(), namespace(context), pipe, context);
+            createKameletBinding(getKubernetesClient(), namespace(context), binding, context);
         }
 
-        LOG.info(String.format("Successfully created pipe '%s'", pipe.getMetadata().getName()));
+        LOG.info(String.format("Successfully created binding '%s'", binding.getMetadata().getName()));
     }
 
     /**
-     * Creates the pipe as a custom resource in given namespace.
+     * Creates the Kamelet binding as a custom resource in given namespace.
      * @param k8sClient
      * @param namespace
-     * @param pipe
+     * @param binding
      * @param context
      */
-    private void createPipe(KubernetesClient k8sClient, String namespace, Pipe pipe, TestContext context) {
+    private void createKameletBinding(KubernetesClient k8sClient, String namespace, KameletBinding binding, TestContext context) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new PipeValuePropertyMapper()).dumpAsMap(pipe));
+            LOG.debug(KubernetesSupport.yaml(new KameletBindingValuePropertyMapper()).dumpAsMap(binding));
         }
 
-        k8sClient.resources(Pipe.class, PipeList.class)
+        k8sClient.resources(KameletBinding.class, KameletBindingList.class)
                 .inNamespace(namespace)
-                .resource(pipe)
+                .resource(binding)
                 .createOr(Updatable::update);
     }
 
     /**
-     * Creates the pipe with local JBang runtime.
+     * Creates the binding with local JBang runtime.
      * @param yaml
      * @param name
      * @param context
@@ -183,30 +184,31 @@ public class CreatePipeAction extends AbstractKameletAction {
                     LOG.debug(pao.getOutput());
                 }
 
-                throw new CitrusRuntimeException(String.format("Failed to create pipe - exit code %s", pao.getProcess().exitValue()));
+                throw new CitrusRuntimeException(String.format("Failed to create binding - exit code %s", pao.getProcess().exitValue()));
             }
 
             Long pid = pao.getCamelProcessId();
             context.setVariable(name + ":pid", pid);
             context.setVariable(name + ":process:" + pid, pao);
         } catch (IOException e) {
-            throw new CitrusRuntimeException("Failed to create pipe file", e);
+            throw new CitrusRuntimeException("Failed to create binding file", e);
         }
     }
 
     /**
      * Action builder.
      */
-    public static final class Builder extends AbstractKameletAction.Builder<CreatePipeAction, Builder> {
+    public static final class Builder extends AbstractKameletAction.Builder<CreateKameletBindingAction, Builder> {
 
-        private String pipeName;
+        private String bindingName;
         private Integration integration;
         private Source source;
         private Sink sink;
         private Resource resource;
 
-        public Builder pipe(String pipeName) {
-            this.pipeName = pipeName;
+        public Builder binding(String bindingName) {
+            apiVersion(CamelKSettings.V1ALPHA1);
+            this.bindingName = bindingName;
             return this;
         }
 
@@ -245,7 +247,7 @@ public class CreatePipeAction extends AbstractKameletAction {
             return sink(new SinkBuilder().withUri(uri).build());
         }
 
-        public Builder sink(org.apache.camel.v1.pipespec.sink.Ref ref, String properties) {
+        public Builder sink(org.apache.camel.v1alpha1.kameletbindingspec.sink.Ref ref, String properties) {
             Map<String, Object> props = null;
             if (properties != null && !properties.isEmpty()) {
                 props = KubernetesSupport.yaml().load(properties);
@@ -258,13 +260,13 @@ public class CreatePipeAction extends AbstractKameletAction {
                     .build());
         }
 
-        public Builder fromBuilder(PipeBuilder builder) {
-            Pipe pipe = builder.build();
+        public Builder fromBuilder(KameletBindingBuilder builder) {
+            KameletBinding binding = builder.build();
 
-            pipeName = pipe.getMetadata().getName();
-            integration = pipe.getSpec().getIntegration();
-            source = pipe.getSpec().getSource();
-            sink = pipe.getSpec().getSink();
+            bindingName = binding.getMetadata().getName();
+            integration = binding.getSpec().getIntegration();
+            source = binding.getSpec().getSource();
+            sink = binding.getSpec().getSink();
 
             return this;
         }
@@ -275,8 +277,8 @@ public class CreatePipeAction extends AbstractKameletAction {
         }
 
         @Override
-        public CreatePipeAction build() {
-            return new CreatePipeAction(this);
+        public CreateKameletBindingAction build() {
+            return new CreateKameletBindingAction(this);
         }
     }
 

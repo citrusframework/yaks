@@ -16,26 +16,29 @@
 
 package org.citrusframework.yaks.camelk.actions.kamelet;
 
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
-import org.citrusframework.context.TestContext;
-import org.citrusframework.context.TestContextFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import org.citrusframework.yaks.YaksClusterType;
-import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
+import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.core.io.ClassPathResource;
 
+import static org.awaitility.Awaitility.await;
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class VerifyPipeActionTest {
+public class DeleteKameletBindingActionTest {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -44,31 +47,55 @@ public class VerifyPipeActionTest {
 
     private final TestContext context = TestContextFactory.newInstance().getObject();
 
-    private static Path samplePipe;
+    private static Path sampleBinding;
 
     @BeforeClass
     public static void setup() throws IOException {
-        samplePipe = new ClassPathResource("timer-to-log-pipe.yaml").getFile().toPath();
+        sampleBinding = new ClassPathResource("timer-to-log-binding.yaml").getFile().toPath();
         camel().version();
     }
 
     @Test
-    public void shouldVerifyLocalPipe() {
-        ProcessAndOutput pao = camel().run("timer-to-log-pipe", samplePipe);
-        Long pid = pao.getCamelProcessId();
+    public void shouldDeleteLocalBinding() {
+        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
 
         try {
-            VerifyPipeAction action = new VerifyPipeAction.Builder()
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
+
+            DeleteKameletBindingAction action = new DeleteKameletBindingAction.Builder()
                     .client(kubernetesClient)
-                    .isAvailable("timer-to-log-pipe")
+                    .apiVersion(CamelKSettings.V1ALPHA1)
+                    .binding("timer-to-log-binding.yaml")
                     .clusterType(YaksClusterType.LOCAL)
-                    .maxAttempts(10)
                     .build();
 
-            context.setVariable("timer-to-log-pipe:pid", pid);
-            context.setVariable("timer-to-log-pipe:process:" + pid, pao);
+            context.setVariable("timer-to-log-binding.yaml:pid", pid);
 
             action.execute(context);
+
+            await().atMost(15000L, TimeUnit.MILLISECONDS).until(() -> camel().get(pid).isEmpty());
+        } finally {
+            camel().stop(pid);
+        }
+    }
+
+    @Test
+    public void shouldDeleteLocalBindingByName() {
+        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
+
+        try {
+            await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
+
+            DeleteKameletBindingAction action = new DeleteKameletBindingAction.Builder()
+                    .client(kubernetesClient)
+                    .apiVersion(CamelKSettings.V1ALPHA1)
+                    .binding("timer-to-log-binding.yaml")
+                    .clusterType(YaksClusterType.LOCAL)
+                    .build();
+
+            action.execute(context);
+
+            await().atMost(15000L, TimeUnit.MILLISECONDS).until(() -> camel().get(pid).isEmpty());
         } finally {
             camel().stop(pid);
         }

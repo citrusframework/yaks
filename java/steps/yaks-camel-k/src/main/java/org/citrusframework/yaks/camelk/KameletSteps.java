@@ -23,7 +23,16 @@ import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.fabric8.kubernetes.api.model.AnyTypeBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.apache.camel.v1.KameletBuilder;
+import org.apache.camel.v1.KameletSpecBuilder;
+import org.apache.camel.v1.kameletspec.DataTypes;
+import org.apache.camel.v1.kameletspec.DefinitionBuilder;
+import org.apache.camel.v1.kameletspec.SourcesBuilder;
+import org.apache.camel.v1.kameletspec.datatypes.TypesBuilder;
+import org.apache.camel.v1.kameletspec.definition.Properties;
+import org.apache.camel.v1.kameletspec.definition.PropertiesBuilder;
 import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusFramework;
@@ -31,12 +40,6 @@ import org.citrusframework.annotations.CitrusResource;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.spi.Resource;
-import org.citrusframework.yaks.camelk.model.Kamelet;
-import org.citrusframework.yaks.camelk.model.KameletSpec;
-import org.citrusframework.yaks.camelk.model.Pipe;
-import org.citrusframework.yaks.camelk.model.PipeSpec;
-import org.citrusframework.yaks.kafka.KafkaSettings;
-import org.citrusframework.yaks.knative.KnativeSettings;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -61,15 +64,11 @@ public class KameletSteps {
     private String kameletApiVersion = KameletSettings.getKameletApiVersion();
 
     // Kamelet builder
-    private Kamelet.Builder kamelet;
-    private KameletSpec.Definition definition;
-
-    // Pipe endpoints
-    private PipeSpec.Endpoint source;
-    private PipeSpec.Endpoint sink;
-
-    private Map<String, Object> sourceProperties;
-    private Map<String, Object> sinkProperties;
+    private KameletBuilder kamelet;
+    private KameletSpecBuilder kameletSpecBuilder;
+    private Map<String, DataTypes> dataTypes;
+    private DefinitionBuilder definition;
+    private String kameletTemplate;
 
     private String namespace = KameletSettings.getNamespace();
 
@@ -83,17 +82,22 @@ public class KameletSteps {
         }
 
         initializeKameletBuilder();
-        initializePipeBuilder();
     }
 
     @Given("^Disable auto removal of Kamelet resources$")
     public void disableAutoRemove() {
         autoRemoveResources = false;
+
+        // update the test variable
+        runner.run(createVariable(VariableNames.AUTO_REMOVE_RESOURCES.value(), "false"));
     }
 
     @Given("^Enable auto removal of Kamelet resources$")
     public void enableAutoRemove() {
         autoRemoveResources = true;
+
+        // update the test variable
+        runner.run(createVariable(VariableNames.AUTO_REMOVE_RESOURCES.value(), "true"));
     }
 
     @Given("^Disable variable support in Kamelet sources$")
@@ -124,27 +128,39 @@ public class KameletSteps {
 
     @Given("^Kamelet dataType (in|out|error)(?:=| is )\"(.+)\"$")
 	public void addType(String slot, String format) {
+        DataTypes dt;
+        if (dataTypes.containsKey(slot)) {
+            dt = dataTypes.get(slot);
+        } else {
+            dt = new DataTypes();
+            dataTypes.put(slot, dt);
+        }
+
+        if (dt.getTypes() == null) {
+            dt.setTypes(new HashMap<>());
+        }
+
         if (format.contains(":")) {
             String[] schemeAndFormat = format.split(":");
-            kamelet.addDataType(slot, schemeAndFormat[0], schemeAndFormat[1]);
+            dt.getTypes().put(schemeAndFormat[1], new TypesBuilder().withScheme(schemeAndFormat[0]).withFormat(schemeAndFormat[1]).build());
         } else {
-            kamelet.addDataType(slot, "camel", format);
+            dt.getTypes().put(format, new TypesBuilder().withScheme("camel").withFormat(format).build());
         }
 	}
 
     @Given("^Kamelet title \"(.+)\"$")
 	public void setTitle(String title) {
-        definition.setTitle(title);
+        definition.withTitle(title);
 	}
 
     @Given("^Kamelet source ([a-z0-9-]+).([a-z0-9-]+)$")
 	public void setSource(String name, String language, String content) {
-        kamelet.source(name, language, content);
+        kameletSpecBuilder.withSources(new SourcesBuilder().withName(name).withLanguage(language).withContent(content).build());
 	}
 
     @Given("^Kamelet template")
 	public void setFlow(String template) {
-        kamelet.template(template);
+        kameletTemplate = template;
 	}
 
     @Given("^Kamelet property definition$")
@@ -165,58 +181,19 @@ public class KameletSteps {
         String required = propertyConfiguration.getOrDefault("required", Boolean.FALSE).toString();
 
         if (Boolean.parseBoolean(required)) {
-            definition.getRequired().add(propertyName);
+            definition.addToRequired(propertyName);
         }
 
-        definition.getProperties().put(propertyName,
-                new KameletSpec.Definition.PropertyConfig(title, type, defaultValue, example));
+        Properties property = new PropertiesBuilder().withTitle(title).withType(type).build();
+        if (example != null) {
+            property.setExample(new AnyTypeBuilder().withValue(example).build());
+        }
+
+        if (defaultValue != null) {
+            property.set_default(new AnyTypeBuilder().withValue(defaultValue).build());
+        }
+        definition.addToProperties(propertyName, property);
 	}
-
-	@Given("^(?:Pipe|KameletBinding) source properties$")
-    public void setPipeSourceProperties(Map<String, Object> properties) {
-        this.sourceProperties.putAll(properties);
-    }
-
-    @Given("^(?:Pipe|KameletBinding) sink properties$")
-    public void setPipeSinkProperties(Map<String, Object> properties) {
-        this.sinkProperties.putAll(properties);
-    }
-
-    @Given("^bind Kamelet ([a-z0-9-]+) to uri ([^\\s]+)$")
-    public void bindKameletToUri(String kameletName, String uri) {
-        PipeSpec.Endpoint.ObjectReference sourceRef =
-                new PipeSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + kameletApiVersion, "Kamelet", namespace, kameletName);
-        source = new PipeSpec.Endpoint(sourceRef);
-
-        sink = new PipeSpec.Endpoint(uri);
-    }
-
-    @Given("^bind Kamelet ([a-z0-9-]+) to Kafka topic ([^\\s]+)$")
-    public void bindKameletToKafka(String kameletName, String topic) {
-        PipeSpec.Endpoint.ObjectReference sourceRef =
-                new PipeSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + kameletApiVersion, "Kamelet", namespace, kameletName);
-        source = new PipeSpec.Endpoint(sourceRef);
-
-        PipeSpec.Endpoint.ObjectReference sinkRef =
-                new PipeSpec.Endpoint.ObjectReference("KafkaTopic", KafkaSettings.getNamespace(), topic);
-        sink = new PipeSpec.Endpoint(sinkRef);
-    }
-
-    @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+)$")
-    public void bindKameletToKnativeChannel(String kameletName, String channel) {
-        bindKameletToKnativeChannel(kameletName, channel, "InMemoryChannel");
-    }
-
-    @Given("^bind Kamelet ([a-z0-9-]+) to Knative channel ([^\\s]+) of kind ([^\\s]+)$")
-    public void bindKameletToKnativeChannel(String kameletName, String channel, String channelKind) {
-        PipeSpec.Endpoint.ObjectReference sourceRef =
-                new PipeSpec.Endpoint.ObjectReference(CamelKSupport.CAMELK_CRD_GROUP + "/" + kameletApiVersion, "Kamelet", namespace, kameletName);
-        source = new PipeSpec.Endpoint(sourceRef);
-
-        PipeSpec.Endpoint.ObjectReference sinkRef =
-                new PipeSpec.Endpoint.ObjectReference(channelKind, KnativeSettings.getNamespace(), channel);
-        sink = new PipeSpec.Endpoint(sinkRef);
-    }
 
     @Given("^load Kamelet ([a-z0-9-]+).kamelet.yaml$")
     public void loadKameletFromFile(String fileName) {
@@ -224,6 +201,7 @@ public class KameletSteps {
         runner.run(camelk()
                 .client(k8sClient)
                 .createKamelet(fileName)
+                .namespace(namespace)
                 .apiVersion(kameletApiVersion)
                 .supportVariables(supportVariablesInSources)
                 .resource(resource));
@@ -236,36 +214,26 @@ public class KameletSteps {
         }
     }
 
-    @Given("^load (?:Pipe|KameletBinding) ([a-z0-9-]+).yaml$")
-    public void loadPipeFromFile(String fileName) {
-        Resource resource = ResourceUtils.resolve(fileName + ".yaml", context);
-        runner.run(camelk()
-                .client(k8sClient)
-                .createPipe(fileName)
-                .resource(resource));
-
-        if (autoRemoveResources) {
-            runner.then(doFinally()
-                    .actions(camelk().client(k8sClient)
-                                     .deletePipe(fileName)
-                                     .apiVersion(kameletApiVersion)));
-        }
-    }
-
     @Given("^(?:create|new) Kamelet ([a-z0-9-]+)$")
 	public void createNewKamelet(String name) {
-        kamelet.name(name);
+        kamelet.withNewMetadata()
+                .withName(name)
+            .endMetadata();
 
         if (definition.getTitle() == null || definition.getTitle().isEmpty()) {
-            definition.setTitle(StringUtils.capitalize(name));
+            definition.withTitle(StringUtils.capitalize(name));
         }
 
-        kamelet.definition(definition);
+        kameletSpecBuilder.withDefinition(definition.build());
+        kameletSpecBuilder.withDataTypes(dataTypes);
+
+        kamelet.withSpec(kameletSpecBuilder.build());
 
         runner.run(camelk()
                     .client(k8sClient)
                     .createKamelet(name)
                     .supportVariables(supportVariablesInSources)
+                    .template(kameletTemplate)
                     .fromBuilder(kamelet));
 
         initializeKameletBuilder();
@@ -286,50 +254,15 @@ public class KameletSteps {
 
     @Given("^(?:create|new) Kamelet ([a-z0-9-]+) with template")
 	public void createNewKameletWithTemplate(String name, String template) {
-        kamelet.template(template);
+        kameletTemplate = template;
         createNewKamelet(name);
 	}
-
-    @Given("^(?:create|new) (?:Pipe|KameletBinding) ([a-z0-9-]+)$")
-    public void createNewPipe(String name) {
-        Pipe.Builder pipe = new Pipe.Builder();
-        pipe.name(name);
-
-        source.getProperties().putAll(sourceProperties);
-        sink.getProperties().putAll(sinkProperties);
-
-        pipe.source(source);
-        pipe.sink(sink);
-
-        runner.run(camelk()
-                .client(k8sClient)
-                .createPipe(name)
-                .apiVersion(kameletApiVersion)
-                .fromBuilder(pipe));
-
-        initializePipeBuilder();
-
-        if (autoRemoveResources) {
-            runner.then(doFinally()
-                    .actions(camelk().client(k8sClient)
-                                     .deletePipe(name)
-                                     .apiVersion(kameletApiVersion)));
-        }
-    }
 
     @Given("^delete Kamelet ([a-z0-9-]+)$")
 	public void deleteKamelet(String name) {
         runner.run(camelk()
                     .client(k8sClient)
                     .deleteKamelet(name)
-                    .apiVersion(kameletApiVersion));
-	}
-
-    @Given("^delete (?:Pipe|KameletBinding) ([a-z0-9-]+)$")
-	public void deletePipe(String name) {
-        runner.run(camelk()
-                    .client(k8sClient)
-                    .deletePipe(name)
                     .apiVersion(kameletApiVersion));
 	}
 
@@ -354,25 +287,11 @@ public class KameletSteps {
                 .isAvailable());
     }
 
-    @Given("^(?:Pipe|KameletBinding) ([a-z0-9-]+) is available$")
-    @Then("^(?:Pipe|KameletBinding) ([a-z0-9-]+) should be available$")
-    public void pipeShouldBeAvailable(String name) {
-        runner.run(camelk()
-                .client(k8sClient)
-                .verifyPipe(name)
-                .apiVersion(kameletApiVersion)
-                .isAvailable());
-    }
-
     private void initializeKameletBuilder() {
-        kamelet = new Kamelet.Builder();
-        definition = new KameletSpec.Definition();
-    }
-
-    private void initializePipeBuilder() {
-        source = null;
-        sink = null;
-        sourceProperties = new HashMap<>();
-        sinkProperties = new HashMap<>();
+        kamelet = new KameletBuilder();
+        definition = new DefinitionBuilder();
+        kameletSpecBuilder = new KameletSpecBuilder();
+        dataTypes = new HashMap<>();
+        kameletTemplate = null;
     }
 }

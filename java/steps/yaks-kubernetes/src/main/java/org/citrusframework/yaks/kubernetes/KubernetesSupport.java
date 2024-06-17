@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.Updatable;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import org.citrusframework.Citrus;
 import org.citrusframework.context.TestContext;
@@ -68,6 +69,11 @@ public final class KubernetesSupport {
 
     private KubernetesSupport() {
         // prevent instantiation of utility class
+    }
+
+    // Optional property value mapper used to customize YAML dumper.
+    public interface PropertyValueMapper {
+        Object map(Property property, Object propertyValue);
     }
 
     /**
@@ -133,6 +139,25 @@ public final class KubernetesSupport {
         return new Yaml(representer);
     }
 
+    public static Yaml yaml(PropertyValueMapper mapper) {
+        Representer representer = new Representer(new DumperOptions()) {
+            @Override
+            protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+                Object propertyValueMapped = mapper.map(property, propertyValue);
+
+                // if value of property is null, ignore it.
+                if (propertyValueMapped == null || (propertyValueMapped instanceof Collection && ((Collection<?>) propertyValueMapped).isEmpty()) ||
+                    (propertyValueMapped instanceof Map && ((Map<?, ?>) propertyValueMapped).isEmpty())) {
+                    return null;
+                } else {
+                    return super.representJavaBeanProperty(javaBean, property, propertyValueMapped, customTag);
+                }
+            }
+        };
+        representer.getPropertyUtils().setSkipMissingProperties(true);
+        return new Yaml(representer);
+    }
+
     public static ObjectMapper json() {
         return OBJECT_MAPPER;
     }
@@ -167,7 +192,7 @@ public final class KubernetesSupport {
     public static void createResource(KubernetesClient k8sClient, String namespace,
                                       ResourceDefinitionContext context, String yaml) {
         k8sClient.genericKubernetesResources(context).inNamespace(namespace)
-                .load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))).createOrReplace();
+                .load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8))).createOr(Updatable::update);
     }
 
     public static void deleteResource(KubernetesClient k8sClient, String namespace,
@@ -223,5 +248,4 @@ public final class KubernetesSupport {
 
         return Optional.empty();
     }
-
 }

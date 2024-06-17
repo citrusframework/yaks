@@ -16,23 +16,21 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.citrusframework.context.TestContext;
-import org.citrusframework.context.TestContextFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
+import org.apache.camel.v1.Integration;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
-import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.kubernetes.KubernetesSettings;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,22 +61,20 @@ public class CreateIntegrationActionTest {
                 .client(kubernetesClient)
                 .integration("helloworld")
                 .source("from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
-                .traits("quarkus.enabled=true,quarkus.native=true,route.enabled=true,openapi.configmaps=[spec]")
+                .traits("quarkus.enabled=true,quarkus.nativeBaseImage=java-native,route.enabled=true,openapi.configmaps=[spec]")
                 .build();
 
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("quarkus"));
-        Assert.assertEquals(2, integration.getSpec().getTraits().get("quarkus").getConfiguration().size());
-        Assert.assertEquals(true, integration.getSpec().getTraits().get("quarkus").getConfiguration().get("enabled"));
-        Assert.assertEquals("true", integration.getSpec().getTraits().get("quarkus").getConfiguration().get("native"));
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("route"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("route").getConfiguration().size());
-        Assert.assertEquals(true, integration.getSpec().getTraits().get("route").getConfiguration().get("enabled"));
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("openapi"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("openapi").getConfiguration().size());
-        Assert.assertEquals(Collections.singletonList("spec"), integration.getSpec().getTraits().get("openapi").getConfiguration().get("configmaps"));
+        Assert.assertNotNull(integration.getSpec().getTraits().getQuarkus());
+        Assert.assertTrue(integration.getSpec().getTraits().getQuarkus().getEnabled());
+        Assert.assertEquals("java-native", integration.getSpec().getTraits().getQuarkus().getNativeBaseImage());
+        Assert.assertNotNull(integration.getSpec().getTraits().getRoute());
+        Assert.assertTrue(integration.getSpec().getTraits().getRoute().getEnabled());
+        Assert.assertNotNull(integration.getSpec().getTraits().getOpenapi());
+        Assert.assertEquals(1L, integration.getSpec().getTraits().getOpenapi().getConfigmaps().size());
+        Assert.assertEquals("spec", integration.getSpec().getTraits().getOpenapi().getConfigmaps().get(0));
     }
 
     @Test
@@ -88,7 +84,7 @@ public class CreateIntegrationActionTest {
                 .integration("foo")
                 .fileName("foo.groovy")
                 .source("// camel-k: trait=quarkus.enabled=true\n" +
-                        "// camel-k: trait=quarkus.native=true\n" +
+                        "// camel-k: trait=quarkus.nativeBaseImage=native-java\n" +
                         "// camel-k: trait=route.enabled=true\n" +
                         "// camel-k: trait=container.port=8443\n" +
                         "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
@@ -97,15 +93,12 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("quarkus"));
-        Assert.assertEquals(2, integration.getSpec().getTraits().get("quarkus").getConfiguration().size());
-        Assert.assertEquals(true, integration.getSpec().getTraits().get("quarkus").getConfiguration().get("enabled"));
-        Assert.assertEquals("true", integration.getSpec().getTraits().get("quarkus").getConfiguration().get("native"));
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("route"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("route").getConfiguration().size());
-        Assert.assertEquals(true, integration.getSpec().getTraits().get("route").getConfiguration().get("enabled"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("container").getConfiguration().size());
-        Assert.assertEquals(8443, integration.getSpec().getTraits().get("container").getConfiguration().get("port"));
+        Assert.assertNotNull(integration.getSpec().getTraits().getQuarkus());
+        Assert.assertTrue(integration.getSpec().getTraits().getQuarkus().getEnabled());
+        Assert.assertEquals("native-java", integration.getSpec().getTraits().getQuarkus().getNativeBaseImage());
+        Assert.assertNotNull(integration.getSpec().getTraits().getRoute());
+        Assert.assertTrue(integration.getSpec().getTraits().getRoute().getEnabled());
+        Assert.assertEquals(8443L, integration.getSpec().getTraits().getContainer().getPort().longValue());
     }
 
     @Test
@@ -122,11 +115,8 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
-        Assert.assertEquals(1, integration.getSpec().getTraits().size());
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
-        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("builder").getConfiguration().get("properties").getClass());
-        List<String> values = (List<String>) integration.getSpec().getTraits().get("builder").getConfiguration().get("properties");
+        Assert.assertNotNull(integration.getSpec().getTraits().getBuilder());
+        List<String> values = integration.getSpec().getTraits().getBuilder().getProperties();
         Assert.assertEquals(2, values.size());
         Assert.assertEquals("quarkus.foo=bar", values.get(0));
         Assert.assertEquals("quarkus.verbose=true", values.get(1));
@@ -146,11 +136,8 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
-        Assert.assertEquals(1, integration.getSpec().getTraits().size());
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("builder"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("builder").getConfiguration().size());
-        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("builder").getConfiguration().get("properties").getClass());
-        List<String> values = (List<String>) integration.getSpec().getTraits().get("builder").getConfiguration().get("properties");
+        Assert.assertNotNull(integration.getSpec().getTraits().getBuilder());
+        List<String> values = integration.getSpec().getTraits().getBuilder().getProperties();
         Assert.assertEquals(2, values.size());
         Assert.assertEquals("quarkus.foo=bar", values.get(0));
         Assert.assertEquals("quarkus.verbose=true", values.get(1));
@@ -170,11 +157,8 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("helloworld").get();
-        Assert.assertEquals(1, integration.getSpec().getTraits().size());
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("environment"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("environment").getConfiguration().size());
-        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("environment").getConfiguration().get("vars").getClass());
-        List<String> values = (List<String>) integration.getSpec().getTraits().get("environment").getConfiguration().get("vars");
+        Assert.assertNotNull(integration.getSpec().getTraits().getEnvironment());
+        List<String> values = integration.getSpec().getTraits().getEnvironment().getVars();
         Assert.assertEquals(2, values.size());
         Assert.assertEquals("QUARKUS_FOO=bar", values.get(0));
         Assert.assertEquals("QUARKUS_VERBOSE=true", values.get(1));
@@ -194,11 +178,8 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
-        Assert.assertEquals(1, integration.getSpec().getTraits().size());
-        Assert.assertTrue(integration.getSpec().getTraits().containsKey("environment"));
-        Assert.assertEquals(1, integration.getSpec().getTraits().get("environment").getConfiguration().size());
-        Assert.assertEquals(ArrayList.class, integration.getSpec().getTraits().get("environment").getConfiguration().get("vars").getClass());
-        List<String> values = (List<String>) integration.getSpec().getTraits().get("environment").getConfiguration().get("vars");
+        Assert.assertNotNull(integration.getSpec().getTraits().getEnvironment());
+        List<String> values = integration.getSpec().getTraits().getEnvironment().getVars();
         Assert.assertEquals(2, values.size());
         Assert.assertEquals("QUARKUS_FOO=bar", values.get(0));
         Assert.assertEquals("QUARKUS_VERBOSE=true", values.get(1));
@@ -226,7 +207,7 @@ public class CreateIntegrationActionTest {
     }
 
     @Test
-    public void shouldCreateLocalJBangIntegration() {
+    public void shouldCreateLocalIntegration() {
         camel().version();
         CreateIntegrationAction action = new CreateIntegrationAction.Builder()
                 .client(kubernetesClient)

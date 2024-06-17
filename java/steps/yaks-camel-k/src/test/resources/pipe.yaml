@@ -17,7 +17,7 @@
 apiVersion: camel.apache.org/v1
 kind: Pipe
 metadata:
-  name: timer-to-log-pipe
+  name: timer-source-pipe
 spec:
   source:
     ref:
@@ -27,4 +27,7 @@ spec:
     properties:
       message: "Hello world!"
   sink:
-    uri: log:info
+    ref:
+      kind: KafkaTopic
+      apiVersion: kafka.strimzi.io/v1beta1
+      name: hello-topic

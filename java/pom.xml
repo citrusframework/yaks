@@ -98,9 +98,10 @@
     <assertj-core.version>3.25.3</assertj-core.version>
     <awaitility.version>4.2.1</awaitility.version>
     <aws-java-sdk2.version>2.25.53</aws-java-sdk2.version>
+    <camel.k.crds.version>2.3.3</camel.k.crds.version>
     <citrus.version>4.2.1</citrus.version>
     <commons.dbcp2.version>2.12.0</commons.dbcp2.version>
-    <cucumber.version>7.16.1</cucumber.version>
+    <cucumber.version>7.18.0</cucumber.version>
     <groovy.version>3.0.21</groovy.version>
     <jackson.version>2.17.1</jackson.version>
     <junit.version>4.13.2</junit.version>
@@ -452,6 +453,13 @@
         <artifactId>s3</artifactId>
         <version>${aws-java-sdk2.version}</version>
         <scope>test</scope>
+      </dependency>
+
+      <!-- Camel K -->
+      <dependency>
+        <groupId>org.apache.camel.k</groupId>
+        <artifactId>camel-k-crds</artifactId>
+        <version>${camel.k.crds.version}</version>
       </dependency>
 
       <dependency>

@@ -47,17 +47,17 @@ public class DeletePipeActionTest {
 
     private final TestContext context = TestContextFactory.newInstance().getObject();
 
-    private static Path sampleBinding;
+    private static Path samplePipe;
 
     @BeforeClass
     public static void setup() throws IOException {
-        sampleBinding = new ClassPathResource("timer-to-log-binding.yaml").getFile().toPath();
+        samplePipe = new ClassPathResource("timer-to-log-pipe.yaml").getFile().toPath();
         camel().version();
     }
 
     @Test
-    public void shouldDeleteLocalJBangBinding() {
-        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
+    public void shouldDeleteLocalPipe() {
+        Long pid = camel().run("timer-to-log-pipe.yaml", samplePipe).getCamelProcessId();
 
         try {
             await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
@@ -65,11 +65,11 @@ public class DeletePipeActionTest {
             DeletePipeAction action = new DeletePipeAction.Builder()
                     .client(kubernetesClient)
                     .apiVersion(CamelKSettings.V1ALPHA1)
-                    .binding("timer-to-log-binding.yaml")
+                    .pipe("timer-to-log-pipe.yaml")
                     .clusterType(YaksClusterType.LOCAL)
                     .build();
 
-            context.setVariable("timer-to-log-binding.yaml:pid", pid);
+            context.setVariable("timer-to-log-pipe.yaml:pid", pid);
 
             action.execute(context);
 
@@ -80,8 +80,8 @@ public class DeletePipeActionTest {
     }
 
     @Test
-    public void shouldDeleteLocalJBangBindingByName() {
-        Long pid = camel().run("timer-to-log-binding.yaml", sampleBinding).getCamelProcessId();
+    public void shouldDeleteLocalPipeByName() {
+        Long pid = camel().run("timer-to-log-pipe.yaml", samplePipe).getCamelProcessId();
 
         try {
             await().atMost(30000L, TimeUnit.MILLISECONDS).until(() -> !camel().get(pid).isEmpty());
@@ -89,7 +89,7 @@ public class DeletePipeActionTest {
             DeletePipeAction action = new DeletePipeAction.Builder()
                     .client(kubernetesClient)
                     .apiVersion(CamelKSettings.V1ALPHA1)
-                    .binding("timer-to-log-binding.yaml")
+                    .pipe("timer-to-log-pipe.yaml")
                     .clusterType(YaksClusterType.LOCAL)
                     .build();
 
