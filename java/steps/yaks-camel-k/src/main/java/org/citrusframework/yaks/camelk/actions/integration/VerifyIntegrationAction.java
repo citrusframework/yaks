@@ -22,6 +22,9 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.dsl.PodResource;
+import org.apache.camel.v1.Integration;
+import org.apache.camel.v1.IntegrationStatus;
+import org.apache.camel.v1.integrationstatus.Conditions;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ActionTimeoutException;
 import org.citrusframework.exceptions.CitrusRuntimeException;
@@ -29,9 +32,7 @@ import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.CamelKSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
-import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
-import org.citrusframework.yaks.camelk.model.IntegrationStatus;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -338,7 +339,7 @@ public class VerifyIntegrationAction extends AbstractCamelKAction {
     }
 
     private String getReadyConditionErrorDetails(IntegrationStatus status) {
-        for (IntegrationStatus.Condition condition : status.getConditions()) {
+        for (Conditions condition : status.getConditions()) {
             if ("Ready".equals(condition.getType()) && "False".equalsIgnoreCase(condition.getStatus())) {
                 return "%s: %s".formatted(condition.getReason(), condition.getMessage());
             }

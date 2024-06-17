@@ -34,6 +34,10 @@ public class KafkaSettings {
     private static final String ENDPOINT_NAME_ENV = KAFKA_ENV_PREFIX + "ENDPOINT_NAME";
     private static final String ENDPOINT_NAME_DEFAULT = "yaks-kafka-endpoint";
 
+    private static final String API_VERSION_PROPERTY = KAFKA_PROPERTY_PREFIX + "api.version";
+    private static final String API_VERSION_ENV = KAFKA_ENV_PREFIX + "API_VERSION";
+    private static final String API_VERSION_DEFAULT = "v1beta1";
+
     static final String NAMESPACE_PROPERTY = KAFKA_PROPERTY_PREFIX + "namespace";
     static final String NAMESPACE_ENV = KAFKA_ENV_PREFIX + "NAMESPACE";
 
@@ -66,5 +70,14 @@ public class KafkaSettings {
     public static String getNamespace() {
         return System.getProperty(NAMESPACE_PROPERTY,
                 System.getenv(NAMESPACE_ENV) != null ? System.getenv(NAMESPACE_ENV) : YaksSettings.getDefaultNamespace());
+    }
+
+    /**
+     * Api version for current Kafka Strimzi installation.
+     * @return
+     */
+    public static String getApiVersion() {
+        return System.getProperty(API_VERSION_PROPERTY,
+                System.getenv(API_VERSION_ENV) != null ? System.getenv(API_VERSION_ENV) : API_VERSION_DEFAULT);
     }
 }

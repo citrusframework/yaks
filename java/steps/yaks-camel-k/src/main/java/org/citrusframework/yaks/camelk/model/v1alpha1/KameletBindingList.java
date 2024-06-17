@@ -17,6 +17,7 @@
 package org.citrusframework.yaks.camelk.model.v1alpha1;
 
 import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
+import org.apache.camel.v1alpha1.KameletBinding;
 
 /**
  * @author Christoph Deppisch

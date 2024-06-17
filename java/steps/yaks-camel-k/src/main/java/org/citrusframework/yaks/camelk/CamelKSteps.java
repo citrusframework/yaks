@@ -35,7 +35,6 @@ import org.citrusframework.annotations.CitrusResource;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.ActionTimeoutException;
 import org.citrusframework.exceptions.CitrusRuntimeException;
-import org.citrusframework.spi.Resource;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.yaks.camelk.actions.integration.CreateIntegrationAction;
 import org.citrusframework.yaks.kubernetes.KubernetesSupport;
@@ -320,12 +319,7 @@ public class CamelKSteps {
 
         String openApiSpec = configuration.getOrDefault("openapi", "");
         if (!openApiSpec.isEmpty()) {
-            try {
-                Resource file = ResourceUtils.resolve(openApiSpec, context);
-                create.openApi(FileUtils.getFileName(file.getLocation()), FileUtils.readToString(file));
-            } catch (IOException e) {
-                throw new CitrusRuntimeException(String.format("Failed to read openapi spec form file path %s", openApiSpec));
-            }
+            create.openApi(openApiSpec);
         }
 
         runner.run(create);

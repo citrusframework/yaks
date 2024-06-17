@@ -16,12 +16,12 @@
 
 package org.citrusframework.yaks.camelk.actions.integration;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
+import org.apache.camel.v1.Integration;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
-import org.citrusframework.yaks.camelk.model.Integration;
 import org.citrusframework.yaks.camelk.model.IntegrationList;
 
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;

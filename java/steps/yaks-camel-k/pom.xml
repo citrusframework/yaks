@@ -68,6 +68,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.camel.k</groupId>
+      <artifactId>camel-k-crds</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp</artifactId>
     </dependency>

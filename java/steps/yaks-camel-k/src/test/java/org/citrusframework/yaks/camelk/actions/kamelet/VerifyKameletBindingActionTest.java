@@ -20,13 +20,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-import org.citrusframework.context.TestContext;
-import org.citrusframework.context.TestContextFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesCrudDispatcher;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import io.fabric8.mockwebserver.Context;
 import okhttp3.mockwebserver.MockWebServer;
+import org.citrusframework.context.TestContext;
+import org.citrusframework.context.TestContextFactory;
 import org.citrusframework.yaks.YaksClusterType;
 import org.citrusframework.yaks.camelk.jbang.ProcessAndOutput;
 import org.junit.BeforeClass;
@@ -35,7 +35,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import static org.citrusframework.yaks.camelk.jbang.CamelJBang.camel;
 
-public class VerifyPipeActionTest {
+public class VerifyKameletBindingActionTest {
 
     private final KubernetesMockServer k8sServer = new KubernetesMockServer(new Context(), new MockWebServer(),
             new HashMap<>(), new KubernetesCrudDispatcher(), false);
@@ -44,29 +44,29 @@ public class VerifyPipeActionTest {
 
     private final TestContext context = TestContextFactory.newInstance().getObject();
 
-    private static Path samplePipe;
+    private static Path sampleBinding;
 
     @BeforeClass
     public static void setup() throws IOException {
-        samplePipe = new ClassPathResource("timer-to-log-pipe.yaml").getFile().toPath();
+        sampleBinding = new ClassPathResource("timer-to-log-binding.yaml").getFile().toPath();
         camel().version();
     }
 
     @Test
-    public void shouldVerifyLocalPipe() {
-        ProcessAndOutput pao = camel().run("timer-to-log-pipe", samplePipe);
+    public void shouldVerifyLocalBinding() {
+        ProcessAndOutput pao = camel().run("timer-to-log-binding", sampleBinding);
         Long pid = pao.getCamelProcessId();
 
         try {
-            VerifyPipeAction action = new VerifyPipeAction.Builder()
+            VerifyKameletBindingAction action = new VerifyKameletBindingAction.Builder()
                     .client(kubernetesClient)
-                    .isAvailable("timer-to-log-pipe")
+                    .isAvailable("timer-to-log-binding")
                     .clusterType(YaksClusterType.LOCAL)
                     .maxAttempts(10)
                     .build();
 
-            context.setVariable("timer-to-log-pipe:pid", pid);
-            context.setVariable("timer-to-log-pipe:process:" + pid, pao);
+            context.setVariable("timer-to-log-binding:pid", pid);
+            context.setVariable("timer-to-log-binding:process:" + pid, pao);
 
             action.execute(context);
         } finally {
