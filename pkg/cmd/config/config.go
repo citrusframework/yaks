@@ -65,7 +65,7 @@ type RuntimeConfig struct {
 	Resources      []string             `yaml:"resources"`
 	Settings       SettingsConfig       `yaml:"settings"`
 	Env            []EnvConfig          `yaml:"env"`
-	Secrets        []string             `yaml:"secret"`
+	Secrets        []string             `yaml:"secrets"`
 	ClusterType    string               `yaml:"clusterType"`
 }
 
