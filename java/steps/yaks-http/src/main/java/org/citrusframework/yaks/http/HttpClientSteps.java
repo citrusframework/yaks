@@ -34,7 +34,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.impl.DefaultSchemePortResolver;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
@@ -60,7 +59,6 @@ import org.citrusframework.http.message.HttpMessage;
 import org.citrusframework.util.FileUtils;
 import org.citrusframework.util.StringUtils;
 import org.citrusframework.variable.dictionary.DataDictionary;
-import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.util.ResourceUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -115,8 +113,12 @@ public class HttpClientSteps implements HttpSteps {
     private String authPassword = HttpSettings.getClientAuthPassword();
 
     private boolean useSslKeyStore = HttpSettings.isUseSslKeyStore();
-    private String sslKeyStorePath = HttpSettings.getSslKeyStorePath();
-    private String sslKeyStorePassword = HttpSettings.getSslKeyStorePassword();
+    private String sslKeyStorePath = HttpSettings.getClientKeyStorePath();
+    private String sslKeyStorePassword = HttpSettings.getClientKeyStorePassword();
+
+    private boolean useSslTrustStore = HttpSettings.isUseSslTrustStore();
+    private String sslTrustStorePath = HttpSettings.getTrustStorePath();
+    private String sslTrustStorePassword = HttpSettings.getTrustStorePassword();
 
     @Before
     public void before(Scenario scenario) {
@@ -162,6 +164,22 @@ public class HttpClientSteps implements HttpSteps {
         }
 
         this.requestUrl = resolvedUrl;
+    }
+
+    @Given("^HTTP client (enable|disable) SSL truststore")
+    public void setSecureTrustStore(String mode) {
+        this.useSslTrustStore = "enable".equals(mode);
+    }
+
+    @Given("^HTTP client SSL truststore path ([^\\s]+)$")
+    public void setSslTrustStorePath(String sslTrustStorePath) {
+        this.sslTrustStorePath = sslTrustStorePath;
+        this.useSslTrustStore = true;
+    }
+
+    @Given("^HTTP client SSL truststore password ([^\\s]+)$")
+    public void setSslTrustStorePassword(String sslTrustStorePassword) {
+        this.sslTrustStorePassword = sslTrustStorePassword;
     }
 
     @Given("^HTTP client (enable|disable) SSL keystore$")
@@ -462,9 +480,13 @@ public class HttpClientSteps implements HttpSteps {
      */
     private org.apache.hc.client5.http.classic.HttpClient sslClient() {
         try {
-            SSLContextBuilder sslContextBuilder = SSLContexts
-                    .custom()
-                    .loadTrustMaterial(TrustAllStrategy.INSTANCE);
+            SSLContextBuilder sslContextBuilder = SSLContexts.custom();
+
+            if (useSslTrustStore && StringUtils.hasText(sslTrustStorePath)) {
+                sslContextBuilder.loadTrustMaterial(ResourceUtils.resolve(sslTrustStorePath, context).getURL(), sslTrustStorePassword.toCharArray());
+            } else {
+                sslContextBuilder.loadTrustMaterial(TrustAllStrategy.INSTANCE);
+            }
 
             if (useSslKeyStore && StringUtils.hasText(sslKeyStorePath)) {
                     sslContextBuilder.loadKeyMaterial(ResourceUtils.resolve(sslKeyStorePath, context).getURL(),

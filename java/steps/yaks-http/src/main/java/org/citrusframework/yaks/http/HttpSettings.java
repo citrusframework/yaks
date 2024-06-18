@@ -82,13 +82,29 @@ public class HttpSettings {
     private static final String SECURE_PORT_ENV = HTTP_ENV_PREFIX + "SECURE_PORT";
     private static final String SECURE_PORT_DEFAULT = "8443";
 
-    private static final String SECURE_KEYSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.path";
-    private static final String SECURE_KEYSTORE_PATH_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PATH";
-    static final String SECURE_KEYSTORE_PATH_DEFAULT = "classpath:keystore/http-server.jks";
+    private static final String TRUSTSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "truststore.path";
+    private static final String TRUSTSTORE_PATH_ENV = HTTP_ENV_PREFIX + "TRUSTSTORE_PATH";
+    static final String TRUSTSTORE_PATH_DEFAULT = "classpath:keystore/truststore.jks";
 
-    private static final String SECURE_KEYSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "secure.keystore.password";
-    private static final String SECURE_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SECURE_KEYSTORE_PASSWORD";
-    private static final String SECURE_KEYSTORE_PASSWORD_DEFAULT = "secret";
+    private static final String TRUSTSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "truststore.password";
+    private static final String TRUSTSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "TRUSTSTORE_PASSWORD";
+    private static final String TRUSTSTORE_PASSWORD_DEFAULT = "secr3t";
+
+    private static final String SERVER_KEYSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "server.keystore.path";
+    private static final String SERVER_KEYSTORE_PATH_ENV = HTTP_ENV_PREFIX + "SERVER_KEYSTORE_PATH";
+    static final String SERVER_KEYSTORE_PATH_DEFAULT = "classpath:keystore/server.jks";
+
+    private static final String SERVER_KEYSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "server.keystore.password";
+    private static final String SERVER_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "SERVER_KEYSTORE_PASSWORD";
+    private static final String SERVER_KEYSTORE_PASSWORD_DEFAULT = "secr3t";
+
+    private static final String CLIENT_KEYSTORE_PATH_PROPERTY = HTTP_PROPERTY_PREFIX + "client.keystore.path";
+    private static final String CLIENT_KEYSTORE_PATH_ENV = HTTP_ENV_PREFIX + "CLIENT_KEYSTORE_PATH";
+    static final String CLIENT_KEYSTORE_PATH_DEFAULT = "classpath:keystore/client.jks";
+
+    private static final String CLIENT_KEYSTORE_PASSWORD_PROPERTY = HTTP_PROPERTY_PREFIX + "client.keystore.password";
+    private static final String CLIENT_KEYSTORE_PASSWORD_ENV = HTTP_ENV_PREFIX + "CLIENT_KEYSTORE_PASSWORD";
+    private static final String CLIENT_KEYSTORE_PASSWORD_DEFAULT = "secr3t";
 
     private static final String USE_SECURE_CONNECTOR_PROPERTY = HTTP_PROPERTY_PREFIX + "use.secure.connector";
     private static final String USE_SECURE_CONNECTOR_ENV = HTTP_ENV_PREFIX + "USE_SECURE_CONNECTOR";
@@ -97,6 +113,10 @@ public class HttpSettings {
     private static final String USE_SECURE_KEYSTORE_PROPERTY = HTTP_PROPERTY_PREFIX + "use.secure.keystore";
     private static final String USE_SECURE_KEYSTORE_ENV = HTTP_ENV_PREFIX + "USE_SECURE_KEYSTORE";
     private static final String USE_SECURE_KEYSTORE_DEFAULT = "false";
+
+    private static final String USE_SECURE_TRUSTSTORE_PROPERTY = HTTP_PROPERTY_PREFIX + "use.secure.truststore";
+    private static final String USE_SECURE_TRUSTSTORE_ENV = HTTP_ENV_PREFIX + "USE_SECURE_TRUSTSTORE";
+    private static final String USE_SECURE_TRUSTSTORE_DEFAULT = "false";
 
     private static final String HEADER_NAME_IGNORE_CASE_PROPERTY = HTTP_PROPERTY_PREFIX + "header.name.ignore.case";
     private static final String HEADER_NAME_IGNORE_CASE_ENV = HTTP_ENV_PREFIX + "HEADER_NAME_IGNORE_CASE";
@@ -163,24 +183,70 @@ public class HttpSettings {
                         USE_SECURE_KEYSTORE_DEFAULT));
     }
 
-    /**
-     * SSL key store path.
-     * @return
-     */
-    public static String getSslKeyStorePath() {
-        return System.getProperty(SECURE_KEYSTORE_PATH_PROPERTY,
-                System.getenv(SECURE_KEYSTORE_PATH_ENV) != null ? System.getenv(SECURE_KEYSTORE_PATH_ENV) :
-                        SECURE_KEYSTORE_PATH_DEFAULT);
+    public static boolean isUseSslTrustStore() {
+        return Boolean.parseBoolean(System.getProperty(USE_SECURE_TRUSTSTORE_PROPERTY,
+                System.getenv(USE_SECURE_TRUSTSTORE_ENV) != null ? System.getenv(USE_SECURE_TRUSTSTORE_ENV) :
+                        USE_SECURE_TRUSTSTORE_DEFAULT));
     }
 
     /**
-     * SSL key store password.
+     * Http server SSL keystore path.
      * @return
      */
-    public static String getSslKeyStorePassword() {
-        return System.getProperty(SECURE_KEYSTORE_PASSWORD_PROPERTY,
-                System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) != null ? System.getenv(SECURE_KEYSTORE_PASSWORD_ENV) :
-                        SECURE_KEYSTORE_PASSWORD_DEFAULT);
+    public static String getServerKeyStorePath() {
+        return System.getProperty(SERVER_KEYSTORE_PATH_PROPERTY,
+                System.getenv(SERVER_KEYSTORE_PATH_ENV) != null ? System.getenv(SERVER_KEYSTORE_PATH_ENV) :
+                        SERVER_KEYSTORE_PATH_DEFAULT);
+    }
+
+    /**
+     * Http server SSL keystore password.
+     * @return
+     */
+    public static String getServerKeyStorePassword() {
+        return System.getProperty(SERVER_KEYSTORE_PASSWORD_PROPERTY,
+                System.getenv(SERVER_KEYSTORE_PASSWORD_ENV) != null ? System.getenv(SERVER_KEYSTORE_PASSWORD_ENV) :
+                        SERVER_KEYSTORE_PASSWORD_DEFAULT);
+    }
+
+    /**
+     * Http SSL truststore path.
+     * @return
+     */
+    public static String getTrustStorePath() {
+        return System.getProperty(TRUSTSTORE_PATH_PROPERTY,
+                System.getenv(TRUSTSTORE_PATH_ENV) != null ? System.getenv(TRUSTSTORE_PATH_ENV) :
+                        TRUSTSTORE_PATH_DEFAULT);
+    }
+
+    /**
+     * Http SSL truststore password.
+     * @return
+     */
+    public static String getTrustStorePassword() {
+        return System.getProperty(TRUSTSTORE_PASSWORD_PROPERTY,
+                System.getenv(TRUSTSTORE_PASSWORD_ENV) != null ? System.getenv(TRUSTSTORE_PASSWORD_ENV) :
+                        TRUSTSTORE_PASSWORD_DEFAULT);
+    }
+
+    /**
+     * Http client SSL key store path.
+     * @return
+     */
+    public static String getClientKeyStorePath() {
+        return System.getProperty(CLIENT_KEYSTORE_PATH_PROPERTY,
+                System.getenv(CLIENT_KEYSTORE_PATH_ENV) != null ? System.getenv(CLIENT_KEYSTORE_PATH_ENV) :
+                        CLIENT_KEYSTORE_PATH_DEFAULT);
+    }
+
+    /**
+     * Http client SSL keystore password.
+     * @return
+     */
+    public static String getClientKeyStorePassword() {
+        return System.getProperty(CLIENT_KEYSTORE_PASSWORD_PROPERTY,
+                System.getenv(CLIENT_KEYSTORE_PASSWORD_ENV) != null ? System.getenv(CLIENT_KEYSTORE_PASSWORD_ENV) :
+                        CLIENT_KEYSTORE_PASSWORD_DEFAULT);
     }
 
     public static boolean isHeaderNameIgnoreCase() {

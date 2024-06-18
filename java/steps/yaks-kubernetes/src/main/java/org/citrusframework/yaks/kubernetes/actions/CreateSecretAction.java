@@ -18,9 +18,11 @@ package org.citrusframework.yaks.kubernetes.actions;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.Secret;
@@ -38,21 +40,21 @@ import org.citrusframework.yaks.util.ResourceUtils;
 public class CreateSecretAction extends AbstractKubernetesAction implements KubernetesAction {
 
     private final String secretName;
-    private final String filePath;
+    private final List<String> filePaths;
     private final Map<String, String> properties;
 
     public CreateSecretAction(Builder builder) {
         super("create-secret", builder);
 
         this.secretName = builder.secretName;
-        this.filePath = builder.filePath;
+        this.filePaths = builder.filePaths;
         this.properties = builder.properties;
     }
 
     @Override
     public void doExecute(TestContext context) {
         Map<String, String> data = new LinkedHashMap<>();
-        if (filePath != null) {
+        for (String filePath : filePaths) {
             try {
                 Resource file = ResourceUtils.resolve(filePath, context);
                 String resolvedFileContent = context.replaceDynamicContentInString(FileUtils.readToString(file, StandardCharsets.UTF_8));
@@ -61,7 +63,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
                 data.put(FileUtils.getFileName(file.getLocation()),
                         Base64.getEncoder().encodeToString(resolvedFileContent.getBytes(StandardCharsets.UTF_8)));
             } catch (IOException e) {
-                throw new CitrusRuntimeException("Failed to read properties file", e);
+                throw new CitrusRuntimeException("Failed to create secret from filepath", e);
             }
         }
 
@@ -89,7 +91,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
     public static class Builder extends AbstractKubernetesAction.Builder<CreateSecretAction, Builder> {
 
         private String secretName;
-        private String filePath;
+        private final List<String> filePaths = new ArrayList<>();
         private final Map<String, String> properties = new HashMap<>();
 
         public Builder name(String secretName) {
@@ -98,7 +100,7 @@ public class CreateSecretAction extends AbstractKubernetesAction implements Kube
         }
 
         public Builder fromFile(String filePath) {
-            this.filePath = filePath;
+            this.filePaths.add(filePath);
             return this;
         }
 

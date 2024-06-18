@@ -24,6 +24,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.Citrus;
 import org.citrusframework.TestCaseRunner;
 import org.citrusframework.annotations.CitrusAnnotations;
@@ -34,12 +40,6 @@ import org.citrusframework.exceptions.ActionTimeoutException;
 import org.citrusframework.exceptions.CitrusRuntimeException;
 import org.citrusframework.http.message.HttpMessage;
 import org.citrusframework.util.FileUtils;
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.Before;
-import io.cucumber.java.Scenario;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.citrusframework.yaks.http.HttpServerSteps;
 import org.citrusframework.yaks.kubernetes.actions.CreateServiceAction;
 import org.citrusframework.yaks.kubernetes.actions.VerifyPodAction;
@@ -233,17 +233,67 @@ public class KubernetesSteps {
         }
     }
 
-    @Given("^load Kubernetes secret from file ([^\\s]+).properties$")
-    public void createSecret(String fileName) {
-        createSecret(fileName, fileName);
+    @Given("^expose Http server certificates as Kubernetes secret ([^\\s]+)$")
+    public void createSecretFromHttpServerCertificates(String name) {
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .create(name)
+                .fromFile("classpath:keystore/server.jks")
+                .fromFile("classpath:keystore/server.crt")
+                .fromFile("classpath:keystore/server.key"));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .secrets()
+                            .delete(name)));
+        }
     }
 
-    @Given("^create Kubernetes secret ([^\\s]+) from file ([^\\s]+).properties$")
-    public void createSecret(String secretName, String fileName) {
+    @Given("^expose Http client certificates as Kubernetes secret ([^\\s]+)$")
+    public void createSecretFromHttpClientCertificates(String name) {
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .create(name)
+                .fromFile("classpath:keystore/client.jks")
+                .fromFile("classpath:keystore/client.crt")
+                .fromFile("classpath:keystore/client.key"));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .secrets()
+                            .delete(name)));
+        }
+    }
+
+    @Given("^expose Http certification authority as Kubernetes secret ([^\\s]+)$")
+    public void createSecretFromHttpCertificationAuthority(String name) {
+        runner.run(kubernetes().client(k8sClient)
+                .secrets()
+                .create(name)
+                .fromFile("classpath:keystore/ca.crt")
+                .fromFile("classpath:keystore/ca.key"));
+
+        if (autoRemoveResources) {
+            runner.then(doFinally()
+                    .actions(kubernetes().client(k8sClient)
+                            .secrets()
+                            .delete(name)));
+        }
+    }
+
+    @Given("^load Kubernetes secret from file ([^\\s]+)$")
+    public void createSecret(String filePath) {
+        createSecret(FileUtils.getBaseName(FileUtils.getFileName(filePath)), filePath);
+    }
+
+    @Given("^create Kubernetes secret ([^\\s]+) from file ([^\\s]+)$")
+    public void createSecret(String secretName, String filePath) {
         runner.run(kubernetes().client(k8sClient)
                 .secrets()
                 .create(secretName)
-                .fromFile(fileName + ".properties"));
+                .fromFile(filePath));
 
         if (autoRemoveResources) {
             runner.then(doFinally()

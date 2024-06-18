@@ -108,8 +108,8 @@ public class HttpServerSteps implements HttpSteps {
     private boolean useSslConnector = HttpSettings.isUseSslConnector();
     private boolean useSslKeyStore = HttpSettings.isUseSslKeyStore();
 
-    private String sslKeyStorePath = HttpSettings.getSslKeyStorePath();
-    private String sslKeyStorePassword = HttpSettings.getSslKeyStorePassword();
+    private String sslKeyStorePath = HttpSettings.getServerKeyStorePath();
+    private String sslKeyStorePassword = HttpSettings.getServerKeyStorePassword();
 
     private String authMethod = HttpSettings.getServerAuthMethod();
     private String authPath = HttpSettings.getServerAuthPath();
@@ -490,8 +490,13 @@ public class HttpServerSteps implements HttpSteps {
         setServerPort(Optional.ofNullable(settings.get("port")).map(context::replaceDynamicContentInString).map(Integer::parseInt).orElse(serverPort));
         configureTimeout(Optional.ofNullable(settings.get("timeout")).map(context::replaceDynamicContentInString).map(Long::valueOf).orElse(timeout));
 
-        setSslKeyStorePath(settings.getOrDefault("sslKeyStorePath", sslKeyStorePath));
-        setSslKeyStorePassword(settings.getOrDefault("sslKeyStorePassword", sslKeyStorePassword));
+        if (settings.containsKey("sslKeyStorePath")) {
+            setSslKeyStorePath(settings.get("sslKeyStorePath"));
+        }
+
+        if (settings.containsKey("sslKeyStorePassword")) {
+            setSslKeyStorePassword(settings.get("sslKeyStorePassword"));
+        }
 
         if (settings.containsKey("securePort")) {
             setSecureServerPort(Integer.parseInt(context.replaceDynamicContentInString(settings.get("securePort"))));
@@ -572,8 +577,8 @@ public class HttpServerSteps implements HttpSteps {
     }
 
     private String getKeyStorePathPath() throws IOException {
-        if (sslKeyStorePath.equals(HttpSettings.SECURE_KEYSTORE_PATH_DEFAULT)) {
-            File tmpKeyStore = File.createTempFile("http-server", ".jks");
+        if (sslKeyStorePath.equals(HttpSettings.SERVER_KEYSTORE_PATH_DEFAULT)) {
+            File tmpKeyStore = File.createTempFile("server", ".jks");
 
             try (InputStream in = ResourceUtils.resolve(sslKeyStorePath, context).getInputStream()) {
                 Files.copy(in, tmpKeyStore.toPath(), StandardCopyOption.REPLACE_EXISTING);
