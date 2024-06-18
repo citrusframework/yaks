@@ -100,7 +100,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
     @Override
     public void doExecute(TestContext context) {
-        String name = context.replaceDynamicContentInString(integrationName);
+        String name = sanitizeIntegrationName(context.replaceDynamicContentInString(integrationName));
 
         LOG.info(String.format("Creating Camel K integration '%s'", name));
 
@@ -491,6 +491,24 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
      */
     private static Pattern getModelinePattern(String name) {
         return Pattern.compile(String.format("^// camel-k: ?%s=(.+)$", name), Pattern.MULTILINE);
+    }
+
+    /**
+     * Create K8s conform integration name using lowercase RFC 1123 rules.
+     * @param name
+     * @return
+     */
+    private String sanitizeIntegrationName(String name) {
+        String sanitized;
+
+        if (name.contains(".")) {
+            sanitized = name.substring(0, name.indexOf("."));
+        } else {
+            sanitized = name;
+        }
+
+        sanitized = sanitized.replaceAll("([a-z])([A-Z]+)", "$1-$2").toLowerCase();
+        return sanitized.replaceAll("[^a-z0-9-]", "");
     }
 
     /**
