@@ -92,7 +92,7 @@ public class VerifyKameletAction extends AbstractKameletAction {
                     LOG.debug(String.format("Kamelet '%s' is not present in namespace '%s'", name, namespace));
                 } else {
                     LOG.debug(String.format("Found Kamelet in namespace '%s'", namespace));
-                    LOG.debug(KubernetesSupport.yaml(new KameletValuePropertyMapper()).dumpAsMap(kamelet));
+                    LOG.debug(KubernetesSupport.dumpYaml(kamelet));
                 }
             }
 

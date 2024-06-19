@@ -71,9 +71,14 @@ public final class KubernetesSupport {
         // prevent instantiation of utility class
     }
 
-    // Optional property value mapper used to customize YAML dumper.
-    public interface PropertyValueMapper {
-        Object map(Property property, Object propertyValue);
+    /**
+     * Dump given domain model object as YAML.
+     * Uses Json conversion to generic map as intermediate step. This makes sure to properly write Json additional properties.
+     * @param model
+     * @return
+     */
+    public static String dumpYaml(Object model) {
+        return yaml().dumpAsMap(json().convertValue(model, Map.class));
     }
 
     /**
@@ -132,25 +137,6 @@ public final class KubernetesSupport {
                     return null;
                 } else {
                     return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
-                }
-            }
-        };
-        representer.getPropertyUtils().setSkipMissingProperties(true);
-        return new Yaml(representer);
-    }
-
-    public static Yaml yaml(PropertyValueMapper mapper) {
-        Representer representer = new Representer(new DumperOptions()) {
-            @Override
-            protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
-                Object propertyValueMapped = mapper.map(property, propertyValue);
-
-                // if value of property is null, ignore it.
-                if (propertyValueMapped == null || (propertyValueMapped instanceof Collection && ((Collection<?>) propertyValueMapped).isEmpty()) ||
-                    (propertyValueMapped instanceof Map && ((Map<?, ?>) propertyValueMapped).isEmpty())) {
-                    return null;
-                } else {
-                    return super.representJavaBeanProperty(javaBean, property, propertyValueMapped, customTag);
                 }
             }
         };

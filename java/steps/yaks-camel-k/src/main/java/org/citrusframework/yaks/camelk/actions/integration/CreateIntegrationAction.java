@@ -22,10 +22,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,12 +36,11 @@ import io.fabric8.kubernetes.client.dsl.Updatable;
 import org.apache.camel.v1.Integration;
 import org.apache.camel.v1.IntegrationBuilder;
 import org.apache.camel.v1.IntegrationSpecBuilder;
-import org.apache.camel.v1.integrationspec.ConfigurationBuilder;
 import org.apache.camel.v1.integrationspec.SourcesBuilder;
 import org.apache.camel.v1.integrationspec.Traits;
+import org.apache.camel.v1.integrationspec.traits.AddonsBuilder;
 import org.citrusframework.context.TestContext;
 import org.citrusframework.exceptions.CitrusRuntimeException;
-import org.citrusframework.variable.VariableUtils;
 import org.citrusframework.yaks.YaksSettings;
 import org.citrusframework.yaks.camelk.actions.AbstractCamelKAction;
 import org.citrusframework.yaks.camelk.jbang.CamelJBangSettings;
@@ -76,6 +77,9 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
     private final List<String> traits;
     private final List<String> openApis;
     private final List<String> resources;
+    private final List<String> volumes;
+    private final List<String> configs;
+    private final List<String> connects;
     private final boolean supportVariables;
 
     /**
@@ -97,6 +101,9 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         this.traits = builder.traits;
         this.openApis = builder.openApis;
         this.resources = builder.resources;
+        this.volumes = builder.volumes;
+        this.configs = builder.configs;
+        this.connects = builder.connects;
         this.supportVariables = builder.supportVariables;
     }
 
@@ -126,15 +133,30 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
             specBuilder.addAllToDependencies(resolvedDependencies);
         }
         Map<String, Map<String, Object>> traitConfigMap = new HashMap<>();
-        addPropertyConfigurationSpec(specBuilder, resolvedSource, context);
-        addRuntimeConfigurationSpec(specBuilder, resolvedSource, context);
+        addPropertyConfigurationSpec(traitConfigMap, resolvedSource, context);
+        addRuntimeConfigurationSpec(traitConfigMap, resolvedSource, context);
         addResourcesSpec(traitConfigMap, resolvedSource, context);
+        addVolumesSpec(traitConfigMap, resolvedSource, context);
+        addConnectsSpec(traitConfigMap, resolvedSource, context);
         addBuildPropertyConfigurationSpec(traitConfigMap, resolvedSource, context);
         addEnvVarConfigurationSpec(traitConfigMap, resolvedSource, context);
         addOpenApiSpec(traitConfigMap, resolvedSource, context);
         addTraitSpec(traitConfigMap, resolvedSource, context);
 
-        specBuilder.withTraits(KubernetesSupport.json().convertValue(traitConfigMap, Traits.class));
+        Traits traitModel = (KubernetesSupport.json().convertValue(traitConfigMap, Traits.class));
+
+        // Handle leftover traits as addons
+        Set<?> knownTraits = KubernetesSupport.json().convertValue(traitModel, Map.class).keySet();
+        if (knownTraits.size() < traitConfigMap.size()) {
+            traitModel.setAddons(new HashMap<>());
+            for (Map.Entry<String, Map<String, Object>> traitConfig : traitConfigMap.entrySet()) {
+                if (!knownTraits.contains(traitConfig.getKey())) {
+                    traitModel.getAddons().put(traitConfig.getKey(), new AddonsBuilder().addToAdditionalProperties(traitConfig.getValue()).build());
+                }
+            }
+        }
+
+        specBuilder.withTraits(traitModel);
 
         final Integration integration = integrationBuilder
                 .withSpec(specBuilder.build())
@@ -154,11 +176,39 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
             String resource = matcher.group(1);
-            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(resource)), traitConfigMap);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(resource)), traitConfigMap, true);
         }
 
         for (String resource : resources) {
-            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(resource)), traitConfigMap);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(resource)), traitConfigMap, true);
+        }
+    }
+
+    private void addVolumesSpec(Map<String, Map<String, Object>> traitConfigMap, String source, TestContext context) {
+        String traitName = "mount.volumes";
+        Pattern pattern = getModelinePattern("volume");
+        Matcher matcher = pattern.matcher(source);
+        while (matcher.find()) {
+            String volume = matcher.group(1);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(volume)), traitConfigMap, true);
+        }
+
+        for (String volume : volumes) {
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(volume)), traitConfigMap, true);
+        }
+    }
+
+    private void addConnectsSpec(Map<String, Map<String, Object>> traitConfigMap, String source, TestContext context) {
+        String traitName = "service-binding.services";
+        Pattern pattern = getModelinePattern("connect");
+        Matcher matcher = pattern.matcher(source);
+        while (matcher.find()) {
+            String connect = matcher.group(1);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(connect)), traitConfigMap, true);
+        }
+
+        for (String connect : connects) {
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(connect)), traitConfigMap, true);
         }
     }
 
@@ -170,7 +220,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
      */
     private static void createIntegration(KubernetesClient k8sClient, String namespace, Integration integration) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new IntegrationValuePropertyMapper()).dumpAsMap(integration));
+            LOG.debug(KubernetesSupport.dumpYaml(integration));
         }
 
         k8sClient.resources(Integration.class, IntegrationList.class)
@@ -187,7 +237,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
      */
     private static void createLocalIntegration(Integration integration, String name, TestContext context) {
         try {
-            String integrationYaml = KubernetesSupport.yaml(new IntegrationValuePropertyMapper()).dumpAsMap(integration);
+            String integrationYaml = KubernetesSupport.dumpYaml(integration);
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(integrationYaml);
@@ -250,35 +300,35 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
             String openApiSpecFile = matcher.group(1);
-            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(openApiSpecFile)), traitConfigMap);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(openApiSpecFile)), traitConfigMap, true);
         }
 
         for (String openApi : openApis) {
-            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(openApi)), traitConfigMap);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(openApi)), traitConfigMap, true);
         }
     }
 
     private void addTraitSpec(Map<String, Map<String, Object>> traitConfigMap, String source, TestContext context) {
         if (traits != null && !traits.isEmpty()) {
             for (String t : context.resolveDynamicValuesInList(traits)) {
-                addTraitSpec(t, traitConfigMap);
+                addTraitSpec(t, traitConfigMap, false);
             }
         }
 
         Pattern pattern = getModelinePattern("trait");
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
-            addTraitSpec(matcher.group(1), traitConfigMap);
+            addTraitSpec(matcher.group(1), traitConfigMap, false);
         }
     }
 
-    private void addTraitSpec(String traitExpression, Map<String, Map<String, Object>> traitConfigMap) {
+    private void addTraitSpec(String traitExpression, Map<String, Map<String, Object>> traitConfigMap, boolean isListType) {
         //traitName.key=value
         final String[] trait = traitExpression.split("\\.",2);
         final String[] traitConfig = trait[1].split("=", 2);
 
         final String traitKey = traitConfig[0];
-        final Object traitValue = resolveTraitValue(traitKey, traitConfig[1].trim());
+        final Object traitValue = resolveTraitValue(traitKey, traitConfig[1].trim(), isListType);
         if (traitConfigMap.containsKey(trait[0])) {
             Map<String, Object> config = traitConfigMap.get(trait[0]);
 
@@ -287,73 +337,90 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
                 if (existingValue instanceof List) {
                     List<String> values = (List<String>) existingValue;
-                    values.add(traitValue.toString());
+                    if (traitValue instanceof List) {
+                        List<String> traitValueList = (List<String>) traitValue;
+                        values.addAll(traitValueList);
+                    } else {
+                        values.add(traitValue.toString());
+                    }
+                } else if (traitValue instanceof List) {
+                    List<String> traitValueList = (List<String>) traitValue;
+                    traitValueList.add(0, existingValue.toString());
+                    config.put(traitKey, traitValueList);
                 } else {
                     config.put(traitKey, Arrays.asList(existingValue.toString(), traitValue));
                 }
             } else {
-                config.put(traitKey, initializeTraitValue(traitValue));
+                config.put(traitKey, traitValue);
             }
         } else {
             Map<String, Object> config = new HashMap<>();
-            config.put(traitKey, initializeTraitValue(traitValue));
+            config.put(traitKey, traitValue);
             traitConfigMap.put(trait[0], config);
         }
-    }
-
-    private Object initializeTraitValue(Object value) {
-        if (value instanceof String && value.toString().startsWith("[") && value.toString().endsWith("]")) {
-            List<String> values = new ArrayList<>();
-            values.add(resolveTraitValue("", value.toString().substring(1, value.toString().length() - 1)).toString());
-            return values;
-        }
-
-        return value;
     }
 
     /**
      * Resolve trait value with automatic type conversion. Enabled trait keys need to be converted to boolean type.
      * @param traitKey
      * @param value
+     * @param isListType
      * @return
      */
-    private Object resolveTraitValue(String traitKey, String value) {
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            return VariableUtils.cutOffDoubleQuotes(value);
-        }
-
-        if (value.startsWith("'") && value.endsWith("'")) {
-            return VariableUtils.cutOffSingleQuotes(value);
-        }
-
+    private Object resolveTraitValue(String traitKey, String value, boolean isListType) {
         if (traitKey.equalsIgnoreCase("enabled") ||
                 traitKey.equalsIgnoreCase("verbose")) {
             return Boolean.valueOf(value);
         }
 
+        if (value.startsWith("[") && value.endsWith("]")) {
+            String valueArrayExpression = value.substring(1, value.length() - 1);
+            List<String> values = new ArrayList<>();
+            if (valueArrayExpression.contains(",")) {
+                values.addAll(List.of(valueArrayExpression.split(",")));
+            } else {
+                values.add(valueArrayExpression);
+            }
+            return values;
+        }
+
+        if (value.contains(",")) {
+            List<String> values = new ArrayList<>();
+            for (String entry : value.split(",")) {
+                values.add(resolveTraitValue("", entry, false).toString());
+            }
+            return values;
+        }
+
+        String resolvedValue = value;
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            resolvedValue = value.substring(1, value.length() - 1);
+        }
+
+        if (value.startsWith("'") && value.endsWith("'")) {
+            resolvedValue = value.substring(1, value.length() - 1);
+        }
+
+        if (isListType) {
+            return new ArrayList<>(Collections.singletonList(resolvedValue));
+        }
+
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            return value;
+            return resolvedValue;
         }
     }
 
-    private void addPropertyConfigurationSpec(IntegrationSpecBuilder specBuilder, String source, TestContext context) {
-        Pattern pattern = getModelinePattern("property");
-        Matcher matcher = pattern.matcher(source);
-        while (matcher.find()) {
-            final String[] property = matcher.group(1).split("=",2);
-            specBuilder.addToConfiguration(
-                    new ConfigurationBuilder().withType("property").withValue(createPropertySpec(property[0], property[1], context)).build());
-        }
+    private void addPropertyConfigurationSpec(Map<String, Map<String, Object>> traitConfigMap, String source, TestContext context) {
+        final String traitName = "camel.properties";
 
         if (properties != null && !properties.isEmpty()) {
             for (String p : context.resolveDynamicValuesInList(properties)){
                 //key=value
                 if (isValidPropertyFormat(p)) {
-                    final String[] property = p.split("=",2);
-                    specBuilder.addToConfiguration(
-                            new ConfigurationBuilder().withType("property").withValue(createPropertySpec(property[0], property[1], context)).build());
+                    final String[] property = p.split("=", 2);
+                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap, true);
                 } else {
                     throw new IllegalArgumentException("Property " + p + " does not match format key=value");
                 }
@@ -365,12 +432,19 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 try {
                     Properties props = new Properties();
                     props.load(ResourceUtils.resolve(pf, context).getInputStream());
-                    props.forEach((key, value) -> specBuilder.addToConfiguration(
-                            new ConfigurationBuilder().withType("property").withValue(createPropertySpec(key.toString(), value.toString(), context)).build()));
+                    props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
+                            traitName,
+                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap, true));
                 } catch (IOException e) {
                     throw new CitrusRuntimeException("Failed to load property file", e);
                 }
             }
+        }
+
+        Pattern pattern = getModelinePattern("property");
+        Matcher matcher = pattern.matcher(source);
+        while (matcher.find()) {
+            addTraitSpec(String.format("%s=%s", traitName, matcher.group(1)), traitConfigMap, true);
         }
     }
 
@@ -382,7 +456,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 //key=value
                 if (isValidPropertyFormat(p)) {
                     final String[] property = p.split("=", 2);
-                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap);
+                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap, true);
                 } else {
                     throw new IllegalArgumentException("Property " + p + " does not match format key=value");
                 }
@@ -396,7 +470,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                     props.load(ResourceUtils.resolve(pf, context).getInputStream());
                     props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
                             traitName,
-                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));
+                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap, true));
                 } catch (IOException e) {
                     throw new CitrusRuntimeException("Failed to load property file", e);
                 }
@@ -406,7 +480,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         Pattern pattern = getModelinePattern("build-property");
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
-            addTraitSpec(String.format("%s=%s", traitName, matcher.group(1)), traitConfigMap);
+            addTraitSpec(String.format("%s=%s", traitName, matcher.group(1)), traitConfigMap, true);
         }
     }
 
@@ -418,7 +492,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                 //key=value
                 if (isValidPropertyFormat(v)) {
                     final String[] property = v.split("=", 2);
-                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap);
+                    addTraitSpec(String.format("%s=%s", traitName, createPropertySpec(property[0], property[1], context)), traitConfigMap, true);
                 } else {
                     throw new IllegalArgumentException("EnvVar " + v + " does not match format key=value");
                 }
@@ -432,7 +506,7 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
                     props.load(ResourceUtils.resolve(vf, context).getInputStream());
                     props.forEach((key, value) -> addTraitSpec(String.format("%s=%s",
                             traitName,
-                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap));
+                            createPropertySpec(key.toString(), value.toString(), context)), traitConfigMap, true));
                 } catch (IOException e) {
                     throw new CitrusRuntimeException("Failed to load env var file", e);
                 }
@@ -442,20 +516,21 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         Pattern pattern = getModelinePattern("env");
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
-            addTraitSpec(String.format("%s=%s", traitName, matcher.group(1)), traitConfigMap);
+            addTraitSpec(String.format("%s=%s", traitName, matcher.group(1)), traitConfigMap, true);
         }
     }
 
-    private void addRuntimeConfigurationSpec(IntegrationSpecBuilder specBuilder, String source, TestContext context) {
+    private void addRuntimeConfigurationSpec(Map<String, Map<String, Object>> traitConfigMap, String source, TestContext context) {
+        String traitName = "mount.configs";
         Pattern pattern = getModelinePattern("config");
         Matcher matcher = pattern.matcher(source);
         while (matcher.find()) {
-            String[] config = matcher.group(1).split(":", 2);
-            if (config.length == 2) {
-                specBuilder.addToConfiguration(new ConfigurationBuilder().withType(config[0]).withValue(context.replaceDynamicContentInString(config[1])).build());
-            } else {
-                specBuilder.addToConfiguration(new ConfigurationBuilder().withType("property").withValue(context.replaceDynamicContentInString(matcher.group(1))).build());
-            }
+            String resource = matcher.group(1);
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(resource)), traitConfigMap, true);
+        }
+
+        for (String config : configs) {
+            addTraitSpec("%s=%s".formatted(traitName, context.replaceDynamicContentInString(config)), traitConfigMap, true);
         }
     }
 
@@ -554,6 +629,9 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
         private final List<String> traits = new ArrayList<>();
         private final List<String> openApis = new ArrayList<>();
         private final List<String> resources = new ArrayList<>();
+        private final List<String> volumes = new ArrayList<>();
+        private final List<String> configs = new ArrayList<>();
+        private final List<String> connects = new ArrayList<>();
         private boolean supportVariables = true;
 
         public Builder integration(String integrationName) {
@@ -594,6 +672,21 @@ public class CreateIntegrationAction extends AbstractCamelKAction {
 
         public Builder resource(String resource) {
             this.resources.add(resource);
+            return this;
+        }
+
+        public Builder volume(String volume) {
+            this.volumes.add(volume);
+            return this;
+        }
+
+        public Builder config(String config) {
+            this.configs.add(config);
+            return this;
+        }
+
+        public Builder connect(String connect) {
+            this.connects.add(connect);
             return this;
         }
 

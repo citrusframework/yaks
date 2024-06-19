@@ -132,7 +132,7 @@ public class CreateKameletAction extends AbstractKameletAction {
 
             if (template != null) {
                 specBuilder.withTemplate(new TemplateBuilder()
-                            .withAdditionalProperties(KubernetesSupport.yaml(new KameletValuePropertyMapper()).load(context.replaceDynamicContentInString(template)))
+                            .withAdditionalProperties(KubernetesSupport.yaml().load(context.replaceDynamicContentInString(template)))
                         .build());
             }
 
@@ -319,7 +319,7 @@ public class CreateKameletAction extends AbstractKameletAction {
             }
 
             if (kamelet.getSpec().getTemplate() != null) {
-                template = KubernetesSupport.yaml(new KameletValuePropertyMapper()).dumpAsMap(kamelet.getSpec().getTemplate());
+                template = KubernetesSupport.dumpYaml(kamelet.getSpec().getTemplate());
             }
 
             return this;

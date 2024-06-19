@@ -131,7 +131,7 @@ public class CreatePipeAction extends AbstractKameletAction {
         }
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            createLocal(KubernetesSupport.yaml(new PipeValuePropertyMapper()).dumpAsMap(pipe), pipeName, context);
+            createLocal(KubernetesSupport.dumpYaml(pipe), pipeName, context);
         } else {
             createPipe(getKubernetesClient(), namespace(context), pipe, context);
         }
@@ -148,7 +148,7 @@ public class CreatePipeAction extends AbstractKameletAction {
      */
     private void createPipe(KubernetesClient k8sClient, String namespace, Pipe pipe, TestContext context) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new PipeValuePropertyMapper()).dumpAsMap(pipe));
+            LOG.debug(KubernetesSupport.dumpYaml(pipe));
         }
 
         k8sClient.resources(Pipe.class, PipeList.class)
