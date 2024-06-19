@@ -85,6 +85,9 @@ public class CreateIntegrationActionTest {
                 .fileName("foo.groovy")
                 .source("// camel-k: trait=quarkus.enabled=true\n" +
                         "// camel-k: trait=quarkus.nativeBaseImage=native-java\n" +
+                        "// camel-k: trait=environment.vars=[foo=bar,baz=foobar]\n" +
+                        "// camel-k: trait=mount.configs=secret:foo,configmap:bar\n" +
+                        "// camel-k: trait=mount.resources=\"secret:foo-resource\",\"configmap:bar-resource\"\n" +
                         "// camel-k: trait=route.enabled=true\n" +
                         "// camel-k: trait=container.port=8443\n" +
                         "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
@@ -93,12 +96,87 @@ public class CreateIntegrationActionTest {
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
+        Assert.assertNotNull(integration.getSpec().getTraits().getEnvironment());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getEnvironment().getVars().size());
+        Assert.assertEquals("foo=bar", integration.getSpec().getTraits().getEnvironment().getVars().get(0));
+        Assert.assertEquals("baz=foobar", integration.getSpec().getTraits().getEnvironment().getVars().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getMount());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getMount().getConfigs().size());
+        Assert.assertEquals("secret:foo", integration.getSpec().getTraits().getMount().getConfigs().get(0));
+        Assert.assertEquals("configmap:bar", integration.getSpec().getTraits().getMount().getConfigs().get(1));
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getMount().getResources().size());
+        Assert.assertEquals("secret:foo-resource", integration.getSpec().getTraits().getMount().getResources().get(0));
+        Assert.assertEquals("configmap:bar-resource", integration.getSpec().getTraits().getMount().getResources().get(1));
         Assert.assertNotNull(integration.getSpec().getTraits().getQuarkus());
         Assert.assertTrue(integration.getSpec().getTraits().getQuarkus().getEnabled());
         Assert.assertEquals("native-java", integration.getSpec().getTraits().getQuarkus().getNativeBaseImage());
         Assert.assertNotNull(integration.getSpec().getTraits().getRoute());
         Assert.assertTrue(integration.getSpec().getTraits().getRoute().getEnabled());
         Assert.assertEquals(8443L, integration.getSpec().getTraits().getContainer().getPort().longValue());
+    }
+
+    @Test
+    public void shouldCreateIntegrationWithTraitModelineShortcuts() {
+        CreateIntegrationAction action = new CreateIntegrationAction.Builder()
+                .client(kubernetesClient)
+                .integration("foo")
+                .fileName("foo.groovy")
+                .source("// camel-k: property=p1=foo\n" +
+                        "// camel-k: property=p2=foobar\n" +
+                        "// camel-k: build-property=b1=foo\n" +
+                        "// camel-k: build-property=b2=bar\n" +
+                        "// camel-k: env=foo=bar\n" +
+                        "// camel-k: env=baz=foobar\n" +
+                        "// camel-k: connect=service1\n" +
+                        "// camel-k: connect=service2\n" +
+                        "// camel-k: volume=v1\n" +
+                        "// camel-k: volume=v2\n" +
+                        "// camel-k: open-api=configmap:foo-spec\n" +
+                        "// camel-k: dependency=camel:jackson\n" +
+                        "// camel-k: dependency=camel:jackson-avro\n" +
+                        "// camel-k: config=secret:foo\n" +
+                        "// camel-k: config=configmap:bar\n" +
+                        "// camel-k: resource=\"secret:foo-resource\"\n" +
+                        "// camel-k: resource=\"configmap:bar-resource\"\n" +
+                        "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
+                .build();
+
+        action.execute(context);
+
+        Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
+        Assert.assertNotNull(integration.getSpec().getDependencies());
+        Assert.assertEquals(2L, integration.getSpec().getDependencies().size());
+        Assert.assertEquals("camel:jackson", integration.getSpec().getDependencies().get(0));
+        Assert.assertEquals("camel:jackson-avro", integration.getSpec().getDependencies().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getServiceBinding());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getServiceBinding().getServices().size());
+        Assert.assertEquals("service1", integration.getSpec().getTraits().getServiceBinding().getServices().get(0));
+        Assert.assertEquals("service2", integration.getSpec().getTraits().getServiceBinding().getServices().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getOpenapi());
+        Assert.assertEquals(1L, integration.getSpec().getTraits().getOpenapi().getConfigmaps().size());
+        Assert.assertEquals("configmap:foo-spec", integration.getSpec().getTraits().getOpenapi().getConfigmaps().get(0));
+        Assert.assertNotNull(integration.getSpec().getTraits().getEnvironment());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getEnvironment().getVars().size());
+        Assert.assertEquals("foo=bar", integration.getSpec().getTraits().getEnvironment().getVars().get(0));
+        Assert.assertEquals("baz=foobar", integration.getSpec().getTraits().getEnvironment().getVars().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getMount());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getMount().getVolumes().size());
+        Assert.assertEquals("v1", integration.getSpec().getTraits().getMount().getVolumes().get(0));
+        Assert.assertEquals("v2", integration.getSpec().getTraits().getMount().getVolumes().get(1));
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getMount().getConfigs().size());
+        Assert.assertEquals("secret:foo", integration.getSpec().getTraits().getMount().getConfigs().get(0));
+        Assert.assertEquals("configmap:bar", integration.getSpec().getTraits().getMount().getConfigs().get(1));
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getMount().getResources().size());
+        Assert.assertEquals("secret:foo-resource", integration.getSpec().getTraits().getMount().getResources().get(0));
+        Assert.assertEquals("configmap:bar-resource", integration.getSpec().getTraits().getMount().getResources().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getCamel());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getCamel().getProperties().size());
+        Assert.assertEquals("p1=foo", integration.getSpec().getTraits().getCamel().getProperties().get(0));
+        Assert.assertEquals("p2=foobar", integration.getSpec().getTraits().getCamel().getProperties().get(1));
+        Assert.assertNotNull(integration.getSpec().getTraits().getBuilder());
+        Assert.assertEquals(2L, integration.getSpec().getTraits().getBuilder().getProperties().size());
+        Assert.assertEquals("b1=foo", integration.getSpec().getTraits().getBuilder().getProperties().get(0));
+        Assert.assertEquals("b2=bar", integration.getSpec().getTraits().getBuilder().getProperties().get(1));
     }
 
     @Test
@@ -193,17 +271,17 @@ public class CreateIntegrationActionTest {
                 .fileName("foo.groovy")
                 .source("// camel-k: config=secret:my-secret\n" +
                         "// camel-k: config=configmap:tokens\n" +
-                        "// camel-k: config=foo=bar\n" +
+                        "// camel-k: property=foo=bar\n" +
                         "from('timer:tick?period=1000').setBody().constant('Hello world from Camel K!').to('log:info')")
                 .build();
 
         action.execute(context);
 
         Integration integration = kubernetesClient.resources(Integration.class).inNamespace(KubernetesSettings.getNamespace()).withName("foo").get();
-        Assert.assertEquals(3, integration.getSpec().getConfiguration().size());
-        Assert.assertEquals("secret", integration.getSpec().getConfiguration().get(0).getType());
-        Assert.assertEquals("configmap", integration.getSpec().getConfiguration().get(1).getType());
-        Assert.assertEquals("property", integration.getSpec().getConfiguration().get(2).getType());
+        Assert.assertEquals(2, integration.getSpec().getTraits().getMount().getConfigs().size());
+        Assert.assertEquals("secret:my-secret", integration.getSpec().getTraits().getMount().getConfigs().get(0));
+        Assert.assertEquals("configmap:tokens", integration.getSpec().getTraits().getMount().getConfigs().get(1));
+        Assert.assertEquals("foo=bar", integration.getSpec().getTraits().getCamel().getProperties().get(0));
     }
 
     @Test

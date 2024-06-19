@@ -112,7 +112,7 @@ public class VerifyPipeAction extends AbstractKameletAction {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new PipeValuePropertyMapper()).dumpAsMap(pipe));
+            LOG.debug(KubernetesSupport.dumpYaml(pipe));
         }
     }
 

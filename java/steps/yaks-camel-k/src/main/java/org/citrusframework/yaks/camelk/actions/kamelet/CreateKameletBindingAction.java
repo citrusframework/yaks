@@ -132,7 +132,7 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
         }
 
         if (YaksSettings.isLocal(clusterType(context))) {
-            createLocal(KubernetesSupport.yaml(new KameletBindingValuePropertyMapper()).dumpAsMap(binding), bindingName, context);
+            createLocal(KubernetesSupport.dumpYaml(binding), bindingName, context);
         } else {
             createKameletBinding(getKubernetesClient(), namespace(context), binding, context);
         }
@@ -149,7 +149,7 @@ public class CreateKameletBindingAction extends AbstractKameletAction {
      */
     private void createKameletBinding(KubernetesClient k8sClient, String namespace, KameletBinding binding, TestContext context) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new KameletBindingValuePropertyMapper()).dumpAsMap(binding));
+            LOG.debug(KubernetesSupport.dumpYaml(binding));
         }
 
         k8sClient.resources(KameletBinding.class, KameletBindingList.class)

@@ -112,7 +112,7 @@ public class VerifyKameletBindingAction extends AbstractKameletAction {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug(KubernetesSupport.yaml(new KameletBindingValuePropertyMapper()).dumpAsMap(binding));
+            LOG.debug(KubernetesSupport.dumpYaml(binding));
         }
     }
 
