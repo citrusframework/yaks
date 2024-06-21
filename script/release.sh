@@ -60,7 +60,7 @@ release() {
     update_olm "$working_dir" "$release_version" "$snapshot_version"
 
     echo "Building virtual file system ..."
-    eval go run ${working_dir}/cmd/util/vfs-gen/ config
+    eval go run ${working_dir}/cmd/util/vfs-gen/ -dest ${working_dir}/pkg/resources config
 
     # Cross compile binaries
     local build_dir=${working_dir}/xtmp
