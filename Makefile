@@ -175,7 +175,7 @@ release: prepare-release
 release-local: prepare-release
 	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --local-release --no-git-push --no-docker-push
 
-release-major:
+release-major: prepare-release
 	./script/release.sh --release-version $(VERSION) --snapshot-version $(SNAPSHOT_VERSION) --next-version $(NEXT_VERSION) --image $(IMAGE_NAME) --go-flags '$(GOFLAGS)' --git-remote $(RELEASE_GIT_REMOTE) --skip-tests --major-release
 
 release-snapshot: prepare-release
