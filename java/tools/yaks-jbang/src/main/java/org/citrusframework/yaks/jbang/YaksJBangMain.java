@@ -36,7 +36,7 @@ public class YaksJBangMain extends CitrusJBangMain {
                 .addSubcommand("ls", new CommandLine(new ListTests(main)))
                 .addSubcommand("completion", new CommandLine(new Complete(main)));
 
-        commandLine.getCommandSpec().versionProvider(() -> new String[] { "0.20.0-SNAPSHOT" });
+        commandLine.getCommandSpec().versionProvider(() -> new String[] { "0.21.0-SNAPSHOT" });
 
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);

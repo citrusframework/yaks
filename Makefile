@@ -14,8 +14,8 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-VERSION := 0.20.0-SNAPSHOT
-SNAPSHOT_VERSION := 0.20.0-SNAPSHOT
+VERSION := 0.21.0-SNAPSHOT
+SNAPSHOT_VERSION := 0.21.0-SNAPSHOT
 OPERATOR_VERSION := $(subst -SNAPSHOT,,$(VERSION))
 LAST_RELEASED_IMAGE_NAME := yaks-operator
 LAST_RELEASED_VERSION := 0.19.0
